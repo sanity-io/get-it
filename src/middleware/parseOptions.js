@@ -1,19 +1,26 @@
-const queryString = require('query-string')
 const objectAssign = require('object-assign')
-const parseUrl = require('../util/parseUrl-node')
+const urlParse = require('url-parse')
 
 export const parseOptions = opts => {
   const options = objectAssign({}, opts)
 
+  // Parse URL into parts
+  const url = urlParse(options.url, true)
+
+  // Shallow-merge (override) existing query params
   if (options.query) {
-    const qs = queryString.stringify(options.query)
-    const path = parseUrl(options.url).pathname
-    options.path = `${path.split('?')[0]}?${opts.query}`
+    url.query = objectAssign({}, url.query, options.query)
   }
 
+  // Implicit POST if we have not specified a method but have a body
   if (options.body && !options.method) {
     options.method = 'POST'
+  } else if (options.method) {
+    options.method = options.method.toUpperCase()
   }
+
+  // Stringify URL
+  options.url = url.toString()
 
   return options
 }

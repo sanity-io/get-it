@@ -25,9 +25,6 @@ module.exports = function createRequester(initMiddleware = []) {
     // Parse the passed options
     const options = applyMiddleware('processOptions', opts)
 
-    // Let middleware know we're about to do a request
-    applyMiddleware('preRequest', options)
-
     // Events will be triggered on individual channels
     httpRequest(options, channels, applyMiddleware)
 

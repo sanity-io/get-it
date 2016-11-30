@@ -15,15 +15,23 @@ const reduceResponse = (res, body) => ({
 })
 
 module.exports = (options, channels, applyMiddleware) => {
-  // @todo move url parsing to shared step
-  const opts = Object.assign({}, options, url.parse(options.url))
-  const protocol = opts.protocol === 'https:' ? https : http
+  const uri = objectAssign({}, options, url.parse(options.url))
+  const protocol = uri.protocol === 'https:' ? https : http
+  const contentLength = options.body ? {'Content-Length': options.body.length} : {}
 
-  const request = protocol.request(opts, res => {
+  const reqOpts = objectAssign(uri, {
+    method: options.method,
+    headers: objectAssign({}, options.headers, contentLength)
+  })
+
+  // Let middleware know we're about to do a request
+  applyMiddleware('preRequest', options)
+
+  const request = protocol.request(reqOpts, res => {
     // @todo Follow 3xx redirects
     // if (res.statusCode >= 300 && res.statusCode < 400 && 'location' in res.headers)
 
-    const tryUnzip = opts.method !== 'HEAD'
+    const tryUnzip = reqOpts.method !== 'HEAD'
     const bodyStream = tryUnzip ? unzipResponse(res) : res
 
     // Concatenate the response body, then parse the response with middlewares

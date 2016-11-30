@@ -4,7 +4,10 @@
   "description": "Generic HTTP request library for node and browsers",
   "main": "lib/index.js",
   "scripts": {
-    "test": "mocha"
+    "coverage": "nyc --reporter=html --reporter=lcov --reporter=text _mocha",
+    "lint": "eslint .",
+    "test": "mocha",
+    "posttest": "npm run lint"
   },
   "keywords": [
     "request",
@@ -18,9 +21,9 @@
     "debug": "^2.3.3",
     "nano-pubsub": "^1.0.1",
     "object-assign": "^4.1.0",
-    "query-string": "^4.2.3",
     "simple-concat": "^1.0.0",
-    "unzip-response": "^2.0.1"
+    "unzip-response": "^2.0.1",
+    "url-parse": "^1.1.7"
   },
   "devDependencies": {
     "babel-preset-es2015": "^6.18.0",
@@ -30,6 +33,7 @@
     "chai-as-promised": "^6.0.0",
     "eslint": "^3.11.1",
     "eslint-config-sanity": "^2.0.1",
-    "mocha": "^3.2.0"
+    "mocha": "^3.2.0",
+    "nyc": "^10.0.0"
   }
 }

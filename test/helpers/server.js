@@ -1,5 +1,8 @@
 const url = require('url')
 const http = require('http')
+const zlib = require('zlib')
+const simpleConcat = require('simple-concat')
+const debugRequest = require('./debugRequest')
 
 const port = 41832
 const responses = {
@@ -25,6 +28,20 @@ const createServer = () => {
       case '/json-echo':
         res.setHeader('Content-Type', 'application/json')
         req.pipe(res)
+        break
+      case '/debug':
+        res.setHeader('Content-Type', 'application/json')
+        simpleConcat(req, (unused, body) => {
+          res.end(JSON.stringify(debugRequest(req, body)))
+        })
+        break
+      case '/gzip':
+        res.setHeader('Content-Type', 'application/json')
+        res.setHeader('Content-Encoding', 'gzip')
+        zlib.gzip(
+          JSON.stringify(['harder', 'better', 'faster', 'stronger']),
+          (unused, result) => res.end(result)
+        )
         break
       default:
         res.statusCode = 404

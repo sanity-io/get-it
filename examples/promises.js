@@ -1,3 +1,4 @@
+/* eslint-disable */
 // Promises
 const requester = require('requestlib')
 const {
