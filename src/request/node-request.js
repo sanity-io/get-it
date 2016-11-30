@@ -42,11 +42,10 @@ module.exports = (options, channels, applyMiddleware) => {
       }
 
       const response = reduceResponse(res, options.rawBody ? data : data.toString())
-      const body = applyMiddleware('parseResponseBody', response.body, response)
-      const finalRes = objectAssign({}, response, {body})
+      response.body = applyMiddleware('parseResponseBody', response.body, response)
 
-      applyMiddleware('onResponse', finalRes)
-      channels.response.publish(finalRes)
+      applyMiddleware('onResponse', response)
+      channels.response.publish(response)
     })
   })
 

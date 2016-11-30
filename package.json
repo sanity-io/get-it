@@ -3,8 +3,13 @@
   "version": "0.0.1",
   "description": "Generic HTTP request library for node and browsers",
   "main": "lib/index.js",
+  "browser": {
+    "./src/request/node-request.js": "./src/request/browser-request.js",
+    "./lib/request/node-request.js": "./lib/request/browser-request.js"
+  },
   "scripts": {
     "coverage": "nyc --reporter=html --reporter=lcov --reporter=text _mocha",
+    "karma": "karma start",
     "lint": "eslint .",
     "test": "mocha",
     "posttest": "npm run lint"
@@ -19,13 +24,18 @@
   "dependencies": {
     "@sanity/observable": "^1.1.0",
     "debug": "^2.3.3",
+    "global": "^4.3.1",
     "nano-pubsub": "^1.0.1",
     "object-assign": "^4.1.0",
+    "parse-headers": "^2.0.1",
+    "same-origin": "^0.1.1",
     "simple-concat": "^1.0.0",
     "unzip-response": "^2.0.1",
     "url-parse": "^1.1.7"
   },
   "devDependencies": {
+    "babel-cli": "^6.18.0",
+    "babel-loader": "^6.2.8",
     "babel-preset-es2015": "^6.18.0",
     "babel-preset-es2015-node4": "^2.1.0",
     "babel-register": "^6.18.0",
@@ -33,7 +43,16 @@
     "chai-as-promised": "^6.0.0",
     "eslint": "^3.11.1",
     "eslint-config-sanity": "^2.0.1",
+    "karma": "^1.3.0",
+    "karma-chrome-launcher": "^2.0.0",
+    "karma-firefox-launcher": "^1.0.0",
+    "karma-mocha": "^1.3.0",
+    "karma-phantomjs-launcher": "^1.0.2",
+    "karma-sourcemap-loader": "^0.3.7",
+    "karma-webpack": "^1.8.0",
     "mocha": "^3.2.0",
-    "nyc": "^10.0.0"
+    "nyc": "^10.0.0",
+    "pinkie-promise": "^2.0.1",
+    "webpack": "^1.13.3"
   }
 }

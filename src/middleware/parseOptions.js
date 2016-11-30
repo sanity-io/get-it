@@ -5,7 +5,11 @@ export const parseOptions = opts => {
   const options = objectAssign({}, opts)
 
   // Parse URL into parts
-  const url = urlParse(options.url, true)
+  const url = urlParse(
+    options.url,
+    {},  // Don't use current browser location
+    true // Parse query strings
+  )
 
   // Shallow-merge (override) existing query params
   if (options.query) {
@@ -13,11 +17,9 @@ export const parseOptions = opts => {
   }
 
   // Implicit POST if we have not specified a method but have a body
-  if (options.body && !options.method) {
-    options.method = 'POST'
-  } else if (options.method) {
-    options.method = options.method.toUpperCase()
-  }
+  options.method = (options.body && !options.method)
+    ? 'POST'
+    : (options.method || 'GET').toUpperCase()
 
   // Stringify URL
   options.url = url.toString()

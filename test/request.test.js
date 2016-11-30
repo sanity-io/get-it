@@ -1,30 +1,37 @@
-const {describe, it, before, after} = require('mocha')
+const chai = require('chai')
+const testServer = require('./helpers/server')
+const chaiAsPromised = require('chai-as-promised')
 const {base, debug, jsonResponse, jsonRequest} = require('../src/middleware')
 const {expectRequest, expectRequestBody} = require('./helpers/expectRequest')
 const requester = require('../src/index')
-const httpServer = require('./helpers/server')
+
+chai.use(chaiAsPromised)
 
 const debugRequest = debug({verbose: true})
-const baseUrl = base(`http://localhost:${httpServer.port}`)
+const baseUrl = base('http://localhost:9876/req-test')
 const isNode = typeof window === 'undefined'
-const ifNode = isNode ? it : it.skip
-// const ifBrowser = isNode ? it.skip : it
 
 describe('request', () => {
-  let server
+  const state = {server: {close: done => done()}}
 
-  before(() => httpServer().then(mockServer => {
-    server = mockServer
-  }))
+  if (isNode) {
+    before(done => {
+      testServer()
+        .then(httpServer => Object.assign(state, {server: httpServer}))
+        .then(done)
+    })
+  } else {
+    before(() => {
+      localStorage.debug = 'reqlib*'
+    })
+  }
 
   it('should be able to request a basic, plain-text file', () => {
+    const body = 'Just some plain text for you to consume'
     const request = requester([baseUrl, debugRequest])
     const req = request({url: '/plain-text'})
 
-    return expectRequest(req).to.eventually.have.property(
-      'body',
-      httpServer.responses.plainText
-    )
+    return expectRequest(req).to.eventually.have.property('body', body)
   })
 
   it('should be able to request data from a JSON-responding endpoint as JSON', () => {
@@ -46,11 +53,17 @@ describe('request', () => {
     return expectRequestBody(req).to.eventually.include.keys({method: 'POST', body: ''})
   })
 
-  ifNode('should be able to get a raw, unparsed body back (node)', () => {
+  it('should be able to get a raw, unparsed body back', isNode ? () => {
+    // Node.js (buffer)
     const request = requester([baseUrl, debugRequest])
     const req = request({url: '/plain-text', rawBody: true})
     return expectRequestBody(req).to.eventually.be.an.instanceOf(Buffer)
-      .and.deep.equal(Buffer.from(httpServer.responses.plainText, 'utf8'))
+      .and.deep.equal(Buffer.from(testServer.responses.plainText, 'utf8'))
+  } : () => {
+    // Browser (ArrayBuffer)
+    const request = requester([baseUrl, debugRequest])
+    const req = request({url: '/plain-text', rawBody: true})
+    return expectRequestBody(req).to.eventually.be.an.instanceOf(ArrayBuffer)
   })
 
   it('should serialize query strings', () => {
@@ -97,8 +110,8 @@ describe('request', () => {
 
   it('should not allow base middleware to add prefix on absolute urls', () => {
     const request = requester([baseUrl, jsonResponse])
-    const req = request({url: `http://localhost:${httpServer.port}/debug`})
-    return expectRequestBody(req).to.eventually.have.property('url', '/debug')
+    const req = request({url: `http://localhost:${testServer.port}/req-test/debug`})
+    return expectRequestBody(req).to.eventually.have.property('url', '/req-test/debug')
   })
 
 
@@ -112,7 +125,5 @@ describe('request', () => {
    *  - Timeouts
    **/
 
-  after(done => {
-    setImmediate(() => server.close(done))
-  })
+  after(done => state.server.close(done))
 })
