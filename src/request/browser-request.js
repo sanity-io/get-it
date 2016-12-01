@@ -72,14 +72,7 @@ module.exports = (options, channels, applyMiddleware) => {
     )
   }
 
-  function onLoad() {
-    if (aborted || loaded) {
-      return
-    }
-
-    // Prevent being called twice
-    loaded = true
-
+  function reduceResponse() {
     let statusCode = xhr.status
     let statusMessage = xhr.statusText
 
@@ -92,21 +85,32 @@ module.exports = (options, channels, applyMiddleware) => {
       statusMessage = xhr.status === 1223 ? 'No Content' : statusMessage
     }
 
-    if (statusCode === 0) {
-      // Unknown XHR error
-      channels.error.publish(new Error('Unknown XHR error'))
-      return
-    }
-
-    // Build normalized response
-    const reduced = {
+    return {
       body: xhr.response || xhr.responseText,
       url: options.url,
       method: options.method,
       headers: isXdr ? {} : parseHeaders(xhr.getAllResponseHeaders()),
       statusCode: statusCode,
-      statusMessage: statusMessage,
+      statusMessage: statusMessage
     }
+  }
+
+  function onLoad() {
+    if (aborted || loaded) {
+      return
+    }
+
+    // Prevent being called twice
+    loaded = true
+
+    // Unknown XHR error?
+    if (xhr.status === 0) {
+      channels.error.publish(new Error('Unknown XHR error'))
+      return
+    }
+
+    // Build normalized response
+    const reduced = reduceResponse()
 
     // Let middleware know the response has been received
     applyMiddleware('onResponse', reduced)
