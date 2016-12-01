@@ -1544,6 +1544,12 @@ flat-cache@^1.2.1:
     graceful-fs "^4.1.2"
     write "^0.2.1"
 
+follow-redirects@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.1.0.tgz#f0a07e20b96396f096873f16ea2b9638a79e7b0c"
+  dependencies:
+    debug "^2.2.0"
+
 for-each@^0.3.2:
   version "0.3.2"
   resolved "https://registry.yarnpkg.com/for-each/-/for-each-0.3.2.tgz#2c40450b9348e97f281322593ba96704b9abd4d4"

@@ -15,6 +15,7 @@ const isIE9 = (!isNode && window.XMLHttpRequest
   && !('withCredentials' in (new window.XMLHttpRequest())))
 
 const testNonIE9 = isIE9 ? it.skip : it
+const testNode = isNode ? it : it.skip
 const hostname = isNode ? 'localhost' : window.location.hostname
 const debugRequest = debug({verbose: true})
 const baseUrlPrefix = `http://${hostname}:9876/req-test`
@@ -182,11 +183,24 @@ describe('request', function () {
     return expectRequest(req).to.eventually.have.property('body').and.include('/deny')
   })
 
+  it('should handle redirects', () => {
+    const request = requester([baseUrl])
+    const req = request({url: '/redirect?n=8'})
+    return expectRequest(req).to.eventually.containSubset({
+      statusCode: 200,
+      body: 'Done redirecting'
+    })
+  })
+
+  testNode('should be able to set max redirects (node)', () => {
+    const request = requester([baseUrl])
+    const req = request({url: '/redirect?n=1'})
+    return expectRequest(req).to.eventually.be.rejectedWith(/Max redirects/)
+  })
+
   /**
    * Cases to test:
-   *  - Redirects
    *  - Retries
-   *  - HTTP errors
    *  - Timeouts
    **/
 

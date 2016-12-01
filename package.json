@@ -26,6 +26,7 @@
     "@sanity/observable": "^1.1.0",
     "create-error-class": "^3.0.2",
     "debug": "^2.3.3",
+    "follow-redirects": "^1.1.0",
     "global": "^4.3.1",
     "nano-pubsub": "^1.0.1",
     "object-assign": "^4.1.0",

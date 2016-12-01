@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 const url = require('url')
 const http = require('http')
 const zlib = require('zlib')
@@ -11,7 +12,8 @@ const responses = {
 
 const responseHandler = (req, res, next) => {
   const parts = url.parse(req.url, true)
-  const queryParam = (key, def) => parts.query[key] || def
+  const atMaxRedirects = parts.query.n >= 10
+
   switch (parts.pathname) {
     case '/req-test/query-string':
       res.setHeader('Content-Type', 'application/json')
@@ -48,8 +50,16 @@ const responseHandler = (req, res, next) => {
       res.setHeader('Content-Type', 'text/markdown')
       res.end('# Memorable tweets\n\n> they\'re good dogs Brent')
       break
+    case '/req-test/redirect':
+      res.statusCode = atMaxRedirects ? 200 : 302
+      res.setHeader(
+        atMaxRedirects ? 'Content-Type' : 'Location',
+        atMaxRedirects ? 'text/plain' : `/req-test/redirect?n=${Number(parts.query.n) + 1}`
+      )
+      res.end(atMaxRedirects ? 'Done redirecting' : '')
+      break
     case '/req-test/status':
-      res.statusCode = Number(queryParam('code', 200))
+      res.statusCode = Number(parts.query.code || 200)
       res.end('---')
       break
     default:

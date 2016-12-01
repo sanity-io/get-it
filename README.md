@@ -2,16 +2,16 @@
 
 ## Wanted features
 
-* [ ] Node and browser support (XHR), with small browser bundle footprint
+* [x] Node and browser support (XHR), with small browser bundle footprint
 * [x] Middleware-ish (like MJ's request lib)
 * [ ] Observable/promise/callback/eventemitter support as middleware (low-level by default)
-* [ ] Follow redirects (optional) up to limit
+* [x] Follow redirects (optional) up to limit
 * [ ] Configurable number of retries + "should retry" handler
 * [ ] Send file/buffer/stuff as body, should just work
 * [ ] Progress upload/download events as middleware (available on observable/eventemitter)
-* [ ] Parsing of JSON request/response payloads as middleware
+* [ x Parsing of JSON request/response payloads as middleware
 * [ ] Timeouts with errors that are catchable (connect/response as separate in node)
-* [ ] Gzip unwrapping support in node (browser automatically handles this)
+* [x] Gzip unwrapping support in node (browser automatically handles this)
 * [x] All HTTP methods supported (obviously)
 * [ ] Stream response middleware?
 * [ ] Developer-friendly assertions that are stripped in production to reduce bundle size and performance
