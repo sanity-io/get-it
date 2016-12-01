@@ -81,12 +81,15 @@ module.exports = (options, channels, applyMiddleware) => {
     loaded = true
 
     let statusCode = xhr.status
+    let statusMessage = xhr.statusText
+
     if (isXdr && statusCode === undefined) {
       // IE8 CORS GET successful response doesn't have a status field, but body is fine
       statusCode = 200
     } else {
       // Another IE bug where HTTP 204 somehow ends up as 1223
       statusCode = xhr.status === 1223 ? 204 : xhr.status
+      statusMessage = xhr.status === 1223 ? 'No Content' : statusMessage
     }
 
     if (statusCode === 0) {
@@ -102,7 +105,7 @@ module.exports = (options, channels, applyMiddleware) => {
       method: options.method,
       headers: isXdr ? {} : parseHeaders(xhr.getAllResponseHeaders()),
       statusCode: statusCode,
-      statusMessage: xhr.statusText,
+      statusMessage: statusMessage,
     }
 
     // Let middleware know the response has been received
