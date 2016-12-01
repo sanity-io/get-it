@@ -18,7 +18,7 @@ describe('request', () => {
     before(done => {
       testServer()
         .then(httpServer => Object.assign(state, {server: httpServer}))
-        .then(done)
+        .then(() => done())
     })
   } else {
     before(() => {
