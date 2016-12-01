@@ -11,6 +11,7 @@ const responses = {
 
 const responseHandler = (req, res, next) => {
   const parts = url.parse(req.url, true)
+  const queryParam = (key, def) => parts.query[key] || def
   switch (parts.pathname) {
     case '/req-test/query-string':
       res.setHeader('Content-Type', 'application/json')
@@ -41,6 +42,15 @@ const responseHandler = (req, res, next) => {
         JSON.stringify(['harder', 'better', 'faster', 'stronger']),
         (unused, result) => res.end(result)
       )
+      break
+    case '/req-test/headers':
+      res.setHeader('X-Custom-Header', 'supercustom')
+      res.setHeader('Content-Type', 'text/markdown')
+      res.end('# Memorable tweets\n\n> they\'re good dogs Brent')
+      break
+    case '/req-test/status':
+      res.statusCode = Number(queryParam('code', 200))
+      res.end('---')
       break
     default:
       if (next) {

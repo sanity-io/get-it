@@ -1,9 +1,17 @@
-const log = require('debug')('reqlib') // @todo fix requestlib name
+const debugIt = require('debug')
+
+const namespace = 'reqlib' // @todo fix requestlib name
+const log = debugIt(namespace)
 
 export const debug = (debugOpts = {}) => {
   const verbose = debugOpts.verbose
   return {
     preRequest: options => {
+      // Short-circuit if not enabled, to save some CPU cycles with formatting stuff
+      if (!debugIt.enabled(namespace)) {
+        return
+      }
+
       log('HTTP %s %s', options.method || 'GET', options.url)
 
       if (verbose && options.body && typeof options.body === 'string') {
@@ -16,6 +24,11 @@ export const debug = (debugOpts = {}) => {
     },
 
     onResponse: res => {
+      // Short-circuit if not enabled, to save some CPU cycles with formatting stuff
+      if (!debugIt.enabled(namespace)) {
+        return
+      }
+
       log('Response code: %s %s', res.statusCode, res.statusMessage)
 
       if (verbose && res.body) {
@@ -28,5 +41,14 @@ export const debug = (debugOpts = {}) => {
 function stringifyBody(res) {
   const contentType = (res.headers['content-type'] || '').toLowerCase()
   const isJson = contentType.indexOf('application/json') !== -1
-  return isJson ? JSON.stringify(res.body, null, 2) : res.body
+  return isJson ? tryFormat(res.body) : res.body
+}
+
+// Attempt pretty-formatting JSON
+function tryFormat(body) {
+  try {
+    return JSON.stringify(JSON.parse(body), null, 2)
+  } catch (err) {
+    return body
+  }
 }

@@ -10,6 +10,7 @@
   "scripts": {
     "coverage": "nyc --reporter=html --reporter=lcov --reporter=text _mocha",
     "karma": "karma start",
+    "ci": "npm run coverage && npm run karma && npm run lint",
     "lint": "eslint .",
     "test": "mocha",
     "posttest": "npm run lint"
@@ -23,6 +24,7 @@
   "license": "MIT",
   "dependencies": {
     "@sanity/observable": "^1.1.0",
+    "create-error-class": "^3.0.2",
     "debug": "^2.3.3",
     "global": "^4.3.1",
     "nano-pubsub": "^1.0.1",
@@ -41,6 +43,7 @@
     "babel-register": "^6.18.0",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
+    "chai-subset": "^1.3.0",
     "eslint": "^3.11.1",
     "eslint-config-sanity": "^2.0.1",
     "karma": "^1.3.0",
@@ -49,6 +52,7 @@
     "karma-mocha": "^1.3.0",
     "karma-phantomjs-launcher": "^1.0.2",
     "karma-sourcemap-loader": "^0.3.7",
+    "karma-virtualboxany-launcher": "^0.0.6",
     "karma-webpack": "^1.8.0",
     "mocha": "^3.2.0",
     "nyc": "^10.0.0",

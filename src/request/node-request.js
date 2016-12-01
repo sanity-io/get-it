@@ -7,8 +7,10 @@ const unzipResponse = require('unzip-response')
 
 // Reduce a fully fledged node-style response object to
 // something that works in both browser and node environment
-const reduceResponse = (res, body) => ({
+const reduceResponse = (res, reqUrl, method, body) => ({
   body,
+  url: reqUrl,
+  method: method,
   headers: res.headers,
   statusCode: res.statusCode,
   statusMessage: res.statusMessage,
@@ -41,11 +43,13 @@ module.exports = (options, channels, applyMiddleware) => {
         return
       }
 
-      const response = reduceResponse(res, options.rawBody ? data : data.toString())
-      response.body = applyMiddleware('parseResponseBody', response.body, response)
+      const body = options.rawBody ? data : data.toString()
+      const reduced = reduceResponse(res, options.url, reqOpts.method, body)
+      applyMiddleware('onResponse', reduced)
 
-      applyMiddleware('onResponse', response)
-      channels.response.publish(response)
+      const response = applyMiddleware('parseResponse', reduced)
+      const channel = response instanceof Error ? 'error' : 'response'
+      channels[channel].publish(response)
     })
   })
 

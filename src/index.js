@@ -8,7 +8,7 @@ const channelNames = ['response', 'error', 'abort']
 module.exports = function createRequester(initMiddleware = []) {
   const middleware = {
     processOptions: [parseOptions],
-    parseResponseBody: [],
+    parseResponse: [],
     preRequest: [],
     onResponse: []
   }

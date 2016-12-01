@@ -1,17 +1,28 @@
 const chai = require('chai')
-const testServer = require('./helpers/server')
 const chaiAsPromised = require('chai-as-promised')
-const {base, debug, jsonResponse, jsonRequest} = require('../src/middleware')
+const chaiSubset = require('chai-subset')
+const testServer = require('./helpers/server')
+const {base, debug, jsonResponse, jsonRequest, httpErrors} = require('../src/middleware')
 const {expectRequest, expectRequestBody} = require('./helpers/expectRequest')
 const requester = require('../src/index')
+const expect = chai.expect
 
+chai.use(chaiSubset)
 chai.use(chaiAsPromised)
 
-const debugRequest = debug({verbose: true})
-const baseUrl = base('http://localhost:9876/req-test')
 const isNode = typeof window === 'undefined'
+const isIE9 = (!isNode && window.XMLHttpRequest
+  && !('withCredentials' in (new window.XMLHttpRequest())))
 
-describe('request', () => {
+const testNonIE9 = isIE9 ? it.skip : it
+const hostname = isNode ? 'localhost' : window.location.hostname
+const debugRequest = debug({verbose: true})
+const baseUrlPrefix = `http://${hostname}:9876/req-test`
+const baseUrl = base(baseUrlPrefix)
+
+describe('request', function () {
+  this.timeout(15000)
+
   const state = {server: {close: done => done()}}
 
   if (isNode) {
@@ -22,7 +33,10 @@ describe('request', () => {
     })
   } else {
     before(() => {
-      localStorage.debug = 'reqlib*'
+      if (!window.EventSource) {
+        // IE only
+        localStorage.debug = 'reqlib*'
+      }
     })
   }
 
@@ -47,13 +61,17 @@ describe('request', () => {
     return expectRequestBody(req).to.eventually.eql(body)
   })
 
-  it('should be able to use json request body parser without data', () => {
+  it('should be able to use json request body parser without response body', () => {
     const request = requester([baseUrl, jsonResponse, jsonRequest, debugRequest])
     const req = request({url: '/debug', method: 'post'})
-    return expectRequestBody(req).to.eventually.include.keys({method: 'POST', body: ''})
+
+    return expectRequestBody(req).to.eventually.containSubset({
+      method: 'POST',
+      body: ''
+    })
   })
 
-  it('should be able to get a raw, unparsed body back', isNode ? () => {
+  testNonIE9('should be able to get a raw, unparsed body back', isNode ? () => {
     // Node.js (buffer)
     const request = requester([baseUrl, debugRequest])
     const req = request({url: '/plain-text', rawBody: true})
@@ -89,7 +107,7 @@ describe('request', () => {
   it('should be able to send PUT-requests with raw bodies', () => {
     const request = requester([baseUrl, jsonResponse, debugRequest])
     const req = request({url: '/debug', method: 'PUT', body: 'just a plain body'})
-    return expectRequestBody(req).to.eventually.include.keys({
+    return expectRequestBody(req).to.eventually.containSubset({
       method: 'PUT',
       body: 'just a plain body'
     })
@@ -105,20 +123,67 @@ describe('request', () => {
     const request = requester([baseUrl, jsonResponse])
     const req = request({url: '/debug', headers: {'X-My-Awesome-Header': 'absolutely'}})
     return expectRequestBody(req).to.eventually.have.property('headers')
-      .and.include.keys({'x-my-awesome-header': 'absolutely'})
+      .and.containSubset({'x-my-awesome-header': 'absolutely'})
   })
 
   it('should not allow base middleware to add prefix on absolute urls', () => {
     const request = requester([baseUrl, jsonResponse])
-    const req = request({url: `http://localhost:${testServer.port}/req-test/debug`})
+    const req = request({url: `http://${hostname}:${testServer.port}/req-test/debug`})
     return expectRequestBody(req).to.eventually.have.property('url', '/req-test/debug')
   })
 
+  it('should return the response headers', () => {
+    const request = requester([baseUrl])
+    const req = request({url: '/headers'})
+    return expectRequest(req).to.eventually.have.property('headers')
+      .and.containSubset({
+        'x-custom-header': 'supercustom',
+        'content-type': 'text/markdown'
+      })
+  })
+
+  it('should not respond with errors on HTTP >= 400 by default', () => {
+    const request = requester([baseUrl])
+    const req = request({url: '/status?code=400'})
+    return expectRequest(req).to.eventually.have.property('statusCode', 400)
+  })
+
+  it('should error when httpErrors middleware is enabled and response code is >= 400', done => {
+    const request = requester([baseUrl, httpErrors])
+    const req = request({url: '/status?code=400'})
+    req.response.subscribe(res => {
+      throw new Error('Response channel called when error channel should have been triggered')
+    })
+    req.error.subscribe(err => {
+      expect(err).to.be.an.instanceOf(Error)
+      expect(err.message).to.include('HTTP 400').and.include('Bad Request')
+      expect(err).to.have.property('response').and.containSubset({
+        url: `${baseUrlPrefix}/status?code=400`,
+        method: 'GET',
+        statusCode: 400,
+        statusMessage: 'Bad Request'
+      })
+
+      done()
+    })
+  })
+
+  // IE9 fails on cross-origin requests from http to https
+  testNonIE9('should handle https without issues', () => {
+    const request = requester()
+    const req = request({url: 'https://httpbin.org/robots.txt'})
+    return expectRequest(req).to.eventually.have.property('body')
+      .and.include('/deny')
+  })
+
+  it('should handle cross-origin requests without issues', () => {
+    const request = requester()
+    const req = request({url: `http://httpbin.org/robots.txt?cb=${Date.now()}`})
+    return expectRequest(req).to.eventually.have.property('body').and.include('/deny')
+  })
 
   /**
    * Cases to test:
-   *  - HTTP headers
-   *  - HTTPS
    *  - Redirects
    *  - Retries
    *  - HTTP errors

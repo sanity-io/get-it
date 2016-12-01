@@ -11,13 +11,12 @@ const XDomainRequest = hasXhr2 ? XmlHttpRequest : win.XDomainRequest
 module.exports = (options, channels, applyMiddleware) => {
   const cors = !sameOrigin(win.location.href, options.url)
   const xhr = cors ? new XDomainRequest() : new XmlHttpRequest()
-  const isXdr = xhr === win.XDomainRequest
+  const isXdr = win.XDomainRequest && xhr instanceof win.XDomainRequest
   const headers = options.headers
-
-  //console.log('cross-domain?', cors, 'xhr2?', hasXhr2, 'is xdr?', isXdr)
 
   // Request state
   let aborted = false
+  let loaded = false
 
   // Apply event handlers
   xhr.onerror = onError
@@ -29,13 +28,10 @@ module.exports = (options, channels, applyMiddleware) => {
   // IE9 must have onprogress be set to a unique function
   xhr.onprogress = () => { /* intentional noop */ }
 
-  if (hasXhr2) {
-    xhr.onload = onLoad
-  } else {
-    xhr.onreadystatechange = () => {
-      if (xhr.readyState === 4) {
-        onLoad()
-      }
+  xhr.onload = onLoad
+  xhr.onreadystatechange = () => {
+    if (xhr.readyState === 4) {
+      onLoad()
     }
   }
 
@@ -77,9 +73,12 @@ module.exports = (options, channels, applyMiddleware) => {
   }
 
   function onLoad() {
-    if (aborted) {
+    if (aborted || loaded) {
       return
     }
+
+    // Prevent being called twice
+    loaded = true
 
     let statusCode = xhr.status
     if (isXdr && statusCode === undefined) {
@@ -96,18 +95,22 @@ module.exports = (options, channels, applyMiddleware) => {
       return
     }
 
-    // Build normalize response
-    const response = {
+    // Build normalized response
+    const reduced = {
       body: xhr.response || xhr.responseText,
+      url: options.url,
+      method: options.method,
       headers: isXdr ? {} : parseHeaders(xhr.getAllResponseHeaders()),
       statusCode: statusCode,
       statusMessage: xhr.statusText,
     }
 
-    // Allow parsing of body
-    response.body = applyMiddleware('parseResponseBody', response.body, response)
+    // Let middleware know the response has been received
+    applyMiddleware('onResponse', reduced)
 
-    applyMiddleware('onResponse', response)
-    channels.response.publish(response)
+    // Allow middleware to parse the response
+    const response = applyMiddleware('parseResponse', reduced)
+    const channel = response instanceof Error ? 'error' : 'response'
+    channels[channel].publish(response)
   }
 }
