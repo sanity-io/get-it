@@ -19,21 +19,34 @@ const reduceResponse = (res, reqUrl, method, body) => ({
 
 module.exports = (context, callback) => {
   const options = context.options
-  const contentLength = options.body ? {'Content-Length': options.body.length} : {}
   const uri = objectAssign({}, options, url.parse(options.url))
+  const bodyType = typeof options.body
 
+  if (bodyType !== 'undefined' && bodyType !== 'string' && !Buffer.isBuffer(options.body)) {
+    throw new Error(`Request body must be a string or buffer, got ${bodyType}`)
+  }
+
+  const contentLength = options.body ? {'Content-Length': options.body.length} : {}
+
+  // Let middleware know we're about to do a request
+  context.applyMiddleware('onRequest', options)
+
+  // Create a reduced subset of options meant for the http.request() method
   const reqOpts = objectAssign(uri, {
     method: options.method,
     headers: objectAssign({}, options.headers, contentLength)
   })
 
   let protocol = uri.protocol === 'https:' ? https : http
+
+  // We're using the follow-redirects module to transparently follow redirects
   if (options.maxRedirects !== 0) {
     protocol = uri.protocol === 'https:' ? follow.https : follow.http
     reqOpts.maxRedirects = options.maxRedirects || 5
   }
 
   const request = protocol.request(reqOpts, res => {
+    // See if we should try to unzip the response
     const tryUnzip = reqOpts.method !== 'HEAD'
     const bodyStream = tryUnzip ? unzipResponse(res) : res
 

@@ -6,7 +6,7 @@ export const HttpError = createErrorClass('HttpError', function (res) {
 })
 
 export const httpErrors = {
-  parseResponse: res => {
+  onResponse: res => {
     const isHttpError = res.statusCode >= 400
     if (!isHttpError) {
       return res

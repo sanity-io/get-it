@@ -5,35 +5,51 @@ const log = debugIt(namespace)
 
 export const debug = (debugOpts = {}) => {
   const verbose = debugOpts.verbose
+  let requestId = 0
+
   return {
-    preRequest: options => {
+    processOptions: options => {
+      options.requestId = options.requestId || ++requestId
+      return options
+    },
+
+    onRequest: options => {
       // Short-circuit if not enabled, to save some CPU cycles with formatting stuff
       if (!debugIt.enabled(namespace)) {
         return
       }
 
-      log('HTTP %s %s', options.method || 'GET', options.url)
+      log('[%s] HTTP %s %s', options.requestId, options.method || 'GET', options.url)
 
       if (verbose && options.body && typeof options.body === 'string') {
-        log('Request body: %s', options.body)
+        log('[%s] Request body: %s', options.requestId, options.body)
       }
 
       if (verbose && options.headers) {
-        log('Request headers: %s', JSON.stringify(options.headers, null, 2))
+        log('[%s] Request headers: %s', options.requestId, JSON.stringify(options.headers, null, 2))
       }
     },
 
-    onResponse: res => {
+    onResponse: (res, context) => {
       // Short-circuit if not enabled, to save some CPU cycles with formatting stuff
       if (!debugIt.enabled(namespace)) {
-        return
+        return res
       }
 
-      log('Response code: %s %s', res.statusCode, res.statusMessage)
+      const reqId = context.options.requestId
+
+      log('[%s] Response code: %s %s', reqId, res.statusCode, res.statusMessage)
 
       if (verbose && res.body) {
-        log('Response body: %s', stringifyBody(res))
+        log('[%s] Response body: %s', reqId, stringifyBody(res))
       }
+
+      return res
+    },
+
+    onError: (err, context) => {
+      log('[%s] ERROR: %s', context.options.requestId, err.message)
+      return err
     }
   }
 }

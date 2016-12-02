@@ -2,7 +2,7 @@ const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 const chaiSubset = require('chai-subset')
 const testServer = require('./helpers/server')
-const {base, debug, jsonResponse, jsonRequest, httpErrors} = require('../src/middleware')
+const {base, retry, debug, jsonResponse, jsonRequest, httpErrors} = require('../src/middleware')
 const {expectRequest, expectRequestBody} = require('./helpers/expectRequest')
 const requester = require('../src/index')
 const expect = chai.expect
@@ -62,6 +62,25 @@ describe('request', function () {
     return expectRequestBody(req).to.eventually.eql(body)
   })
 
+  it('should be able to use json response body parser on non-json responses', () => {
+    const request = requester([baseUrl, jsonResponse, debugRequest])
+    const req = request({url: '/plain-text'})
+    return expectRequestBody(req).to.eventually.eql('Just some plain text for you to consume')
+  })
+
+  testNode('should be able to post a Buffer as body in node', () => {
+    const request = requester([baseUrl, debugRequest])
+    const req = request({url: '/echo', body: Buffer.from('Foo bar', 'utf8')})
+    return expectRequestBody(req).to.eventually.eql('Foo bar')
+  })
+
+  testNode('should throw when trying to post invalid stuff', () => {
+    const request = requester([baseUrl, debugRequest])
+    expect(() => {
+      request({url: '/echo', method: 'post', body: {}})
+    }).to.throw(/string or buffer/)
+  })
+
   it('should be able to use json request body parser without response body', () => {
     const request = requester([baseUrl, jsonResponse, jsonRequest, debugRequest])
     const req = request({url: '/debug', method: 'post'})
@@ -77,7 +96,7 @@ describe('request', function () {
     const request = requester([baseUrl, debugRequest])
     const req = request({url: '/plain-text', rawBody: true})
     return expectRequestBody(req).to.eventually.be.an.instanceOf(Buffer)
-      .and.deep.equal(Buffer.from(testServer.responses.plainText, 'utf8'))
+      .and.deep.equal(Buffer.from('Just some plain text for you to consume', 'utf8'))
   } : () => {
     // Browser (ArrayBuffer)
     const request = requester([baseUrl, debugRequest])
@@ -103,6 +122,15 @@ describe('request', function () {
     const request = requester([baseUrl, jsonResponse, debugRequest])
     const req = request({url: '/gzip'})
     return expectRequestBody(req).to.eventually.deep.equal(['harder', 'better', 'faster', 'stronger'])
+  })
+
+  it('should not return a body on HEAD-requests', () => {
+    const request = requester([baseUrl, jsonResponse])
+    const req = request({url: '/gzip', method: 'HEAD'})
+    return expectRequest(req).to.eventually.containSubset({
+      statusCode: 200,
+      method: 'HEAD'
+    })
   })
 
   it('should be able to send PUT-requests with raw bodies', () => {
@@ -169,6 +197,15 @@ describe('request', function () {
     })
   })
 
+  it('should not error when httpErrors middleware is enabled and response code is < 400', () => {
+    const request = requester([baseUrl, httpErrors])
+    const req = request({url: '/plain-text'})
+    expectRequest(req).to.eventually.containSubset({
+      statusCode: 200,
+      body: 'Just some plain text for you to consume'
+    })
+  })
+
   // IE9 fails on cross-origin requests from http to https
   testNonIE9('should handle https without issues', () => {
     const request = requester()
@@ -194,14 +231,55 @@ describe('request', function () {
 
   testNode('should be able to set max redirects (node)', () => {
     const request = requester([baseUrl])
-    const req = request({url: '/redirect?n=1'})
+    const req = request({url: '/redirect?n=7', maxRedirects: 2})
     return expectRequest(req).to.eventually.be.rejectedWith(/Max redirects/)
+  })
+
+  testNode('should be able to be told NOT to follow redirects', () => {
+    const request = requester([baseUrl])
+    const req = request({url: '/redirect?n=8', maxRedirects: 0})
+    return expectRequest(req).to.eventually.containSubset({statusCode: 302})
+  })
+
+  it('should handle retries when retry middleware is used', () => {
+    const request = requester([baseUrl, debugRequest, retry()])
+    const req = request({url: `/fail?uuid=${Date.now()}`})
+
+    return expectRequest(req).to.eventually.containSubset({
+      statusCode: 200,
+      body: 'Success after failure'
+    })
+  })
+
+  it('should be able to set max retries ', () => {
+    const request = requester([baseUrl, retry({maxRetries: 1})])
+    const req = request({url: `/fail?uuid=${Date.now()}`})
+    return expectRequest(req).to.eventually.be.rejectedWith(/socket/)
+  })
+
+  it('should be able to set a custom function on whether or not we should retry', () => {
+    const shouldRetry = (error, retryCount) => retryCount !== 1
+    const request = requester([baseUrl, debugRequest, httpErrors, retry({shouldRetry})])
+    const req = request({url: '/status?code=503'})
+    return expectRequest(req).to.eventually.be.rejectedWith(/HTTP 503/)
+  })
+
+  it('should handle retries with a delay function ', () => {
+    const retryDelay = () => 375
+    const request = requester([baseUrl, retry({retryDelay})])
+
+    const startTime = Date.now()
+    const req = request({url: `/fail?uuid=${Date.now()}`})
+    return expectRequest(req).to.eventually.satisfy(() => {
+      const timeUsed = Date.now() - startTime
+      return timeUsed > 1000 && timeUsed < 1750
+    }, 'respects the retry delay (roughly)')
   })
 
   /**
    * Cases to test:
-   *  - Retries
    *  - Timeouts
+   *  - Cancel
    *  - Auth
    **/
 

@@ -15,6 +15,9 @@ module.exports = (context, callback) => {
   const isXdr = win.XDomainRequest && xhr instanceof win.XDomainRequest
   const headers = options.headers
 
+  // Let middleware know we're about to do a request
+  context.applyMiddleware('onRequest', options)
+
   // Request state
   let aborted = false
   let loaded = false

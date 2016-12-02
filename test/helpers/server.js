@@ -5,14 +5,26 @@ const zlib = require('zlib')
 const simpleConcat = require('simple-concat')
 const debugRequest = require('./debugRequest')
 
-const port = 9876
-const responses = {
-  plainText: 'Just some plain text for you to consume'
+const createError = (code, msg) => {
+  const err = new Error(msg || code)
+  err.code = code
+  return err
 }
+
+const port = 9876
+const state = {failures: {}}
 
 const responseHandler = (req, res, next) => {
   const parts = url.parse(req.url, true)
-  const atMaxRedirects = parts.query.n >= 10
+  const atMax = parts.query.n >= 10
+  const uuid = parts.query.uuid
+  const incrementFailureCount = () => {
+    if (!state.failures[uuid]) {
+      state.failures[uuid] = 0
+    }
+
+    return ++state.failures[uuid]
+  }
 
   switch (parts.pathname) {
     case '/req-test/query-string':
@@ -21,7 +33,7 @@ const responseHandler = (req, res, next) => {
       break
     case '/req-test/plain-text':
       res.setHeader('Content-Type', 'text/plain')
-      res.end(responses.plainText)
+      res.end('Just some plain text for you to consume')
       break
     case '/req-test/json':
       res.setHeader('Content-Type', 'application/json')
@@ -29,6 +41,9 @@ const responseHandler = (req, res, next) => {
       break
     case '/req-test/json-echo':
       res.setHeader('Content-Type', 'application/json')
+      req.pipe(res)
+      break
+    case '/req-test/echo':
       req.pipe(res)
       break
     case '/req-test/debug':
@@ -51,12 +66,20 @@ const responseHandler = (req, res, next) => {
       res.end('# Memorable tweets\n\n> they\'re good dogs Brent')
       break
     case '/req-test/redirect':
-      res.statusCode = atMaxRedirects ? 200 : 302
+      res.statusCode = atMax ? 200 : 302
       res.setHeader(
-        atMaxRedirects ? 'Content-Type' : 'Location',
-        atMaxRedirects ? 'text/plain' : `/req-test/redirect?n=${Number(parts.query.n) + 1}`
+        atMax ? 'Content-Type' : 'Location',
+        atMax ? 'text/plain' : `/req-test/redirect?n=${Number(parts.query.n) + 1}`
       )
-      res.end(atMaxRedirects ? 'Done redirecting' : '')
+      res.end(atMax ? 'Done redirecting' : '')
+      break
+    case '/req-test/fail':
+      if (incrementFailureCount() >= 4) {
+        res.end('Success after failure')
+        break
+      }
+
+      res.destroy(createError(parts.query.error || 'ECONNREFUSED'))
       break
     case '/req-test/status':
       res.statusCode = Number(parts.query.code || 200)
@@ -81,7 +104,6 @@ const createServer = () => {
 }
 
 createServer.port = port
-createServer.responses = responses
 createServer.responseHandler = responseHandler
 createServer.responseHandlerFactory = function () {
   return responseHandler
