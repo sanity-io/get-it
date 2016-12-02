@@ -8,7 +8,7 @@ const XmlHttpRequest = win.XMLHttpRequest || noop
 const hasXhr2 = 'withCredentials' in (new XmlHttpRequest())
 const XDomainRequest = hasXhr2 ? XmlHttpRequest : win.XDomainRequest
 
-module.exports = (options, channels, applyMiddleware) => {
+module.exports = (options, context, callback) => {
   const cors = !sameOrigin(win.location.href, options.url)
   const xhr = cors ? new XDomainRequest() : new XmlHttpRequest()
   const isXdr = win.XDomainRequest && xhr instanceof win.XDomainRequest
@@ -60,16 +60,10 @@ module.exports = (options, channels, applyMiddleware) => {
     xhr.responseType = 'arraybuffer'
   }
 
-  // Let middleware know we're about to do a request
-  applyMiddleware('preRequest', options)
-
   xhr.send(options.body || null)
 
   function onError(err) {
-    channels.error.publish(err instanceof Error
-      ? err
-      : new Error(`${err || 'Unknown XMLHttpRequest error'}`)
-    )
+    callback(err instanceof Error ? err : new Error(`${err || 'Unknown XMLHttpRequest error'}`))
   }
 
   function reduceResponse() {
@@ -103,21 +97,8 @@ module.exports = (options, channels, applyMiddleware) => {
     // Prevent being called twice
     loaded = true
 
-    // Unknown XHR error?
-    if (xhr.status === 0) {
-      channels.error.publish(new Error('Unknown XHR error'))
-      return
-    }
-
-    // Build normalized response
-    const reduced = reduceResponse()
-
-    // Let middleware know the response has been received
-    applyMiddleware('onResponse', reduced)
-
-    // Allow middleware to parse the response
-    const response = applyMiddleware('parseResponse', reduced)
-    const channel = response instanceof Error ? 'error' : 'response'
-    channels[channel].publish(response)
+    const err = xhr.status === 0 && new Error('Unknown XHR error')
+    const res = !err && reduceResponse()
+    callback(err, res)
   }
 }

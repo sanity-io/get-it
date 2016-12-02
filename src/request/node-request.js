@@ -17,7 +17,7 @@ const reduceResponse = (res, reqUrl, method, body) => ({
   statusMessage: res.statusMessage,
 })
 
-module.exports = (options, channels, applyMiddleware) => {
+module.exports = (options, context, callback) => {
   const contentLength = options.body ? {'Content-Length': options.body.length} : {}
   const uri = objectAssign({}, options, url.parse(options.url))
 
@@ -32,9 +32,6 @@ module.exports = (options, channels, applyMiddleware) => {
     reqOpts.maxRedirects = options.maxRedirects || 5
   }
 
-  // Let middleware know we're about to do a request
-  applyMiddleware('preRequest', options)
-
   const request = protocol.request(reqOpts, res => {
     const tryUnzip = reqOpts.method !== 'HEAD'
     const bodyStream = tryUnzip ? unzipResponse(res) : res
@@ -42,20 +39,15 @@ module.exports = (options, channels, applyMiddleware) => {
     // Concatenate the response body, then parse the response with middlewares
     concat(bodyStream, (err, data) => {
       if (err) {
-        channels.error.publish(err)
-        return
+        return callback(err)
       }
 
       const body = options.rawBody ? data : data.toString()
       const reduced = reduceResponse(res, options.url, reqOpts.method, body)
-      applyMiddleware('onResponse', reduced)
-
-      const response = applyMiddleware('parseResponse', reduced)
-      const channel = response instanceof Error ? 'error' : 'response'
-      channels[channel].publish(response)
+      return callback(null, reduced)
     })
   })
 
-  request.on('error', err => channels.error.publish(err))
+  request.on('error', callback)
   request.end(options.body)
 }

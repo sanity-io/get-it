@@ -25,8 +25,29 @@ module.exports = function createRequester(initMiddleware = []) {
     // Parse the passed options
     const options = applyMiddleware('processOptions', opts)
 
-    // Events will be triggered on individual channels
-    httpRequest(options, channels, applyMiddleware)
+    // Build a context option we can pass to child handlers
+    const context = {channels, applyMiddleware}
+
+    // Let middleware know we're about to do a request
+    applyMiddleware('preRequest', options)
+
+    // Let request adapters (node/browser) perform the actual request
+    httpRequest(options, context, (err, res) => {
+      if (err) {
+        // @todo hook in retry here?
+        channels.error.publish(err)
+        return
+      }
+
+      // Notify middleware about the response
+      applyMiddleware('onResponse', res)
+
+      // Allow middleware to parse the response, possibly returning an error,
+      // otherwise return the parsed response
+      const response = applyMiddleware('parseResponse', res)
+      const channel = response instanceof Error ? 'error' : 'response'
+      channels[channel].publish(response)
+    })
 
     // @todo middleware that modifies return value
     return channels

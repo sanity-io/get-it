@@ -202,6 +202,7 @@ describe('request', function () {
    * Cases to test:
    *  - Retries
    *  - Timeouts
+   *  - Auth
    **/
 
   after(done => state.server.close(done))
