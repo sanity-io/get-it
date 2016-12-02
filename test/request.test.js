@@ -244,7 +244,8 @@ describe('request', function () {
 
   it('should handle retries when retry middleware is used', () => {
     const request = requester([baseUrl, debugRequest, retry()])
-    const successAt = isNode ? 4 : 8 // Browsers have a weird thing where they might auto-retry on network errors
+    const browserAt = isIE9 ? 4 : 8
+    const successAt = isNode ? 4 : browserAt // Browsers have a weird thing where they might auto-retry on network errors
     const req = request({url: `/fail?uuid=${Math.random()}&n=${successAt}`})
 
     return expectRequest(req).to.eventually.containSubset({
