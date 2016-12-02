@@ -17,7 +17,8 @@ const reduceResponse = (res, reqUrl, method, body) => ({
   statusMessage: res.statusMessage,
 })
 
-module.exports = (options, context, callback) => {
+module.exports = (context, callback) => {
+  const options = context.options
   const contentLength = options.body ? {'Content-Length': options.body.length} : {}
   const uri = objectAssign({}, options, url.parse(options.url))
 

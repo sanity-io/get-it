@@ -8,7 +8,8 @@ const XmlHttpRequest = win.XMLHttpRequest || noop
 const hasXhr2 = 'withCredentials' in (new XmlHttpRequest())
 const XDomainRequest = hasXhr2 ? XmlHttpRequest : win.XDomainRequest
 
-module.exports = (options, context, callback) => {
+module.exports = (context, callback) => {
+  const options = context.options
   const cors = !sameOrigin(win.location.href, options.url)
   const xhr = cors ? new XDomainRequest() : new XmlHttpRequest()
   const isXdr = win.XDomainRequest && xhr instanceof win.XDomainRequest
