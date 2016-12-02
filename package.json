@@ -5,7 +5,9 @@
   "main": "lib/index.js",
   "browser": {
     "./src/request/node-request.js": "./src/request/browser-request.js",
-    "./lib/request/node-request.js": "./lib/request/browser-request.js"
+    "./lib/request/node-request.js": "./lib/request/browser-request.js",
+    "./src/util/node-shouldRetry.js": "./src/util/browser-shouldRetry.js",
+    "./lib/util/node-shouldRetry.js": "./lib/util/browser-shouldRetry.js"
   },
   "scripts": {
     "coverage": "nyc --reporter=html --reporter=lcov --reporter=text _mocha",
@@ -28,6 +30,7 @@
     "debug": "^2.3.3",
     "follow-redirects": "^1.1.0",
     "global": "^4.3.1",
+    "is-retry-allowed": "^1.1.0",
     "nano-pubsub": "^1.0.1",
     "object-assign": "^4.1.0",
     "parse-headers": "^2.0.1",

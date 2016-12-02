@@ -2,12 +2,16 @@
 const webpackConfig = require('./webpack.config')
 const server = require('./test/helpers/server')
 
+const allBrowsers = ['Chrome', 'PhantomJS', 'Firefox']
+
 const virtualOnly = process.env.VIRTUAL_ONLY || false
+const envBrowsers = process.env.BROWSERS || allBrowsers.join(',')
 const virtual = process.env.VIRTUAL || process.env.VIRTUAL_ONLY || false
 const keepOpen = process.env.KEEP_OPEN || false
 
 const virtuals = ['VirtualIE9']
-const browsers = ['Chrome', 'PhantomJS', 'Firefox'].concat(virtual ? virtuals : [])
+const baseBrowsers = envBrowsers.split(',')
+const browsers = baseBrowsers.concat(virtual ? virtuals : [])
 
 const useBrowsers = virtualOnly ? virtuals : browsers
 

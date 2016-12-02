@@ -16,7 +16,8 @@ const state = {failures: {}}
 
 const responseHandler = (req, res, next) => {
   const parts = url.parse(req.url, true)
-  const atMax = parts.query.n >= 10
+  const num = Number(parts.query.n)
+  const atMax = num >= 10
   const uuid = parts.query.uuid
   const incrementFailureCount = () => {
     if (!state.failures[uuid]) {
@@ -69,12 +70,12 @@ const responseHandler = (req, res, next) => {
       res.statusCode = atMax ? 200 : 302
       res.setHeader(
         atMax ? 'Content-Type' : 'Location',
-        atMax ? 'text/plain' : `/req-test/redirect?n=${Number(parts.query.n) + 1}`
+        atMax ? 'text/plain' : `/req-test/redirect?n=${num + 1}`
       )
       res.end(atMax ? 'Done redirecting' : '')
       break
     case '/req-test/fail':
-      if (incrementFailureCount() >= 4) {
+      if (incrementFailureCount() >= (num || 4)) {
         res.end('Success after failure')
         break
       }

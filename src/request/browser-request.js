@@ -11,7 +11,10 @@ const XDomainRequest = hasXhr2 ? XmlHttpRequest : win.XDomainRequest
 module.exports = (context, callback) => {
   const options = context.options
   const cors = !sameOrigin(win.location.href, options.url)
-  const xhr = cors ? new XDomainRequest() : new XmlHttpRequest()
+
+  // We'll want to null out the request on success/failure
+  let xhr = cors ? new XDomainRequest() : new XmlHttpRequest()
+
   const isXdr = win.XDomainRequest && xhr instanceof win.XDomainRequest
   const headers = options.headers
 
@@ -32,11 +35,18 @@ module.exports = (context, callback) => {
   // IE9 must have onprogress be set to a unique function
   xhr.onprogress = () => { /* intentional noop */ }
 
-  xhr.onload = onLoad
-  xhr.onreadystatechange = () => {
-    if (xhr.readyState === 4) {
-      onLoad()
+  const loadEvent = isXdr ? 'onload' : 'onreadystatechange'
+  xhr[loadEvent] = () => {
+    if (xhr.readyState !== 4 && !isXdr) {
+      return
     }
+
+    // Will be handled by onError
+    if (xhr.status === 0) {
+      return
+    }
+
+    onLoad()
   }
 
   // @todo two last options to open() is username/password
@@ -66,8 +76,21 @@ module.exports = (context, callback) => {
 
   xhr.send(options.body || null)
 
-  function onError(err) {
-    callback(err instanceof Error ? err : new Error(`${err || 'Unknown XMLHttpRequest error'}`))
+  function onError() {
+    if (loaded) {
+      return
+    }
+
+    // Clean up
+    loaded = true
+    xhr = null
+
+    // Annoyingly, details are extremely scarce and hidden from us.
+    // We only really know that it is a network error
+    const err = new Error(`Network error while attempting to reach ${options.url}`)
+    err.isNetworkError = true
+    err.request = options
+    callback(err)
   }
 
   function reduceResponse() {
@@ -98,11 +121,13 @@ module.exports = (context, callback) => {
       return
     }
 
+    if (xhr.status === 0) {
+      onError(new Error('Unknown XHR error'))
+      return
+    }
+
     // Prevent being called twice
     loaded = true
-
-    const err = xhr.status === 0 && new Error('Unknown XHR error')
-    const res = !err && reduceResponse()
-    callback(err, res)
+    callback(null, reduceResponse())
   }
 }

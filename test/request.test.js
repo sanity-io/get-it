@@ -20,6 +20,7 @@ const hostname = isNode ? 'localhost' : window.location.hostname
 const debugRequest = debug({verbose: true})
 const baseUrlPrefix = `http://${hostname}:9876/req-test`
 const baseUrl = base(baseUrlPrefix)
+const retry5xx = err => err.response.statusCode >= 500
 
 describe('request', function () {
   this.timeout(15000)
@@ -243,7 +244,8 @@ describe('request', function () {
 
   it('should handle retries when retry middleware is used', () => {
     const request = requester([baseUrl, debugRequest, retry()])
-    const req = request({url: `/fail?uuid=${Date.now()}`})
+    const successAt = isNode ? 4 : 8 // Browsers have a weird thing where they might auto-retry on network errors
+    const req = request({url: `/fail?uuid=${Math.random()}&n=${successAt}`})
 
     return expectRequest(req).to.eventually.containSubset({
       statusCode: 200,
@@ -251,10 +253,12 @@ describe('request', function () {
     })
   })
 
-  it('should be able to set max retries ', () => {
-    const request = requester([baseUrl, retry({maxRetries: 1})])
-    const req = request({url: `/fail?uuid=${Date.now()}`})
-    return expectRequest(req).to.eventually.be.rejectedWith(/socket/)
+  // Browsers are not playing nice in regards to network errors and retries
+  it('should be able to set max retries', function () {
+    this.timeout(250)
+    const request = requester([baseUrl, httpErrors, retry({maxRetries: 1, shouldRetry: retry5xx})])
+    const req = request({url: '/status?code=500'})
+    return expectRequest(req).to.eventually.be.rejectedWith(/HTTP 500/i)
   })
 
   it('should be able to set a custom function on whether or not we should retry', () => {
@@ -264,12 +268,13 @@ describe('request', function () {
     return expectRequest(req).to.eventually.be.rejectedWith(/HTTP 503/)
   })
 
-  it('should handle retries with a delay function ', () => {
+  // Browsers are really flaky with retries, revisit later
+  testNode('should handle retries with a delay function ', () => {
     const retryDelay = () => 375
     const request = requester([baseUrl, retry({retryDelay})])
 
     const startTime = Date.now()
-    const req = request({url: `/fail?uuid=${Date.now()}`})
+    const req = request({url: `/fail?uuid=${Math.random()}&n=4`})
     return expectRequest(req).to.eventually.satisfy(() => {
       const timeUsed = Date.now() - startTime
       return timeUsed > 1000 && timeUsed < 1750
