@@ -9,7 +9,8 @@ const {
   debugRequest,
   baseUrl,
   baseUrlPrefix,
-  isNode
+  isNode,
+  bufferFrom
 } = require('./helpers')
 
 describe('basics', function () {
@@ -23,9 +24,17 @@ describe('basics', function () {
     return expectRequest(req).to.eventually.have.property('body', body)
   })
 
+  it('should transform string to url option', () => {
+    const body = 'Just some plain text for you to consume'
+    const request = requester([baseUrl, debugRequest])
+    const req = request('/plain-text')
+
+    return expectRequest(req).to.eventually.have.property('body', body)
+  })
+
   testNode('should be able to post a Buffer as body in node', () => {
     const request = requester([baseUrl, debugRequest])
-    const req = request({url: '/echo', body: Buffer.from('Foo bar', 'utf8')})
+    const req = request({url: '/echo', body: bufferFrom('Foo bar')})
     return expectRequestBody(req).to.eventually.eql('Foo bar')
   })
 
@@ -41,7 +50,7 @@ describe('basics', function () {
     const request = requester([baseUrl, debugRequest])
     const req = request({url: '/plain-text', rawBody: true})
     return expectRequestBody(req).to.eventually.be.an.instanceOf(Buffer)
-      .and.deep.equal(Buffer.from('Just some plain text for you to consume', 'utf8'))
+      .and.deep.equal(bufferFrom('Just some plain text for you to consume'))
   } : () => {
     // Browser (ArrayBuffer)
     const request = requester([baseUrl, debugRequest])
