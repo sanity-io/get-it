@@ -83,6 +83,9 @@ const responseHandler = (req, res, next) => {
 
       res.destroy(createError(parts.query.error || 'ECONNREFUSED'))
       break
+    case '/req-test/permafail':
+      res.destroy(createError(parts.query.error || 'ECONNREFUSED'))
+      break
     case '/req-test/status':
       res.statusCode = Number(parts.query.code || 200)
       res.end('---')

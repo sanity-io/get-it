@@ -10,7 +10,8 @@ module.exports = function createRequester(initMiddleware = []) {
     processOptions: [processOptions],
     onRequest: [],
     onResponse: [],
-    onError: []
+    onError: [],
+    onReturn: []
   }
 
   function request(opts) {
@@ -40,8 +41,7 @@ module.exports = function createRequester(initMiddleware = []) {
     // Let request adapters (node/browser) perform the actual request
     httpRequest(context, onResponse)
 
-    // @todo middleware that modifies return value
-    return channels
+    return applyMiddleware('onReturn', channels)
 
     function onResponse(reqErr, res) {
       let error = reqErr

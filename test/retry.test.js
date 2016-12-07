@@ -15,7 +15,7 @@ describe('retry middleware', () => {
 
   it('should handle retries when retry middleware is used', () => {
     const request = requester([baseUrl, debugRequest, retry()])
-    const browserAt = isIE9 ? 4 : 8
+    const browserAt = isIE9 ? 4 : 7
     const successAt = isNode ? 4 : browserAt // Browsers have a weird thing where they might auto-retry on network errors
     const req = request({url: `/fail?uuid=${Math.random()}&n=${successAt}`})
 
