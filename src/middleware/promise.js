@@ -10,6 +10,7 @@ export const promise = (opts = {}) => {
     onReturn: channels => new Promise((resolve, reject) => {
       channels.error.subscribe(reject)
       channels.response.subscribe(resolve)
+      channels.request.publish()
     })
   }
 }

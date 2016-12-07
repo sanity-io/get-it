@@ -3,7 +3,7 @@ import middlewareReducer from './util/middlewareReducer'
 import {processOptions} from './middleware/defaultOptionsProcessor'
 import httpRequest from './request' // node-request in node, browser-request in browsers
 
-const channelNames = ['response', 'error', 'abort']
+const channelNames = ['request', 'response', 'error', 'abort']
 
 module.exports = function createRequester(initMiddleware = []) {
   const middleware = {
@@ -14,7 +14,7 @@ module.exports = function createRequester(initMiddleware = []) {
     onReturn: []
   }
 
-  function request(opts) {
+  function request(opts, ...args) {
     const channels = channelNames.reduce((target, name) => {
       target[name] = pubsub()
       return target
@@ -38,10 +38,26 @@ module.exports = function createRequester(initMiddleware = []) {
       }
     }
 
-    // Let request adapters (node/browser) perform the actual request
-    httpRequest(context, onResponse)
+    const unsubscribe = channels.request.subscribe(() => {
+      // We only want to perform the request on the first triggered event
+      unsubscribe()
 
-    return applyMiddleware('onReturn', channels)
+      // Let request adapters (node/browser) perform the actual request
+      httpRequest(context, onResponse)
+    })
+
+    // See if any middleware wants to modify the return value - for instance
+    // the promise or observable middlewares
+    const returnValue = applyMiddleware('onReturn', channels, ...args)
+
+    // If return value has been modified by a middleware, we expect the middleware
+    // to publish on the 'request' channel. If it hasn't been modified, we want to
+    // trigger it right away
+    if (returnValue === channels) {
+      channels.request.publish()
+    }
+
+    return returnValue
 
     function onResponse(reqErr, res) {
       let error = reqErr
@@ -71,6 +87,10 @@ module.exports = function createRequester(initMiddleware = []) {
   }
 
   request.use = function use(newMiddleware) {
+    if (newMiddleware.onReturn && middleware.onReturn.length > 0) {
+      throw new Error('Tried to add new middleware with `onReturn` handler, but another handler has already been registered for this event')
+    }
+
     // @todo validate middlewares when not in production
     for (const key in newMiddleware) {
       if (middleware.hasOwnProperty(key)) {

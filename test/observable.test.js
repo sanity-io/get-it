@@ -2,21 +2,32 @@ const {observable} = require('../src/middleware')
 const requester = require('../src/index')
 const {expect, baseUrl} = require('./helpers')
 
-describe.skip('observable middleware', () => {
-  it('should turn the return value into an observable', () => {
+describe('observable middleware', () => {
+  it('should turn the return value into an observable', done => {
     const request = requester([baseUrl, observable])
-    const req = request({url: '/plain-text'})
-    return expect(req).to.eventually.containSubset({
-      body: 'Just some plain text for you to consume',
-      method: 'GET',
-      statusCode: 200
-    })
+    request({url: '/plain-text'})
+      .filter(ev => ev.type === 'response')
+      .map(ev => ev.response)
+      .subscribe(res => {
+        expect(res).to.containSubset({
+          body: 'Just some plain text for you to consume',
+          method: 'GET',
+          statusCode: 200
+        })
+
+        done()
+      })
   })
 
-  it('should reject errors', () => {
+  it('should trigger error handler on failures', done => {
     const request = requester([baseUrl, observable])
-    const req = request({url: '/permafail'})
-    return expect(req).to.eventually.be.rejectedWith(/(socket|network)/i)
+    request({url: '/permafail'}).subscribe({
+      next: () => done(new Error('next() called when error() should have been')),
+      error: err => {
+        expect(err.message).to.match(/(socket|network)/i)
+        done()
+      }
+    })
   })
 
   // @todo test timeout errors
