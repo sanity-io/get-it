@@ -7,11 +7,9 @@ export const promise = (opts = {}) => {
   }
 
   return {
-    onReturn: channels => {
-      return new Promise((resolve, reject) => {
-        channels.error.subscribe(reject)
-        channels.response.subscribe(resolve)
-      })
-    }
+    onReturn: channels => new Promise((resolve, reject) => {
+      channels.error.subscribe(reject)
+      channels.response.subscribe(resolve)
+    })
   }
 }

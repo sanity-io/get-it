@@ -9,9 +9,10 @@ const {
 describe('headers', () => {
   it('should be able to set http headers', () => {
     const request = requester([baseUrl, jsonResponse])
-    const req = request({url: '/debug', headers: {'X-My-Awesome-Header': 'absolutely'}})
+    const req = request({url: '/debug', headers: {'X-My-Awesome-Header': 'forsure'}})
+
     return expectRequestBody(req).to.eventually.have.property('headers')
-      .and.containSubset({'x-my-awesome-header': 'absolutely'})
+      .and.containSubset({'x-my-awesome-header': 'forsure'})
   })
 
   it('should return the response headers', () => {

@@ -100,6 +100,10 @@ module.exports = (context, callback) => {
     if (isXdr && statusCode === undefined) {
       // IE8 CORS GET successful response doesn't have a status field, but body is fine
       statusCode = 200
+    } else if (statusCode > 12000 && statusCode < 12156) {
+      // Yet another IE quirk where it emits weird status codes on network errors
+      // https://support.microsoft.com/en-us/kb/193625
+      return onError()
     } else {
       // Another IE bug where HTTP 204 somehow ends up as 1223
       statusCode = xhr.status === 1223 ? 204 : xhr.status

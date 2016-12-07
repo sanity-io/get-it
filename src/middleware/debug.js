@@ -63,7 +63,8 @@ function stringifyBody(res) {
 // Attempt pretty-formatting JSON
 function tryFormat(body) {
   try {
-    return JSON.stringify(JSON.parse(body), null, 2)
+    const parsed = typeof body === 'string' ? JSON.parse(body) : body
+    return JSON.stringify(parsed, null, 2)
   } catch (err) {
     return body
   }

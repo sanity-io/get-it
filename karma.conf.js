@@ -43,7 +43,7 @@ module.exports = config => {
         base: 'VirtualBoxAny',
         config: {
           vm_name: 'IE9 - Win7',
-          use_gui: keepOpen,
+          use_gui: true,
           shutdown: !keepOpen,
           cmd: 'C:\\Program Files\\Internet Explorer\\iexplore.exe'
         }

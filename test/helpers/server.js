@@ -20,6 +20,7 @@ const responseHandler = (req, res, next) => {
   const num = Number(parts.query.n)
   const atMax = num >= 10
   const uuid = parts.query.uuid
+  const noCache = () => res.setHeader('Cache-Control', 'private,max-age=0,no-cache,no-store')
   const incrementFailureCount = () => {
     if (!state.failures[uuid]) {
       state.failures[uuid] = 0
@@ -27,6 +28,22 @@ const responseHandler = (req, res, next) => {
 
     return ++state.failures[uuid]
   }
+
+  const tempFail = parts.pathname === '/req-test/fail'
+  const permaFail = parts.pathname === '/req-test/permafail'
+  if (tempFail || permaFail) {
+    if (tempFail && incrementFailureCount() >= (num || 4)) {
+      noCache()
+      res.end('Success after failure')
+      return
+    }
+
+    res.destroy(createError(parts.query.error || 'ECONNREFUSED'))
+    return
+  }
+
+  // For all other requests, set no-cache
+  noCache()
 
   switch (parts.pathname) {
     case '/req-test/query-string':
@@ -74,17 +91,6 @@ const responseHandler = (req, res, next) => {
         atMax ? 'text/plain' : `/req-test/redirect?n=${num + 1}`
       )
       res.end(atMax ? 'Done redirecting' : '')
-      break
-    case '/req-test/fail':
-      if (incrementFailureCount() >= (num || 4)) {
-        res.end('Success after failure')
-        break
-      }
-
-      res.destroy(createError(parts.query.error || 'ECONNREFUSED'))
-      break
-    case '/req-test/permafail':
-      res.destroy(createError(parts.query.error || 'ECONNREFUSED'))
       break
     case '/req-test/status':
       res.statusCode = Number(parts.query.code || 200)

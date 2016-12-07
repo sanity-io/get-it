@@ -10,7 +10,9 @@ const {
 } = require('./helpers')
 
 
-describe('retry middleware', () => {
+describe('retry middleware', function () {
+  this.timeout(15000)
+
   const retry5xx = err => err.response.statusCode >= 500
 
   it('should handle retries when retry middleware is used', () => {

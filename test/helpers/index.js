@@ -9,9 +9,12 @@ chai.use(chaiSubset)
 chai.use(chaiAsPromised)
 
 const isNode = typeof window === 'undefined'
+const isIE = !isNode && typeof window.EventSource === 'undefined'
 const isIE9 = (!isNode && window.XMLHttpRequest
   && !('withCredentials' in (new window.XMLHttpRequest())))
 
+const testIE = isIE ? it : it.skip
+const testNonIE = isIE ? it.skip : it
 const testNonIE9 = isIE9 ? it.skip : it
 const testNode = isNode ? it : it.skip
 const hostname = isNode ? 'localhost' : window.location.hostname
@@ -25,6 +28,8 @@ module.exports = {
   expectRequestBody,
   expect,
   testNonIE9,
+  testNonIE,
+  testIE,
   testNode,
   debugRequest,
   serverUrl,
