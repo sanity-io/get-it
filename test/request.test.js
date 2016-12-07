@@ -1,25 +1,19 @@
-const chai = require('chai')
-const chaiAsPromised = require('chai-as-promised')
-const chaiSubset = require('chai-subset')
+const {retry, jsonResponse, jsonRequest, httpErrors} = require('../src/middleware')
 const testServer = require('./helpers/server')
-const {base, retry, debug, jsonResponse, jsonRequest, httpErrors} = require('../src/middleware')
-const {expectRequest, expectRequestBody} = require('./helpers/expectRequest')
 const requester = require('../src/index')
-const expect = chai.expect
+const {
+  expectRequest,
+  expectRequestBody,
+  expect,
+  testNonIE9,
+  testNode,
+  debugRequest,
+  baseUrl,
+  baseUrlPrefix,
+  isIE9,
+  isNode
+} = require('./helpers')
 
-chai.use(chaiSubset)
-chai.use(chaiAsPromised)
-
-const isNode = typeof window === 'undefined'
-const isIE9 = (!isNode && window.XMLHttpRequest
-  && !('withCredentials' in (new window.XMLHttpRequest())))
-
-const testNonIE9 = isIE9 ? it.skip : it
-const testNode = isNode ? it : it.skip
-const hostname = isNode ? 'localhost' : window.location.hostname
-const debugRequest = debug({verbose: true})
-const baseUrlPrefix = `http://${hostname}:9876/req-test`
-const baseUrl = base(baseUrlPrefix)
 const retry5xx = err => err.response.statusCode >= 500
 
 describe('request', function () {
@@ -142,7 +136,7 @@ describe('request', function () {
 
   it('should not allow base middleware to add prefix on absolute urls', () => {
     const request = requester([baseUrl, jsonResponse])
-    const req = request({url: `http://${hostname}:${testServer.port}/req-test/debug`})
+    const req = request({url: `${baseUrlPrefix}/debug`})
     return expectRequestBody(req).to.eventually.have.property('url', '/req-test/debug')
   })
 
