@@ -12,6 +12,7 @@ const createError = (code, msg) => {
 }
 
 const port = 9876
+const isNode = typeof window === 'undefined'
 const state = {failures: {}}
 
 const responseHandler = (req, res, next) => {
@@ -108,6 +109,27 @@ createServer.port = port
 createServer.responseHandler = responseHandler
 createServer.responseHandlerFactory = function () {
   return responseHandler
+}
+
+createServer.addHooks = (before, after) => {
+  const hookState = {}
+
+  if (isNode) {
+    before(done => {
+      createServer()
+        .then(httpServer => Object.assign(hookState, {server: httpServer}))
+        .then(() => done())
+    })
+  } else {
+    before(() => {
+      if (!window.EventSource) {
+        // IE only
+        localStorage.debug = 'get-it*'
+      }
+    })
+  }
+
+  after(done => hookState.server && hookState.server.close(done))
 }
 
 module.exports = createServer

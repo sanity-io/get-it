@@ -24,23 +24,7 @@ const retry5xx = err => err.response.statusCode >= 500
 
 describe('request', function () {
   this.timeout(15000)
-
-  const state = {server: {close: done => done()}}
-
-  if (isNode) {
-    before(done => {
-      testServer()
-        .then(httpServer => Object.assign(state, {server: httpServer}))
-        .then(() => done())
-    })
-  } else {
-    before(() => {
-      if (!window.EventSource) {
-        // IE only
-        localStorage.debug = 'reqlib*'
-      }
-    })
-  }
+  testServer.addHooks(before, after)
 
   it('should be able to request a basic, plain-text file', () => {
     const body = 'Just some plain text for you to consume'
@@ -269,7 +253,7 @@ describe('request', function () {
     return expectRequest(req).to.eventually.be.rejectedWith(/HTTP 503/)
   })
 
-  // Browsers are really flaky with retries, revisit later
+  // @todo Browsers are really flaky with retries, revisit later
   testNode('should handle retries with a delay function ', () => {
     const retryDelay = () => 375
     const request = requester([baseUrl, retry({retryDelay})])
@@ -288,6 +272,4 @@ describe('request', function () {
    *  - Cancel
    *  - Auth
    **/
-
-  after(done => state.server.close(done))
 })
