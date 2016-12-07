@@ -1,10 +1,12 @@
 const objectAssign = require('object-assign')
 const urlParse = require('url-parse')
 
+const defaultOptions = {timeout: 120000}
+
 export const processOptions = opts => {
   const options = typeof opts === 'string'
-    ? {url: opts}
-    : objectAssign({}, opts)
+    ? objectAssign({url: opts}, defaultOptions)
+    : objectAssign({}, defaultOptions, opts)
 
   // Parse URL into parts
   const url = urlParse(
