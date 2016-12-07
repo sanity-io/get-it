@@ -27,46 +27,47 @@ module.exports = function createRequester(initMiddleware = []) {
     const options = applyMiddleware('processOptions', opts)
 
     // Build a context object we can pass to child handlers
-    let context = {
-      options,
-      channels,
-      applyMiddleware,
-      request: ctx => {
-        // Redeclare context in case a middleware has altered it
-        context = ctx
-        httpRequest(ctx, onResponse)
-      }
-    }
+    const context = {options, channels, applyMiddleware}
 
-    const unsubscribe = channels.request.subscribe(() => {
-      // We only want to perform the request on the first triggered event
-      unsubscribe()
-
+    // We need to hold a reference to the current, ongoing request,
+    // in order to allow cancellation. In the case of the retry middleware,
+    // a new request might be triggered
+    let ongoingRequest = null
+    const unsubscribe = channels.request.subscribe(ctx => {
       // Let request adapters (node/browser) perform the actual request
-      httpRequest(context, onResponse)
+      ongoingRequest = httpRequest(ctx, (err, res) => onResponse(err, res, ctx))
+    })
+
+    // If we abort the request, prevent further requests from happening,
+    // and be sure to cancel any ongoing request (obviously)
+    channels.abort.subscribe(() => {
+      unsubscribe()
+      if (ongoingRequest) {
+        ongoingRequest.abort()
+      }
     })
 
     // See if any middleware wants to modify the return value - for instance
     // the promise or observable middlewares
-    const returnValue = applyMiddleware('onReturn', channels, ...args)
+    const returnValue = applyMiddleware('onReturn', channels, context, ...args)
 
     // If return value has been modified by a middleware, we expect the middleware
     // to publish on the 'request' channel. If it hasn't been modified, we want to
     // trigger it right away
     if (returnValue === channels) {
-      channels.request.publish()
+      channels.request.publish(context)
     }
 
     return returnValue
 
-    function onResponse(reqErr, res) {
+    function onResponse(reqErr, res, ctx) {
       let error = reqErr
       let response = res
 
       // We're processing non-errors first, in case a middleware converts the
       // response into an error (for instance, status >= 400 == HttpError)
       if (!error) {
-        response = applyMiddleware.untilError('onResponse', res, context)
+        response = applyMiddleware.untilError('onResponse', res, ctx)
         if (response instanceof Error) {
           error = response
           response = null
@@ -75,7 +76,7 @@ module.exports = function createRequester(initMiddleware = []) {
 
       // Apply error middleware - if middleware return the same (or a different) error,
       // publish as an error event. If we *don't* return an error, assume it has been handled
-      error = error && applyMiddleware('onError', error, context)
+      error = error && applyMiddleware('onError', error, ctx)
 
       // Figure out if we should publish on error/response channels
       if (error) {

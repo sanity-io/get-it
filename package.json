@@ -59,6 +59,7 @@
     "karma-sourcemap-loader": "^0.3.7",
     "karma-virtualboxany-launcher": "^0.0.6",
     "karma-webpack": "^1.8.0",
+    "lodash.once": "^4.1.1",
     "mocha": "^3.2.0",
     "nyc": "^10.0.0",
     "pinkie-promise": "^2.0.1",

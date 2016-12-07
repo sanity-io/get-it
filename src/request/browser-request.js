@@ -76,6 +76,8 @@ module.exports = (context, callback) => {
 
   xhr.send(options.body || null)
 
+  return {abort: () => xhr.abort()}
+
   function onError() {
     if (loaded) {
       return

@@ -22,7 +22,7 @@ export const retry = (opts = {}) => {
       })
 
       // Wait a given amount of time before doing the request again
-      setTimeout(() => context.request(newContext), retryDelay(attemptNumber))
+      setTimeout(() => context.channels.request.publish(newContext), retryDelay(attemptNumber))
 
       // Signal that we've handled the error and that it should not propagate further
       return null

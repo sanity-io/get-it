@@ -96,6 +96,9 @@ const responseHandler = (req, res, next) => {
       res.statusCode = Number(parts.query.code || 200)
       res.end('---')
       break
+    case '/req-test/delay':
+      setTimeout(() => res.end('Hello future'), Number(parts.query.delay || 1000))
+      break
     default:
       if (next) {
         next()

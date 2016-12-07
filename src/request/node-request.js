@@ -17,7 +17,7 @@ const reduceResponse = (res, reqUrl, method, body) => ({
   statusMessage: res.statusMessage,
 })
 
-module.exports = (context, callback) => {
+module.exports = (context, cb) => {
   const options = context.options
   const uri = objectAssign({}, options, url.parse(options.url))
   const bodyType = typeof options.body
@@ -27,6 +27,13 @@ module.exports = (context, callback) => {
   }
 
   const contentLength = options.body ? {'Content-Length': options.body.length} : {}
+
+  // Make sure callback is not called in the event of a cancellation
+  let aborted = false
+  const callback = (err, res) => !aborted && cb(err, res)
+  context.channels.abort.subscribe(() => {
+    aborted = true
+  })
 
   // Let middleware know we're about to do a request
   context.applyMiddleware('onRequest', options)
@@ -64,4 +71,6 @@ module.exports = (context, callback) => {
 
   request.on('error', callback)
   request.end(options.body)
+
+  return {abort: () => request.abort()}
 }

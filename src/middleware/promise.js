@@ -7,10 +7,10 @@ export const promise = (opts = {}) => {
   }
 
   return {
-    onReturn: channels => new Promise((resolve, reject) => {
+    onReturn: (channels, context) => new Promise((resolve, reject) => {
       channels.error.subscribe(reject)
       channels.response.subscribe(resolve)
-      channels.request.publish()
+      channels.request.publish(context)
     })
   }
 }
