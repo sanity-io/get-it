@@ -1,6 +1,6 @@
 const debugIt = require('debug')
 
-const namespace = 'reqlib' // @todo fix requestlib name
+const namespace = 'get-it'
 const log = debugIt(namespace)
 
 export const debug = (debugOpts = {}) => {
