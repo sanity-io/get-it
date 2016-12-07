@@ -29,6 +29,10 @@ const responseHandler = (req, res, next) => {
     return ++state.failures[uuid]
   }
 
+  if (parts.pathname === '/req-test/stall') {
+    return
+  }
+
   const tempFail = parts.pathname === '/req-test/fail'
   const permaFail = parts.pathname === '/req-test/permafail'
   if (tempFail || permaFail) {
@@ -100,8 +104,17 @@ const responseHandler = (req, res, next) => {
       res.statusCode = Number(parts.query.code || 200)
       res.end('---')
       break
+    case '/req-test/stall-after-initial':
+      // Need a bit of data before browsers will usually accept it as "open"
+      res.writeHead(200, {'Content-Type': 'text/plain'})
+      res.write((new Array(2048)).join('.'))
+      setTimeout(() => res.end((new Array(1024)).join('.')), 6000)
+      break
     case '/req-test/delay':
       setTimeout(() => res.end('Hello future'), Number(parts.query.delay || 1000))
+      break
+    case '/req-test/drip':
+      drip(res)
       break
     default:
       if (next) {
@@ -112,6 +125,21 @@ const responseHandler = (req, res, next) => {
       res.statusCode = 404
       res.end('File not found')
   }
+}
+
+function drip(res) {
+  let iterations = 0
+  setTimeout(() => {
+    res.writeHead(200, {'Content-Type': 'text/plain'})
+    setInterval(() => {
+      if (++iterations === 10) {
+        res.end()
+        return
+      }
+
+      res.write('chunk')
+    }, 50)
+  }, 500)
 }
 
 const createServer = () => {

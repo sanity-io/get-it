@@ -15,6 +15,9 @@ export const processOptions = opts => {
     true // Parse query strings
   )
 
+  // Normalize timeouts
+  options.timeout = normalizeTimeout(options.timeout)
+
   // Shallow-merge (override) existing query params
   if (options.query) {
     url.query = objectAssign({}, url.query, options.query)
@@ -29,4 +32,21 @@ export const processOptions = opts => {
   options.url = url.toString()
 
   return options
+}
+
+function normalizeTimeout(time) {
+  if (time === false) {
+    return false
+  }
+
+  if (time.connect || time.socket) {
+    return time
+  }
+
+  const delay = Number(time)
+  if (isNaN(delay)) {
+    return normalizeTimeout(defaultOptions.timeout)
+  }
+
+  return {connect: delay, socket: delay}
 }

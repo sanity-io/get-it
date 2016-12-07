@@ -2,9 +2,10 @@ const url = require('url')
 const http = require('http')
 const https = require('https')
 const concat = require('simple-concat')
+const follow = require('follow-redirects')
+const timedOut = require('@rexxars/timed-out')
 const objectAssign = require('object-assign')
 const unzipResponse = require('unzip-response')
-const follow = require('follow-redirects')
 
 // Reduce a fully fledged node-style response object to
 // something that works in both browser and node environment
@@ -19,7 +20,7 @@ const reduceResponse = (res, reqUrl, method, body) => ({
 
 module.exports = (context, cb) => {
   const options = context.options
-  const uri = objectAssign({}, options, url.parse(options.url))
+  const uri = objectAssign({}, url.parse(options.url))
   const bodyType = typeof options.body
 
   if (bodyType !== 'undefined' && bodyType !== 'string' && !Buffer.isBuffer(options.body)) {
@@ -69,7 +70,11 @@ module.exports = (context, cb) => {
     })
   })
 
-  request.on('error', callback)
+  if (options.timeout) {
+    timedOut(request, options.timeout)
+  }
+
+  request.once('error', callback)
   request.end(options.body)
 
   return {abort: () => request.abort()}

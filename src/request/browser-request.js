@@ -11,6 +11,7 @@ const XDomainRequest = hasXhr2 ? XmlHttpRequest : win.XDomainRequest
 module.exports = (context, callback) => {
   const options = context.options
   const cors = !sameOrigin(win.location.href, options.url)
+  const timers = {}
 
   // We'll want to null out the request on success/failure
   let xhr = cors ? new XDomainRequest() : new XmlHttpRequest()
@@ -24,6 +25,7 @@ module.exports = (context, callback) => {
   // Request state
   let aborted = false
   let loaded = false
+  let timedOut = false
 
   // Apply event handlers
   xhr.onerror = onError
@@ -37,6 +39,9 @@ module.exports = (context, callback) => {
 
   const loadEvent = isXdr ? 'onload' : 'onreadystatechange'
   xhr[loadEvent] = () => {
+    // Prevent request from timing out
+    resetTimers()
+
     if (xhr.readyState !== 4 && !isXdr) {
       return
     }
@@ -76,7 +81,50 @@ module.exports = (context, callback) => {
 
   xhr.send(options.body || null)
 
+  // Figure out which timeouts to use (if any)
+  const delays = options.timeout
+  if (delays) {
+    timers.connect = setTimeout(
+      () => timeoutRequest('ETIMEDOUT'),
+      delays.connect
+    )
+  }
+
   return {abort: () => xhr.abort()}
+
+  function timeoutRequest(code) {
+    timedOut = true
+    xhr.abort()
+    const error = new Error(code === 'ESOCKETTIMEDOUT'
+      ? `Socket timed out on request to ${options.url}`
+      : `Connection timed out on request to ${options.url}`
+    )
+    error.code = code
+    context.channels.error.publish(error)
+  }
+
+  function resetTimers() {
+    if (!delays) {
+      return
+    }
+
+    stopTimers()
+    timers.socket = setTimeout(
+      () => timeoutRequest('ESOCKETTIMEDOUT'),
+      delays.socket
+    )
+  }
+
+  function stopTimers() {
+    // Only clear the connect timeout if we've got a connection
+    if (xhr.readyState >= 2 && timers.connect) {
+      clearTimeout(timers.connect)
+    }
+
+    if (timers.socket) {
+      clearTimeout(timers.socket)
+    }
+  }
 
   function onError() {
     if (loaded) {
@@ -84,6 +132,7 @@ module.exports = (context, callback) => {
     }
 
     // Clean up
+    stopTimers()
     loaded = true
     xhr = null
 
@@ -123,7 +172,7 @@ module.exports = (context, callback) => {
   }
 
   function onLoad() {
-    if (aborted || loaded) {
+    if (aborted || loaded || timedOut) {
       return
     }
 
@@ -133,6 +182,7 @@ module.exports = (context, callback) => {
     }
 
     // Prevent being called twice
+    stopTimers()
     loaded = true
     callback(null, reduceResponse())
   }
