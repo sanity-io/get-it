@@ -1,4 +1,5 @@
 const global = require('global')
+const once = require('lodash.once')
 const pinkiePromise = require('pinkie-promise')
 const {promise, httpErrors} = require('../src/middleware')
 const requester = require('../src/index')
@@ -35,6 +36,25 @@ describe('promise middleware', function () {
       const request = requester([baseUrl, httpErrors, middleware.impl])
       const req = request({url: '/status?code=500'})
       return expect(req).to.eventually.be.rejectedWith(/HTTP 500/i)
+    })
+
+    it(`[${middleware.name}] can cancel using cancel tokens`, cb => {
+      const done = once(cb)
+      const source = promise.CancelToken.source()
+
+      const request = requester([baseUrl, middleware.impl])
+      request({url: '/delay', cancelToken: source.token})
+        .then(() => done(new Error('Should not be resolved when cancelled')))
+        .catch(err => {
+          if (promise.isCancel(err)) {
+            done()
+            return
+          }
+
+          done(new Error(`Should be rejected with cancellation, got:\n\n${err.message}`))
+        })
+
+      setTimeout(() => source.cancel('Cancelled by user'), 15)
     })
   })
 
