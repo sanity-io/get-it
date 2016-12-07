@@ -79,6 +79,10 @@ const responseHandler = (req, res, next) => {
         (unused, result) => res.end(result)
       )
       break
+    case '/req-test/invalid-json':
+      res.setHeader('Content-Type', 'application/json')
+      res.end('{"foo":"bar')
+      break
     case '/req-test/headers':
       res.setHeader('X-Custom-Header', 'supercustom')
       res.setHeader('Content-Type', 'text/markdown')

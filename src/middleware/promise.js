@@ -11,10 +11,6 @@ export const promise = (opts = {}) => {
 
   return {
     onReturn: (channels, context) => new Promise((resolve, reject) => {
-      channels.error.subscribe(reject)
-      channels.response.subscribe(resolve)
-      channels.request.publish(context)
-
       const cancel = context.options.cancelToken
       if (cancel) {
         cancel.promise.then(reason => {
@@ -22,6 +18,12 @@ export const promise = (opts = {}) => {
           reject(reason)
         })
       }
+
+      channels.error.subscribe(reject)
+      channels.response.subscribe(resolve)
+
+      // Wait until next tick in case cancel has been performed
+      setTimeout(() => channels.request.publish(context), 0)
     })
   }
 }

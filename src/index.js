@@ -14,7 +14,7 @@ module.exports = function createRequester(initMiddleware = []) {
     onReturn: []
   }
 
-  function request(opts, ...args) {
+  function request(opts) {
     const channels = channelNames.reduce((target, name) => {
       target[name] = pubsub()
       return target
@@ -49,7 +49,7 @@ module.exports = function createRequester(initMiddleware = []) {
 
     // See if any middleware wants to modify the return value - for instance
     // the promise or observable middlewares
-    const returnValue = applyMiddleware('onReturn', channels, context, ...args)
+    const returnValue = applyMiddleware('onReturn', channels, context)
 
     // If return value has been modified by a middleware, we expect the middleware
     // to publish on the 'request' channel. If it hasn't been modified, we want to
@@ -67,10 +67,11 @@ module.exports = function createRequester(initMiddleware = []) {
       // We're processing non-errors first, in case a middleware converts the
       // response into an error (for instance, status >= 400 == HttpError)
       if (!error) {
-        response = applyMiddleware.untilError('onResponse', res, ctx)
-        if (response instanceof Error) {
-          error = response
+        try {
+          response = applyMiddleware('onResponse', res, ctx)
+        } catch (err) {
           response = null
+          error = err
         }
       }
 

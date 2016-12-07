@@ -1,10 +1,11 @@
 const debugIt = require('debug')
 
-const namespace = 'get-it'
-const log = debugIt(namespace)
-
-export const debug = (debugOpts = {}) => {
-  const verbose = debugOpts.verbose
+export const debug = (opts = {}) => {
+  const verbose = opts.verbose
+  const namespace = 'get-it'
+  const defaultLogger = debugIt(namespace)
+  const log = opts.log || defaultLogger
+  const shortCircuit = log === defaultLogger && !debugIt.enabled(namespace)
   let requestId = 0
 
   return {
@@ -15,11 +16,11 @@ export const debug = (debugOpts = {}) => {
 
     onRequest: options => {
       // Short-circuit if not enabled, to save some CPU cycles with formatting stuff
-      if (!debugIt.enabled(namespace)) {
+      if (shortCircuit) {
         return
       }
 
-      log('[%s] HTTP %s %s', options.requestId, options.method || 'GET', options.url)
+      log('[%s] HTTP %s %s', options.requestId, options.method, options.url)
 
       if (verbose && options.body && typeof options.body === 'string') {
         log('[%s] Request body: %s', options.requestId, options.body)
@@ -32,7 +33,7 @@ export const debug = (debugOpts = {}) => {
 
     onResponse: (res, context) => {
       // Short-circuit if not enabled, to save some CPU cycles with formatting stuff
-      if (!debugIt.enabled(namespace)) {
+      if (shortCircuit) {
         return res
       }
 

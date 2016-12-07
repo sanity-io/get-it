@@ -3,7 +3,7 @@ const once = require('lodash.once')
 const pinkiePromise = require('pinkie-promise')
 const {promise, httpErrors} = require('../src/middleware')
 const requester = require('../src/index')
-const {expect, baseUrl, testNonIE} = require('./helpers')
+const {expect, debugRequest, baseUrl, testNonIE} = require('./helpers')
 
 describe('promise middleware', function () {
   this.timeout(5000)
@@ -47,6 +47,7 @@ describe('promise middleware', function () {
         .then(() => done(new Error('Should not be resolved when cancelled')))
         .catch(err => {
           if (promise.isCancel(err)) {
+            expect(err.toString()).to.equal('Cancel: Cancelled by user')
             done()
             return
           }
@@ -55,6 +56,25 @@ describe('promise middleware', function () {
         })
 
       setTimeout(() => source.cancel('Cancelled by user'), 15)
+    })
+
+    it(`[${middleware.name}] does not execute requests that are already cancelled`, cb => {
+      const done = once(cb)
+      const source = promise.CancelToken.source()
+      source.cancel()
+
+      const request = requester([baseUrl, debugRequest, middleware.impl])
+      request({url: '/delay', cancelToken: source.token})
+        .then(() => done(new Error('Should not be resolved when cancelled')))
+        .catch(err => {
+          if (promise.isCancel(err)) {
+            expect(err.toString()).to.equal('Cancel')
+            done()
+            return
+          }
+
+          done(new Error(`Should be rejected with cancellation, got:\n\n${err.message}`))
+        })
     })
   })
 

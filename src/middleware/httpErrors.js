@@ -12,6 +12,6 @@ export const httpErrors = {
       return res
     }
 
-    return new HttpError(res)
+    throw new HttpError(res)
   }
 }

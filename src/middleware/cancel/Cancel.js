@@ -3,7 +3,7 @@ function Cancel(message) {
 }
 
 Cancel.prototype.toString = function toString() {
-  return `Cancel: ${this.message ? `: ${this.message}` : ''}`
+  return `Cancel${this.message ? `: ${this.message}` : ''}`
 }
 
 Cancel.prototype.__CANCEL__ = true

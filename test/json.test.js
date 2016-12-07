@@ -2,6 +2,7 @@ const {jsonResponse, jsonRequest} = require('../src/middleware')
 const requester = require('../src/index')
 const {
   debugRequest,
+  expectRequest,
   expectRequestBody,
   baseUrl
 } = require('./helpers')
@@ -40,5 +41,11 @@ describe('json middleware', () => {
     const request = requester([baseUrl, jsonRequest, jsonResponse, debugRequest])
     const req = request({url: '/json-echo', method: 'PUT', body: {foo: 'bar'}})
     return expectRequestBody(req).to.eventually.include.eql({foo: 'bar'})
+  })
+
+  it('should throw if response body is not valid JSON', () => {
+    const request = requester([baseUrl, jsonResponse])
+    const req = request({url: '/invalid-json'})
+    return expectRequest(req).to.eventually.be.rejectedWith(/response body as json/i)
   })
 })
