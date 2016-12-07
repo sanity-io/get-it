@@ -1,20 +1,20 @@
-# Awesome request library without a name
+# get-it
 
 ## Wanted features
 
-* [x] Node and browser support (XHR), with small browser bundle footprint
-* [x] Middleware-ish (like MJ's request lib)
-* [ ] Observable/promise/callback/eventemitter support as middleware (low-level by default)
-* [x] Follow redirects (optional) up to limit
-* [ ] Configurable number of retries + "should retry" handler
-* [ ] Send file/buffer/stuff as body, should just work
-* [ ] Progress upload/download events as middleware (available on observable/eventemitter)
-* [ x Parsing of JSON request/response payloads as middleware
-* [ ] Timeouts with errors that are catchable (connect/response as separate in node)
-* [x] Gzip unwrapping support in node (browser automatically handles this)
-* [x] All HTTP methods supported (obviously)
-* [ ] Stream response middleware?
 * [ ] Developer-friendly assertions that are stripped in production to reduce bundle size and performance
+* [ ] Progress upload/download events as middleware (available on observable/eventemitter)
+* [ ] Stream response middleware?
+* [x] All HTTP methods supported (obviously)
+* [x] Configurable number of retries + "should retry" handler
+* [x] Follow redirects (optional) up to limit
+* [x] Gzip unwrapping support in node (browser automatically handles this)
+* [x] Middleware-ish (like MJ's request lib)
+* [x] Node and browser support (XHR), with small browser bundle footprint
+* [x] Observable/promise/callback/eventemitter support as middleware (low-level by default)
+* [x] Parsing of JSON request/response payloads as middleware
+* [x] Send file/buffer/stuff as body, should just work
+* [x] Timeouts with errors that are catchable (connect/response as separate in node)
 
 ## Options
 
@@ -53,6 +53,17 @@ Should return: Plain object of options to pass on to the rest of the middlewares
 Called once a response has been received and the response body is ready.
 
 @todo document
+
+## Prior work
+
+This module was inspired by the great work of others:
+
+* [got](https://github.com/sindresorhus/got)
+* [simple-get](https://github.com/feross/simple-get)
+* [xhr](https://github.com/naugtur/xhr)
+* [Axios](https://github.com/mzabriskie/axios/)
+* [http-client](https://github.com/mjackson/http-client)
+* [request](https://github.com/request/request)
 
 ## License
 
