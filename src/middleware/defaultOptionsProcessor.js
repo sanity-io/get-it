@@ -2,7 +2,9 @@ const objectAssign = require('object-assign')
 const urlParse = require('url-parse')
 
 export const processOptions = opts => {
-  const options = objectAssign({}, opts)
+  const options = typeof opts === 'string'
+    ? {url: opts}
+    : objectAssign({}, opts)
 
   // Parse URL into parts
   const url = urlParse(
