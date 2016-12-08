@@ -3,7 +3,7 @@ const objectAssign = require('object-assign')
 const leadingSlash = /^\//
 const trailingSlash = /\/$/
 
-export const base = baseUrl => {
+module.exports = baseUrl => {
   const baseUri = baseUrl.replace(trailingSlash, '')
   return {
     processOptions: options => {

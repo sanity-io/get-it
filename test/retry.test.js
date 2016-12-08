@@ -27,9 +27,8 @@ describe('retry middleware', function () {
     })
   })
 
-  // Browsers are not playing nice in regards to network errors and retries
   it('should be able to set max retries', function () {
-    this.timeout(250)
+    this.timeout(400)
     const request = requester([baseUrl, httpErrors, retry({maxRetries: 1, shouldRetry: retry5xx})])
     const req = request({url: '/status?code=500'})
     return expectRequest(req).to.eventually.be.rejectedWith(/HTTP 500/i)

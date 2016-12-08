@@ -1,6 +1,6 @@
 const objectAssign = require('object-assign')
 
-export const jsonRequest = {
+module.exports = {
   processOptions: options => {
     if (typeof options.body === 'undefined') {
       return options

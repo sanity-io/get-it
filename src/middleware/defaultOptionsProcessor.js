@@ -3,7 +3,7 @@ const urlParse = require('url-parse')
 
 const defaultOptions = {timeout: 120000}
 
-export const processOptions = opts => {
+module.exports = opts => {
   const options = typeof opts === 'string'
     ? objectAssign({url: opts}, defaultOptions)
     : objectAssign({}, defaultOptions, opts)

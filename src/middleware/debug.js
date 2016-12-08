@@ -1,6 +1,6 @@
 const debugIt = require('debug')
 
-export const debug = (opts = {}) => {
+module.exports = (opts = {}) => {
   const verbose = opts.verbose
   const namespace = 'get-it'
   const defaultLogger = debugIt(namespace)

@@ -3,7 +3,7 @@ const Cancel = require('./cancel/Cancel')
 const CancelToken = require('./cancel/CancelToken')
 const isCancel = require('./cancel/isCancel')
 
-export const promise = (opts = {}) => {
+const promise = (opts = {}) => {
   if (!Promise) {
     throw new Error('`Promise` is not available in global scope, and no implementation was given')
   }
@@ -30,3 +30,5 @@ export const promise = (opts = {}) => {
 promise.Cancel = Cancel
 promise.CancelToken = CancelToken
 promise.isCancel = isCancel
+
+module.exports = promise

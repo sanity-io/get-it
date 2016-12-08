@@ -1,8 +1,9 @@
-export {base} from './base'
-export {debug} from './debug'
-export {jsonRequest} from './jsonRequest'
-export {jsonResponse} from './jsonResponse'
-export {httpErrors} from './httpErrors'
-export {retry} from './retry'
-export {promise} from './promise'
-export {observable} from './observable'
+exports.base = require('./base')
+exports.debug = require('./debug')
+exports.jsonRequest = require('./jsonRequest')
+exports.jsonResponse = require('./jsonResponse')
+exports.httpErrors = require('./httpErrors')
+exports.retry = require('./retry')
+exports.promise = require('./promise')
+exports.observable = require('./observable')
+exports.progress = require('./progress')

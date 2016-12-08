@@ -1,15 +1,16 @@
 import pubsub from 'nano-pubsub'
 import middlewareReducer from './util/middlewareReducer'
-import {processOptions} from './middleware/defaultOptionsProcessor'
+import processOptions from './middleware/defaultOptionsProcessor'
 import httpRequest from './request' // node-request in node, browser-request in browsers
 
-const channelNames = ['request', 'response', 'error', 'abort']
+const channelNames = ['request', 'response', 'progress', 'error', 'abort']
 
 module.exports = function createRequester(initMiddleware = []) {
   const middleware = {
     processOptions: [processOptions],
     onRequest: [],
     onResponse: [],
+    onXhrSend: [],
     onError: [],
     onReturn: []
   }
@@ -93,7 +94,6 @@ module.exports = function createRequester(initMiddleware = []) {
       throw new Error('Tried to add new middleware with `onReturn` handler, but another handler has already been registered for this event')
     }
 
-    // @todo validate middlewares when not in production
     for (const key in newMiddleware) {
       if (middleware.hasOwnProperty(key)) {
         middleware[key].push(newMiddleware[key])

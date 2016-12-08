@@ -1,8 +1,10 @@
 import Observable from '@sanity/observable/minimal'
+import objectAssign from 'object-assign'
 
-export const observable = {
+module.exports = {
   onReturn: (channels, context) => new Observable(observer => {
     channels.error.subscribe(err => observer.error(err))
+    channels.progress.subscribe(event => observer.next(objectAssign({type: 'progress'}, event)))
     channels.response.subscribe(response => {
       observer.next({type: 'response', response})
       observer.complete()
