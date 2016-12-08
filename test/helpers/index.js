@@ -1,7 +1,12 @@
 const global = require('global')
-const hasPromise = typeof global.Promise !== 'undefined'
-if (!hasPromise) {
+if (typeof global.Promise === 'undefined') {
   require('any-promise/register/pinkie')
+}
+
+if (typeof global.Observable === 'undefined') {
+  require('any-observable/register')('sanityObservable', {
+    Observable: require('@sanity/observable/minimal')
+  })
 }
 
 const chai = require('chai')

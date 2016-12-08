@@ -1,4 +1,4 @@
-import Observable from '@sanity/observable/minimal'
+import Observable from 'any-observable'
 import objectAssign from 'object-assign'
 
 module.exports = {
