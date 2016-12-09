@@ -1,6 +1,6 @@
 const objectAssign = require('object-assign')
 
-module.exports = {
+module.exports = () => ({
   processOptions: options => {
     if (typeof options.body === 'undefined') {
       return options
@@ -13,4 +13,4 @@ module.exports = {
       })
     })
   }
-}
+})

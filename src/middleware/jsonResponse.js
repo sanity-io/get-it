@@ -1,6 +1,6 @@
 const objectAssign = require('object-assign')
 
-module.exports = {
+module.exports = () => ({
   onResponse: response => {
     const contentType = response.headers['content-type']
     if (!response.body || contentType.indexOf('application/json') === -1) {
@@ -11,9 +11,9 @@ module.exports = {
   },
 
   processOptions: options => objectAssign({}, options, {
-    headers: objectAssign({}, options.headers, {Accept: 'application/json'})
+    headers: objectAssign({Accept: 'application/json'}, options.headers)
   })
-}
+})
 
 function tryParse(body) {
   try {

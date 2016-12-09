@@ -4,7 +4,7 @@ const {baseUrl, testNode, testNonIE, expect} = require('./helpers')
 
 describe('progress', () => {
   it('should be able to use progress middleware without side-effects', done => {
-    const request = requester([baseUrl, progress])
+    const request = requester([baseUrl, progress()])
     const req = request({url: '/plain-text'})
 
     req.error.subscribe(err => done(new Error(`error channel should not be called, got:\n\n${err.message}`)))
@@ -14,7 +14,7 @@ describe('progress', () => {
   testNonIE('should emit download progress events', function (done) {
     this.timeout(10000)
 
-    const request = requester([baseUrl, progress])
+    const request = requester([baseUrl, progress()])
     const req = request({url: '/drip'})
     let events = 0
 
@@ -34,7 +34,7 @@ describe('progress', () => {
   })
 
   testNode('[node] should emit upload progress events on strings', done => {
-    const request = requester([baseUrl, progress])
+    const request = requester([baseUrl, progress()])
     const req = request({url: '/plain-text', body: (new Array(100)).join('-')})
     let events = 0
 
@@ -59,7 +59,7 @@ describe('progress', () => {
 
   testNode('[node] can tell requester how large the body is', done => {
     const fs = require('fs')
-    const request = requester([baseUrl, progress])
+    const request = requester([baseUrl, progress()])
     const body = fs.createReadStream(__filename)
     const bodySize = fs.statSync(__filename).size // eslint-disable-line no-sync
     const req = request({url: '/plain-text', body, bodySize})
@@ -87,7 +87,7 @@ describe('progress', () => {
   testNonIE('progress events should be emitted on observable', function (done) {
     this.timeout(10000)
 
-    const request = requester([baseUrl, progress, observable])
+    const request = requester([baseUrl, progress(), observable()])
     const obs = request({url: '/drip'})
       .filter(ev => ev.type === 'progress')
       .subscribe(evt => {

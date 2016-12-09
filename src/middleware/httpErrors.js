@@ -5,7 +5,7 @@ const HttpError = createErrorClass('HttpError', function (res) {
   this.response = res
 })
 
-module.exports = {
+module.exports = () => ({
   onResponse: res => {
     const isHttpError = res.statusCode >= 400
     if (!isHttpError) {
@@ -14,4 +14,4 @@ module.exports = {
 
     throw new HttpError(res)
   }
-}
+})

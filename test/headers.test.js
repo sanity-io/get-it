@@ -8,7 +8,7 @@ const {
 
 describe('headers', () => {
   it('should be able to set http headers', () => {
-    const request = requester([baseUrl, jsonResponse])
+    const request = requester([baseUrl, jsonResponse()])
     const req = request({url: '/debug', headers: {'X-My-Awesome-Header': 'forsure'}})
 
     return expectRequestBody(req).to.eventually.have.property('headers')

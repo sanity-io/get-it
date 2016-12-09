@@ -23,7 +23,7 @@ describe('promise middleware', function () {
   })
 
   it('should reject http errors (if middleware is loaded)', () => {
-    const request = requester([baseUrl, httpErrors, promise()])
+    const request = requester([baseUrl, httpErrors(), promise()])
     const req = request({url: '/status?code=500'})
     return expect(req).to.eventually.be.rejectedWith(/HTTP 500/i)
   })

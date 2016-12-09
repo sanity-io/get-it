@@ -16,7 +16,7 @@ describe('errors', () => {
   })
 
   it('should error when httpErrors middleware is enabled and response code is >= 400', done => {
-    const request = requester([baseUrl, httpErrors])
+    const request = requester([baseUrl, httpErrors()])
     const req = request({url: '/status?code=400'})
     req.response.subscribe(res => {
       throw new Error('Response channel called when error channel should have been triggered')
@@ -36,7 +36,7 @@ describe('errors', () => {
   })
 
   it('should not error when httpErrors middleware is enabled and response code is < 400', () => {
-    const request = requester([baseUrl, httpErrors])
+    const request = requester([baseUrl, httpErrors()])
     const req = request({url: '/plain-text'})
     expectRequest(req).to.eventually.containSubset({
       statusCode: 200,

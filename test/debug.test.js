@@ -23,7 +23,7 @@ describe('debug middleware', () => {
 
   it('should be able to pass custom logger (verbose mode + json request body)', done => {
     const logger = debug({log, verbose: true})
-    const request = requester([baseUrl, jsonRequest, jsonResponse, logger])
+    const request = requester([baseUrl, jsonRequest(), jsonResponse(), logger])
     request({url: '/json-echo', method: 'PUT', body: {foo: 'bar'}}).response.subscribe(() => done())
   })
 

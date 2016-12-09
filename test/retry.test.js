@@ -30,14 +30,14 @@ describe('retry middleware', function () {
 
   it('should be able to set max retries', function () {
     this.timeout(400)
-    const request = requester([baseUrl, httpErrors, retry({maxRetries: 1, shouldRetry: retry5xx})])
+    const request = requester([baseUrl, httpErrors(), retry({maxRetries: 1, shouldRetry: retry5xx})])
     const req = request({url: '/status?code=500'})
     return expectRequest(req).to.eventually.be.rejectedWith(/HTTP 500/i)
   })
 
   it('should be able to set a custom function on whether or not we should retry', () => {
     const shouldRetry = (error, retryCount) => retryCount !== 1
-    const request = requester([baseUrl, debugRequest, httpErrors, retry({shouldRetry})])
+    const request = requester([baseUrl, debugRequest, httpErrors(), retry({shouldRetry})])
     const req = request({url: '/status?code=503'})
     return expectRequest(req).to.eventually.be.rejectedWith(/HTTP 503/)
   })

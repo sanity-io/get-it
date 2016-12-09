@@ -59,13 +59,13 @@ describe('basics', function () {
   })
 
   it('should unzip gziped responses', () => {
-    const request = requester([baseUrl, jsonResponse, debugRequest])
+    const request = requester([baseUrl, jsonResponse(), debugRequest])
     const req = request({url: '/gzip'})
     return expectRequestBody(req).to.eventually.deep.equal(['harder', 'better', 'faster', 'stronger'])
   })
 
   it('should not return a body on HEAD-requests', () => {
-    const request = requester([baseUrl, jsonResponse])
+    const request = requester([baseUrl, jsonResponse()])
     const req = request({url: '/gzip', method: 'HEAD'})
     return expectRequest(req).to.eventually.containSubset({
       statusCode: 200,
@@ -74,7 +74,7 @@ describe('basics', function () {
   })
 
   it('should be able to send PUT-requests with raw bodies', () => {
-    const request = requester([baseUrl, jsonResponse, debugRequest])
+    const request = requester([baseUrl, jsonResponse(), debugRequest])
     const req = request({url: '/debug', method: 'PUT', body: 'just a plain body'})
     return expectRequestBody(req).to.eventually.containSubset({
       method: 'PUT',
@@ -97,7 +97,7 @@ describe('basics', function () {
   })
 
   it('should not allow base middleware to add prefix on absolute urls', () => {
-    const request = requester([baseUrl, jsonResponse])
+    const request = requester([baseUrl, jsonResponse()])
     const req = request({url: `${baseUrlPrefix}/debug`})
     return expectRequestBody(req).to.eventually.have.property('url', '/req-test/debug')
   })

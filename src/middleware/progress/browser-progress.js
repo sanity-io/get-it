@@ -1,4 +1,4 @@
-module.exports = {
+module.exports = () => ({
   onRequest: evt => {
     if (evt.adapter !== 'xhr') {
       return
@@ -28,4 +28,4 @@ module.exports = {
       }
     }
   }
-}
+})
