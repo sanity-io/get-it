@@ -2,6 +2,7 @@ const requester = require('../src/index')
 const {retry, httpErrors} = require('../src/middleware')
 const {
   testNode,
+  testNonIE,
   debugRequest,
   expectRequest,
   baseUrl,
@@ -15,7 +16,7 @@ describe('retry middleware', function () {
 
   const retry5xx = err => err.response.statusCode >= 500
 
-  it('should handle retries when retry middleware is used', () => {
+  testNonIE('should handle retries when retry middleware is used', () => {
     const request = requester([baseUrl, debugRequest, retry()])
     const browserAt = isIE9 ? 4 : 7
     const successAt = isNode ? 4 : browserAt // Browsers have a weird thing where they might auto-retry on network errors

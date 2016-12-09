@@ -14,11 +14,13 @@ module.exports = (opts = {}) => {
       return options
     },
 
-    onRequest: options => {
+    onRequest: event => {
       // Short-circuit if not enabled, to save some CPU cycles with formatting stuff
-      if (shortCircuit) {
-        return
+      if (shortCircuit || !event) {
+        return event
       }
+
+      const options = event.options
 
       log('[%s] HTTP %s %s', options.requestId, options.method, options.url)
 
@@ -29,11 +31,13 @@ module.exports = (opts = {}) => {
       if (verbose && options.headers) {
         log('[%s] Request headers: %s', options.requestId, JSON.stringify(options.headers, null, 2))
       }
+
+      return event
     },
 
     onResponse: (res, context) => {
       // Short-circuit if not enabled, to save some CPU cycles with formatting stuff
-      if (shortCircuit) {
+      if (shortCircuit || !res) {
         return res
       }
 

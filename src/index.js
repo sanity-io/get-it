@@ -4,16 +4,13 @@ import processOptions from './middleware/defaultOptionsProcessor'
 import httpRequest from './request' // node-request in node, browser-request in browsers
 
 const channelNames = ['request', 'response', 'progress', 'error', 'abort']
+const middlehooks = ['processOptions', 'onRequest', 'onResponse', 'onError', 'onReturn', 'onHeaders']
 
 module.exports = function createRequester(initMiddleware = []) {
-  const middleware = {
-    processOptions: [processOptions],
-    onRequest: [],
-    onResponse: [],
-    onXhrSend: [],
-    onError: [],
-    onReturn: []
-  }
+  const middleware = middlehooks.reduce((ware, name) => {
+    ware[name] = ware[name] || []
+    return ware
+  }, {processOptions: [processOptions]})
 
   function request(opts) {
     const channels = channelNames.reduce((target, name) => {
@@ -90,15 +87,23 @@ module.exports = function createRequester(initMiddleware = []) {
   }
 
   request.use = function use(newMiddleware) {
+    if (!newMiddleware) {
+      throw new Error('Tried to add middleware that resolved to falsey value')
+    }
+
+    if (typeof newMiddleware === 'function') {
+      throw new Error('Tried to add middleware that was a function. It probably expects you to pass options to it.')
+    }
+
     if (newMiddleware.onReturn && middleware.onReturn.length > 0) {
       throw new Error('Tried to add new middleware with `onReturn` handler, but another handler has already been registered for this event')
     }
 
-    for (const key in newMiddleware) {
-      if (middleware.hasOwnProperty(key)) {
+    middlehooks.forEach(key => {
+      if (newMiddleware[key]) {
         middleware[key].push(newMiddleware[key])
       }
-    }
+    })
   }
 
   initMiddleware.forEach(request.use)

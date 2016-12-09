@@ -6,8 +6,11 @@
   "browser": {
     "./src/request/node-request.js": "./src/request/browser-request.js",
     "./lib/request/node-request.js": "./lib/request/browser-request.js",
+    "./src/middleware/progress/node-progress.js": "./src/middleware/progress/browser-progress.js",
+    "./lib/middleware/progress/node-progress.js": "./lib/middleware/progress/browser-progress.js",
     "./src/util/node-shouldRetry.js": "./src/util/browser-shouldRetry.js",
-    "./lib/util/node-shouldRetry.js": "./lib/util/browser-shouldRetry.js"
+    "./lib/util/node-shouldRetry.js": "./lib/util/browser-shouldRetry.js",
+    "fs": "./test/helpers/noop.js"
   },
   "scripts": {
     "ci": "npm run coverage && npm run karma && npm run lint",
@@ -33,10 +36,13 @@
     "debug": "^2.3.3",
     "follow-redirects": "^1.2.0",
     "global": "^4.3.1",
+    "into-stream": "^3.1.0",
     "is-retry-allowed": "^1.1.0",
+    "is-stream": "^1.1.0",
     "nano-pubsub": "^1.0.1",
     "object-assign": "^4.1.0",
     "parse-headers": "^2.0.1",
+    "progress-stream": "^1.2.0",
     "same-origin": "^0.1.1",
     "simple-concat": "^1.0.0",
     "unzip-response": "^2.0.1",

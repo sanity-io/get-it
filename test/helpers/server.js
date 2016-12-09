@@ -129,10 +129,13 @@ const responseHandler = (req, res, next) => {
 
 function drip(res) {
   let iterations = 0
+  let interval = null
+
   setTimeout(() => {
-    res.writeHead(200, {'Content-Type': 'text/plain'})
-    setInterval(() => {
+    res.writeHead(200, {'Content-Type': 'text/plain', 'Content-Length': '45'})
+    interval = setInterval(() => {
       if (++iterations === 10) {
+        clearInterval(interval)
         res.end()
         return
       }

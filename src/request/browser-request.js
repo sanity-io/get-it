@@ -7,6 +7,7 @@ const noop = function () { /* intentional noop */ }
 const XmlHttpRequest = win.XMLHttpRequest || noop
 const hasXhr2 = 'withCredentials' in (new XmlHttpRequest())
 const XDomainRequest = hasXhr2 ? XmlHttpRequest : win.XDomainRequest
+const adapter = 'xhr'
 
 module.exports = (context, callback) => {
   const options = context.options
@@ -18,9 +19,6 @@ module.exports = (context, callback) => {
 
   const isXdr = win.XDomainRequest && xhr instanceof win.XDomainRequest
   const headers = options.headers
-
-  // Let middleware know we're about to do a request
-  context.applyMiddleware('onRequest', options)
 
   // Request state
   let aborted = false
@@ -42,7 +40,7 @@ module.exports = (context, callback) => {
     // Prevent request from timing out
     resetTimers()
 
-    if (xhr.readyState !== 4 && !isXdr) {
+    if (aborted || (xhr.readyState !== 4 && !isXdr)) {
       return
     }
 
@@ -79,6 +77,9 @@ module.exports = (context, callback) => {
     xhr.responseType = 'arraybuffer'
   }
 
+  // Let middleware know we're about to do a request
+  context.applyMiddleware('onRequest', {options, adapter, request: xhr, context})
+
   xhr.send(options.body || null)
 
   // Figure out which timeouts to use (if any)
@@ -90,7 +91,12 @@ module.exports = (context, callback) => {
     )
   }
 
-  return {abort: () => xhr.abort()}
+  return {abort}
+
+  function abort() {
+    aborted = true
+    xhr.abort()
+  }
 
   function timeoutRequest(code) {
     timedOut = true
@@ -117,7 +123,7 @@ module.exports = (context, callback) => {
 
   function stopTimers() {
     // Only clear the connect timeout if we've got a connection
-    if (xhr.readyState >= 2 && timers.connect) {
+    if (aborted || (xhr.readyState >= 2 && timers.connect)) {
       clearTimeout(timers.connect)
     }
 

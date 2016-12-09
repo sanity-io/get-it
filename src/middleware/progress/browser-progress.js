@@ -1,5 +1,12 @@
 module.exports = {
-  onXhrSend: (xhr, context) => {
+  onRequest: evt => {
+    if (evt.adapter !== 'xhr') {
+      return
+    }
+
+    const xhr = evt.request
+    const context = evt.context
+
     if ('upload' in xhr && 'onprogress' in xhr.upload) {
       xhr.upload.onprogress = handleProgress('upload')
     }

@@ -1,5 +1,5 @@
 const once = require('lodash.once')
-const {observable} = require('../src/middleware')
+const {observable, httpErrors} = require('../src/middleware')
 const requester = require('../src/index')
 const {expect, baseUrl} = require('./helpers')
 
@@ -21,11 +21,11 @@ describe('observable middleware', () => {
   })
 
   it('should trigger error handler on failures', done => {
-    const request = requester([baseUrl, observable])
-    request({url: '/permafail'}).subscribe({
+    const request = requester([baseUrl, httpErrors, observable])
+    request({url: '/status?code=500'}).subscribe({
       next: () => done(new Error('next() called when error() should have been')),
       error: err => {
-        expect(err.message).to.match(/(socket|network)/i)
+        expect(err.message).to.match(/HTTP 500/i)
         done()
       }
     })

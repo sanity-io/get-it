@@ -42,7 +42,7 @@ describe('basics', function () {
     const request = requester([baseUrl, debugRequest])
     expect(() => {
       request({url: '/echo', method: 'post', body: {}})
-    }).to.throw(/string or buffer/)
+    }).to.throw(/string, buffer or stream/)
   })
 
   testNonIE9('should be able to get a raw, unparsed body back', isNode ? () => {
@@ -101,11 +101,4 @@ describe('basics', function () {
     const req = request({url: `${baseUrlPrefix}/debug`})
     return expectRequestBody(req).to.eventually.have.property('url', '/req-test/debug')
   })
-
-  /**
-   * Cases to test:
-   *  - Timeouts
-   *  - Cancel
-   *  - Auth
-   **/
 })
