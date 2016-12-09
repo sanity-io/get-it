@@ -1,7 +1,7 @@
-import pubsub from 'nano-pubsub'
-import middlewareReducer from './util/middlewareReducer'
-import processOptions from './middleware/defaultOptionsProcessor'
-import httpRequest from './request' // node-request in node, browser-request in browsers
+const pubsub = require('nano-pubsub')
+const middlewareReducer = require('./util/middlewareReducer')
+const processOptions = require('./middleware/defaultOptionsProcessor')
+const httpRequest = require('./request') // node-request in node, browser-request in browsers
 
 const channelNames = ['request', 'response', 'progress', 'error', 'abort']
 const middlehooks = ['processOptions', 'onRequest', 'onResponse', 'onError', 'onReturn', 'onHeaders']

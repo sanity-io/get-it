@@ -1,4 +1,4 @@
-import createErrorClass from 'create-error-class'
+const createErrorClass = require('create-error-class')
 
 const HttpError = createErrorClass('HttpError', function (res) {
   this.message = `${res.method}-request to ${res.url} resulted in HTTP ${res.statusCode} ${res.statusMessage}`.trim()

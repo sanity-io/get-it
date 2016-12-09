@@ -1,5 +1,5 @@
-import Observable from 'any-observable'
-import objectAssign from 'object-assign'
+const Observable = require('any-observable')
+const objectAssign = require('object-assign')
 
 module.exports = {
   onReturn: (channels, context) => new Observable(observer => {

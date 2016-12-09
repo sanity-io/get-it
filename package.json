@@ -15,6 +15,7 @@
   "scripts": {
     "ci": "npm run coverage && npm run karma && npm run lint",
     "clean": "rimraf lib .nyc_output coverage npm-debug.log yarn-debug.log",
+    "compile": "babel --source-maps --copy-files -d lib/ src/",
     "coverage": "nyc --reporter=html --reporter=lcov --reporter=text _mocha",
     "karma": "karma start",
     "lint": "eslint .",
