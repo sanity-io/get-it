@@ -7,6 +7,7 @@ const channelNames = ['request', 'response', 'progress', 'error', 'abort']
 const middlehooks = ['processOptions', 'onRequest', 'onResponse', 'onError', 'onReturn', 'onHeaders']
 
 module.exports = function createRequester(initMiddleware = []) {
+  const loadedMiddleware = []
   const middleware = middlehooks.reduce((ware, name) => {
     ware[name] = ware[name] || []
     return ware
@@ -104,6 +105,12 @@ module.exports = function createRequester(initMiddleware = []) {
         middleware[key].push(newMiddleware[key])
       }
     })
+
+    loadedMiddleware.push(newMiddleware)
+  }
+
+  request.clone = function clone() {
+    return createRequester(loadedMiddleware)
   }
 
   initMiddleware.forEach(request.use)

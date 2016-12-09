@@ -3,9 +3,9 @@
 ## Wanted features
 
 * [ ] Developer-friendly assertions that are stripped in production to reduce bundle size and performance
-* [x] Progress upload/download events as middleware (available on observable/eventemitter)
 * [ ] Authentication (basic)
 * [ ] Stream response middleware?
+* [x] Progress upload/download events as middleware (available on observable/eventemitter)
 * [x] All HTTP methods supported (obviously)
 * [x] Configurable number of retries + "should retry" handler
 * [x] Follow redirects (optional) up to limit

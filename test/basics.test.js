@@ -101,4 +101,19 @@ describe('basics', function () {
     const req = request({url: `${baseUrlPrefix}/debug`})
     return expectRequestBody(req).to.eventually.have.property('url', '/req-test/debug')
   })
+
+  it('should be able to clone a requester, keeping the same middleware', done => {
+    let i = 0
+    const onRequest = () => i++
+    const base = requester([baseUrl, {onRequest}])
+    const cloned = base.clone()
+
+    base('/plain-text')
+    cloned('/plain-text')
+
+    setTimeout(() => {
+      expect(i).to.equal(2, 'two requests should have been initiated')
+      done()
+    }, 15)
+  })
 })
