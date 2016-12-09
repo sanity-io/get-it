@@ -1,0 +1,11 @@
+/.nyc_output
+/coverage
+/test
+/karma.conf.js
+/webpack.config.js
+node_modules
+.babelrc
+.editorconfig
+.eslintignore
+.eslintrc
+.gitignore
