@@ -1,5 +1,5 @@
 const requester = require('../src/index')
-const {progress} = require('../src/middleware')
+const {progress, observable} = require('../src/middleware')
 const {baseUrl, testNode, testNonIE, expect} = require('./helpers')
 
 describe('progress', () => {
@@ -82,5 +82,22 @@ describe('progress', () => {
       expect(events).to.be.above(0, 'should have received progress events')
       done()
     })
+  })
+
+  testNonIE('progress events should be emitted on observable', function (done) {
+    this.timeout(10000)
+
+    const request = requester([baseUrl, progress, observable])
+    const obs = request({url: '/drip'})
+      .filter(ev => ev.type === 'progress')
+      .subscribe(evt => {
+        expect(evt).to.containSubset({
+          stage: 'download',
+          lengthComputable: true
+        })
+
+        obs.unsubscribe()
+        done()
+      })
   })
 })
