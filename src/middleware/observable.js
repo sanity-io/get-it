@@ -1,9 +1,10 @@
-const Observable = require('any-observable')
+const global = require('global')
 const objectAssign = require('object-assign')
 
-module.exports = () => {
+module.exports = (opts = {}) => {
+  const Observable = opts.implementation || global.Observable
   if (!Observable) {
-    throw new Error('`Observable` is not available in global scope, and no implementation is registered using any-observable')
+    throw new Error('`Observable` is not available in global scope, and no implementation was passed')
   }
 
   return {
@@ -11,7 +12,7 @@ module.exports = () => {
       channels.error.subscribe(err => observer.error(err))
       channels.progress.subscribe(event => observer.next(objectAssign({type: 'progress'}, event)))
       channels.response.subscribe(response => {
-        observer.next({type: 'response', response})
+        observer.next(objectAssign({type: 'response'}, response))
         observer.complete()
       })
 

@@ -1,12 +1,6 @@
 const global = require('global')
 if (typeof global.Promise === 'undefined') {
-  require('any-promise/register/pinkie')
-}
-
-if (typeof global.Observable === 'undefined') {
-  require('any-observable/register')('sanityObservable', {
-    Observable: require('@sanity/observable/minimal')
-  })
+  require('es6-promise/auto')
 }
 
 const chai = require('chai')

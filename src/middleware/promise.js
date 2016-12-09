@@ -1,11 +1,12 @@
-const Promise = require('any-promise')
+const global = require('global')
 const Cancel = require('./cancel/Cancel')
 const CancelToken = require('./cancel/CancelToken')
 const isCancel = require('./cancel/isCancel')
 
 const promise = () => {
+  const Promise = global.Promise
   if (!Promise) {
-    throw new Error('`Promise` is not available in global scope, and no implementation was registered using any-promise')
+    throw new Error('`Promise` is not available in global scope, and no implementation was passed')
   }
 
   return {

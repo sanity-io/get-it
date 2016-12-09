@@ -1,5 +1,4 @@
 const Cancel = require('./Cancel')
-const Promise = require('any-promise')
 
 function CancelToken(executor) {
   if (typeof executor !== 'function') {

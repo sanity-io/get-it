@@ -87,7 +87,8 @@ describe('progress', () => {
   testNonIE('progress events should be emitted on observable', function (done) {
     this.timeout(10000)
 
-    const request = requester([baseUrl, progress(), observable()])
+    const implementation = require('zen-observable')
+    const request = requester([baseUrl, progress(), observable({implementation})])
     const obs = request({url: '/drip'})
       .filter(ev => ev.type === 'progress')
       .subscribe(evt => {

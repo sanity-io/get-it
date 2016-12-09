@@ -1,61 +1,178 @@
 # get-it
 
-## Wanted features
+Generic HTTP request library for node and browsers (IE9 and newer)
 
-* [ ] Developer-friendly assertions that are stripped in production to reduce bundle size and performance
-* [ ] Authentication (basic)
-* [ ] Stream response middleware?
-* [x] Progress upload/download events as middleware (available on observable/eventemitter)
-* [x] All HTTP methods supported (obviously)
-* [x] Configurable number of retries + "should retry" handler
-* [x] Follow redirects (optional) up to limit
-* [x] Gzip unwrapping support in node (browser automatically handles this)
-* [x] Middleware-ish (like MJ's request lib)
-* [x] Node and browser support (XHR), with small browser bundle footprint
-* [x] Observable/promise/callback/eventemitter support as middleware (low-level by default)
-* [x] Parsing of JSON request/response payloads as middleware
-* [x] Send file/buffer/stuff as body, should just work
-* [x] Timeouts with errors that are catchable (connect/response as separate in node)
+## Motivation
+
+We wanted an HTTP request library that worked transparently in Node.js and browsers with a small browser bundle footprint.
+
+To be able to use the same library in a range of different applications with varying requirements, but still keep the bundle size down, we took inspiration from [http-client](https://github.com/mjackson/http-client) which cleverly composes functionality into the client.
+
+## Features
+
+Using a middleware approach, `get-it` has the following feature set:
+
+* Promise, observable and low-level event-emitter patterns
+* Automatic retrying with customizable number of attempts and filtering functionality
+* Cancellation of requests
+* Configurable connect/socket timeouts
+* Automatic parsing of JSON responses
+* Automatic stringifying of JSON request bodies
+* Automatic gzip unwrapping in Node
+* Automatically prepend base URL
+* Automatically follow redirects (configurable number of retries)
+* Upload/download progress events
+* Treat HTTP status codes >=400 as errors
+* Debug requests with environment variables/localStorage setting
+
+## Usage
+
+How `get-it` behaves depends on which middleware you've loaded, but common to all approaches is the setup process.
+
+```js
+// Require the core get-it package, which is used to generate a requester
+const getIt = require('get-it')
+
+// And require whatever middleware you want to use
+const base = require('get-it/lib/middleware/base')
+const jsonResponse = require('get-it/lib/middleware/jsonResponse')
+const promise = require('get-it/lib/middleware/promise')
+
+// Now compose the middleware you want to use
+const request = getIt([
+  base('https://api.your.service/v1'),
+  jsonResponse()
+])
+
+// You can also register middleware using `.use(middleware)`
+request.use(promise())
+
+// Now you're ready to use the requester:
+request({url: '/projects'})
+  .then(projects => console.log(projects))
+  .catch(err => console.error(err))
+```
+
+In most larger projects, you'd probably make a `httpClient.js` or similar, where you would instantiate the requester and export it for other modules to reuse.
 
 ## Options
 
-* `rawBody` - Set to `true` to return the raw value of the response body, instead of a string. *Important note*: The returned body will be different in Node and browser environments. In Node, it will return a `Buffer`, while in browsers it will return an `ArrayBuffer`.
+* `url` - URL to the resource you want to reach.
+* `method` - HTTP method to use for request. Default: `GET`, unless a body is provided, in which case the default is `POST`.
+* `headers` - Object of HTTP headers to send. Note that cross-origin requests in IE9 will not be able to set these headers.
+* `body` - The request body. If the `jsonRequest` middleware is used, it will serialize to a JSON string before sending. Otherwise, it tries to send whatever is passed to it using the underlying adapter. Supported types:
+  * *Browser*: `string`, `ArrayBufferView`, `Blob`, `Document`, `FormData` (deprecated: `ArrayBuffer`)
+  * *Node*: `string`, `buffer`, `ReadStream`
+* `bodySize` - Size of body, in bytes. Only used in Node when passing a `ReadStream` as body, in order for progress events to emit status on upload progress.
+* `timeout` - Timeout in millisecond for the request. Takes an object with `connect` and `socket` properties.
+* `maxRedirects` - Maximum number of redirects to follow before giving up. Note that this is only used in Node, as browsers have built-in redirect handling which cannot be adjusted. Default: `5`
+* `rawBody` - Set to `true` to return the raw value of the response body, instead of a string. The type returned differs based on the underlying adapter:
+  * *Browser*: `ArrayBuffer`
+  * *Node*: `Buffer`
 
-## Middleware
+## Return values
 
-Each middleware is an object of hook => action bindings. They are called in the order they are added to the request instance using `request.use()`. For instance, if you want to always set a certain header on outgoing responses, you could do:
+By default, `get-it` will return an object of single-channel event emitters. This is done in order to provide a low-level API surface that others can build upon, which is what the `promise` and `observable` middlewares do. Unless you really know what you're doing, you'll probably want to use those middlewares.
 
-```
-const isAwesome = {
-  processOptions: options => Object.assign({
-    headers: Object.assign({}, options.headers, {
-      'X-Is-Awesome': 'Absolutely'
-    })
-  })
+## Response objects
+
+`get-it` does not expose the low-level primitives such as the `XMLHttpRequest` or `http.IncomingMessage` instances. Instead, it provides a response object with the following properties:
+
+```js
+{
+  // string (ArrayBuffer or Buffer if `rawBody` is set to `true`)
+  body: 'Response body'
+  url: 'http://foo.bar/baz',
+  method: 'GET',
+  statusCode: 200,
+  statusMessage: 'OK',
+  headers: {
+    'Date': 'Fri, 09 Dec 2016 14:55:32 GMT',
+    'Cache-Control': 'public, max-age=120'
+  }
 }
-
-request.use(isAwesome)
 ```
 
-The available hooks, their arguments and expected return values are as following:
+## Promise API
 
-### processOptions
+```js
+const getIt = require('get-it')
+const request = getIt([require('get-it/lib/middleware/promise')])
 
-Called once a new request is instantiated. Can be used to alter options before they are validated and turned into an actual HTTP request. This hook is used by the `base` middleware, which prefixes the passed URL if it is not an absolute URI already.
+request({url: 'http://foo.bar'})
+  .then(res => console.log(res.body))
+  .catch(err => console.error(err))
+```
 
-Arguments:
+If you are targetting older browsers that do not have a global Promise implementation, you must register one globally using a polyfill such as [es6-promise](https://github.com/stefanpenner/es6-promise):
 
-1. `options` - Object of request options passed to the request. Should be cloned if modifications are to be performed, to prevent unexpected side-effects.
+```js
+require('es6-promise/auto')
 
-Should return: Plain object of options to pass on to the rest of the middlewares.
+const promise = require('get-it/lib/middleware/promise')
+const request = getIt([promise])
+```
 
-### parseResponse
+### Cancelling promise-based requests
 
-Called once a response has been received and the response body is ready.
+With the Promise API, you can cancel requests using a _cancel token_. This API is based on the [Cancelable Promises proposal](https://github.com/tc39/proposal-cancelable-promises), which is currently at Stage 1.
 
-@todo document
+You can create a cancel token using the `CancelToken.source` factory as shown below:
 
-## Prior work
+```js
+const promise = require('get-it/lib/middleware/promise')
+const request = getIt([promise])
+
+const source = promise.CancelToken.source()
+
+request.get({
+  url: 'http://foo.bar/baz',
+  cancelToken: source.token
+}).catch(err => {
+  if (promise.isCancel(err)) {
+    console.log('Request canceled', err.message)
+  } else {
+    // handle error
+  }
+})
+
+// Cancel the request (the message parameter is optional)
+source.cancel('Operation canceled by the user')
+```
+
+## Observable API
+
+The observable API requires you to pass an Observable-implementation that you want to use. Optionally, you can register it under the global `Observable`, but this is not recommended.
+
+```js
+const getIt = require('get-it')
+const observable = require('get-it/lib/middleware/observable')
+const request = getIt()
+
+request.use(observable({
+  implementation: require('zen-observable')}
+))
+
+const observer = request({url: 'http://foo.bar/baz'})
+  .filter(ev => ev.type === 'response')
+  .subscribe({
+    next: res => console.log(res.body),
+    error: err => console.error(err)
+  })
+
+// If you want to cancel the request, simply unsubscribe:
+observer.unsubscribe()
+```
+
+It's important to note that the observable middleware does not only emit `response` objects, but also `progress` events. You should always filter to specify what you're interested in receiving. Every emitted value has a `type` property.
+
+## Upcoming features
+
+* Developer-friendly assertions that are stripped in production to reduce bundle size and performance
+* Authentication (basic)
+* Stream response middleware?
+
+## Prior art
 
 This module was inspired by the great work of others:
 
