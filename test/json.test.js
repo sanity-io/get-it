@@ -1,6 +1,8 @@
+const intoStream = require('into-stream')
 const {jsonResponse, jsonRequest} = require('../src/middleware')
 const requester = require('../src/index')
 const {
+  testNode,
   debugRequest,
   expectRequest,
   expectRequestBody,
@@ -46,12 +48,50 @@ describe('json middleware', () => {
   it('should be able to send PUT-requests with json bodies', () => {
     const request = requester([baseUrl, jsonRequest(), jsonResponse(), debugRequest])
     const req = request({url: '/json-echo', method: 'PUT', body: {foo: 'bar'}})
-    return expectRequestBody(req).to.eventually.include.eql({foo: 'bar'})
+    return expectRequestBody(req).to.eventually.eql({foo: 'bar'})
   })
 
   it('should throw if response body is not valid JSON', () => {
     const request = requester([baseUrl, jsonResponse()])
     const req = request({url: '/invalid-json'})
     return expectRequest(req).to.eventually.be.rejectedWith(/response body as json/i)
+  })
+
+  it('should serialize anything with a toJSON function', () => {
+    const Foo = function (fooVal) {
+      this.foo = fooVal
+    }
+    Foo.prototype.toJSON = function () {
+      return {foo: this.foo, baz: 'yup'}
+    }
+
+    const request = requester([baseUrl, jsonRequest(), jsonResponse(), debugRequest])
+    const body = new Foo('bar')
+    const req = request({url: '/json-echo', method: 'PUT', body})
+    return expectRequestBody(req).to.eventually.eql({foo: 'bar', baz: 'yup'})
+  })
+
+  it('should serialize plain values (numbers, strings, booleans)', () => {
+    const request = requester([baseUrl, jsonRequest(), jsonResponse(), debugRequest])
+    const url = '/json-echo'
+    return Promise.all([
+      expectRequestBody(request({url, body: 'string'})).to.eventually.eql('string'),
+      expectRequestBody(request({url, body: 1337})).to.eventually.eql(1337),
+      expectRequestBody(request({url, body: false})).to.eventually.eql(false)
+    ])
+  })
+
+  it('should serialize arrays', () => {
+    const request = requester([baseUrl, jsonRequest(), jsonResponse(), debugRequest])
+    const body = ['foo', 'bar', 'baz']
+    const req = request({url: '/json-echo', method: 'PUT', body})
+    return expectRequestBody(req).to.eventually.eql(body)
+  })
+
+  testNode('should not serialize streams', () => {
+    const request = requester([baseUrl, jsonRequest(), jsonResponse(), debugRequest])
+    const body = intoStream('unicorn')
+    const req = request({url: '/echo', method: 'PUT', body})
+    return expectRequestBody(req).to.eventually.eql('unicorn')
   })
 })

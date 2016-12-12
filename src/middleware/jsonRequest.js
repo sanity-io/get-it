@@ -1,8 +1,19 @@
 const objectAssign = require('object-assign')
+const isPlainObject = require('is-plain-object')
+
+const serializeTypes = ['boolean', 'string', 'number']
 
 module.exports = () => ({
   processOptions: options => {
-    if (typeof options.body === 'undefined') {
+    const body = options.body
+    const shouldSerialize = (
+      serializeTypes.indexOf(typeof body) !== -1
+      || Array.isArray(body)
+      || isPlainObject(body)
+      || (body && typeof body.toJSON === 'function')
+    )
+
+    if (!shouldSerialize) {
       return options
     }
 
