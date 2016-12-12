@@ -40,10 +40,24 @@ describe('retry middleware', function () {
     return expectRequest(req).to.eventually.be.rejectedWith(/HTTP 500/i)
   })
 
+  it('should be able to set max retries on a per-request basis', function () {
+    this.timeout(400)
+    const request = requester([baseUrl, httpErrors(), retry({maxRetries: 5, shouldRetry: retry5xx})])
+    const req = request({url: '/status?code=500', maxRetries: 1})
+    return expectRequest(req).to.eventually.be.rejectedWith(/HTTP 500/i)
+  })
+
   it('should be able to set a custom function on whether or not we should retry', () => {
     const shouldRetry = (error, retryCount) => retryCount !== 1
     const request = requester([baseUrl, debugRequest, httpErrors(), retry({shouldRetry})])
     const req = request({url: '/status?code=503'})
+    return expectRequest(req).to.eventually.be.rejectedWith(/HTTP 503/)
+  })
+
+  it('should be able to set a custom function on whether or not we should retry (per-request basis)', () => {
+    const shouldRetry = (error, retryCount) => retryCount !== 1
+    const request = requester([baseUrl, debugRequest, httpErrors(), retry()])
+    const req = request({url: '/status?code=503', shouldRetry})
     return expectRequest(req).to.eventually.be.rejectedWith(/HTTP 503/)
   })
 

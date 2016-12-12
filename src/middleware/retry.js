@@ -4,15 +4,17 @@ const defaultShouldRetry = require('../util/node-shouldRetry')
 const retry = module.exports = (opts = {}) => {
   const maxRetries = opts.maxRetries || 5
   const retryDelay = opts.retryDelay || getRetryDelay
-  const shouldRetry = opts.shouldRetry || defaultShouldRetry
+  const allowRetry = opts.shouldRetry || defaultShouldRetry
 
   return {
     onError: (err, context) => {
       const options = context.options
+      const max = options.maxRetries || maxRetries
+      const shouldRetry = options.shouldRetry || allowRetry
       const attemptNumber = options.attemptNumber || 0
 
       // Give up?
-      if (!shouldRetry(err, attemptNumber) || attemptNumber >= maxRetries) {
+      if (!shouldRetry(err, attemptNumber) || attemptNumber >= max) {
         return err
       }
 
