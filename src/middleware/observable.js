@@ -1,4 +1,4 @@
-const global = require('global')
+const global = require('../util/global')
 const objectAssign = require('object-assign')
 
 module.exports = (opts = {}) => {

@@ -1,4 +1,4 @@
-const global = require('global')
+const global = require('../util/global')
 const Cancel = require('./cancel/Cancel')
 const CancelToken = require('./cancel/CancelToken')
 const isCancel = require('./cancel/isCancel')

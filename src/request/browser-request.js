@@ -1,9 +1,9 @@
 /* eslint max-depth: ["error", 4] */
-const win = require('global/window')
 const sameOrigin = require('same-origin')
 const parseHeaders = require('parse-headers')
 const noop = function () { /* intentional noop */ }
 
+const win = window
 const XmlHttpRequest = win.XMLHttpRequest || noop
 const hasXhr2 = 'withCredentials' in (new XmlHttpRequest())
 const XDomainRequest = hasXhr2 ? XmlHttpRequest : win.XDomainRequest

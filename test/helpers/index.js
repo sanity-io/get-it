@@ -1,4 +1,4 @@
-const global = require('global')
+const global = require('../../src/util/global')
 if (typeof global.Promise === 'undefined') {
   require('es6-promise/auto')
 }
