@@ -28,6 +28,7 @@
     "karma": "karma start",
     "lint": "eslint .",
     "posttest": "npm run lint",
+    "prepublish": "in-publish && npm run compile && npm test || not-in-publish",
     "test": "mocha"
   },
   "keywords": [
@@ -42,6 +43,7 @@
     "create-error-class": "^3.0.2",
     "debug": "^2.3.3",
     "follow-redirects": "^1.2.0",
+    "in-publish": "^2.0.0",
     "into-stream": "^3.1.0",
     "is-retry-allowed": "^1.1.0",
     "is-stream": "^1.1.0",
