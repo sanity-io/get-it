@@ -20,7 +20,7 @@ module.exports = opts => {
 
   // Shallow-merge (override) existing query params
   if (options.query) {
-    url.query = objectAssign({}, url.query, options.query)
+    url.query = objectAssign({}, url.query, removeUndefined(options.query))
   }
 
   // Implicit POST if we have not specified a method but have a body
@@ -49,4 +49,14 @@ function normalizeTimeout(time) {
   }
 
   return {connect: delay, socket: delay}
+}
+
+function removeUndefined(obj) {
+  const target = {}
+  for (const key in obj) {
+    if (obj[key] !== undefined) {
+      target[key] = obj[key]
+    }
+  }
+  return target
 }
