@@ -4,6 +4,7 @@ const {
   testNode,
   testNonIE,
   debugRequest,
+  expect,
   expectRequest,
   baseUrl,
   isIE9,
@@ -15,6 +16,10 @@ describe('retry middleware', function () {
   this.timeout(15000)
 
   const retry5xx = err => err.response.statusCode >= 500
+
+  it('exposes default "shouldRetry" function', () => {
+    expect(retry.shouldRetry).to.be.a('function')
+  })
 
   testNonIE('should handle retries when retry middleware is used', () => {
     const request = requester([baseUrl, debugRequest, retry()])

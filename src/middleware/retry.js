@@ -1,7 +1,7 @@
 const objectAssign = require('object-assign')
 const defaultShouldRetry = require('../util/node-shouldRetry')
 
-module.exports = (opts = {}) => {
+const retry = module.exports = (opts = {}) => {
   const maxRetries = opts.maxRetries || 5
   const retryDelay = opts.retryDelay || getRetryDelay
   const shouldRetry = opts.shouldRetry || defaultShouldRetry
@@ -29,6 +29,8 @@ module.exports = (opts = {}) => {
     }
   }
 }
+
+retry.shouldRetry = defaultShouldRetry
 
 function getRetryDelay(attemptNum) {
   return (100 * Math.pow(2, attemptNum)) + (Math.random() * 100)
