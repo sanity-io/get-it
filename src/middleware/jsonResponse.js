@@ -3,7 +3,7 @@ const objectAssign = require('object-assign')
 module.exports = () => ({
   onResponse: response => {
     const contentType = response.headers['content-type']
-    if (!response.body || contentType.indexOf('application/json') === -1) {
+    if (!response.body || !contentType || contentType.indexOf('application/json') === -1) {
       return response
     }
 

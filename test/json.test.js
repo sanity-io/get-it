@@ -27,6 +27,12 @@ describe('json middleware', () => {
     return expectRequestBody(req).to.eventually.eql('Just some plain text for you to consume')
   })
 
+  it('should be able to use json response body parser on non-json responses (no content type)', () => {
+    const request = requester([baseUrl, jsonResponse(), debugRequest])
+    const req = request({url: '/echo', body: 'Foobar'})
+    return expectRequestBody(req).to.eventually.eql('Foobar')
+  })
+
   it('should be able to use json request body parser without response body', () => {
     const request = requester([baseUrl, jsonResponse(), jsonRequest(), debugRequest])
     const req = request({url: '/debug', method: 'post'})
