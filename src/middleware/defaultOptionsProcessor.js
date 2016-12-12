@@ -35,7 +35,7 @@ module.exports = opts => {
 }
 
 function normalizeTimeout(time) {
-  if (time === false) {
+  if (time === false || time === 0) {
     return false
   }
 
