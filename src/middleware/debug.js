@@ -2,7 +2,7 @@ const debugIt = require('debug')
 
 module.exports = (opts = {}) => {
   const verbose = opts.verbose
-  const namespace = 'get-it'
+  const namespace = opts.namespace || 'get-it'
   const defaultLogger = debugIt(namespace)
   const log = opts.log || defaultLogger
   const shortCircuit = log === defaultLogger && !debugIt.enabled(namespace)
