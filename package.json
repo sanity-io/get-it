@@ -40,7 +40,6 @@
   "author": "Sanity.io <hello@sanity.io>",
   "license": "MIT",
   "dependencies": {
-    "@rexxars/timed-out": "^3.0.1",
     "create-error-class": "^3.0.2",
     "debug": "^2.3.3",
     "follow-redirects": "^1.2.0",
@@ -55,6 +54,7 @@
     "progress-stream": "^1.2.0",
     "same-origin": "^0.1.1",
     "simple-concat": "^1.0.0",
+    "timed-out": "^3.1.0",
     "unzip-response": "^2.0.1",
     "url-parse": "^1.1.7"
   },
