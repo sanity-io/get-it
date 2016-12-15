@@ -40,6 +40,14 @@ describe('retry middleware', function () {
     return expectRequest(req).to.eventually.be.rejectedWith(/HTTP 500/i)
   })
 
+  testNode('should not retry if it body is a stream', function () {
+    this.timeout(400)
+    const fs = require('fs')
+    const request = requester([baseUrl, httpErrors(), retry({maxRetries: 5, shouldRetry: retry5xx})])
+    const req = request({url: '/status?code=500', body: fs.createReadStream(__filename)})
+    return expectRequest(req).to.eventually.be.rejectedWith(/HTTP 500/i)
+  })
+
   it('should be able to set max retries on a per-request basis', function () {
     this.timeout(400)
     const request = requester([baseUrl, httpErrors(), retry({maxRetries: 5, shouldRetry: retry5xx})])
