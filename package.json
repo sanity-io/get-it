@@ -10,7 +10,8 @@
     "./lib/middleware/progress/node-progress.js": "./lib/middleware/progress/browser-progress.js",
     "./src/util/node-shouldRetry.js": "./src/util/browser-shouldRetry.js",
     "./lib/util/node-shouldRetry.js": "./lib/util/browser-shouldRetry.js",
-    "fs": "./test/helpers/noop.js"
+    "fs": "./test/helpers/noop.js",
+    "into-stream": "./test/helpers/noop.js"
   },
   "scripts": {
     "bundle": "npm run bundle:build && npm run bundle:build:all && npm run bundle:minify && npm run bundle:minify:all && npm run bundle:size",

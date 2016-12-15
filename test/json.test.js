@@ -1,4 +1,3 @@
-const intoStream = require('into-stream')
 const {jsonResponse, jsonRequest} = require('../src/middleware')
 const requester = require('../src/index')
 const {
@@ -71,13 +70,12 @@ describe('json middleware', () => {
     return expectRequestBody(req).to.eventually.eql({foo: 'bar', baz: 'yup'})
   })
 
-  it('should serialize plain values (numbers, strings, booleans)', () => {
+  it('should serialize plain values (numbers, strings)', () => {
     const request = requester([baseUrl, jsonRequest(), jsonResponse(), debugRequest])
     const url = '/json-echo'
     return Promise.all([
       expectRequestBody(request({url, body: 'string'})).to.eventually.eql('string'),
-      expectRequestBody(request({url, body: 1337})).to.eventually.eql(1337),
-      expectRequestBody(request({url, body: false})).to.eventually.eql(false)
+      expectRequestBody(request({url, body: 1337})).to.eventually.eql(1337)
     ])
   })
 
@@ -90,7 +88,7 @@ describe('json middleware', () => {
 
   testNode('should not serialize streams', () => {
     const request = requester([baseUrl, jsonRequest(), jsonResponse(), debugRequest])
-    const body = intoStream('unicorn')
+    const body = require('into-stream')('unicorn')
     const req = request({url: '/echo', method: 'PUT', body})
     return expectRequestBody(req).to.eventually.eql('unicorn')
   })
