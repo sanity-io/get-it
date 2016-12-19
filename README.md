@@ -115,7 +115,7 @@ const request = getIt([promise])
 
 ### Cancelling promise-based requests
 
-With the Promise API, you can cancel requests using a _cancel token_. This API is based on the [Cancelable Promises proposal](https://github.com/tc39/proposal-cancelable-promises), which is currently at Stage 1.
+With the Promise API, you can cancel requests using a _cancel token_. This API is based on the [Cancelable Promises proposal](https://github.com/tc39/proposal-cancelable-promises), which was at Stage 1 before it was withdrawn.
 
 You can create a cancel token using the `CancelToken.source` factory as shown below:
 
