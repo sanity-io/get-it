@@ -35,7 +35,7 @@ module.exports = (context, cb) => {
   const lengthHeader = {}
   if (options.bodySize) {
     lengthHeader['Content-Length'] = options.bodySize
-  } else if (options.body && bodyType !== 'stream') {
+  } else if (options.body && Buffer.isBuffer(options.body)) {
     lengthHeader['Content-Length'] = options.body.length
   }
 
