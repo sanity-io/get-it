@@ -86,6 +86,13 @@ describe('json middleware', () => {
     return expectRequestBody(req).to.eventually.eql(body)
   })
 
+  testNode('should not serialize buffers', () => {
+    const request = requester([baseUrl, jsonRequest(), jsonResponse(), debugRequest])
+    const body = Buffer.from('blåbærsyltetøy', 'utf8')
+    const req = request({url: '/echo', method: 'PUT', body})
+    return expectRequestBody(req).to.eventually.eql('blåbærsyltetøy')
+  })
+
   testNode('should not serialize streams', () => {
     const request = requester([baseUrl, jsonRequest(), jsonResponse(), debugRequest])
     const body = require('into-stream')('unicorn')
