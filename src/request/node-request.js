@@ -112,7 +112,7 @@ function getProgressStream(options) {
   }
 
   const bodyIsStream = isStream(options.body)
-  const length = options.bodySize || (bodyIsStream ? null : options.body.length)
+  const length = options.bodySize || (bodyIsStream ? null : Buffer.byteLength(options.body))
   if (!length) {
     return bodyIsStream ? {bodyStream: options.body} : {}
   }
