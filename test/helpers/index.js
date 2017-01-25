@@ -18,6 +18,7 @@ const isIE = !isNode && typeof window.EventSource === 'undefined'
 const isIE9 = (!isNode && window.XMLHttpRequest
   && !('withCredentials' in (new window.XMLHttpRequest())))
 
+const describeNode = isNode ? describe : describe.skip
 const testIE = isIE ? it : it.skip
 const testNonIE = isIE ? it.skip : it
 const testNonIE9 = isIE9 ? it.skip : it
@@ -43,6 +44,7 @@ module.exports = {
   testIE,
   testNode,
   debugRequest,
+  describeNode,
   serverUrl,
   baseUrlPrefix,
   baseUrl,
