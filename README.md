@@ -1,6 +1,6 @@
 # get-it
 
-Generic HTTP request library for node and browsers (IE9 and newer)
+Generic HTTP request library for node (>= 4) and browsers (IE9 and newer)
 
 ## Motivation
 

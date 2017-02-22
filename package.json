@@ -3,6 +3,9 @@
   "version": "1.0.2",
   "description": "Generic HTTP request library for node and browsers",
   "main": "lib/index.js",
+  "engines": {
+    "node": ">=4.0.0"
+  },
   "browser": {
     "./src/request/node-request.js": "./src/request/browser-request.js",
     "./lib/request/node-request.js": "./lib/request/browser-request.js",
