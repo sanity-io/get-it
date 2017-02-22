@@ -25,7 +25,7 @@ const retry = module.exports = (opts = {}) => {
       }
 
       // Give up?
-      if (!shouldRetry(err, attemptNumber) || attemptNumber >= max) {
+      if (!shouldRetry(err, attemptNumber, options) || attemptNumber >= max) {
         return err
       }
 
