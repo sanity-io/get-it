@@ -95,7 +95,10 @@ module.exports = (context, callback) => {
 
   function abort() {
     aborted = true
-    xhr.abort()
+
+    if (xhr) {
+      xhr.abort()
+    }
   }
 
   function timeoutRequest(code) {
