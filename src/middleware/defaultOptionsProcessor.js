@@ -1,6 +1,7 @@
 const objectAssign = require('object-assign')
 const urlParse = require('url-parse')
 
+const has = Object.prototype.hasOwnProperty
 const defaultOptions = {timeout: 120000}
 
 module.exports = opts => {
@@ -29,9 +30,28 @@ module.exports = opts => {
     : (options.method || 'GET').toUpperCase()
 
   // Stringify URL
-  options.url = url.toString()
+  options.url = url.toString(stringifyQueryString)
 
   return options
+}
+
+function stringifyQueryString(obj) {
+  const pairs = []
+  for (const key in obj) {
+    if (has.call(obj, key)) {
+      push(key, obj[key])
+    }
+  }
+
+  return pairs.length ? pairs.join('&') : ''
+
+  function push(key, val) {
+    if (Array.isArray(val)) {
+      val.forEach(item => push(key, item))
+    } else {
+      pairs.push([key, val].map(encodeURIComponent).join('='))
+    }
+  }
 }
 
 function normalizeTimeout(time) {

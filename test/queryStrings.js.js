@@ -21,6 +21,17 @@ describe('query strings', () => {
     return expectRequestBody(req).to.eventually.eql({foo: '1', bar: '2', baz: '3'})
   })
 
+  it('should serialize arrays correctly', () => {
+    const request = requester([baseUrl, jsonResponse(), debugRequest])
+    const query = {it: ['hai', 'there']}
+    const req = request({url: '/query-string?foo=1&bar=2', query})
+    return expectRequestBody(req).to.eventually.eql({
+      foo: '1',
+      bar: '2',
+      it: ['hai', 'there']
+    })
+  })
+
   it('should remove undefined values from query strings', () => {
     const request = requester([baseUrl, jsonResponse(), debugRequest])
     const query = {foo: undefined, bar: 'baz'}
