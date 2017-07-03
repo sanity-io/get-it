@@ -7,7 +7,7 @@ const isStream = stream => (
   && typeof stream.pipe === 'function'
 )
 
-const retry = module.exports = (opts = {}) => {
+const retry = (opts = {}) => {
   const maxRetries = opts.maxRetries || 5
   const retryDelay = opts.retryDelay || getRetryDelay
   const allowRetry = opts.shouldRetry || defaultShouldRetry
@@ -44,6 +44,8 @@ const retry = module.exports = (opts = {}) => {
 }
 
 retry.shouldRetry = defaultShouldRetry
+
+module.exports = retry
 
 function getRetryDelay(attemptNum) {
   return (100 * Math.pow(2, attemptNum)) + (Math.random() * 100)

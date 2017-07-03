@@ -178,8 +178,8 @@ createServer.addHooks = (before, after) => {
 
   after(done => (
     hookState.server
-     ? hookState.server.close(done)
-     : done()
+      ? hookState.server.close(done)
+      : done()
   ))
 }
 

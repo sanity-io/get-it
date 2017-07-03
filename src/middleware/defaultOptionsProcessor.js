@@ -12,7 +12,7 @@ module.exports = opts => {
   // Parse URL into parts
   const url = urlParse(
     options.url,
-    {},  // Don't use current browser location
+    {}, // Don't use current browser location
     true // Parse query strings
   )
 
