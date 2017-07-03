@@ -7,8 +7,8 @@ const timedOut = require('timed-out')
 const isStream = require('is-stream')
 const toStream = require('into-stream')
 const objectAssign = require('object-assign')
-const unzipResponse = require('unzip-response')
 const progressStream = require('progress-stream')
+const decompressResponse = require('decompress-response')
 
 const adapter = 'node'
 
@@ -61,9 +61,9 @@ module.exports = (context, cb) => {
   }
 
   const request = protocol.request(reqOpts, response => {
-    // See if we should try to unzip the response
-    const tryUnzip = reqOpts.method !== 'HEAD'
-    const res = tryUnzip ? unzipResponse(response) : response
+    // See if we should try to decompress the response
+    const tryDecompress = reqOpts.method !== 'HEAD'
+    const res = tryDecompress ? decompressResponse(response) : response
 
     const resStream = context.applyMiddleware('onHeaders', res, {
       headers: response.headers,

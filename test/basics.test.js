@@ -3,6 +3,7 @@ const requester = require('../src/index')
 const {
   expectRequest,
   expectRequestBody,
+  promiseRequest,
   expect,
   testNonIE9,
   testNode,
@@ -49,8 +50,9 @@ describe('basics', function () {
     // Node.js (buffer)
     const request = requester([baseUrl, debugRequest])
     const req = request({url: '/plain-text', rawBody: true})
-    return expectRequestBody(req).to.eventually.be.an.instanceOf(Buffer)
-      .and.deep.equal(bufferFrom('Just some plain text for you to consume'))
+    return promiseRequest(req).then(res => {
+      expect(res.body.equals(bufferFrom('Just some plain text for you to consume'))).to.equal(true)
+    })
   } : () => {
     // Browser (ArrayBuffer)
     const request = requester([baseUrl, debugRequest])

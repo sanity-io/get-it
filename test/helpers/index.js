@@ -7,7 +7,7 @@ const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 const chaiSubset = require('chai-subset')
 const {base, debug} = require('../../src/middleware')
-const {expectRequest, expectRequestBody} = require('./expectRequest')
+const {expectRequest, expectRequestBody, promiseRequest} = require('./expectRequest')
 const expect = chai.expect
 
 chai.use(chaiSubset)
@@ -39,6 +39,7 @@ module.exports = {
   expectRequest,
   expectRequestBody,
   expect,
+  promiseRequest,
   testNonIE9,
   testNonIE,
   testIE,

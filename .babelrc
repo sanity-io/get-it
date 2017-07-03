@@ -1,3 +1,35 @@
 {
-  "presets": ["es2015"]
+  "env": {
+    "browser": {
+      "presets": [
+        [
+          "env",
+          {
+            "targets": {
+              "browsers": [
+                "ie >= 9"
+              ]
+            }
+          }
+        ]
+      ]
+    },
+    "node": {
+      "presets": [
+        [
+          "env",
+          {
+            "targets": {
+              "node": 4
+            },
+            "exclude": [
+              // These are not _really_ needed for node@4
+              "transform-es2015-block-scoping",
+              "transform-es2015-arrow-functions"
+            ]
+          }
+        ]
+      ]
+    }
+  }
 }
