@@ -14,6 +14,20 @@ module.exports = (context, callback) => {
   const cors = !sameOrigin(win.location.href, options.url)
   const timers = {}
 
+  // Allow middleware to inject a response, for instance in the case of caching or mocking
+  const injectedResponse = context.applyMiddleware('interceptRequest', undefined, {
+    adapter,
+    context
+  })
+
+  // If middleware injected a response, treat it as we normally would and return it
+  // Do note that the injected response has to be reduced to a cross-environment friendly response
+  if (injectedResponse) {
+    const cbTimer = setTimeout(callback, 0, null, injectedResponse)
+    const cancel = () => clearTimeout(cbTimer)
+    return {abort: cancel}
+  }
+
   // We'll want to null out the request on success/failure
   let xhr = cors ? new XDomainRequest() : new XmlHttpRequest()
 

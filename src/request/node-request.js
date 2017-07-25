@@ -52,6 +52,20 @@ module.exports = (context, cb) => {
     headers: objectAssign({}, options.headers, lengthHeader)
   })
 
+  // Allow middleware to inject a response, for instance in the case of caching or mocking
+  const injectedResponse = context.applyMiddleware('interceptRequest', undefined, {
+    adapter,
+    context
+  })
+
+  // If middleware injected a response, treat it as we normally would and return it
+  // Do note that the injected response has to be reduced to a cross-environment friendly response
+  if (injectedResponse) {
+    const cbTimer = setImmediate(callback, null, injectedResponse)
+    const abort = () => clearImmediate(cbTimer)
+    return {abort}
+  }
+
   let protocol = uri.protocol === 'https:' ? https : http
 
   // We're using the follow-redirects module to transparently follow redirects

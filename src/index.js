@@ -4,7 +4,15 @@ const processOptions = require('./middleware/defaultOptionsProcessor')
 const httpRequest = require('./request') // node-request in node, browser-request in browsers
 
 const channelNames = ['request', 'response', 'progress', 'error', 'abort']
-const middlehooks = ['processOptions', 'onRequest', 'onResponse', 'onError', 'onReturn', 'onHeaders']
+const middlehooks = [
+  'processOptions',
+  'interceptRequest',
+  'onRequest',
+  'onResponse',
+  'onError',
+  'onReturn',
+  'onHeaders'
+]
 
 module.exports = function createRequester(initMiddleware = []) {
   const loadedMiddleware = []
