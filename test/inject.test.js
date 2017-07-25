@@ -1,3 +1,4 @@
+const once = require('lodash.once')
 const {injectResponse} = require('../src/middleware')
 const requester = require('../src/index')
 const {
@@ -41,5 +42,19 @@ describe('inject response', () => {
       expectRequestBody(normalReq).to.eventually.contain('Just some plain text'),
       expectRequestBody(mockedReq).to.eventually.contain('Just some mocked text'),
     ])
+  })
+
+  it('should be able to immediately cancel request', cb => {
+    const done = once(cb)
+    const inject = () => ({body: 'foo'})
+    const request = requester([injectResponse({inject})])
+    const req = request({url: 'http://blah-blah'})
+
+    req.error.subscribe(err => done(new Error(`error channel should not be called when aborting, got:\n\n${err.message}`)))
+    req.response.subscribe(() => done(new Error('response channel should not be called when aborting')))
+
+    req.abort.publish()
+
+    setTimeout(() => done(), 250)
   })
 })
