@@ -17,7 +17,7 @@ describe('errors', () => {
 
   it('should error when httpErrors middleware is enabled and response code is >= 400', done => {
     const request = requester([baseUrl, httpErrors()])
-    const req = request({url: '/status?code=400'})
+    const req = request({url: '/status?code=400', headers: {foo: 'bar'}})
     req.response.subscribe(res => {
       throw new Error('Response channel called when error channel should have been triggered')
     })
@@ -28,7 +28,12 @@ describe('errors', () => {
         url: `${baseUrlPrefix}/status?code=400`,
         method: 'GET',
         statusCode: 400,
-        statusMessage: 'Bad Request'
+        statusMessage: 'Bad Request',
+        body: '---',
+      })
+
+      expect(err).to.have.deep.property('request.headers').and.containSubset({
+        foo: 'bar'
       })
 
       done()
