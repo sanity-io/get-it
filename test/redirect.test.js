@@ -2,7 +2,8 @@ const requester = require('../src/index')
 const {
   testNode,
   expectRequest,
-  baseUrl
+  baseUrl,
+  baseUrlPrefix
 } = require('./helpers')
 
 describe('redirects', () => {
@@ -11,7 +12,8 @@ describe('redirects', () => {
     const req = request({url: '/redirect?n=8'})
     return expectRequest(req).to.eventually.containSubset({
       statusCode: 200,
-      body: 'Done redirecting'
+      body: 'Done redirecting',
+      url: `${baseUrlPrefix}/redirect?n=10`
     })
   })
 

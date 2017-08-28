@@ -92,7 +92,13 @@ module.exports = (context, cb) => {
       }
 
       const body = options.rawBody ? data : data.toString()
-      const reduced = reduceResponse(res, options.url, reqOpts.method, body)
+      const reduced = reduceResponse(
+        res,
+        response.responseUrl || options.url, // On redirects, `responseUrl` is set
+        reqOpts.method,
+        body
+      )
+
       return callback(null, reduced)
     })
   })
