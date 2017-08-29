@@ -53,7 +53,13 @@ module.exports = (opts = {}) => {
     },
 
     onError: (err, context) => {
-      log('[%s] ERROR: %s', context.options.requestId, err.message)
+      const reqId = context.options.requestId
+      if (!err) {
+        log('[%s] Error encountered, but handled by an earlier middleware', reqId)
+        return err
+      }
+
+      log('[%s] ERROR: %s', reqId, err.message)
       return err
     }
   }
