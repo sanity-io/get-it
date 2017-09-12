@@ -115,6 +115,7 @@ module.exports = function createRequester(initMiddleware = []) {
     })
 
     loadedMiddleware.push(newMiddleware)
+    return request
   }
 
   request.clone = function clone() {

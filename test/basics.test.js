@@ -17,6 +17,11 @@ const {
 describe('basics', function () {
   this.timeout(15000)
 
+  it('should return same instance when calling use()', () => {
+    const request = requester([baseUrl])
+    return expect(request).to.equal(request.use(jsonResponse()))
+  })
+
   it('should be able to request a basic, plain-text file', () => {
     const body = 'Just some plain text for you to consume'
     const request = requester([baseUrl, debugRequest])
