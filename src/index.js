@@ -1,11 +1,13 @@
 const pubsub = require('nano-pubsub')
 const middlewareReducer = require('./util/middlewareReducer')
 const processOptions = require('./middleware/defaultOptionsProcessor')
+const validateOptions = require('./middleware/defaultOptionsValidator')
 const httpRequest = require('./request') // node-request in node, browser-request in browsers
 
 const channelNames = ['request', 'response', 'progress', 'error', 'abort']
 const middlehooks = [
   'processOptions',
+  'validateOptions',
   'interceptRequest',
   'onRequest',
   'onResponse',
@@ -19,7 +21,10 @@ module.exports = function createRequester(initMiddleware = []) {
   const middleware = middlehooks.reduce((ware, name) => {
     ware[name] = ware[name] || []
     return ware
-  }, {processOptions: [processOptions]})
+  }, {
+    processOptions: [processOptions],
+    validateOptions: [validateOptions]
+  })
 
   function request(opts) {
     const channels = channelNames.reduce((target, name) => {
@@ -32,6 +37,9 @@ module.exports = function createRequester(initMiddleware = []) {
 
     // Parse the passed options
     const options = applyMiddleware('processOptions', opts)
+
+    // Validate the options
+    applyMiddleware('validateOptions', options)
 
     // Build a context object we can pass to child handlers
     const context = {options, channels, applyMiddleware}

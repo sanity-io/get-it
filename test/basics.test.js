@@ -22,6 +22,11 @@ describe('basics', function () {
     return expect(request).to.equal(request.use(jsonResponse()))
   })
 
+  it('should throw when requesting with invalid URL', () => {
+    const request = requester()
+    return expect(() => request({url: 'heisann'})).to.throw(/valid URL/)
+  })
+
   it('should be able to request a basic, plain-text file', () => {
     const body = 'Just some plain text for you to consume'
     const request = requester([baseUrl, debugRequest])
