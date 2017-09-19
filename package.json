@@ -101,5 +101,13 @@
     "uglifyify": "^4.0.3",
     "webpack": "^2.0.0",
     "zen-observable": "^0.4.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sanity-io/get-it.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sanity-io/get-it/issues"
+  },
+  "homepage": "https://github.com/sanity-io/get-it#readme"
 }
