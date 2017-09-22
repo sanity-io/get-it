@@ -3,11 +3,11 @@ const debugIt = require('debug')
 const SENSITIVE_HEADERS = ['Authorization']
 
 const hasOwn = Object.prototype.hasOwnProperty
-const redactKeys = (source, redactKeys) => {
+const redactKeys = (source, keys) => {
   const target = {}
   for (const key in source) {
     if (hasOwn.call(source, key)) {
-      target[key] = redactKeys.indexOf(key) > -1 ? '<redacted>' : source[key]
+      target[key] = keys.indexOf(key) > -1 ? '<redacted>' : source[key]
     }
   }
   return target
