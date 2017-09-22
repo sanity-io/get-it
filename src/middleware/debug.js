@@ -1,5 +1,18 @@
 const debugIt = require('debug')
 
+const SENSITIVE_HEADERS = ['Authorization']
+
+const hasOwn = Object.prototype.hasOwnProperty
+const redactKeys = (source, redactKeys) => {
+  const target = {}
+  for (const key in source) {
+    if (hasOwn.call(source, key)) {
+      target[key] = redactKeys.indexOf(key) > -1 ? '<redacted>' : source[key]
+    }
+  }
+  return target
+}
+
 module.exports = (opts = {}) => {
   const verbose = opts.verbose
   const namespace = opts.namespace || 'get-it'
@@ -29,7 +42,11 @@ module.exports = (opts = {}) => {
       }
 
       if (verbose && options.headers) {
-        log('[%s] Request headers: %s', options.requestId, JSON.stringify(options.headers, null, 2))
+        log(
+          '[%s] Request headers: %s',
+          options.requestId,
+          JSON.stringify(redactKeys(options.headers, SENSITIVE_HEADERS), null, 2)
+        )
       }
 
       return event
