@@ -42,11 +42,11 @@ module.exports = (opts = {}) => {
       }
 
       if (verbose && options.headers) {
-        log(
-          '[%s] Request headers: %s',
-          options.requestId,
-          JSON.stringify(redactKeys(options.headers, SENSITIVE_HEADERS), null, 2)
-        )
+        const headers = opts.redactSensitiveHeaders === false
+          ? options.headers
+          : redactKeys(options.headers, SENSITIVE_HEADERS)
+
+        log('[%s] Request headers: %s', options.requestId, JSON.stringify(headers, null, 2))
       }
 
       return event
