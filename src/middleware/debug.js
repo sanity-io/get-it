@@ -1,6 +1,6 @@
 const debugIt = require('debug')
 
-const SENSITIVE_HEADERS = ['Authorization']
+const SENSITIVE_HEADERS = ['Cookie', 'Authorization']
 
 const hasOwn = Object.prototype.hasOwnProperty
 const redactKeys = (source, keys) => {
