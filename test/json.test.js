@@ -56,20 +56,6 @@ describe('json middleware', () => {
     return expectRequest(req).to.eventually.be.rejectedWith(/response body as json/i)
   })
 
-  it('should serialize anything with a toJSON function', () => {
-    const Foo = function (fooVal) {
-      this.foo = fooVal
-    }
-    Foo.prototype.toJSON = function () {
-      return {foo: this.foo, baz: 'yup'}
-    }
-
-    const request = requester([baseUrl, jsonRequest(), jsonResponse(), debugRequest])
-    const body = new Foo('bar')
-    const req = request({url: '/json-echo', method: 'PUT', body})
-    return expectRequestBody(req).to.eventually.eql({foo: 'bar', baz: 'yup'})
-  })
-
   it('should serialize plain values (numbers, strings)', () => {
     const request = requester([baseUrl, jsonRequest(), jsonResponse(), debugRequest])
     const url = '/json-echo'
