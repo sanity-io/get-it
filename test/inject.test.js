@@ -33,7 +33,7 @@ describe('inject response', () => {
 
   it('should be able to use real request on a per-request basis', () => {
     const mock = {body: 'Just some mocked text'}
-    const inject = evt => evt.context.options.url.includes('/mocked') && mock
+    const inject = evt => evt.context.options.url.indexOf('/mocked') !== -1 && mock
     const request = requester([baseUrl, injectResponse({inject})])
     const normalReq = request({url: '/plain-text'})
     const mockedReq = request({url: '/mocked'})
