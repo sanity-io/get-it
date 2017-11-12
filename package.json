@@ -9,6 +9,7 @@
   "browser": {
     "./middleware.js": "./lib/middleware/index.js",
     "./src/index.js": "./lib/index.js",
+    "./lib-node": "./lib",
     "./lib-node/index.js": "./lib/index.js",
     "./src/request/node-request.js": "./src/request/browser-request.js",
     "./lib/request/node-request.js": "./lib/request/browser-request.js",
