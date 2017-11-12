@@ -186,7 +186,7 @@ module.exports = (context, callback) => {
 
     return {
       body: xhr.response || xhr.responseText,
-      url: options.url,
+      url: xhr.responseURL || options.url, // On redirects, some browsers set `responseURL`
       method: options.method,
       headers: isXdr ? {} : parseHeaders(xhr.getAllResponseHeaders()),
       statusCode: statusCode,
