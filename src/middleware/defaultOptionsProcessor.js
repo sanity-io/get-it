@@ -1,8 +1,12 @@
 const objectAssign = require('object-assign')
 const urlParse = require('url-parse')
 
+const isReactNative = typeof navigator === 'undefined'
+  ? false
+  : navigator.product === 'ReactNative'
+
 const has = Object.prototype.hasOwnProperty
-const defaultOptions = {timeout: 120000}
+const defaultOptions = {timeout: isReactNative ? 60000 : 120000}
 
 module.exports = opts => {
   const options = typeof opts === 'string'
