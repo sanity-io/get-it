@@ -120,8 +120,7 @@ module.exports = (context, callback) => {
     xhr.abort()
     const error = new Error(code === 'ESOCKETTIMEDOUT'
       ? `Socket timed out on request to ${options.url}`
-      : `Connection timed out on request to ${options.url}`
-    )
+      : `Connection timed out on request to ${options.url}`)
     error.code = code
     context.channels.error.publish(error)
   }

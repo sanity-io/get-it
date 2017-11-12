@@ -22,13 +22,9 @@ module.exports = config => {
     singleRun: !keepOpen,
 
     middleware: ['test-server'],
-    plugins: config.plugins.concat([
-      {'middleware:test-server': ['factory', server.responseHandlerFactory]}
-    ]),
+    plugins: config.plugins.concat([{'middleware:test-server': ['factory', server.responseHandlerFactory]}]),
 
-    files: [
-      {pattern: 'test/*.test.js', watched: false}
-    ],
+    files: [{pattern: 'test/*.test.js', watched: false}],
 
     preprocessors: {
       'test/*.test.js': ['webpack', 'sourcemap']

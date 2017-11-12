@@ -34,7 +34,6 @@ module.exports = () => ({
 
     const normalize = normalizer('upload')
     evt.progress.on('progress', prog =>
-      evt.context.channels.progress.publish(normalize(prog))
-    )
+      evt.context.channels.progress.publish(normalize(prog)))
   }
 })

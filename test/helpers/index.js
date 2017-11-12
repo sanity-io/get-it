@@ -28,12 +28,15 @@ const debugRequest = debug({verbose: true})
 const serverUrl = `http://${hostname}:9876`
 const baseUrlPrefix = `${serverUrl}/req-test`
 const baseUrl = base(baseUrlPrefix)
+
+/* eslint-disable no-buffer-constructor */
 const bufferFrom = str => {
   const nodeVersion = parseInt(process.version.replace('v', ''), 10)
   return nodeVersion >= 6
     ? Buffer.from(str, 'utf8')
     : new Buffer(str, 'utf8')
 }
+/* eslint-enable no-buffer-constructor */
 
 module.exports = {
   expectRequest,
