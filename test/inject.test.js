@@ -1,6 +1,6 @@
 const once = require('lodash.once')
 const {injectResponse} = require('../src/middleware')
-const requester = require('../src/index')
+const requester = require('../src')
 const {
   baseUrl,
   expect,

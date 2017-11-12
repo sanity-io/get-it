@@ -1,5 +1,5 @@
 const {jsonResponse, jsonRequest} = require('../src/middleware')
-const requester = require('../src/index')
+const requester = require('../src')
 const {
   testNode,
   debugRequest,

@@ -1,5 +1,5 @@
 const once = require('lodash.once')
-const requester = require('../src/index')
+const requester = require('../src')
 const {expect, debugRequest, baseUrl} = require('./helpers')
 
 describe('timeouts', function () {

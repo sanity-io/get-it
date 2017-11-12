@@ -1,7 +1,7 @@
 const once = require('lodash.once')
 const zenObservable = require('zen-observable')
 const {observable, httpErrors} = require('../src/middleware')
-const requester = require('../src/index')
+const requester = require('../src')
 const {expect, baseUrl} = require('./helpers')
 
 describe('observable middleware', () => {

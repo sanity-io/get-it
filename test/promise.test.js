@@ -1,6 +1,6 @@
 const once = require('lodash.once')
 const {promise, httpErrors} = require('../src/middleware')
-const requester = require('../src/index')
+const requester = require('../src')
 const {expect, debugRequest, baseUrl, testNonIE} = require('./helpers')
 
 describe('promise middleware', function () {

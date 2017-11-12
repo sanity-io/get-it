@@ -1,4 +1,4 @@
-const requester = require('../src/index')
+const requester = require('../src')
 const {progress, observable} = require('../src/middleware')
 const {baseUrl, testNode, testNonIE, expect} = require('./helpers')
 

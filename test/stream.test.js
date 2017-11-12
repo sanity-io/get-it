@@ -1,6 +1,6 @@
 const getUri = require('./helpers/getUri')
 const toStream = require('into-stream')
-const requester = require('../src/index')
+const requester = require('../src')
 const {
   expectRequest,
   expectRequestBody,

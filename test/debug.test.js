@@ -1,4 +1,4 @@
-const requester = require('../src/index')
+const requester = require('../src')
 const {debug, jsonRequest, jsonResponse} = require('../src/middleware')
 const {baseUrl, expect} = require('./helpers')
 

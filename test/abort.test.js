@@ -1,5 +1,5 @@
 const once = require('lodash.once')
-const requester = require('../src/index')
+const requester = require('../src')
 const {debugRequest, baseUrl} = require('./helpers')
 
 describe('aborting requests', () => {

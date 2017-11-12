@@ -1,4 +1,4 @@
-const requester = require('../src/index')
+const requester = require('../src')
 const {retry, httpErrors} = require('../src/middleware')
 const {
   testNode,
