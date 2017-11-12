@@ -69,8 +69,8 @@ describe('retry middleware', function () {
     return expectRequest(req).to.eventually.be.rejectedWith(/HTTP 503/)
   })
 
-  it('should not retry non-GET-requests by default', () => {
-    // Browsers have a weird thing where they might auto-retry on network errors
+  // Browsers have a weird thing where they might auto-retry on network errors
+  testNode('should not retry non-GET-requests by default', () => {
     const request = requester([baseUrl, debugRequest, retry()])
     const req = request({url: `/fail?uuid=${Math.random()}&n=2`, method: 'POST', body: 'Heisann'})
     return expectRequest(req).to.eventually.be.rejectedWith(Error)
