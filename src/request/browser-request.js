@@ -11,8 +11,10 @@ const adapter = 'xhr'
 
 module.exports = (context, callback) => {
   const options = context.options
-  const cors = !sameOrigin(win.location.href, options.url)
   const timers = {}
+
+  // Deep-checking window.location because of react native, where `location` doesn't exist
+  const cors = win && win.location && !sameOrigin(win.location.href, options.url)
 
   // Allow middleware to inject a response, for instance in the case of caching or mocking
   const injectedResponse = context.applyMiddleware('interceptRequest', undefined, {
