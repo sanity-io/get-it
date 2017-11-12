@@ -13,6 +13,16 @@ describe('redirects', () => {
     return expectRequest(req).to.eventually.containSubset({
       statusCode: 200,
       body: 'Done redirecting',
+    })
+  })
+
+  // @todo Scope this more appropriately when we have cut phantom from the setup
+  testNode('should resolve URL to target URL on node/modern browsers', () => {
+    const request = requester([baseUrl])
+    const req = request({url: '/redirect?n=8'})
+    return expectRequest(req).to.eventually.containSubset({
+      statusCode: 200,
+      body: 'Done redirecting',
       url: `${baseUrlPrefix}/redirect?n=10`
     })
   })
