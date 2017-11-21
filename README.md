@@ -51,7 +51,7 @@ request.use(promise())
 
 // Now you're ready to use the requester:
 request({url: '/projects'})
-  .then(projects => console.log(projects))
+  .then(response => console.log(response.body))
   .catch(err => console.error(err))
 ```
 
@@ -97,12 +97,15 @@ By default, `get-it` will return an object of single-channel event emitters. Thi
 
 ## Promise API
 
+For the most part, you simply have to register the middleware and you should be good to go. Sometimes you only need the response body, in which case you can set the `onlyBody` option to `true`. Otherwise the promise will be resolved with the response object mentioned earlier.
+
 ```js
 const getIt = require('get-it')
-const request = getIt([require('get-it/lib/middleware/promise')])
+const promise = require('get-it/lib/middleware/promise')
+const request = getIt([promise({onlyBody: true})])
 
-request({url: 'http://foo.bar'})
-  .then(res => console.log(res.body))
+request({url: 'http://foo.bar/api/projects'})
+  .then(projects => console.log(projects))
   .catch(err => console.error(err))
 ```
 
@@ -112,7 +115,7 @@ If you are targetting older browsers that do not have a global Promise implement
 require('es6-promise/auto')
 
 const promise = require('get-it/lib/middleware/promise')
-const request = getIt([promise])
+const request = getIt([promise()])
 ```
 
 ### Cancelling promise-based requests
@@ -123,7 +126,7 @@ You can create a cancel token using the `CancelToken.source` factory as shown be
 
 ```js
 const promise = require('get-it/lib/middleware/promise')
-const request = getIt([promise])
+const request = getIt([promise()])
 
 const source = promise.CancelToken.source()
 

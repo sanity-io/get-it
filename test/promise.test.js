@@ -16,6 +16,12 @@ describe('promise middleware', function () {
     })
   })
 
+  it('should be able to resolve only the response body', () => {
+    const request = requester([baseUrl, promise({onlyBody: true})])
+    const req = request({url: '/plain-text'})
+    return expect(req).to.eventually.equal('Just some plain text for you to consume')
+  })
+
   testNonIE('should reject network errors', () => {
     const request = requester([baseUrl, promise()])
     const req = request({url: '/permafail'})
