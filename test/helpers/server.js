@@ -1,4 +1,5 @@
 /* eslint-disable complexity */
+const qs = require('querystring')
 const url = require('url')
 const http = require('http')
 const zlib = require('zlib')
@@ -65,6 +66,12 @@ const responseHandler = (req, res, next) => {
     case '/req-test/json-echo':
       res.setHeader('Content-Type', 'application/json')
       req.pipe(res)
+      break
+    case '/req-test/urlencoded':
+      simpleConcat(req, (unused, body) => {
+        res.setHeader('Content-Type', 'application/json')
+        res.end(JSON.stringify(qs.parse(body.toString())))
+      })
       break
     case '/req-test/echo':
       req.pipe(res)
