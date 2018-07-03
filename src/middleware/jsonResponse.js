@@ -1,9 +1,10 @@
 const objectAssign = require('object-assign')
 
-module.exports = () => ({
+module.exports = opts => ({
   onResponse: response => {
-    const contentType = response.headers['content-type']
-    if (!response.body || !contentType || contentType.indexOf('application/json') === -1) {
+    const contentType = response.headers['content-type'] || ''
+    const shouldDecode = (opts && opts.force) || contentType.indexOf('application/json') !== -1
+    if (!response.body || !contentType || !shouldDecode) {
       return response
     }
 

@@ -15,6 +15,12 @@ describe('json middleware', () => {
     return expectRequestBody(req).to.eventually.have.property('foo', 'bar')
   })
 
+  it('should be able to force response body as JSON regardless of content type', () => {
+    const request = requester([baseUrl, jsonResponse({force: true}), debugRequest])
+    const req = request({url: '/custom-json'})
+    return expectRequestBody(req).to.eventually.have.property('foo', 'bar')
+  })
+
   it('should be able to send JSON-data data to a JSON endpoint and get JSON back', () => {
     const request = requester([baseUrl, jsonResponse(), jsonRequest(), debugRequest])
     const body = {randomValue: Date.now()}

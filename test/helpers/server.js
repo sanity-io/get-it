@@ -59,6 +59,10 @@ const responseHandler = (req, res, next) => {
       res.setHeader('Content-Type', 'text/plain')
       res.end('Just some plain text for you to consume')
       break
+    case '/req-test/custom-json':
+      res.setHeader('Content-Type', 'application/vnd.npm.install-v1+json')
+      res.end(JSON.stringify({foo: 'bar'}))
+      break
     case '/req-test/json':
       res.setHeader('Content-Type', 'application/json')
       res.end(JSON.stringify({foo: 'bar'}))
