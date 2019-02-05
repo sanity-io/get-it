@@ -89,9 +89,8 @@ const responseHandler = (req, res, next) => {
     case '/req-test/gzip':
       res.setHeader('Content-Type', 'application/json')
       res.setHeader('Content-Encoding', 'gzip')
-      zlib.gzip(
-        JSON.stringify(['harder', 'better', 'faster', 'stronger']),
-        (unused, result) => res.end(result)
+      zlib.gzip(JSON.stringify(['harder', 'better', 'faster', 'stronger']), (unused, result) =>
+        res.end(result)
       )
       break
     case '/req-test/invalid-json':
@@ -101,7 +100,7 @@ const responseHandler = (req, res, next) => {
     case '/req-test/headers':
       res.setHeader('X-Custom-Header', 'supercustom')
       res.setHeader('Content-Type', 'text/markdown')
-      res.end('# Memorable tweets\n\n> they\'re good dogs Brent')
+      res.end("# Memorable tweets\n\n> they're good dogs Brent")
       break
     case '/req-test/redirect':
       res.statusCode = atMax ? 200 : 302
@@ -118,8 +117,8 @@ const responseHandler = (req, res, next) => {
     case '/req-test/stall-after-initial':
       // Need a bit of data before browsers will usually accept it as "open"
       res.writeHead(200, {'Content-Type': 'text/plain'})
-      res.write((new Array(2048)).join('.'))
-      setTimeout(() => res.end((new Array(1024)).join('.')), 6000)
+      res.write(new Array(2048).join('.'))
+      setTimeout(() => res.end(new Array(1024).join('.')), 6000)
       break
     case '/req-test/delay':
       setTimeout(() => res.end('Hello future'), Number(parts.query.delay || 1000))
@@ -165,7 +164,7 @@ const createServer = () => {
 
 createServer.port = port
 createServer.responseHandler = responseHandler
-createServer.responseHandlerFactory = function () {
+createServer.responseHandlerFactory = function() {
   return responseHandler
 }
 
@@ -187,11 +186,7 @@ createServer.addHooks = (before, after) => {
     })
   }
 
-  after(done => (
-    hookState.server
-      ? hookState.server.close(done)
-      : done()
-  ))
+  after(done => (hookState.server ? hookState.server.close(done) : done()))
 }
 
 module.exports = createServer

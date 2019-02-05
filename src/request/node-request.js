@@ -1,3 +1,4 @@
+/* eslint-disable no-process-env */
 const url = require('url')
 const http = require('http')
 const https = require('https')
@@ -20,7 +21,7 @@ const reduceResponse = (res, reqUrl, method, body) => ({
   method: method,
   headers: res.headers,
   statusCode: res.statusCode,
-  statusMessage: res.statusMessage,
+  statusMessage: res.statusMessage
 })
 
 module.exports = (context, cb) => {
@@ -28,7 +29,12 @@ module.exports = (context, cb) => {
   const uri = objectAssign({}, url.parse(options.url))
   const bodyType = isStream(options.body) ? 'stream' : typeof options.body
 
-  if (bodyType !== 'undefined' && bodyType !== 'stream' && bodyType !== 'string' && !Buffer.isBuffer(options.body)) {
+  if (
+    bodyType !== 'undefined' &&
+    bodyType !== 'stream' &&
+    bodyType !== 'string' &&
+    !Buffer.isBuffer(options.body)
+  ) {
     throw new Error(`Request body must be a string, buffer or stream, got ${bodyType}`)
   }
 
@@ -49,7 +55,8 @@ module.exports = (context, cb) => {
   // Create a reduced subset of options meant for the http.request() method
   const reqOpts = objectAssign(uri, {
     method: options.method,
-    headers: objectAssign({}, options.headers, lengthHeader)
+    headers: objectAssign({}, options.headers, lengthHeader),
+    maxRedirects: options.maxRedirects
   })
 
   // Allow middleware to inject a response, for instance in the case of caching or mocking
@@ -66,15 +73,43 @@ module.exports = (context, cb) => {
     return {abort}
   }
 
-  let protocol = uri.protocol === 'https:' ? https : http
+  // Check for configured proxy
+  const proxy = getProxyConfig(options, uri)
+  if (proxy) {
+    const port = uri.port ? `:${uri.port}` : ''
+    reqOpts.hostname = proxy.host
+    reqOpts.host = proxy.host
+    reqOpts.headers.host = uri.hostname + port
+    reqOpts.port = proxy.port
+    reqOpts.path = `${uri.protocol}//${uri.hostname}${port}${uri.path}`
+
+    // Basic proxy authorization
+    if (proxy.auth) {
+      const auth = Buffer.from(`${proxy.auth.username}:${proxy.auth.password}`, 'utf8')
+      const authBase64 = auth.toString('base64')
+      reqOpts.headers['Proxy-Authorization'] = `Basic ${authBase64}`
+    }
+  }
+
+  const isHttpsRequest = uri.protocol === 'https:'
 
   // We're using the follow-redirects module to transparently follow redirects
   if (options.maxRedirects !== 0) {
-    protocol = uri.protocol === 'https:' ? follow.https : follow.http
     reqOpts.maxRedirects = options.maxRedirects || 5
   }
 
-  const request = protocol.request(reqOpts, response => {
+  const transports =
+    reqOpts.maxRedirects === 0 ? {http, https} : {http: follow.http, https: follow.https}
+
+  let transport
+  if (proxy) {
+    const isHttpsProxy = isHttpsRequest && /^https:?/.test(proxy.protocol)
+    transport = isHttpsProxy ? transports.https : transports.http
+  } else {
+    transport = isHttpsRequest ? transports.https : transports.http
+  }
+
+  const request = transport.request(reqOpts, response => {
     // See if we should try to decompress the response
     const tryDecompress = reqOpts.method !== 'HEAD'
     const res = tryDecompress ? decompressResponse(response) : response
@@ -140,4 +175,60 @@ function getProgressStream(options) {
   const progress = progressStream({time: 16, length})
   const bodyStream = bodyIsStream ? options.body : toStream(options.body)
   return {bodyStream: bodyStream.pipe(progress), progress}
+}
+
+function getProxyConfig(options, uri) {
+  let proxy = options.proxy
+  if (proxy || proxy === false) {
+    return proxy
+  }
+
+  const proxyEnv = `${uri.protocol.slice(0, -1)}_proxy`
+  const proxyUrl = process.env[proxyEnv] || process.env[proxyEnv.toUpperCase()]
+  if (!proxyUrl) {
+    return proxy
+  }
+
+  const parsedProxyUrl = url.parse(proxyUrl)
+  const noProxyEnv = process.env.no_proxy || process.env.NO_PROXY
+  let shouldProxy = true
+
+  if (noProxyEnv) {
+    const noProxy = noProxyEnv.split(',').map(s => s.trim())
+
+    shouldProxy = !noProxy.some(proxyElement => {
+      if (!proxyElement) {
+        return false
+      }
+      if (proxyElement === '*') {
+        return true
+      }
+      if (
+        proxyElement[0] === '.' &&
+        uri.hostname.substr(uri.hostname.length - proxyElement.length) === proxyElement &&
+        proxyElement.match(/\./g).length === uri.hostname.match(/\./g).length
+      ) {
+        return true
+      }
+
+      return uri.hostname === proxyElement
+    })
+  }
+
+  if (shouldProxy) {
+    proxy = {
+      host: parsedProxyUrl.hostname,
+      port: parsedProxyUrl.port
+    }
+
+    if (parsedProxyUrl.auth) {
+      const proxyUrlAuth = parsedProxyUrl.auth.split(':')
+      proxy.auth = {
+        username: proxyUrlAuth[0],
+        password: proxyUrlAuth[1]
+      }
+    }
+  }
+
+  return proxy
 }
