@@ -15,8 +15,8 @@ chai.use(chaiAsPromised)
 
 const isNode = typeof window === 'undefined'
 const isIE = !isNode && typeof window.EventSource === 'undefined'
-const isIE9 = (!isNode && window.XMLHttpRequest
-  && !('withCredentials' in (new window.XMLHttpRequest())))
+const isIE9 =
+  !isNode && window.XMLHttpRequest && !('withCredentials' in new window.XMLHttpRequest())
 
 const describeNode = isNode ? describe : describe.skip
 const testIE = isIE ? it : it.skip
@@ -30,9 +30,8 @@ const baseUrlPrefix = `${serverUrl}/req-test`
 const baseUrl = base(baseUrlPrefix)
 const bufferFrom = str => {
   const nodeVersion = parseInt(process.version.replace('v', ''), 10)
-  return nodeVersion >= 6
-    ? Buffer.from(str, 'utf8')
-    : new Buffer(str, 'utf8')
+  // eslint-disable-next-line no-buffer-constructor
+  return nodeVersion >= 6 ? Buffer.from(str, 'utf8') : new Buffer(str, 'utf8')
 }
 
 module.exports = {
