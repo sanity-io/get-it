@@ -89,25 +89,16 @@ module.exports = (context, cb) => {
       const authBase64 = auth.toString('base64')
       reqOpts.headers['Proxy-Authorization'] = `Basic ${authBase64}`
     }
-  }
 
-  const isHttpsRequest = uri.protocol === 'https:'
+    reqOpts.protocol = (proxy.protocol || reqOpts.protocol).replace(/:?$/, ':')
+  }
 
   // We're using the follow-redirects module to transparently follow redirects
   if (options.maxRedirects !== 0) {
     reqOpts.maxRedirects = options.maxRedirects || 5
   }
 
-  const transports =
-    reqOpts.maxRedirects === 0 ? {http, https} : {http: follow.http, https: follow.https}
-
-  let transport
-  if (proxy) {
-    const isHttpsProxy = isHttpsRequest && /^https:?/.test(proxy.protocol)
-    transport = isHttpsProxy ? transports.https : transports.http
-  } else {
-    transport = isHttpsRequest ? transports.https : transports.http
-  }
+  const transport = getRequestTransport(reqOpts, proxy)
 
   const request = transport.request(reqOpts, response => {
     // See if we should try to decompress the response
@@ -177,6 +168,27 @@ function getProgressStream(options) {
   return {bodyStream: bodyStream.pipe(progress), progress}
 }
 
+function getRequestTransport(reqOpts, proxy) {
+  const isHttpsRequest = reqOpts.protocol === 'https:'
+  const transports =
+    reqOpts.maxRedirects === 0
+      ? {http: http, https: https}
+      : {http: follow.http, https: follow.https}
+
+  if (!proxy) {
+    return isHttpsRequest ? transports.https : transports.http
+  }
+
+  // Assume the proxy is an HTTPS proxy if port is 443, or if there is a
+  // `protocol` option set that starts with https
+  let isHttpsProxy = proxy.port === 443
+  if (proxy.protocol) {
+    isHttpsProxy = /^https:?/.test(proxy.protocol)
+  }
+
+  return isHttpsProxy ? transports.https : transports.http
+}
+
 function getProxyConfig(options, uri) {
   let proxy = options.proxy
   if (proxy || proxy === false) {
@@ -194,7 +206,7 @@ function getProxyConfig(options, uri) {
   let shouldProxy = true
 
   if (noProxyEnv) {
-    const noProxy = noProxyEnv.split(',').map(s => s.trim())
+    const noProxy = noProxyEnv.split(',').map(str => str.trim())
 
     shouldProxy = !noProxy.some(proxyElement => {
       if (!proxyElement) {
@@ -217,6 +229,7 @@ function getProxyConfig(options, uri) {
 
   if (shouldProxy) {
     proxy = {
+      protocol: parsedProxyUrl.protocol,
       host: parsedProxyUrl.hostname,
       port: parsedProxyUrl.port
     }

@@ -1,10 +1,26 @@
-const http = require('http')
+/* eslint-disable no-sync */
+const fs = require('fs')
 const url = require('url')
+const path = require('path')
+const http = require('http')
+const https = require('https')
 
-module.exports = () =>
+const httpsServerOptions = {
+  key: fs.readFileSync(path.join(__dirname, '..', 'certs', 'server', 'key.pem')),
+  cert: fs.readFileSync(path.join(__dirname, '..', 'certs', 'server', 'certificate.pem'))
+}
+
+const httpPort = 4000
+const httpsPort = 4443
+
+module.exports = (proto = 'http', serverOpts = {}) =>
   new Promise((resolve, reject) => {
-    const server = http
-      .createServer((request, response) => {
+    const serverTransport = proto === 'http' ? http : https
+    const protoOpts = proto === 'http' ? {} : httpsServerOptions
+    const protoPort = proto === 'http' ? httpPort : httpsPort
+    const options = Object.assign({}, protoOpts, serverOpts)
+    const server = serverTransport
+      .createServer(options, (request, response) => {
         const parsed = url.parse(request.url)
         const opts = {
           host: parsed.hostname,
@@ -12,7 +28,8 @@ module.exports = () =>
           path: parsed.path
         }
 
-        http.get(opts, res => {
+        const transport = parsed.protocol === 'https:' ? https : http
+        transport.get(opts, res => {
           let body = ''
           res.on('data', data => {
             body += data
@@ -24,5 +41,5 @@ module.exports = () =>
           })
         })
       })
-      .listen(4000, err => (err ? reject(err) : resolve(server)))
+      .listen(protoPort, err => (err ? reject(err) : resolve(server)))
   })

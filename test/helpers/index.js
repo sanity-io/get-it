@@ -25,9 +25,12 @@ const testNonIE9 = isIE9 ? it.skip : it
 const testNode = isNode ? it : it.skip
 const hostname = isNode ? 'localhost' : window.location.hostname
 const debugRequest = debug({verbose: true})
-const serverUrl = `http://${hostname}:9876`
+const serverUrl = `http://${hostname}:9980`
+const serverUrlHttps = `https://${hostname}:9443`
 const baseUrlPrefix = `${serverUrl}/req-test`
+const baseUrlPrefixHttps = `${serverUrlHttps}/req-test`
 const baseUrl = base(baseUrlPrefix)
+const baseUrlHttps = base(baseUrlPrefixHttps.replace(/^http:/, 'https:'))
 const bufferFrom = str => {
   const nodeVersion = parseInt(process.version.replace('v', ''), 10)
   // eslint-disable-next-line no-buffer-constructor
@@ -46,8 +49,11 @@ module.exports = {
   debugRequest,
   describeNode,
   serverUrl,
-  baseUrlPrefix,
+  serverUrlHttps,
   baseUrl,
+  baseUrlHttps,
+  baseUrlPrefix,
+  baseUrlPrefixHttps,
   isIE9,
   isNode,
   bufferFrom
