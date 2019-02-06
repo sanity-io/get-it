@@ -172,11 +172,14 @@ function drip(res) {
 }
 
 const createServer = (proto = 'http', opts = {}) => {
-  const transport = proto === 'http' ? http : https
-  const protoOpts = proto === 'http' ? {} : httpsServerOptions
-  const protoPort = proto === 'http' ? httpPort : httpsPort
+  const isHttp = proto === 'http'
+  const protoOpts = isHttp ? {} : httpsServerOptions
+  const protoPort = isHttp ? httpPort : httpsPort
   const options = Object.assign({}, protoOpts, opts)
-  const server = transport.createServer(options, getResponseHandler(proto))
+  const server = isHttp
+    ? http.createServer(getResponseHandler(proto))
+    : https.createServer(options, getResponseHandler(proto))
+
   return new Promise((resolve, reject) => {
     server.listen(protoPort, err => (err ? reject(err) : resolve(server)))
   })

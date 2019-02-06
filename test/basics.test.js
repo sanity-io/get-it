@@ -14,7 +14,7 @@ const {
   bufferFrom
 } = require('./helpers')
 
-describe('basics', function () {
+describe('basics', function() {
   this.timeout(15000)
 
   it('should return same instance when calling use()', () => {
@@ -56,24 +56,36 @@ describe('basics', function () {
     }).to.throw(/string, buffer or stream/)
   })
 
-  testNonIE9('should be able to get a raw, unparsed body back', isNode ? () => {
-    // Node.js (buffer)
-    const request = requester([baseUrl, debugRequest])
-    const req = request({url: '/plain-text', rawBody: true})
-    return promiseRequest(req).then(res => {
-      expect(res.body.equals(bufferFrom('Just some plain text for you to consume'))).to.equal(true)
-    })
-  } : () => {
-    // Browser (ArrayBuffer)
-    const request = requester([baseUrl, debugRequest])
-    const req = request({url: '/plain-text', rawBody: true})
-    return expectRequestBody(req).to.eventually.be.an.instanceOf(ArrayBuffer)
-  })
+  testNonIE9(
+    'should be able to get a raw, unparsed body back',
+    isNode
+      ? () => {
+          // Node.js (buffer)
+          const request = requester([baseUrl, debugRequest])
+          const req = request({url: '/plain-text', rawBody: true})
+          return promiseRequest(req).then(res => {
+            expect(res.body.equals(bufferFrom('Just some plain text for you to consume'))).to.equal(
+              true
+            )
+          })
+        }
+      : () => {
+          // Browser (ArrayBuffer)
+          const request = requester([baseUrl, debugRequest])
+          const req = request({url: '/plain-text', rawBody: true})
+          return expectRequestBody(req).to.eventually.be.an.instanceOf(ArrayBuffer)
+        }
+  )
 
   it('should unzip gziped responses', () => {
     const request = requester([baseUrl, jsonResponse(), debugRequest])
     const req = request({url: '/gzip'})
-    return expectRequestBody(req).to.eventually.deep.equal(['harder', 'better', 'faster', 'stronger'])
+    return expectRequestBody(req).to.eventually.deep.equal([
+      'harder',
+      'better',
+      'faster',
+      'stronger'
+    ])
   })
 
   it('should not return a body on HEAD-requests', () => {
@@ -98,14 +110,17 @@ describe('basics', function () {
   testNonIE9('should handle https without issues', () => {
     const request = requester()
     const req = request({url: 'https://httpbin.org/robots.txt'})
-    return expectRequest(req).to.eventually.have.property('body')
+    return expectRequest(req)
+      .to.eventually.have.property('body')
       .and.include('/deny')
   })
 
   it('should handle cross-origin requests without issues', () => {
     const request = requester()
     const req = request({url: `http://httpbin.org/robots.txt?cb=${Date.now()}`})
-    return expectRequest(req).to.eventually.have.property('body').and.include('/deny')
+    return expectRequest(req)
+      .to.eventually.have.property('body')
+      .and.include('/deny')
   })
 
   it('should not allow base middleware to add prefix on absolute urls', () => {

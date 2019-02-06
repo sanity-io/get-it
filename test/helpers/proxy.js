@@ -15,31 +15,33 @@ const httpsPort = 4443
 
 module.exports = (proto = 'http', serverOpts = {}) =>
   new Promise((resolve, reject) => {
-    const serverTransport = proto === 'http' ? http : https
-    const protoOpts = proto === 'http' ? {} : httpsServerOptions
-    const protoPort = proto === 'http' ? httpPort : httpsPort
+    const isHttp = proto === 'http'
+    const protoOpts = isHttp ? {} : httpsServerOptions
+    const protoPort = isHttp ? httpPort : httpsPort
     const options = Object.assign({}, protoOpts, serverOpts)
-    const server = serverTransport
-      .createServer(options, (request, response) => {
-        const parsed = url.parse(request.url)
-        const opts = {
-          host: parsed.hostname,
-          port: parsed.port,
-          path: parsed.path
-        }
+    const requestHandler = (request, response) => {
+      const parsed = url.parse(request.url)
+      const opts = {
+        host: parsed.hostname,
+        port: parsed.port,
+        path: parsed.path
+      }
 
-        const transport = parsed.protocol === 'https:' ? https : http
-        transport.get(opts, res => {
-          let body = ''
-          res.on('data', data => {
-            body += data
-          })
-          res.on('end', () => {
-            response.setHeader('X-Proxy-Auth', request.headers['proxy-authorization'] || 'none')
-            response.setHeader('Content-Type', 'text/plain; charset=UTF-8')
-            response.end(`${body} + proxy`)
-          })
+      const transport = parsed.protocol === 'https:' ? https : http
+      transport.get(opts, res => {
+        let body = ''
+        res.on('data', data => {
+          body += data
+        })
+        res.on('end', () => {
+          response.setHeader('X-Proxy-Auth', request.headers['proxy-authorization'] || 'none')
+          response.setHeader('Content-Type', 'text/plain; charset=UTF-8')
+          response.end(`${body} + proxy`)
         })
       })
-      .listen(protoPort, err => (err ? reject(err) : resolve(server)))
+    }
+    const server = (isHttp
+      ? http.createServer(requestHandler)
+      : https.createServer(options, requestHandler)
+    ).listen(protoPort, err => (err ? reject(err) : resolve(server)))
   })
