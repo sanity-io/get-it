@@ -2,7 +2,7 @@
 require('./init.test')
 
 const requester = require('../src/index')
-const {proxy: proxyMiddleware} = require('../src/middleware')
+const {proxy: proxyMiddleware, base} = require('../src/middleware')
 const getProxy = require('./helpers/proxy')
 
 const {
@@ -127,6 +127,21 @@ describe('proxy', function() {
         .to.eventually.have.property('headers')
         .and.containSubset({
           'x-proxy-auth': 'Basic dXNlcjpwYXNz'
+        })
+    })
+  })
+
+  testNode('http: should use requested hostname as Host header', () => {
+    process.env.http_proxy = 'http://localhost:4000/'
+
+    const request = requester([base(baseUrlPrefix.replace('localhost', '127.0.0.1')), debugRequest])
+
+    return getProxy().then(proxy => {
+      proxyServer = proxy
+      return expectRequest(request({url: '/plain-text'}))
+        .to.eventually.have.property('headers')
+        .and.containSubset({
+          'x-proxy-host': '127.0.0.1:9980'
         })
     })
   })

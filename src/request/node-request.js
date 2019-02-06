@@ -53,7 +53,7 @@ module.exports = (context, cb) => {
   })
 
   // Create a reduced subset of options meant for the http.request() method
-  const reqOpts = objectAssign(uri, {
+  const reqOpts = objectAssign({}, uri, {
     method: options.method,
     headers: objectAssign({}, options.headers, lengthHeader),
     maxRedirects: options.maxRedirects

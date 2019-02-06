@@ -35,6 +35,7 @@ module.exports = (proto = 'http', serverOpts = {}) =>
         })
         res.on('end', () => {
           response.setHeader('X-Proxy-Auth', request.headers['proxy-authorization'] || 'none')
+          response.setHeader('X-Proxy-Host', request.headers.host)
           response.setHeader('Content-Type', 'text/plain; charset=UTF-8')
           response.end(`${body} + proxy`)
         })
