@@ -23,6 +23,7 @@ module.exports = (opts = {}) => {
 
   return {
     processOptions: options => {
+      options.debug = log
       options.requestId = options.requestId || ++requestId
       return options
     },
@@ -42,9 +43,10 @@ module.exports = (opts = {}) => {
       }
 
       if (verbose && options.headers) {
-        const headers = opts.redactSensitiveHeaders === false
-          ? options.headers
-          : redactKeys(options.headers, SENSITIVE_HEADERS)
+        const headers =
+          opts.redactSensitiveHeaders === false
+            ? options.headers
+            : redactKeys(options.headers, SENSITIVE_HEADERS)
 
         log('[%s] Request headers: %s', options.requestId, JSON.stringify(headers, null, 2))
       }
