@@ -66,6 +66,7 @@
     "same-origin": "^0.1.1",
     "simple-concat": "^1.0.0",
     "timed-out": "^4.0.1",
+    "tunnel-agent": "^0.6.0",
     "url-parse": "^1.1.9"
   },
   "devDependencies": {

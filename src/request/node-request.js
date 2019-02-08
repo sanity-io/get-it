@@ -1,4 +1,5 @@
 /* eslint-disable no-process-env */
+const qs = require('querystring')
 const url = require('url')
 const http = require('http')
 const https = require('https')
@@ -10,6 +11,8 @@ const toStream = require('into-stream')
 const objectAssign = require('object-assign')
 const progressStream = require('progress-stream')
 const decompressResponse = require('decompress-response')
+const {getProxyOptions, rewriteUriForProxy} = require('./node/proxy')
+const tunneling = require('./node/tunnel')
 
 const adapter = 'node'
 
@@ -40,9 +43,9 @@ module.exports = (context, cb) => {
 
   const lengthHeader = {}
   if (options.bodySize) {
-    lengthHeader['Content-Length'] = options.bodySize
+    lengthHeader['content-length'] = options.bodySize
   } else if (options.body && Buffer.isBuffer(options.body)) {
-    lengthHeader['Content-Length'] = options.body.length
+    lengthHeader['content-length'] = options.body.length
   }
 
   // Make sure callback is not called in the event of a cancellation
@@ -53,11 +56,15 @@ module.exports = (context, cb) => {
   })
 
   // Create a reduced subset of options meant for the http.request() method
-  const reqOpts = objectAssign({}, uri, {
+  let reqOpts = objectAssign({}, uri, {
     method: options.method,
-    headers: objectAssign({}, options.headers, lengthHeader),
+    headers: objectAssign({}, lowerCaseHeaders(options.headers), lengthHeader),
     maxRedirects: options.maxRedirects
   })
+
+  // Figure out proxying/tunnel options
+  const proxy = getProxyOptions(options)
+  const tunnel = proxy && tunneling.shouldEnable(options)
 
   // Allow middleware to inject a response, for instance in the case of caching or mocking
   const injectedResponse = context.applyMiddleware('interceptRequest', undefined, {
@@ -73,32 +80,37 @@ module.exports = (context, cb) => {
     return {abort}
   }
 
-  // Check for configured proxy
-  const proxy = getProxyConfig(options, uri)
-  if (proxy) {
-    const port = uri.port ? `:${uri.port}` : ''
-    reqOpts.hostname = proxy.host
-    reqOpts.host = proxy.host
-    reqOpts.headers.host = uri.hostname + port
-    reqOpts.port = proxy.port
-    reqOpts.path = `${uri.protocol}//${uri.hostname}${port}${uri.path}`
-
-    // Basic proxy authorization
-    if (proxy.auth) {
-      const auth = Buffer.from(`${proxy.auth.username}:${proxy.auth.password}`, 'utf8')
-      const authBase64 = auth.toString('base64')
-      reqOpts.headers['Proxy-Authorization'] = `Basic ${authBase64}`
-    }
-
-    reqOpts.protocol = (proxy.protocol || reqOpts.protocol).replace(/:?$/, ':')
-  }
-
   // We're using the follow-redirects module to transparently follow redirects
   if (options.maxRedirects !== 0) {
     reqOpts.maxRedirects = options.maxRedirects || 5
   }
 
-  const transport = getRequestTransport(reqOpts, proxy)
+  // Apply currect options for proxy tunneling, if enabled
+  if (proxy && tunnel) {
+    reqOpts = tunneling.applyAgent(reqOpts, proxy)
+  } else if (proxy && !tunnel) {
+    reqOpts = rewriteUriForProxy(reqOpts, uri, proxy)
+  }
+
+  // Handle proxy authorization if present
+  if (!tunnel && proxy && proxy.auth && !reqOpts.headers['proxy-authorization']) {
+    const [username, password] = proxy.auth.username
+      ? [proxy.auth.username, proxy.auth.password]
+      : proxy.auth.split(':').map(item => qs.unescape(item))
+
+    const auth = Buffer.from(`${username}:${password}`, 'utf8')
+    const authBase64 = auth.toString('base64')
+    reqOpts.headers['proxy-authorization'] = `Basic ${authBase64}`
+  }
+
+  // Figure out transport (http/https, forwarding/non-forwarding agent)
+  const transport = getRequestTransport(reqOpts, proxy, tunnel)
+  if (typeof options.debug === 'function' && proxy) {
+    options.debug(
+      'Proxying using %s',
+      reqOpts.agent ? 'tunnel agent' : `${reqOpts.host}:${reqOpts.port}`
+    )
+  }
 
   const request = transport.request(reqOpts, response => {
     // See if we should try to decompress the response
@@ -168,14 +180,14 @@ function getProgressStream(options) {
   return {bodyStream: bodyStream.pipe(progress), progress}
 }
 
-function getRequestTransport(reqOpts, proxy) {
+function getRequestTransport(reqOpts, proxy, tunnel) {
   const isHttpsRequest = reqOpts.protocol === 'https:'
   const transports =
     reqOpts.maxRedirects === 0
       ? {http: http, https: https}
       : {http: follow.http, https: follow.https}
 
-  if (!proxy) {
+  if (!proxy || tunnel) {
     return isHttpsRequest ? transports.https : transports.http
   }
 
@@ -189,59 +201,9 @@ function getRequestTransport(reqOpts, proxy) {
   return isHttpsProxy ? transports.https : transports.http
 }
 
-function getProxyConfig(options, uri) {
-  let proxy = options.proxy
-  if (proxy || proxy === false) {
-    return proxy
-  }
-
-  const proxyEnv = `${uri.protocol.slice(0, -1)}_proxy`
-  const proxyUrl = process.env[proxyEnv] || process.env[proxyEnv.toUpperCase()]
-  if (!proxyUrl) {
-    return proxy
-  }
-
-  const parsedProxyUrl = url.parse(proxyUrl)
-  const noProxyEnv = process.env.no_proxy || process.env.NO_PROXY
-  let shouldProxy = true
-
-  if (noProxyEnv) {
-    const noProxy = noProxyEnv.split(',').map(str => str.trim())
-
-    shouldProxy = !noProxy.some(proxyElement => {
-      if (!proxyElement) {
-        return false
-      }
-      if (proxyElement === '*') {
-        return true
-      }
-      if (
-        proxyElement[0] === '.' &&
-        uri.hostname.substr(uri.hostname.length - proxyElement.length) === proxyElement &&
-        proxyElement.match(/\./g).length === uri.hostname.match(/\./g).length
-      ) {
-        return true
-      }
-
-      return uri.hostname === proxyElement
-    })
-  }
-
-  if (shouldProxy) {
-    proxy = {
-      protocol: parsedProxyUrl.protocol,
-      host: parsedProxyUrl.hostname,
-      port: parsedProxyUrl.port
-    }
-
-    if (parsedProxyUrl.auth) {
-      const proxyUrlAuth = parsedProxyUrl.auth.split(':')
-      proxy.auth = {
-        username: proxyUrlAuth[0],
-        password: proxyUrlAuth[1]
-      }
-    }
-  }
-
-  return proxy
+function lowerCaseHeaders(headers) {
+  return Object.keys(headers || {}).reduce((acc, header) => {
+    acc[header.toLowerCase()] = headers[header]
+    return acc
+  }, {})
 }

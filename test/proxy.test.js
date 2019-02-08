@@ -196,7 +196,7 @@ describe('proxy', function() {
       proxyServer = proxy
       const req = request({
         url: '/plain-text',
-        proxy: {host: 'localhost', port: 4443, protocol: 'https'}
+        proxy: {host: 'localhost', port: 4443, protocol: 'https:'}
       })
       return expectRequest(req).to.eventually.have.property('body', body)
     })
@@ -262,16 +262,20 @@ describe('proxy', function() {
     })
   })
 
-  testNode('https: should support proxy set via env var (https request)', () => {
+  testNode('https: should support proxy set via env var (https request / no tunnel)', () => {
     const body = 'Just some secure, plain text for you to consume + proxy'
     const request = requester([baseUrlHttps, debugRequest])
 
     process.env.https_proxy = 'https://localhost:4443/'
     return getProxy('https').then(proxy => {
       proxyServer = proxy
-      const req = request({url: '/plain-text'})
+      const req = request({url: '/plain-text', tunnel: false})
       return expectRequest(req).to.eventually.have.property('body', body)
     })
+  })
+
+  testNode('https: should support proxy set via env var (https request / tunnel)', () => {
+    // @todo
   })
 
   testNode('https: should not pass through disabled proxy (https request)', () => {
@@ -287,7 +291,7 @@ describe('proxy', function() {
     })
   })
 
-  testNode('https: should only use proxy for domains not in no_proxy (https request)', () => {
+  testNode('https: should proxy domains not in no_proxy (https request / no tunnel)', () => {
     const body = 'Just some secure, plain text for you to consume'
     const proxyBody = `${body} + proxy`
     const request = requester([baseUrlHttps, debugRequest])
@@ -297,29 +301,38 @@ describe('proxy', function() {
     return getProxy('https').then(proxy => {
       proxyServer = proxy
 
+      const tunnel = false
       const url = '/plain-text'
-      const absUrl = `${baseUrlPrefixHttps.replace('localhost', '127.0.0.1')}/plain-text`
+      const abUrl = `${baseUrlPrefixHttps.replace('localhost', '127.0.0.1')}/plain-text`
 
       return Promise.all([
-        expectRequest(request({url})).to.eventually.have.property('body', body),
-        expectRequest(request({url: absUrl})).to.eventually.have.property('body', proxyBody)
+        expectRequest(request({url, tunnel})).to.eventually.have.property('body', body),
+        expectRequest(request({url: abUrl, tunnel})).to.eventually.have.property('body', proxyBody)
       ])
     })
   })
 
-  testNode('https: should support HTTP proxy auth from env (https request)', () => {
+  testNode('https: should proxy domains not in no_proxy (https request / tunnel)', () => {
+    // @todo
+  })
+
+  testNode('https: should support HTTP proxy auth from env (https request / no tunnel)', () => {
     process.env.https_proxy = 'https://user:pass@localhost:4443/'
 
     const request = requester([baseUrlHttps, debugRequest])
 
     return getProxy('https').then(proxy => {
       proxyServer = proxy
-      return expectRequest(request({url: '/plain-text'}))
+      return expectRequest(request({url: '/plain-text', tunnel: false}))
         .to.eventually.have.property('headers')
         .and.containSubset({
           'x-proxy-auth': 'Basic dXNlcjpwYXNz'
         })
     })
+  })
+
+  testNode('https: should support HTTP proxy auth from env (https request / tunnel)', () => {
+    // @todo
   })
 
   testNode('https: should support HTTP proxy auth', () => {
@@ -332,7 +345,7 @@ describe('proxy', function() {
         proxy: {
           host: 'localhost',
           port: 4443,
-          protocol: 'https',
+          protocol: 'https:',
           auth: {username: 'user', password: 'pass'}
         }
       })
@@ -349,7 +362,7 @@ describe('proxy', function() {
     const request = requester([
       baseUrl,
       debugRequest,
-      proxyMiddleware({host: 'localhost', port: 4443, protocol: 'https'})
+      proxyMiddleware({host: 'localhost', port: 4443, protocol: 'https:'})
     ])
 
     return getProxy('https').then(proxy => {
@@ -380,7 +393,7 @@ describe('proxy', function() {
       proxyServer = proxy
       const req = request({
         url: '/plain-text',
-        proxy: {host: 'localhost', port: 4443, protocol: 'https'}
+        proxy: {host: 'localhost', port: 4443, protocol: 'https:'}
       })
       return expectRequest(req).to.eventually.have.property('body', body)
     })
