@@ -1,16 +1,19 @@
 /* eslint max-depth: ["error", 4] */
 const sameOrigin = require('same-origin')
 const parseHeaders = require('parse-headers')
-const noop = function () { /* intentional noop */ }
+const noop = function() {
+  /* intentional noop */
+}
 
 const win = window
 const XmlHttpRequest = win.XMLHttpRequest || noop
-const hasXhr2 = 'withCredentials' in (new XmlHttpRequest())
+const hasXhr2 = 'withCredentials' in new XmlHttpRequest()
 const XDomainRequest = hasXhr2 ? XmlHttpRequest : win.XDomainRequest
 const adapter = 'xhr'
 
 module.exports = (context, callback) => {
-  const options = context.options
+  const opts = context.options
+  const options = context.applyMiddleware('finalizeOptions', opts)
   const timers = {}
 
   // Deep-checking window.location because of react native, where `location` doesn't exist
@@ -49,7 +52,9 @@ module.exports = (context, callback) => {
   }
 
   // IE9 must have onprogress be set to a unique function
-  xhr.onprogress = () => { /* intentional noop */ }
+  xhr.onprogress = () => {
+    /* intentional noop */
+  }
 
   const loadEvent = isXdr ? 'onload' : 'onreadystatechange'
   xhr[loadEvent] = () => {
@@ -101,10 +106,7 @@ module.exports = (context, callback) => {
   // Figure out which timeouts to use (if any)
   const delays = options.timeout
   if (delays) {
-    timers.connect = setTimeout(
-      () => timeoutRequest('ETIMEDOUT'),
-      delays.connect
-    )
+    timers.connect = setTimeout(() => timeoutRequest('ETIMEDOUT'), delays.connect)
   }
 
   return {abort}
@@ -120,9 +122,10 @@ module.exports = (context, callback) => {
   function timeoutRequest(code) {
     timedOut = true
     xhr.abort()
-    const error = new Error(code === 'ESOCKETTIMEDOUT'
-      ? `Socket timed out on request to ${options.url}`
-      : `Connection timed out on request to ${options.url}`
+    const error = new Error(
+      code === 'ESOCKETTIMEDOUT'
+        ? `Socket timed out on request to ${options.url}`
+        : `Connection timed out on request to ${options.url}`
     )
     error.code = code
     context.channels.error.publish(error)
@@ -134,10 +137,7 @@ module.exports = (context, callback) => {
     }
 
     stopTimers()
-    timers.socket = setTimeout(
-      () => timeoutRequest('ESOCKETTIMEDOUT'),
-      delays.socket
-    )
+    timers.socket = setTimeout(() => timeoutRequest('ESOCKETTIMEDOUT'), delays.socket)
   }
 
   function stopTimers() {

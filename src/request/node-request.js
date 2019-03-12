@@ -112,7 +112,8 @@ module.exports = (context, cb) => {
     )
   }
 
-  const request = transport.request(reqOpts, response => {
+  const finalOptions = context.applyMiddleware('finalizeOptions', reqOpts)
+  const request = transport.request(finalOptions, response => {
     // See if we should try to decompress the response
     const tryDecompress = reqOpts.method !== 'HEAD'
     const res = tryDecompress ? decompressResponse(response) : response
