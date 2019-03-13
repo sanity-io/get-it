@@ -1,6 +1,6 @@
 # get-it
 
-[![npm version](http://img.shields.io/npm/v/get-it.svg?style=flat-square)](http://browsenpm.org/package/get-it)[![Build Status](http://img.shields.io/travis/sanity-io/get-it/master.svg?style=flat-square)](https://travis-ci.org/sanity-io/get-it)
+[![npm version](http://img.shields.io/npm/v/get-it.svg?style=flat-square)](https://www.npmjs.com/package/get-it)[![Build Status](http://img.shields.io/travis/sanity-io/get-it/master.svg?style=flat-square)](https://travis-ci.org/sanity-io/get-it)
 
 Generic HTTP request library for node.js (>= 8) and browsers (IE9 and newer)
 
