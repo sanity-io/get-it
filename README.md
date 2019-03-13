@@ -2,7 +2,7 @@
 
 [![npm version](http://img.shields.io/npm/v/get-it.svg?style=flat-square)](http://browsenpm.org/package/get-it)[![Build Status](http://img.shields.io/travis/sanity-io/get-it/master.svg?style=flat-square)](https://travis-ci.org/sanity-io/get-it)
 
-Generic HTTP request library for node (>= 4) and browsers (IE9 and newer)
+Generic HTTP request library for node.js (>= 8) and browsers (IE9 and newer)
 
 ## Motivation
 
@@ -14,18 +14,18 @@ To be able to use the same library in a range of different applications with var
 
 Using a middleware approach, `get-it` has the following feature set:
 
-* Promise, observable and low-level event-emitter patterns
-* Automatic retrying with customizable number of attempts and filtering functionality
-* Cancellation of requests
-* Configurable connect/socket timeouts
-* Automatic parsing of JSON responses
-* Automatic stringifying of JSON request bodies
-* Automatic gzip unwrapping in Node
-* Automatically prepend base URL
-* Automatically follow redirects (configurable number of retries)
-* Upload/download progress events
-* Treat HTTP status codes >=400 as errors
-* Debug requests with environment variables/localStorage setting
+- Promise, observable and low-level event-emitter patterns
+- Automatic retrying with customizable number of attempts and filtering functionality
+- Cancellation of requests
+- Configurable connect/socket timeouts
+- Automatic parsing of JSON responses
+- Automatic stringifying of JSON request bodies
+- Automatic gzip unwrapping in Node
+- Automatically prepend base URL
+- Automatically follow redirects (configurable number of retries)
+- Upload/download progress events
+- Treat HTTP status codes >=400 as errors
+- Debug requests with environment variables/localStorage setting
 
 ## Usage
 
@@ -41,10 +41,7 @@ const jsonResponse = require('get-it/lib/middleware/jsonResponse')
 const promise = require('get-it/lib/middleware/promise')
 
 // Now compose the middleware you want to use
-const request = getIt([
-  base('https://api.your.service/v1'),
-  jsonResponse()
-])
+const request = getIt([base('https://api.your.service/v1'), jsonResponse()])
 
 // You can also register middleware using `.use(middleware)`
 request.use(promise())
@@ -59,18 +56,18 @@ In most larger projects, you'd probably make a `httpClient.js` or similar, where
 
 ## Options
 
-* `url` - URL to the resource you want to reach.
-* `method` - HTTP method to use for request. Default: `GET`, unless a body is provided, in which case the default is `POST`.
-* `headers` - Object of HTTP headers to send. Note that cross-origin requests in IE9 will not be able to set these headers.
-* `body` - The request body. If the `jsonRequest` middleware is used, it will serialize to a JSON string before sending. Otherwise, it tries to send whatever is passed to it using the underlying adapter. Supported types:
-  * *Browser*: `string`, `ArrayBufferView`, `Blob`, `Document`, `FormData` (deprecated: `ArrayBuffer`)
-  * *Node*: `string`, `buffer`, `ReadStream`
-* `bodySize` - Size of body, in bytes. Only used in Node when passing a `ReadStream` as body, in order for progress events to emit status on upload progress.
-* `timeout` - Timeout in millisecond for the request. Takes an object with `connect` and `socket` properties.
-* `maxRedirects` - Maximum number of redirects to follow before giving up. Note that this is only used in Node, as browsers have built-in redirect handling which cannot be adjusted. Default: `5`
-* `rawBody` - Set to `true` to return the raw value of the response body, instead of a string. The type returned differs based on the underlying adapter:
-  * *Browser*: `ArrayBuffer`
-  * *Node*: `Buffer`
+- `url` - URL to the resource you want to reach.
+- `method` - HTTP method to use for request. Default: `GET`, unless a body is provided, in which case the default is `POST`.
+- `headers` - Object of HTTP headers to send. Note that cross-origin requests in IE9 will not be able to set these headers.
+- `body` - The request body. If the `jsonRequest` middleware is used, it will serialize to a JSON string before sending. Otherwise, it tries to send whatever is passed to it using the underlying adapter. Supported types:
+  - _Browser_: `string`, `ArrayBufferView`, `Blob`, `Document`, `FormData` (deprecated: `ArrayBuffer`)
+  - _Node_: `string`, `buffer`, `ReadStream`
+- `bodySize` - Size of body, in bytes. Only used in Node when passing a `ReadStream` as body, in order for progress events to emit status on upload progress.
+- `timeout` - Timeout in millisecond for the request. Takes an object with `connect` and `socket` properties.
+- `maxRedirects` - Maximum number of redirects to follow before giving up. Note that this is only used in Node, as browsers have built-in redirect handling which cannot be adjusted. Default: `5`
+- `rawBody` - Set to `true` to return the raw value of the response body, instead of a string. The type returned differs based on the underlying adapter:
+  - _Browser_: `ArrayBuffer`
+  - _Node_: `Buffer`
 
 ## Return values
 
@@ -130,16 +127,18 @@ const request = getIt([promise()])
 
 const source = promise.CancelToken.source()
 
-request.get({
-  url: 'http://foo.bar/baz',
-  cancelToken: source.token
-}).catch(err => {
-  if (promise.isCancel(err)) {
-    console.log('Request canceled', err.message)
-  } else {
-    // handle error
-  }
-})
+request
+  .get({
+    url: 'http://foo.bar/baz',
+    cancelToken: source.token
+  })
+  .catch(err => {
+    if (promise.isCancel(err)) {
+      console.log('Request canceled', err.message)
+    } else {
+      // handle error
+    }
+  })
 
 // Cancel the request (the message parameter is optional)
 source.cancel('Operation canceled by the user')
@@ -154,9 +153,11 @@ const getIt = require('get-it')
 const observable = require('get-it/lib/middleware/observable')
 const request = getIt()
 
-request.use(observable({
-  implementation: require('zen-observable')}
-))
+request.use(
+  observable({
+    implementation: require('zen-observable')
+  })
+)
 
 const observer = request({url: 'http://foo.bar/baz'})
   .filter(ev => ev.type === 'response')
@@ -173,20 +174,20 @@ It's important to note that the observable middleware does not only emit `respon
 
 ## Upcoming features
 
-* Developer-friendly assertions that are stripped in production to reduce bundle size and performance
-* Authentication (basic)
-* Stream response middleware?
+- Developer-friendly assertions that are stripped in production to reduce bundle size and performance
+- Authentication (basic)
+- Stream response middleware?
 
 ## Prior art
 
 This module was inspired by the great work of others:
 
-* [got](https://github.com/sindresorhus/got)
-* [simple-get](https://github.com/feross/simple-get)
-* [xhr](https://github.com/naugtur/xhr)
-* [Axios](https://github.com/mzabriskie/axios/)
-* [http-client](https://github.com/mjackson/http-client)
-* [request](https://github.com/request/request)
+- [got](https://github.com/sindresorhus/got)
+- [simple-get](https://github.com/feross/simple-get)
+- [xhr](https://github.com/naugtur/xhr)
+- [Axios](https://github.com/mzabriskie/axios/)
+- [http-client](https://github.com/mjackson/http-client)
+- [request](https://github.com/request/request)
 
 ## License
 
