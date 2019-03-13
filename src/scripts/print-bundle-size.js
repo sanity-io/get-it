@@ -6,28 +6,30 @@ const chalk = require('chalk')
 const gzipSize = require('gzip-size')
 const prettyBytes = require('pretty-bytes')
 
-const read = filePath => new Promise((resolve, reject) => {
-  fs.readFile(filePath, (err, content) => {
-    if (err) {
-      reject(err)
-    } else {
-      resolve(content)
-    }
+const read = filePath =>
+  new Promise((resolve, reject) => {
+    fs.readFile(filePath, (err, content) => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve(content)
+      }
+    })
   })
-})
 
-const zip = content => new Promise((resolve, reject) => {
-  gzipSize(content, (err, zipSize) => {
-    if (err) {
-      reject(err)
-    } else {
-      resolve({
-        uncompressed: content.length,
-        compressed: zipSize
-      })
-    }
+const zip = content =>
+  new Promise((resolve, reject) => {
+    gzipSize(content, (err, zipSize) => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve({
+          uncompressed: content.length,
+          compressed: zipSize
+        })
+      }
+    })
   })
-})
 
 const umdPath = path.join(__dirname, '..', '..', 'umd')
 const bundlePath = path.join(umdPath, 'get-it.js')
@@ -54,14 +56,16 @@ function output(res) {
     `Full bundle + gzip: ${size(res[2].compressed)}`,
     '',
     `Full bundle, minified: ${size(res[3].uncompressed)}`,
-    `Full bundle, minified + gzip: ${size(res[3].compressed)}`,
+    `Full bundle, minified + gzip: ${size(res[3].compressed)}`
   ].join('\n')
 
-  console.log(boxen(text, {
-    padding: 1,
-    borderColor: 'yellow',
-    align: 'right'
-  }))
+  console.log(
+    boxen(text, {
+      padding: 1,
+      borderColor: 'yellow',
+      align: 'right'
+    })
+  )
 }
 
 function throwOnError(err) {

@@ -13,14 +13,18 @@ module.exports = (opts = {}) => {
 
     // Merge defaults so we don't have to provide the most basic of details unless we want to
     const options = event.context.options
-    return objectAssign({}, {
-      body: '',
-      url: options.url,
-      method: options.method,
-      headers: {},
-      statusCode: 200,
-      statusMessage: 'OK',
-    }, response)
+    return objectAssign(
+      {},
+      {
+        body: '',
+        url: options.url,
+        method: options.method,
+        headers: {},
+        statusCode: 200,
+        statusMessage: 'OK'
+      },
+      response
+    )
   }
 
   return {interceptRequest: inject}

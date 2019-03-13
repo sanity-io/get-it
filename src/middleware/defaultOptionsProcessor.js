@@ -1,17 +1,16 @@
 const objectAssign = require('object-assign')
 const urlParse = require('url-parse')
 
-const isReactNative = typeof navigator === 'undefined'
-  ? false
-  : navigator.product === 'ReactNative'
+const isReactNative = typeof navigator === 'undefined' ? false : navigator.product === 'ReactNative'
 
 const has = Object.prototype.hasOwnProperty
 const defaultOptions = {timeout: isReactNative ? 60000 : 120000}
 
 module.exports = opts => {
-  const options = typeof opts === 'string'
-    ? objectAssign({url: opts}, defaultOptions)
-    : objectAssign({}, defaultOptions, opts)
+  const options =
+    typeof opts === 'string'
+      ? objectAssign({url: opts}, defaultOptions)
+      : objectAssign({}, defaultOptions, opts)
 
   // Parse URL into parts
   const url = urlParse(
@@ -29,9 +28,8 @@ module.exports = opts => {
   }
 
   // Implicit POST if we have not specified a method but have a body
-  options.method = (options.body && !options.method)
-    ? 'POST'
-    : (options.method || 'GET').toUpperCase()
+  options.method =
+    options.body && !options.method ? 'POST' : (options.method || 'GET').toUpperCase()
 
   // Stringify URL
   options.url = url.toString(stringifyQueryString)

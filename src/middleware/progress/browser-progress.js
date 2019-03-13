@@ -17,13 +17,13 @@ module.exports = () => ({
 
     function handleProgress(stage) {
       return event => {
-        const percent = event.lengthComputable ? ((event.loaded / event.total) * 100) : -1
+        const percent = event.lengthComputable ? (event.loaded / event.total) * 100 : -1
         context.channels.progress.publish({
           stage,
           percent,
           total: event.total,
           loaded: event.loaded,
-          lengthComputable: event.lengthComputable,
+          lengthComputable: event.lengthComputable
         })
       }
     }

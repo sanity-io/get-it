@@ -4,11 +4,10 @@ const urlEncode = require('form-urlencoded')
 
 const encode = urlEncode.default || urlEncode
 
-const isBuffer = obj => (
-  !!obj.constructor
-  && typeof obj.constructor.isBuffer === 'function'
-  && obj.constructor.isBuffer(obj)
-)
+const isBuffer = obj =>
+  !!obj.constructor &&
+  typeof obj.constructor.isBuffer === 'function' &&
+  obj.constructor.isBuffer(obj)
 
 module.exports = () => ({
   processOptions: options => {

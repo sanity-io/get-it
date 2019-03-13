@@ -1,7 +1,10 @@
 const createErrorClass = require('create-error-class')
 
-const HttpError = createErrorClass('HttpError', function (res, ctx) {
-  this.message = `${res.method}-request to ${res.url} resulted in HTTP ${res.statusCode} ${res.statusMessage}`.trim()
+const HttpError = createErrorClass('HttpError', function(res, ctx) {
+  let msg = `${res.method}-request to ${res.url} resulted in`
+  msg += `HTTP ${res.statusCode} ${res.statusMessage}`
+
+  this.message = msg.trim()
   this.response = res
   this.request = ctx.options
 })

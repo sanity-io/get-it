@@ -10,23 +10,24 @@ const promise = (options = {}) => {
   }
 
   return {
-    onReturn: (channels, context) => new Promise((resolve, reject) => {
-      const cancel = context.options.cancelToken
-      if (cancel) {
-        cancel.promise.then(reason => {
-          channels.abort.publish(reason)
-          reject(reason)
+    onReturn: (channels, context) =>
+      new Promise((resolve, reject) => {
+        const cancel = context.options.cancelToken
+        if (cancel) {
+          cancel.promise.then(reason => {
+            channels.abort.publish(reason)
+            reject(reason)
+          })
+        }
+
+        channels.error.subscribe(reject)
+        channels.response.subscribe(response => {
+          resolve(options.onlyBody ? response.body : response)
         })
-      }
 
-      channels.error.subscribe(reject)
-      channels.response.subscribe(response => {
-        resolve(options.onlyBody ? response.body : response)
+        // Wait until next tick in case cancel has been performed
+        setTimeout(() => channels.request.publish(context), 0)
       })
-
-      // Wait until next tick in case cancel has been performed
-      setTimeout(() => channels.request.publish(context), 0)
-    })
   }
 }
 

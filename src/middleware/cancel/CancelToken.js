@@ -21,7 +21,7 @@ function CancelToken(executor) {
   })
 }
 
-CancelToken.source = function () {
+CancelToken.source = function() {
   let cancel
   const token = new CancelToken(can => {
     cancel = can

@@ -2,11 +2,10 @@ const objectAssign = require('object-assign')
 const isPlainObject = require('is-plain-object')
 
 const serializeTypes = ['boolean', 'string', 'number']
-const isBuffer = obj => (
-  !!obj.constructor
-  && typeof obj.constructor.isBuffer === 'function'
-  && obj.constructor.isBuffer(obj)
-)
+const isBuffer = obj =>
+  !!obj.constructor &&
+  typeof obj.constructor.isBuffer === 'function' &&
+  obj.constructor.isBuffer(obj)
 
 module.exports = () => ({
   processOptions: options => {
@@ -16,11 +15,10 @@ module.exports = () => ({
     }
 
     const isStream = typeof body.pipe === 'function'
-    const shouldSerialize = !isStream && !isBuffer(body) && (
-      serializeTypes.indexOf(typeof body) !== -1
-      || Array.isArray(body)
-      || isPlainObject(body)
-    )
+    const shouldSerialize =
+      !isStream &&
+      !isBuffer(body) &&
+      (serializeTypes.indexOf(typeof body) !== -1 || Array.isArray(body) || isPlainObject(body))
 
     if (!shouldSerialize) {
       return options

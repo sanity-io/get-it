@@ -1,11 +1,8 @@
 const objectAssign = require('object-assign')
 const defaultShouldRetry = require('../util/node-shouldRetry')
 
-const isStream = stream => (
-  stream !== null
-  && typeof stream === 'object'
-  && typeof stream.pipe === 'function'
-)
+const isStream = stream =>
+  stream !== null && typeof stream === 'object' && typeof stream.pipe === 'function'
 
 const retry = (opts = {}) => {
   const maxRetries = opts.maxRetries || 5
@@ -48,5 +45,5 @@ retry.shouldRetry = defaultShouldRetry
 module.exports = retry
 
 function getRetryDelay(attemptNum) {
-  return (100 * Math.pow(2, attemptNum)) + (Math.random() * 100)
+  return 100 * Math.pow(2, attemptNum) + Math.random() * 100
 }

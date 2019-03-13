@@ -11,9 +11,10 @@ module.exports = opts => ({
     return objectAssign({}, response, {body: tryParse(response.body)})
   },
 
-  processOptions: options => objectAssign({}, options, {
-    headers: objectAssign({Accept: 'application/json'}, options.headers)
-  })
+  processOptions: options =>
+    objectAssign({}, options, {
+      headers: objectAssign({Accept: 'application/json'}, options.headers)
+    })
 })
 
 function tryParse(body) {

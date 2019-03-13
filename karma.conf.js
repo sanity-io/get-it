@@ -26,9 +26,7 @@ module.exports = config => {
       {'middleware:test-server': ['factory', server.responseHandlerFactory]}
     ]),
 
-    files: [
-      {pattern: 'test/*.test.js', watched: false}
-    ],
+    files: [{pattern: 'test/*.test.js', watched: false}],
 
     preprocessors: {
       'test/*.test.js': ['webpack', 'sourcemap']
