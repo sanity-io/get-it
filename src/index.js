@@ -9,6 +9,7 @@ const middlehooks = [
   'processOptions',
   'validateOptions',
   'interceptRequest',
+  'finalizeOptions',
   'onRequest',
   'onResponse',
   'onError',
@@ -18,13 +19,16 @@ const middlehooks = [
 
 module.exports = function createRequester(initMiddleware = []) {
   const loadedMiddleware = []
-  const middleware = middlehooks.reduce((ware, name) => {
-    ware[name] = ware[name] || []
-    return ware
-  }, {
-    processOptions: [processOptions],
-    validateOptions: [validateOptions]
-  })
+  const middleware = middlehooks.reduce(
+    (ware, name) => {
+      ware[name] = ware[name] || []
+      return ware
+    },
+    {
+      processOptions: [processOptions],
+      validateOptions: [validateOptions]
+    }
+  )
 
   function request(opts) {
     const channels = channelNames.reduce((target, name) => {
@@ -109,11 +113,15 @@ module.exports = function createRequester(initMiddleware = []) {
     }
 
     if (typeof newMiddleware === 'function') {
-      throw new Error('Tried to add middleware that was a function. It probably expects you to pass options to it.')
+      throw new Error(
+        'Tried to add middleware that was a function. It probably expects you to pass options to it.'
+      )
     }
 
     if (newMiddleware.onReturn && middleware.onReturn.length > 0) {
-      throw new Error('Tried to add new middleware with `onReturn` handler, but another handler has already been registered for this event')
+      throw new Error(
+        'Tried to add new middleware with `onReturn` handler, but another handler has already been registered for this event'
+      )
     }
 
     middlehooks.forEach(key => {
