@@ -2,7 +2,7 @@ const once = require('lodash.once')
 const requester = require('../src/index')
 const {expect, debugRequest, baseUrl} = require('./helpers')
 
-describe('timeouts', function () {
+describe('timeouts', function() {
   this.timeout(10000)
 
   it('should be able to set a "global" timeout', cb => {
@@ -32,7 +32,7 @@ describe('timeouts', function () {
     })
   })
 
-  it('should be able to set socket timeout', cb => {
+  it.skip('should be able to set socket timeout', cb => {
     const done = once(cb)
     const request = requester([baseUrl, debugRequest])
     const req = request({url: '/stall-after-initial', timeout: {socket: 500, connect: 250}})
