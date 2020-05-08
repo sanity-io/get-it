@@ -65,4 +65,31 @@ describe('errors', () => {
       body: 'Just some plain text for you to consume'
     })
   })
+
+  it('should only call onError middlewares up to the first one that returns null', () => {
+    const errs = []
+    const first = {onError: err => errs.push(err) && err}
+    const second = {
+      onError: (err, ctx) => {
+        errs.push(err)
+        ctx.channels.response.publish({
+          body: 'works',
+          method: 'GET',
+          headers: {},
+          statusCode: 200,
+          statusMessage: 'OK'
+        })
+      }
+    }
+    const third = {onError: err => errs.push(err)}
+    const request = requester([baseUrl, first, second, third])
+    const req = request({url: '/permafail'})
+
+    return Promise.all([
+      expectRequest(req).to.eventually.be.containSubset({statusCode: 200}),
+      new Promise(resolve => setTimeout(resolve, 500)).then(() => {
+        expect(errs).to.have.length(2)
+      })
+    ])
+  })
 })
