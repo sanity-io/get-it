@@ -118,12 +118,6 @@ module.exports = function createRequester(initMiddleware = []) {
       )
     }
 
-    if (newMiddleware.onReturn && middleware.onReturn.length > 0) {
-      throw new Error(
-        'Tried to add new middleware with `onReturn` handler, but another handler has already been registered for this event'
-      )
-    }
-
     middlehooks.forEach(key => {
       if (newMiddleware[key]) {
         middleware[key].push(newMiddleware[key])

@@ -49,6 +49,7 @@
   "author": "Sanity.io <hello@sanity.io>",
   "license": "MIT",
   "dependencies": {
+    "@rexxars/p-ratelimit": "^1.0.1",
     "@sanity/timed-out": "^4.0.2",
     "create-error-class": "^3.0.2",
     "debug": "^2.6.8",
