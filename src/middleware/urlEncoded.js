@@ -1,5 +1,5 @@
 const objectAssign = require('object-assign')
-const isPlainObject = require('is-plain-object')
+const {isPlainObject} = require('is-plain-object')
 const urlEncode = require('form-urlencoded')
 
 const encode = urlEncode.default || urlEncode

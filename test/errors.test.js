@@ -34,9 +34,9 @@ describe('errors', () => {
         })
 
       expect(err)
-        .to.have.deep.property('request.headers')
+        .to.have.property('request')
         .and.containSubset({
-          foo: 'bar'
+          headers: {foo: 'bar'},
         })
 
       done()
