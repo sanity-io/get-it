@@ -1,17 +1,18 @@
 const global = require('../../src/util/global')
+
 if (typeof global.Promise === 'undefined') {
   require('es6-promise/auto')
 }
 
 const chai = require('chai')
-const chaiAsPromised = require('chai-as-promised')
 const chaiSubset = require('chai-subset')
+const asPromised = require('./asPromised')
 const {base, debug} = require('../../src/middleware')
 const {expectRequest, expectRequestBody, promiseRequest} = require('./expectRequest')
 const expect = chai.expect
 
 chai.use(chaiSubset)
-chai.use(chaiAsPromised)
+chai.use(asPromised)
 
 const isNode = typeof window === 'undefined'
 const isIE = !isNode && typeof window.EventSource === 'undefined'

@@ -33,7 +33,7 @@ describe('retry middleware', function () {
   })
 
   it('should be able to set max retries', function () {
-    this.timeout(400)
+    this.timeout(5000)
     const request = requester([
       baseUrl,
       httpErrors(),
@@ -44,7 +44,7 @@ describe('retry middleware', function () {
   })
 
   testNode('should not retry if it body is a stream', function () {
-    this.timeout(400)
+    this.timeout(5000)
     const fs = require('fs')
     const request = requester([
       baseUrl,
@@ -56,7 +56,7 @@ describe('retry middleware', function () {
   })
 
   it('should be able to set max retries on a per-request basis', function () {
-    this.timeout(400)
+    this.timeout(5000)
     const request = requester([
       baseUrl,
       httpErrors(),
@@ -80,14 +80,14 @@ describe('retry middleware', function () {
     return expectRequest(req).to.eventually.be.rejectedWith(/HTTP 503/)
   })
 
-  it('should not retry non-GET-requests by default', () => {
-    // Browsers have a weird thing where they might auto-retry on network errors
+  // Browsers have a weird thing where they might auto-retry on network errors
+  testNode('should not retry non-GET-requests by default', () => {
     const request = requester([baseUrl, debugRequest, retry()])
     const req = request({url: `/fail?uuid=${Math.random()}&n=2`, method: 'POST', body: 'Heisann'})
     return expectRequest(req).to.eventually.be.rejectedWith(Error)
   })
 
-  // @todo Browsers are really flaky with retries, revisit later
+  // Browsers are really flaky with retries, revisit later
   testNode('should handle retries with a delay function ', () => {
     const retryDelay = () => 375
     const request = requester([baseUrl, retry({retryDelay})])
