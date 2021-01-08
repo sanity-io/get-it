@@ -1,6 +1,6 @@
 const validUrl = /^https?:\/\//i
 
-module.exports = options => {
+module.exports = (options) => {
   if (!validUrl.test(options.url)) {
     throw new Error(`"${options.url}" is not a valid URL`)
   }

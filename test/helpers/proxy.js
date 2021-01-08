@@ -7,7 +7,7 @@ const https = require('https')
 
 const httpsServerOptions = {
   key: fs.readFileSync(path.join(__dirname, '..', 'certs', 'server', 'key.pem')),
-  cert: fs.readFileSync(path.join(__dirname, '..', 'certs', 'server', 'certificate.pem'))
+  cert: fs.readFileSync(path.join(__dirname, '..', 'certs', 'server', 'certificate.pem')),
 }
 
 const httpPort = 4000
@@ -24,13 +24,13 @@ module.exports = (proto = 'http', serverOpts = {}) =>
       const opts = {
         host: parsed.hostname,
         port: parsed.port,
-        path: parsed.path
+        path: parsed.path,
       }
 
       const transport = parsed.protocol === 'https:' ? https : http
-      transport.get(opts, res => {
+      transport.get(opts, (res) => {
         let body = ''
-        res.on('data', data => {
+        res.on('data', (data) => {
           body += data
         })
         res.on('end', () => {
@@ -44,5 +44,5 @@ module.exports = (proto = 'http', serverOpts = {}) =>
     const server = (isHttp
       ? http.createServer(requestHandler)
       : https.createServer(options, requestHandler)
-    ).listen(protoPort, err => (err ? reject(err) : resolve(server)))
+    ).listen(protoPort, (err) => (err ? reject(err) : resolve(server)))
   })

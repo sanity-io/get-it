@@ -12,7 +12,7 @@ describe('promise middleware', function () {
     return expect(req).to.eventually.containSubset({
       body: 'Just some plain text for you to consume',
       method: 'GET',
-      statusCode: 200
+      statusCode: 200,
     })
   })
 
@@ -34,14 +34,14 @@ describe('promise middleware', function () {
     return expect(req).to.eventually.be.rejectedWith(/HTTP 500/i)
   })
 
-  it('can cancel using cancel tokens', cb => {
+  it('can cancel using cancel tokens', (cb) => {
     const done = once(cb)
     const source = promise.CancelToken.source()
 
     const request = requester([baseUrl, promise()])
     request({url: '/delay', cancelToken: source.token})
       .then(() => done(new Error('Should not be resolved when cancelled')))
-      .catch(err => {
+      .catch((err) => {
         if (promise.isCancel(err)) {
           expect(err.toString()).to.equal('Cancel: Cancelled by user')
           done()
@@ -54,7 +54,7 @@ describe('promise middleware', function () {
     setTimeout(() => source.cancel('Cancelled by user'), 15)
   })
 
-  it('does not execute requests that are already cancelled', cb => {
+  it('does not execute requests that are already cancelled', (cb) => {
     const done = once(cb)
     const source = promise.CancelToken.source()
     source.cancel()
@@ -62,7 +62,7 @@ describe('promise middleware', function () {
     const request = requester([baseUrl, debugRequest, promise()])
     request({url: '/delay', cancelToken: source.token})
       .then(() => done(new Error('Should not be resolved when cancelled')))
-      .catch(err => {
+      .catch((err) => {
         if (promise.isCancel(err)) {
           expect(err.toString()).to.equal('Cancel')
           done()

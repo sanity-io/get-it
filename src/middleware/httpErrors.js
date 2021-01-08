@@ -1,6 +1,6 @@
 const createErrorClass = require('create-error-class')
 
-const HttpError = createErrorClass('HttpError', function(res, ctx) {
+const HttpError = createErrorClass('HttpError', function (res, ctx) {
   const truncatedUrl = res.url.length > 400 ? `${res.url.slice(0, 399)}…` : res.url
   let msg = `${res.method}-request to ${truncatedUrl} resulted in `
   msg += `HTTP ${res.statusCode} ${res.statusMessage}`
@@ -18,5 +18,5 @@ module.exports = () => ({
     }
 
     throw new HttpError(res, ctx)
-  }
+  },
 })

@@ -11,7 +11,7 @@ const debugRequest = require('./debugRequest')
 
 const httpsServerOptions = {
   key: fs.readFileSync(path.join(__dirname, '..', 'certs', 'server', 'key.pem')),
-  cert: fs.readFileSync(path.join(__dirname, '..', 'certs', 'server', 'certificate.pem'))
+  cert: fs.readFileSync(path.join(__dirname, '..', 'certs', 'server', 'certificate.pem')),
 }
 
 const createError = (code, msg) => {
@@ -181,7 +181,7 @@ const createServer = (proto = 'http', opts = {}) => {
     : https.createServer(options, getResponseHandler(proto))
 
   return new Promise((resolve, reject) => {
-    server.listen(protoPort, err => (err ? reject(err) : resolve(server)))
+    server.listen(protoPort, (err) => (err ? reject(err) : resolve(server)))
   })
 }
 
@@ -193,8 +193,8 @@ createServer.addHooks = (before, after) => {
   if (isNode) {
     before(() =>
       Promise.all([
-        createServer('http').then(httpServer => Object.assign(hookState, {httpServer})),
-        createServer('https').then(httpsServer => Object.assign(hookState, {httpsServer}))
+        createServer('http').then((httpServer) => Object.assign(hookState, {httpServer})),
+        createServer('https').then((httpsServer) => Object.assign(hookState, {httpsServer})),
       ])
     )
   } else {
@@ -210,7 +210,7 @@ createServer.addHooks = (before, after) => {
 }
 
 function closeServer(server) {
-  return new Promise(resolve => (server ? server.close(resolve) : resolve()))
+  return new Promise((resolve) => (server ? server.close(resolve) : resolve()))
 }
 
 module.exports = createServer

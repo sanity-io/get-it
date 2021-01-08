@@ -3,11 +3,13 @@ const {progress, observable} = require('../src/middleware')
 const {baseUrl, testNode, testNonIE, expect} = require('./helpers')
 
 describe('progress', () => {
-  it('should be able to use progress middleware without side-effects', done => {
+  it('should be able to use progress middleware without side-effects', (done) => {
     const request = requester([baseUrl, progress()])
     const req = request({url: '/plain-text'})
 
-    req.error.subscribe(err => done(new Error(`error channel should not be called, got:\n\n${err.message}`)))
+    req.error.subscribe((err) =>
+      done(new Error(`error channel should not be called, got:\n\n${err.message}`))
+    )
     req.response.subscribe(() => done())
   })
 
@@ -18,27 +20,29 @@ describe('progress', () => {
     const req = request({url: '/drip'})
     let events = 0
 
-    req.progress.subscribe(evt => {
+    req.progress.subscribe((evt) => {
       events++
       expect(evt).to.containSubset({
         stage: 'download',
-        lengthComputable: true
+        lengthComputable: true,
       })
     })
 
-    req.error.subscribe(err => done(new Error(`error channel should not be called, got:\n\n${err.message}`)))
+    req.error.subscribe((err) =>
+      done(new Error(`error channel should not be called, got:\n\n${err.message}`))
+    )
     req.response.subscribe(() => {
       expect(events).to.be.above(0)
       done()
     })
   })
 
-  testNode('[node] should emit upload progress events on strings', done => {
+  testNode('[node] should emit upload progress events on strings', (done) => {
     const request = requester([baseUrl, progress()])
-    const req = request({url: '/plain-text', body: (new Array(100)).join('-')})
+    const req = request({url: '/plain-text', body: new Array(100).join('-')})
     let events = 0
 
-    req.progress.subscribe(evt => {
+    req.progress.subscribe((evt) => {
       if (evt.stage !== 'upload') {
         return
       }
@@ -46,18 +50,20 @@ describe('progress', () => {
       events++
       expect(evt).to.containSubset({
         stage: 'upload',
-        lengthComputable: true
+        lengthComputable: true,
       })
     })
 
-    req.error.subscribe(err => done(new Error(`error channel should not be called, got:\n\n${err.message}`)))
+    req.error.subscribe((err) =>
+      done(new Error(`error channel should not be called, got:\n\n${err.message}`))
+    )
     req.response.subscribe(() => {
       expect(events).to.be.above(0)
       done()
     })
   })
 
-  testNode('[node] can tell requester how large the body is', done => {
+  testNode('[node] can tell requester how large the body is', (done) => {
     // This is flakey on node 6, works on all other versions though.
     const nodeVersion = parseInt(process.version.replace(/^v/, ''), 10)
     if (nodeVersion === 6) {
@@ -72,7 +78,7 @@ describe('progress', () => {
     const req = request({url: '/plain-text', body, bodySize})
     let events = 0
 
-    req.progress.subscribe(evt => {
+    req.progress.subscribe((evt) => {
       if (evt.stage !== 'upload') {
         return
       }
@@ -80,11 +86,13 @@ describe('progress', () => {
       events++
       expect(evt).to.containSubset({
         stage: 'upload',
-        lengthComputable: true
+        lengthComputable: true,
       })
     })
 
-    req.error.subscribe(err => done(new Error(`error channel should not be called, got:\n\n${err.message}`)))
+    req.error.subscribe((err) =>
+      done(new Error(`error channel should not be called, got:\n\n${err.message}`))
+    )
     req.response.subscribe(() => {
       expect(events).to.be.above(0, 'should have received progress events')
       done()
@@ -97,11 +105,11 @@ describe('progress', () => {
     const implementation = require('zen-observable')
     const request = requester([baseUrl, progress(), observable({implementation})])
     const obs = request({url: '/drip'})
-      .filter(ev => ev.type === 'progress')
-      .subscribe(evt => {
+      .filter((ev) => ev.type === 'progress')
+      .subscribe((evt) => {
         expect(evt).to.containSubset({
           stage: 'download',
-          lengthComputable: true
+          lengthComputable: true,
         })
 
         obs.unsubscribe()

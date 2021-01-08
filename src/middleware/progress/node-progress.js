@@ -1,12 +1,12 @@
 const progressStream = require('progress-stream')
 
 function normalizer(stage) {
-  return prog => ({
+  return (prog) => ({
     stage,
     percent: prog.percentage,
     total: prog.length,
     loaded: prog.transferred,
-    lengthComputable: !(prog.length === 0 && prog.percentage === 0)
+    lengthComputable: !(prog.length === 0 && prog.percentage === 0),
   })
 }
 
@@ -23,16 +23,16 @@ module.exports = () => ({
       progress.setLength(length)
     }
 
-    progress.on('progress', prog => evt.context.channels.progress.publish(normalize(prog)))
+    progress.on('progress', (prog) => evt.context.channels.progress.publish(normalize(prog)))
     return response.pipe(progress)
   },
 
-  onRequest: evt => {
+  onRequest: (evt) => {
     if (!evt.progress) {
       return
     }
 
     const normalize = normalizer('upload')
-    evt.progress.on('progress', prog => evt.context.channels.progress.publish(normalize(prog)))
-  }
+    evt.progress.on('progress', (prog) => evt.context.channels.progress.publish(normalize(prog)))
+  },
 })

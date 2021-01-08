@@ -9,7 +9,7 @@ const keepOpen = process.env.KEEP_OPEN || false
 
 const useBrowsers = envBrowsers.split(',')
 
-module.exports = config => {
+module.exports = (config) => {
   config.set({
     browsers: useBrowsers,
     frameworks: ['mocha'],
@@ -17,13 +17,13 @@ module.exports = config => {
 
     middleware: ['test-server'],
     plugins: config.plugins.concat([
-      {'middleware:test-server': ['factory', server.responseHandlerFactory]}
+      {'middleware:test-server': ['factory', server.responseHandlerFactory]},
     ]),
 
     files: [{pattern: 'test/*.test.js', watched: false}],
 
     preprocessors: {
-      'test/*.test.js': ['webpack', 'sourcemap']
+      'test/*.test.js': ['webpack', 'sourcemap'],
     },
 
     webpack: Object.assign({}, webpackConfig, {devtool: 'inline-source-map'}),

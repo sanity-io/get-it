@@ -1,12 +1,7 @@
 const once = require('lodash.once')
 const {injectResponse} = require('../src/middleware')
 const requester = require('../src/index')
-const {
-  baseUrl,
-  expect,
-  expectRequest,
-  expectRequestBody,
-} = require('./helpers')
+const {baseUrl, expect, expectRequest, expectRequestBody} = require('./helpers')
 
 describe('inject response', () => {
   it('should throw if not provided with an `inject` function', () => {
@@ -27,13 +22,14 @@ describe('inject response', () => {
     const request = requester([baseUrl, injectResponse({inject})])
     const req = request({url: '/headers'})
 
-    return expectRequest(req).to.eventually.have.property('headers')
+    return expectRequest(req)
+      .to.eventually.have.property('headers')
       .and.containSubset({'x-my-mock': 'is-mocked'})
   })
 
   it('should be able to use real request on a per-request basis', () => {
     const mock = {body: 'Just some mocked text'}
-    const inject = evt => evt.context.options.url.includes('/mocked') && mock
+    const inject = (evt) => evt.context.options.url.includes('/mocked') && mock
     const request = requester([baseUrl, injectResponse({inject})])
     const normalReq = request({url: '/plain-text'})
     const mockedReq = request({url: '/mocked'})
@@ -44,14 +40,18 @@ describe('inject response', () => {
     ])
   })
 
-  it('should be able to immediately cancel request', cb => {
+  it('should be able to immediately cancel request', (cb) => {
     const done = once(cb)
     const inject = () => ({body: 'foo'})
     const request = requester([injectResponse({inject})])
     const req = request({url: 'http://blah-blah'})
 
-    req.error.subscribe(err => done(new Error(`error channel should not be called when aborting, got:\n\n${err.message}`)))
-    req.response.subscribe(() => done(new Error('response channel should not be called when aborting')))
+    req.error.subscribe((err) =>
+      done(new Error(`error channel should not be called when aborting, got:\n\n${err.message}`))
+    )
+    req.response.subscribe(() =>
+      done(new Error('response channel should not be called when aborting'))
+    )
 
     req.abort.publish()
 

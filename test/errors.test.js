@@ -9,20 +9,18 @@ describe('errors', () => {
     return expectRequest(req).to.eventually.have.property('statusCode', 400)
   })
 
-  it('should error when httpErrors middleware is enabled and response code is >= 400', done => {
+  it('should error when httpErrors middleware is enabled and response code is >= 400', (done) => {
     const request = requester([baseUrl, httpErrors()])
     const req = request({url: '/status?code=400', headers: {foo: 'bar'}})
-    req.response.subscribe(res => {
+    req.response.subscribe((res) => {
       throw new Error('Response channel called when error channel should have been triggered')
     })
-    req.error.subscribe(err => {
+    req.error.subscribe((err) => {
       expect(err).to.be.an.instanceOf(Error)
       expect(err.message).to.eq(
         'GET-request to http://localhost:9980/req-test/status?code=400 resulted in HTTP 400 Bad Request'
       )
-      expect(err.message)
-        .to.include('HTTP 400')
-        .and.include('Bad Request')
+      expect(err.message).to.include('HTTP 400').and.include('Bad Request')
       expect(err)
         .to.have.property('response')
         .and.containSubset({
@@ -30,7 +28,7 @@ describe('errors', () => {
           method: 'GET',
           statusCode: 400,
           statusMessage: 'Bad Request',
-          body: '---'
+          body: '---',
         })
 
       expect(err)
@@ -43,14 +41,14 @@ describe('errors', () => {
     })
   })
 
-  it('should truncate really long URLs from error message', done => {
+  it('should truncate really long URLs from error message', (done) => {
     const request = requester([baseUrl, httpErrors()])
     const rep = new Array(1024).join('a')
     const req = request({url: `/status?code=400&foo=${rep}`, headers: {foo: 'bar'}})
-    req.response.subscribe(res => {
+    req.response.subscribe((res) => {
       throw new Error('Response channel called when error channel should have been triggered')
     })
-    req.error.subscribe(err => {
+    req.error.subscribe((err) => {
       expect(err).to.be.an.instanceOf(Error)
       expect(err.message).to.have.length.lessThan(600)
       done()
@@ -62,13 +60,13 @@ describe('errors', () => {
     const req = request({url: '/plain-text'})
     expectRequest(req).to.eventually.containSubset({
       statusCode: 200,
-      body: 'Just some plain text for you to consume'
+      body: 'Just some plain text for you to consume',
     })
   })
 
   it('should only call onError middlewares up to the first one that returns null', () => {
     const errs = []
-    const first = {onError: err => errs.push(err) && err}
+    const first = {onError: (err) => errs.push(err) && err}
     const second = {
       onError: (err, ctx) => {
         errs.push(err)
@@ -77,19 +75,19 @@ describe('errors', () => {
           method: 'GET',
           headers: {},
           statusCode: 200,
-          statusMessage: 'OK'
+          statusMessage: 'OK',
         })
-      }
+      },
     }
-    const third = {onError: err => errs.push(err)}
+    const third = {onError: (err) => errs.push(err)}
     const request = requester([baseUrl, first, second, third])
     const req = request({url: '/permafail'})
 
     return Promise.all([
       expectRequest(req).to.eventually.be.containSubset({statusCode: 200}),
-      new Promise(resolve => setTimeout(resolve, 500)).then(() => {
+      new Promise((resolve) => setTimeout(resolve, 500)).then(() => {
         expect(errs).to.have.length(2)
-      })
+      }),
     ])
   })
 })

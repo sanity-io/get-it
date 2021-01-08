@@ -2,13 +2,13 @@ const objectAssign = require('object-assign')
 const {isPlainObject} = require('is-plain-object')
 
 const serializeTypes = ['boolean', 'string', 'number']
-const isBuffer = obj =>
+const isBuffer = (obj) =>
   !!obj.constructor &&
   typeof obj.constructor.isBuffer === 'function' &&
   obj.constructor.isBuffer(obj)
 
 module.exports = () => ({
-  processOptions: options => {
+  processOptions: (options) => {
     const body = options.body
     if (!body) {
       return options
@@ -27,8 +27,8 @@ module.exports = () => ({
     return objectAssign({}, options, {
       body: JSON.stringify(options.body),
       headers: objectAssign({}, options.headers, {
-        'Content-Type': 'application/json'
-      })
+        'Content-Type': 'application/json',
+      }),
     })
-  }
+  },
 })

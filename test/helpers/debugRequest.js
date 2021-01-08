@@ -3,6 +3,6 @@ module.exports = function debugRequest(req, body) {
     headers: req.headers,
     method: req.method,
     url: req.url,
-    body: body ? body.toString() : null
+    body: body ? body.toString() : null,
   }
 }

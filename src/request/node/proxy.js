@@ -29,7 +29,7 @@ function uriInNoProxy(uri, noProxy) {
   const noProxyList = noProxy.split(',')
 
   // iterate through the noProxyList until it finds a match.
-  return noProxyList.map(parseNoProxyZone).some(noProxyZone => {
+  return noProxyList.map(parseNoProxyZone).some((noProxyZone) => {
     const isMatchedAt = hostname.indexOf(noProxyZone.hostname)
     const hostnameMatched =
       isMatchedAt > -1 && isMatchedAt === hostname.length - noProxyZone.hostname.length

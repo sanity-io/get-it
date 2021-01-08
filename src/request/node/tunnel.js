@@ -19,7 +19,7 @@ const uriParts = [
   'query',
   'pathname',
   'path',
-  'href'
+  'href',
 ]
 
 const defaultProxyHeaderWhiteList = [
@@ -43,7 +43,7 @@ const defaultProxyHeaderWhiteList = [
   'referer',
   'te',
   'user-agent',
-  'via'
+  'via',
 ]
 
 const defaultProxyHeaderExclusiveList = ['proxy-authorization']
@@ -72,11 +72,11 @@ exports.applyAgent = (opts = {}, proxy) => {
   // Setup proxy header exclusive list and whitelist
   const proxyHeaderWhiteList = defaultProxyHeaderWhiteList
     .concat(options.proxyHeaderWhiteList || [])
-    .map(header => header.toLowerCase())
+    .map((header) => header.toLowerCase())
 
   const proxyHeaderExclusiveList = defaultProxyHeaderExclusiveList
     .concat(options.proxyHeaderExclusiveList || [])
-    .map(header => header.toLowerCase())
+    .map((header) => header.toLowerCase())
 
   // Get the headers we should send to the proxy
   const proxyHeaders = getAllowedProxyHeaders(options.headers, proxyHeaderWhiteList)
@@ -136,7 +136,7 @@ function constructProxyHost(uri) {
 
 function getAllowedProxyHeaders(headers, whiteList) {
   return Object.keys(headers)
-    .filter(header => whiteList.indexOf(header.toLowerCase()) !== -1)
+    .filter((header) => whiteList.indexOf(header.toLowerCase()) !== -1)
     .reduce((set, header) => {
       set[header] = headers[header]
       return set
@@ -149,7 +149,7 @@ function constructTunnelOptions(options, proxy, proxyHeaders) {
       host: proxy.hostname,
       port: +proxy.port,
       proxyAuth: proxy.auth,
-      headers: proxyHeaders
+      headers: proxyHeaders,
     },
     headers: options.headers,
     ca: options.ca,
@@ -160,6 +160,6 @@ function constructTunnelOptions(options, proxy, proxyHeaders) {
     ciphers: options.ciphers,
     rejectUnauthorized: options.rejectUnauthorized,
     secureOptions: options.secureOptions,
-    secureProtocol: options.secureProtocol
+    secureProtocol: options.secureProtocol,
   }
 }

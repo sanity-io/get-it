@@ -7,7 +7,7 @@ const {
   describeNode,
   debugRequest,
   baseUrlPrefix,
-  baseUrl
+  baseUrl,
 } = require('./helpers')
 
 describeNode('streams', function () {
@@ -21,13 +21,12 @@ describeNode('streams', function () {
   })
 
   it('should be able to pipe one request stream into the other', () =>
-    getUri(`${baseUrlPrefix}/plain-text`).then(stream => {
+    getUri(`${baseUrlPrefix}/plain-text`).then((stream) => {
       const expected = 'Just some plain text for you to consume'
       const request = requester([baseUrl, debugRequest])
       const req = request({url: '/echo', body: stream})
       return expectRequestBody(req).to.eventually.equal(expected)
-    })
-  )
+    }))
 
   it('does not retry failed requests when using streams', () => {
     const body = 'Just some plain text for you to consume'

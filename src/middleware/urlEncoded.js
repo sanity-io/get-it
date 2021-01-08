@@ -4,13 +4,13 @@ const urlEncode = require('form-urlencoded')
 
 const encode = urlEncode.default || urlEncode
 
-const isBuffer = obj =>
+const isBuffer = (obj) =>
   !!obj.constructor &&
   typeof obj.constructor.isBuffer === 'function' &&
   obj.constructor.isBuffer(obj)
 
 module.exports = () => ({
-  processOptions: options => {
+  processOptions: (options) => {
     const body = options.body
     if (!body) {
       return options
@@ -26,8 +26,8 @@ module.exports = () => ({
     return objectAssign({}, options, {
       body: encode(options.body),
       headers: objectAssign({}, options.headers, {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      })
+        'Content-Type': 'application/x-www-form-urlencoded',
+      }),
     })
-  }
+  },
 })

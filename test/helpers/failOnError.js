@@ -1,4 +1,4 @@
-module.exports = err => {
+module.exports = (err) => {
   if (err) {
     throw err
   }

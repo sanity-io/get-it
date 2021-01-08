@@ -22,13 +22,13 @@ module.exports = (opts = {}) => {
   let requestId = 0
 
   return {
-    processOptions: options => {
+    processOptions: (options) => {
       options.debug = log
       options.requestId = options.requestId || ++requestId
       return options
     },
 
-    onRequest: event => {
+    onRequest: (event) => {
       // Short-circuit if not enabled, to save some CPU cycles with formatting stuff
       if (shortCircuit || !event) {
         return event
@@ -80,7 +80,7 @@ module.exports = (opts = {}) => {
 
       log('[%s] ERROR: %s', reqId, err.message)
       return err
-    }
+    },
   }
 }
 

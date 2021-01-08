@@ -11,10 +11,10 @@ const {
   baseUrl,
   baseUrlPrefix,
   isNode,
-  bufferFrom
+  bufferFrom,
 } = require('./helpers')
 
-describe('basics', function() {
+describe('basics', function () {
   this.timeout(15000)
 
   it('should return same instance when calling use()', () => {
@@ -63,7 +63,7 @@ describe('basics', function() {
           // Node.js (buffer)
           const request = requester([baseUrl, debugRequest])
           const req = request({url: '/plain-text', rawBody: true})
-          return promiseRequest(req).then(res => {
+          return promiseRequest(req).then((res) => {
             expect(res.body.equals(bufferFrom('Just some plain text for you to consume'))).to.equal(
               true
             )
@@ -84,7 +84,7 @@ describe('basics', function() {
       'harder',
       'better',
       'faster',
-      'stronger'
+      'stronger',
     ])
   })
 
@@ -93,7 +93,7 @@ describe('basics', function() {
     const req = request({url: '/gzip', method: 'HEAD'})
     return expectRequest(req).to.eventually.containSubset({
       statusCode: 200,
-      method: 'HEAD'
+      method: 'HEAD',
     })
   })
 
@@ -102,7 +102,7 @@ describe('basics', function() {
     const req = request({url: '/debug', method: 'PUT', body: 'just a plain body'})
     return expectRequestBody(req).to.eventually.containSubset({
       method: 'PUT',
-      body: 'just a plain body'
+      body: 'just a plain body',
     })
   })
 
@@ -110,17 +110,13 @@ describe('basics', function() {
   testNonIE9('should handle https without issues', () => {
     const request = requester()
     const req = request({url: 'https://httpbin.org/robots.txt'})
-    return expectRequest(req)
-      .to.eventually.have.property('body')
-      .and.include('/deny')
+    return expectRequest(req).to.eventually.have.property('body').and.include('/deny')
   })
 
   it('should handle cross-origin requests without issues', () => {
     const request = requester()
     const req = request({url: `http://httpbin.org/robots.txt?cb=${Date.now()}`})
-    return expectRequest(req)
-      .to.eventually.have.property('body')
-      .and.include('/deny')
+    return expectRequest(req).to.eventually.have.property('body').and.include('/deny')
   })
 
   it('should not allow base middleware to add prefix on absolute urls', () => {
@@ -129,7 +125,7 @@ describe('basics', function() {
     return expectRequestBody(req).to.eventually.have.property('url', '/req-test/debug')
   })
 
-  it('should be able to clone a requester, keeping the same middleware', done => {
+  it('should be able to clone a requester, keeping the same middleware', (done) => {
     let i = 0
     const onRequest = () => i++
     const base = requester([baseUrl, {onRequest}])

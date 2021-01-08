@@ -8,14 +8,13 @@ const {
   expectRequest,
   baseUrl,
   isIE9,
-  isNode
+  isNode,
 } = require('./helpers')
-
 
 describe('retry middleware', function () {
   this.timeout(15000)
 
-  const retry5xx = err => err.response.statusCode >= 500
+  const retry5xx = (err) => err.response.statusCode >= 500
 
   it('exposes default "shouldRetry" function', () => {
     expect(retry.shouldRetry).to.be.a('function')
@@ -29,13 +28,17 @@ describe('retry middleware', function () {
 
     return expectRequest(req).to.eventually.containSubset({
       statusCode: 200,
-      body: 'Success after failure'
+      body: 'Success after failure',
     })
   })
 
   it('should be able to set max retries', function () {
     this.timeout(400)
-    const request = requester([baseUrl, httpErrors(), retry({maxRetries: 1, shouldRetry: retry5xx})])
+    const request = requester([
+      baseUrl,
+      httpErrors(),
+      retry({maxRetries: 1, shouldRetry: retry5xx}),
+    ])
     const req = request({url: '/status?code=500'})
     return expectRequest(req).to.eventually.be.rejectedWith(/HTTP 500/i)
   })
@@ -43,14 +46,22 @@ describe('retry middleware', function () {
   testNode('should not retry if it body is a stream', function () {
     this.timeout(400)
     const fs = require('fs')
-    const request = requester([baseUrl, httpErrors(), retry({maxRetries: 5, shouldRetry: retry5xx})])
+    const request = requester([
+      baseUrl,
+      httpErrors(),
+      retry({maxRetries: 5, shouldRetry: retry5xx}),
+    ])
     const req = request({url: '/status?code=500', body: fs.createReadStream(__filename)})
     return expectRequest(req).to.eventually.be.rejectedWith(/HTTP 500/i)
   })
 
   it('should be able to set max retries on a per-request basis', function () {
     this.timeout(400)
-    const request = requester([baseUrl, httpErrors(), retry({maxRetries: 5, shouldRetry: retry5xx})])
+    const request = requester([
+      baseUrl,
+      httpErrors(),
+      retry({maxRetries: 5, shouldRetry: retry5xx}),
+    ])
     const req = request({url: '/status?code=500', maxRetries: 1})
     return expectRequest(req).to.eventually.be.rejectedWith(/HTTP 500/i)
   })

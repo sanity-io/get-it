@@ -1,5 +1,5 @@
 module.exports = () => ({
-  onRequest: evt => {
+  onRequest: (evt) => {
     if (evt.adapter !== 'xhr') {
       return
     }
@@ -16,16 +16,16 @@ module.exports = () => ({
     }
 
     function handleProgress(stage) {
-      return event => {
+      return (event) => {
         const percent = event.lengthComputable ? (event.loaded / event.total) * 100 : -1
         context.channels.progress.publish({
           stage,
           percent,
           total: event.total,
           loaded: event.loaded,
-          lengthComputable: event.lengthComputable
+          lengthComputable: event.lengthComputable,
         })
       }
     }
-  }
+  },
 })

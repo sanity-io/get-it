@@ -14,20 +14,20 @@ const promise = (options = {}) => {
       new Promise((resolve, reject) => {
         const cancel = context.options.cancelToken
         if (cancel) {
-          cancel.promise.then(reason => {
+          cancel.promise.then((reason) => {
             channels.abort.publish(reason)
             reject(reason)
           })
         }
 
         channels.error.subscribe(reject)
-        channels.response.subscribe(response => {
+        channels.response.subscribe((response) => {
           resolve(options.onlyBody ? response.body : response)
         })
 
         // Wait until next tick in case cancel has been performed
         setTimeout(() => channels.request.publish(context), 0)
-      })
+      }),
   }
 }
 

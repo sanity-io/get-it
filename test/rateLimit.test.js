@@ -8,7 +8,7 @@ const {expect, baseUrl, testNonIE} = require('./helpers')
 const options = {rate: 1, interval: 500, maxDelay: 750}
 const obsOptions = {implementation: zenObservable}
 
-describe('rate limit middleware', function() {
+describe('rate limit middleware', function () {
   this.timeout(15000)
 
   it('should give understandable error if mounting after promise/observable', () => {
@@ -26,12 +26,12 @@ describe('rate limit middleware', function() {
     return Promise.all([
       expect(req1).to.eventually.containSubset({
         body: 'Just some plain text for you to consume',
-        statusCode: 200
+        statusCode: 200,
       }),
       expect(req2).to.eventually.containSubset({
         body: 'Just some plain text for you to consume',
-        statusCode: 200
-      })
+        statusCode: 200,
+      }),
     ]).then(() => {
       expect(Date.now() - start).to.be.greaterThan(500)
     })
@@ -45,12 +45,12 @@ describe('rate limit middleware', function() {
     return Promise.all([
       expect(req1).to.eventually.containSubset({statusCode: 200}),
       expect(req2).to.eventually.containSubset({statusCode: 200}),
-      expect(req3).to.eventually.containSubset({statusCode: 200})
+      expect(req3).to.eventually.containSubset({statusCode: 200}),
     ])
       .then(() => {
         throw new Error('Should have failed when reaching max delay')
       })
-      .catch(err => {
+      .catch((err) => {
         expect(err.message).to.include('Rate limit max delay reached')
       })
   })
@@ -61,18 +61,18 @@ describe('rate limit middleware', function() {
     return expect(req).to.eventually.be.rejectedWith(/(socket|network)/i)
   })
 
-  it('should work with observable middleware', done => {
+  it('should work with observable middleware', (done) => {
     const request = requester([baseUrl, rateLimit(options), observable(obsOptions)])
 
     const start = Date.now()
     const responses = []
 
     request({url: '/plain-text'})
-      .filter(ev => ev.type === 'response')
+      .filter((ev) => ev.type === 'response')
       .subscribe(onResponse)
 
     request({url: '/plain-text'})
-      .filter(ev => ev.type === 'response')
+      .filter((ev) => ev.type === 'response')
       .subscribe(onResponse)
 
     function onResponse(res) {
@@ -84,25 +84,25 @@ describe('rate limit middleware', function() {
 
       expect(responses[0]).to.containSubset({
         body: 'Just some plain text for you to consume',
-        statusCode: 200
+        statusCode: 200,
       })
 
       expect(responses[1]).to.containSubset({
         body: 'Just some plain text for you to consume',
-        statusCode: 200
+        statusCode: 200,
       })
 
       done()
     }
   })
 
-  it('should cancel the request when unsubscribing from observable', cb => {
+  it('should cancel the request when unsubscribing from observable', (cb) => {
     const done = once(cb)
     const request = requester([baseUrl, rateLimit(options), observable(obsOptions)])
     const subscriber = request({url: '/delay'}).subscribe({
-      next: res => done(new Error('response channel should not be called when aborting')),
-      error: err =>
-        done(new Error(`error channel should not be called when aborting, got:\n\n${err.message}`))
+      next: (res) => done(new Error('response channel should not be called when aborting')),
+      error: (err) =>
+        done(new Error(`error channel should not be called when aborting, got:\n\n${err.message}`)),
     })
 
     setTimeout(() => subscriber.unsubscribe(), 15)

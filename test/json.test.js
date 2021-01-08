@@ -1,12 +1,6 @@
 const {jsonResponse, jsonRequest} = require('../src/middleware')
 const requester = require('../src/index')
-const {
-  testNode,
-  debugRequest,
-  expectRequest,
-  expectRequestBody,
-  baseUrl
-} = require('./helpers')
+const {testNode, debugRequest, expectRequest, expectRequestBody, baseUrl} = require('./helpers')
 
 describe('json middleware', () => {
   it('should be able to request data from a JSON-responding endpoint as JSON', () => {
@@ -46,7 +40,7 @@ describe('json middleware', () => {
 
     return expectRequestBody(req).to.eventually.containSubset({
       method: 'POST',
-      body: ''
+      body: '',
     })
   })
 
@@ -67,7 +61,7 @@ describe('json middleware', () => {
     const url = '/json-echo'
     return Promise.all([
       expectRequestBody(request({url, body: 'string'})).to.eventually.eql('string'),
-      expectRequestBody(request({url, body: 1337})).to.eventually.eql(1337)
+      expectRequestBody(request({url, body: 1337})).to.eventually.eql(1337),
     ])
   })
 

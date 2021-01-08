@@ -6,11 +6,11 @@ function CancelToken(executor) {
   }
 
   let resolvePromise = null
-  this.promise = new Promise(resolve => {
+  this.promise = new Promise((resolve) => {
     resolvePromise = resolve
   })
 
-  executor(message => {
+  executor((message) => {
     if (this.reason) {
       // Cancellation has already been requested
       return
@@ -21,15 +21,15 @@ function CancelToken(executor) {
   })
 }
 
-CancelToken.source = function() {
+CancelToken.source = function () {
   let cancel
-  const token = new CancelToken(can => {
+  const token = new CancelToken((can) => {
     cancel = can
   })
 
   return {
     token: token,
-    cancel: cancel
+    cancel: cancel,
   }
 }
 

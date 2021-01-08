@@ -14,7 +14,7 @@ const middlehooks = [
   'onResponse',
   'onError',
   'onReturn',
-  'onHeaders'
+  'onHeaders',
 ]
 
 module.exports = function createRequester(initMiddleware = []) {
@@ -26,7 +26,7 @@ module.exports = function createRequester(initMiddleware = []) {
     },
     {
       processOptions: [processOptions],
-      validateOptions: [validateOptions]
+      validateOptions: [validateOptions],
     }
   )
 
@@ -52,7 +52,7 @@ module.exports = function createRequester(initMiddleware = []) {
     // in order to allow cancellation. In the case of the retry middleware,
     // a new request might be triggered
     let ongoingRequest = null
-    const unsubscribe = channels.request.subscribe(ctx => {
+    const unsubscribe = channels.request.subscribe((ctx) => {
       // Let request adapters (node/browser) perform the actual request
       ongoingRequest = httpRequest(ctx, (err, res) => onResponse(err, res, ctx))
     })
@@ -118,7 +118,7 @@ module.exports = function createRequester(initMiddleware = []) {
       )
     }
 
-    middlehooks.forEach(key => {
+    middlehooks.forEach((key) => {
       if (newMiddleware[key]) {
         middleware[key].push(newMiddleware[key])
       }

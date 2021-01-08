@@ -6,7 +6,7 @@ const isReactNative = typeof navigator === 'undefined' ? false : navigator.produ
 const has = Object.prototype.hasOwnProperty
 const defaultOptions = {timeout: isReactNative ? 60000 : 120000}
 
-module.exports = opts => {
+module.exports = (opts) => {
   const options =
     typeof opts === 'string'
       ? objectAssign({url: opts}, defaultOptions)
@@ -49,7 +49,7 @@ function stringifyQueryString(obj) {
 
   function push(key, val) {
     if (Array.isArray(val)) {
-      val.forEach(item => push(key, item))
+      val.forEach((item) => push(key, item))
     } else {
       pairs.push([key, val].map(encodeURIComponent).join('='))
     }

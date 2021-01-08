@@ -13,7 +13,7 @@ module.exports = (config = {}) => {
   const agents = {http: httpAgent, https: httpsAgent}
 
   return {
-    finalizeOptions: options => {
+    finalizeOptions: (options) => {
       if (options.agent) {
         return options
       }
@@ -23,6 +23,6 @@ module.exports = (config = {}) => {
         options.maxRedirects === 0 ? {agent: isHttps ? httpsAgent : httpAgent} : {agents}
 
       return objectAssign({}, options, keepOpts)
-    }
+    },
   }
 }

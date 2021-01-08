@@ -8,9 +8,9 @@ describe('keepAlive middleware', () => {
     const request = requester([baseUrl, keepAlive()])
     return Promise.all([
       expectRequestBody(request('/plain-text')).to.eventually.eql(body),
-      new Promise(resolve => setTimeout(resolve, 50)).then(() =>
+      new Promise((resolve) => setTimeout(resolve, 50)).then(() =>
         expectRequestBody(request('/plain-text')).to.eventually.eql(body)
-      )
+      ),
     ])
   })
 
@@ -20,9 +20,9 @@ describe('keepAlive middleware', () => {
     const options = {url: '/plain-text', maxRedirects: 0}
     return Promise.all([
       expectRequestBody(request(options)).to.eventually.eql(body),
-      new Promise(resolve => setTimeout(resolve, 50)).then(() =>
+      new Promise((resolve) => setTimeout(resolve, 50)).then(() =>
         expectRequestBody(request(options)).to.eventually.eql(body)
-      )
+      ),
     ])
   })
 })

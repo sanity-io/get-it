@@ -7,45 +7,46 @@ const {expect, baseUrl} = require('./helpers')
 describe('observable middleware', () => {
   const implementation = zenObservable
 
-  it('should turn the return value into an observable', done => {
+  it('should turn the return value into an observable', (done) => {
     const request = requester([baseUrl, observable({implementation})])
     request({url: '/plain-text'})
-      .filter(ev => ev.type === 'response')
-      .subscribe(res => {
+      .filter((ev) => ev.type === 'response')
+      .subscribe((res) => {
         expect(res).to.containSubset({
           body: 'Just some plain text for you to consume',
           method: 'GET',
-          statusCode: 200
+          statusCode: 200,
         })
 
         done()
       })
   })
 
-  it('should trigger error handler on failures', done => {
+  it('should trigger error handler on failures', (done) => {
     const request = requester([baseUrl, httpErrors(), observable({implementation})])
     request({url: '/status?code=500'}).subscribe({
       next: () => done(new Error('next() called when error() should have been')),
-      error: err => {
+      error: (err) => {
         expect(err.message).to.match(/HTTP 500/i)
         done()
-      }
+      },
     })
   })
 
-  it('should not trigger request unless subscribe is called', done => {
+  it('should not trigger request unless subscribe is called', (done) => {
     const onRequest = () => done(new Error('Request triggered without subscribe()'))
     const request = requester([baseUrl, observable({implementation}), {onRequest}])
     request({url: '/plain-text'})
     setTimeout(() => done(), 100)
   })
 
-  it('should cancel the request when unsubscribing from observable', cb => {
+  it('should cancel the request when unsubscribing from observable', (cb) => {
     const done = once(cb)
     const request = requester([baseUrl, observable({implementation})])
     const subscriber = request({url: '/delay'}).subscribe({
-      next: res => done(new Error('response channel should not be called when aborting')),
-      error: err => done(new Error(`error channel should not be called when aborting, got:\n\n${err.message}`))
+      next: (res) => done(new Error('response channel should not be called when aborting')),
+      error: (err) =>
+        done(new Error(`error channel should not be called when aborting, got:\n\n${err.message}`)),
     })
 
     setTimeout(() => subscriber.unsubscribe(), 15)

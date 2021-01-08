@@ -1,10 +1,6 @@
 const {jsonResponse} = require('../src/middleware')
 const requester = require('../src/index')
-const {
-  debugRequest,
-  expectRequestBody,
-  baseUrl
-} = require('./helpers')
+const {debugRequest, expectRequestBody, baseUrl} = require('./helpers')
 
 describe('query strings', () => {
   it('should serialize query strings', () => {
@@ -28,7 +24,7 @@ describe('query strings', () => {
     return expectRequestBody(req).to.eventually.eql({
       foo: '1',
       bar: '2',
-      it: ['hai', 'there']
+      it: ['hai', 'there'],
     })
   })
 

@@ -1,12 +1,7 @@
 const objectAssign = require('object-assign')
 const {urlEncoded, jsonResponse} = require('../src/middleware')
 const requester = require('../src/index')
-const {
-  testNode,
-  debugRequest,
-  expectRequestBody,
-  baseUrl
-} = require('./helpers')
+const {testNode, debugRequest, expectRequestBody, baseUrl} = require('./helpers')
 
 describe('urlEncoded middleware', () => {
   it('should be able to send urlencoded data to an endpoint and get JSON back', () => {
@@ -33,7 +28,7 @@ describe('urlEncoded middleware', () => {
     return expectRequestBody(req).to.eventually.eql({
       'foo[0]': 'foo',
       'foo[1]': 'bar',
-      'foo[2]': 'baz'
+      'foo[2]': 'baz',
     })
   })
 

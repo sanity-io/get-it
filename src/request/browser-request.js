@@ -1,7 +1,7 @@
 /* eslint max-depth: ["error", 4] */
 const sameOrigin = require('same-origin')
 const parseHeaders = require('parse-headers')
-const noop = function() {
+const noop = function () {
   /* intentional noop */
 }
 
@@ -22,7 +22,7 @@ module.exports = (context, callback) => {
   // Allow middleware to inject a response, for instance in the case of caching or mocking
   const injectedResponse = context.applyMiddleware('interceptRequest', undefined, {
     adapter,
-    context
+    context,
   })
 
   // If middleware injected a response, treat it as we normally would and return it
@@ -192,7 +192,7 @@ module.exports = (context, callback) => {
       method: options.method,
       headers: isXdr ? {} : parseHeaders(xhr.getAllResponseHeaders()),
       statusCode: statusCode,
-      statusMessage: statusMessage
+      statusMessage: statusMessage,
     }
   }
 

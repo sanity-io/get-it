@@ -1,7 +1,7 @@
 const objectAssign = require('object-assign')
 
-module.exports = opts => ({
-  onResponse: response => {
+module.exports = (opts) => ({
+  onResponse: (response) => {
     const contentType = response.headers['content-type'] || ''
     const shouldDecode = (opts && opts.force) || contentType.indexOf('application/json') !== -1
     if (!response.body || !contentType || !shouldDecode) {
@@ -11,10 +11,10 @@ module.exports = opts => ({
     return objectAssign({}, response, {body: tryParse(response.body)})
   },
 
-  processOptions: options =>
+  processOptions: (options) =>
     objectAssign({}, options, {
-      headers: objectAssign({Accept: 'application/json'}, options.headers)
-    })
+      headers: objectAssign({Accept: 'application/json'}, options.headers),
+    }),
 })
 
 function tryParse(body) {

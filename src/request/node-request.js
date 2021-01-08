@@ -24,7 +24,7 @@ const reduceResponse = (res, reqUrl, method, body) => ({
   method: method,
   headers: res.headers,
   statusCode: res.statusCode,
-  statusMessage: res.statusMessage
+  statusMessage: res.statusMessage,
 })
 
 module.exports = (context, cb) => {
@@ -59,7 +59,7 @@ module.exports = (context, cb) => {
   let reqOpts = objectAssign({}, uri, {
     method: options.method,
     headers: objectAssign({}, lowerCaseHeaders(options.headers), lengthHeader),
-    maxRedirects: options.maxRedirects
+    maxRedirects: options.maxRedirects,
   })
 
   // Figure out proxying/tunnel options
@@ -69,7 +69,7 @@ module.exports = (context, cb) => {
   // Allow middleware to inject a response, for instance in the case of caching or mocking
   const injectedResponse = context.applyMiddleware('interceptRequest', undefined, {
     adapter,
-    context
+    context,
   })
 
   // If middleware injected a response, treat it as we normally would and return it
@@ -96,7 +96,7 @@ module.exports = (context, cb) => {
   if (!tunnel && proxy && proxy.auth && !reqOpts.headers['proxy-authorization']) {
     const [username, password] = proxy.auth.username
       ? [proxy.auth.username, proxy.auth.password]
-      : proxy.auth.split(':').map(item => qs.unescape(item))
+      : proxy.auth.split(':').map((item) => qs.unescape(item))
 
     const auth = Buffer.from(`${username}:${password}`, 'utf8')
     const authBase64 = auth.toString('base64')
@@ -113,7 +113,7 @@ module.exports = (context, cb) => {
   }
 
   const finalOptions = context.applyMiddleware('finalizeOptions', reqOpts)
-  const request = transport.request(finalOptions, response => {
+  const request = transport.request(finalOptions, (response) => {
     // See if we should try to decompress the response
     const tryDecompress = reqOpts.method !== 'HEAD'
     const res = tryDecompress ? decompressResponse(response) : response
@@ -121,7 +121,7 @@ module.exports = (context, cb) => {
     const resStream = context.applyMiddleware('onHeaders', res, {
       headers: response.headers,
       adapter,
-      context
+      context,
     })
 
     // Concatenate the response body, then parse the response with middlewares

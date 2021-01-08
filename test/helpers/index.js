@@ -31,7 +31,7 @@ const baseUrlPrefix = `${serverUrl}/req-test`
 const baseUrlPrefixHttps = `${serverUrlHttps}/req-test`
 const baseUrl = base(baseUrlPrefix)
 const baseUrlHttps = base(baseUrlPrefixHttps.replace(/^http:/, 'https:'))
-const bufferFrom = str => {
+const bufferFrom = (str) => {
   const nodeVersion = parseInt(process.version.replace('v', ''), 10)
   // eslint-disable-next-line no-buffer-constructor
   return nodeVersion >= 6 ? Buffer.from(str, 'utf8') : new Buffer(str, 'utf8')
@@ -56,5 +56,5 @@ module.exports = {
   baseUrlPrefixHttps,
   isIE9,
   isNode,
-  bufferFrom
+  bufferFrom,
 }

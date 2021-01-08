@@ -13,7 +13,7 @@ module.exports = function rateLimit(options = {}) {
       throw new Error('Rate limit middleware must be called before promise/observable middlewares')
     }
 
-    const publish = ctx => {
+    const publish = (ctx) => {
       return limit(
         () =>
           new Promise((resolve, reject) => {
@@ -21,7 +21,7 @@ module.exports = function rateLimit(options = {}) {
             channels.response.subscribe(resolve)
             channels.request.publish(ctx)
           })
-      ).catch(err => {
+      ).catch((err) => {
         if (err.name === 'RateLimitTimeoutError') {
           err.message = options.maxDelayError || 'Rate limit max delay reached'
         }

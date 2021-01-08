@@ -21,7 +21,7 @@ module.exports = (opts = {}) => {
         method: options.method,
         headers: {},
         statusCode: 200,
-        statusMessage: 'OK'
+        statusMessage: 'OK',
       },
       response
     )
