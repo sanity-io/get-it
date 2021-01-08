@@ -1,19 +1,4 @@
 /* eslint-disable complexity, no-sync */
-const fs = require('fs')
-const path = require('path')
-const qs = require('querystring')
-const url = require('url')
-const zlib = require('zlib')
-const http = require('http')
-const https = require('https')
-const simpleConcat = require('simple-concat')
-const debugRequest = require('./debugRequest')
-
-const httpsServerOptions = {
-  key: fs.readFileSync(path.join(__dirname, '..', 'certs', 'server', 'key.pem')),
-  cert: fs.readFileSync(path.join(__dirname, '..', 'certs', 'server', 'certificate.pem')),
-}
-
 const createError = (code, msg) => {
   const err = new Error(msg || code)
   err.code = code
@@ -25,14 +10,26 @@ const httpsPort = 9443
 const isNode = typeof window === 'undefined'
 const state = {failures: {}}
 
-function getResponseHandler(proto = 'http') {
-  const isSecure = proto === 'https'
+function getResponseHandler(config) {
+  const qs = require('querystring')
+  const url = require('url')
+  const zlib = require('zlib')
+  const simpleConcat = require('simple-concat')
+  const debugRequest = require('./debugRequest')
+
+  const isSecure = config && config.protocol === 'https:'
   return (req, res, next) => {
     const parts = url.parse(req.url, true)
     const num = Number(parts.query.n)
     const atMax = num >= 10
     const uuid = parts.query.uuid
     const noCache = () => res.setHeader('Cache-Control', 'private,max-age=0,no-cache,no-store')
+    const cors = () => {
+      res.setHeader('Access-Control-Allow-Origin', '*')
+      res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,HEAD,OPTIONS')
+      res.setHeader('Access-Control-Allow-Credentials', 'true')
+    }
+
     const incrementFailureCount = () => {
       if (!state.failures[uuid]) {
         state.failures[uuid] = 0
@@ -50,6 +47,7 @@ function getResponseHandler(proto = 'http') {
     if (tempFail || permaFail) {
       if (tempFail && incrementFailureCount() >= (num || 4)) {
         noCache()
+        cors()
         res.end('Success after failure')
         return
       }
@@ -58,8 +56,9 @@ function getResponseHandler(proto = 'http') {
       return
     }
 
-    // For all other requests, set no-cache
+    // For all other requests, set no-cache (and allow cross-origin)
     noCache()
+    cors()
 
     switch (parts.pathname) {
       case '/req-test/query-string':
@@ -171,14 +170,23 @@ function drip(res) {
   }, 500)
 }
 
-const createServer = (proto = 'http', opts = {}) => {
-  const isHttp = proto === 'http'
+const createServer = (protocol = 'http:', opts = {}) => {
+  const fs = require('fs')
+  const path = require('path')
+  const http = require('http')
+  const https = require('https')
+  const httpsServerOptions = {
+    key: fs.readFileSync(path.join(__dirname, '..', 'certs', 'server', 'key.pem')),
+    cert: fs.readFileSync(path.join(__dirname, '..', 'certs', 'server', 'certificate.pem')),
+  }
+
+  const isHttp = protocol === 'http:'
   const protoOpts = isHttp ? {} : httpsServerOptions
   const protoPort = isHttp ? httpPort : httpsPort
   const options = Object.assign({}, protoOpts, opts)
   const server = isHttp
-    ? http.createServer(getResponseHandler(proto))
-    : https.createServer(options, getResponseHandler(proto))
+    ? http.createServer(getResponseHandler({protocol}))
+    : https.createServer(options, getResponseHandler({protocol}))
 
   return new Promise((resolve, reject) => {
     server.listen(protoPort, (err) => (err ? reject(err) : resolve(server)))
@@ -193,8 +201,8 @@ createServer.addHooks = (before, after) => {
   if (isNode) {
     before(() =>
       Promise.all([
-        createServer('http').then((httpServer) => Object.assign(hookState, {httpServer})),
-        createServer('https').then((httpsServer) => Object.assign(hookState, {httpsServer})),
+        createServer('http:').then((httpServer) => Object.assign(hookState, {httpServer})),
+        createServer('https:').then((httpsServer) => Object.assign(hookState, {httpsServer})),
       ])
     )
   } else {

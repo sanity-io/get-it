@@ -1,13 +1,15 @@
 // Used for karma tests
 module.exports = {
   module: {
-    loaders: [
+    rules: [
       {
         test: /\.js$/,
         exclude: /node_modules/,
-        loader: 'babel-loader',
-        options: {
-          forceEnv: 'browser',
+        use: {
+          loader: 'babel-loader',
+          options: {
+            envName: 'browser',
+          },
         },
       },
     ],

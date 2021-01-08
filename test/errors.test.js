@@ -1,6 +1,6 @@
 const {httpErrors} = require('../src/middleware')
 const requester = require('../src/index')
-const {expectRequest, expect, baseUrl, baseUrlPrefix} = require('./helpers')
+const {expectRequest, expect, baseUrl, baseUrlPrefix, serverUrl} = require('./helpers')
 
 describe('errors', () => {
   it('should not respond with errors on HTTP >= 400 by default', () => {
@@ -18,7 +18,7 @@ describe('errors', () => {
     req.error.subscribe((err) => {
       expect(err).to.be.an.instanceOf(Error)
       expect(err.message).to.eq(
-        'GET-request to http://localhost:9980/req-test/status?code=400 resulted in HTTP 400 Bad Request'
+        `GET-request to ${serverUrl}/req-test/status?code=400 resulted in HTTP 400 Bad Request`
       )
       expect(err.message).to.include('HTTP 400').and.include('Bad Request')
       expect(err)

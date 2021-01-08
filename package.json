@@ -35,7 +35,7 @@
     "karma": "karma start",
     "lint": "eslint .",
     "posttest": "npm run lint",
-    "prepare": "npm run build && npm test",
+    "prepublishOnly": "npm run build && npm test",
     "test": "BABEL_ENV=node mocha"
   },
   "keywords": [
@@ -94,7 +94,7 @@
     "rimraf": "^3.0.2",
     "terser": "^5.5.1",
     "uglifyify": "^5.0.2",
-    "webpack": "^5.11.1",
+    "webpack": "^4.0.0",
     "zen-observable": "^0.8.15"
   },
   "repository": {

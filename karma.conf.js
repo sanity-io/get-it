@@ -26,7 +26,7 @@ module.exports = (config) => {
       'test/*.test.js': ['webpack', 'sourcemap'],
     },
 
-    webpack: Object.assign({}, webpackConfig, {devtool: 'inline-source-map'}),
+    webpack: {...webpackConfig, devtool: 'inline-source-map', mode: 'development'},
     webpackServer: {noInfo: true},
   })
 }
