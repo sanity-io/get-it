@@ -1,5 +1,5 @@
 /* eslint-disable no-process-env */
-const webpackConfig = require('./webpack.config')
+const webpackConfig = require('./webpack.karma.config')
 const server = require('./test/helpers/server')
 
 const allBrowsers = ['Chrome', 'PhantomJS', 'Firefox']
