@@ -83,6 +83,7 @@ module.exports = (context, cb) => {
   // We're using the follow-redirects module to transparently follow redirects
   if (options.maxRedirects !== 0) {
     reqOpts.maxRedirects = options.maxRedirects || 5
+    reqOpts.maxBodyLength = +Infinity
   }
 
   // Apply currect options for proxy tunneling, if enabled
