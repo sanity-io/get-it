@@ -188,7 +188,8 @@ module.exports = (context, callback) => {
 
     return {
       body: xhr.response || xhr.responseText,
-      url: options.url,
+      // responseURL has the "end" URL, eg after redirects
+      url: xhr.responseURL || options.url,
       method: options.method,
       headers: isXdr ? {} : parseHeaders(xhr.getAllResponseHeaders()),
       statusCode: statusCode,
