@@ -26,7 +26,13 @@ const promise = (options = {}) => {
         })
 
         // Wait until next tick in case cancel has been performed
-        setTimeout(() => channels.request.publish(context), 0)
+        setTimeout(() => {
+          try {
+            channels.request.publish(context)
+          } catch (err) {
+            reject(err)
+          }
+        }, 0)
       })
   }
 }
