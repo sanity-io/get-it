@@ -40,4 +40,28 @@ describe('headers', () => {
     return expectRequestBody(req).to.eventually.have.property('headers')
       .and.containSubset({'x-name': 'Something', 'x-dont-override': 'You'})
   })
+
+  it('should set Content-Length based on body (Buffer)', () => {
+    const request = requester([baseUrl, jsonResponse()])
+    const req = request({method: 'POST', url: '/debug', body: Buffer.from("hello")})
+
+    return expectRequestBody(req).to.eventually.have.property('headers')
+      .and.containSubset({'content-length': '5'})
+  })
+
+  it('should set Content-Length based on body (string)', () => {
+    const request = requester([baseUrl, jsonResponse()])
+    const req = request({method: 'POST', url: '/debug', body: "hello"})
+
+    return expectRequestBody(req).to.eventually.have.property('headers')
+      .and.containSubset({'content-length': '5'})
+  })
+
+  it('should set Content-Length based on body (string)', () => {
+    const request = requester([baseUrl, jsonResponse()])
+    const req = request({method: 'POST', url: '/debug', body: "hello 🚀"})
+
+    return expectRequestBody(req).to.eventually.have.property('headers')
+      .and.containSubset({'content-length': '10'})
+  })
 })

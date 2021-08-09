@@ -44,8 +44,8 @@ module.exports = (context, cb) => {
   const lengthHeader = {}
   if (options.bodySize) {
     lengthHeader['content-length'] = options.bodySize
-  } else if (options.body && Buffer.isBuffer(options.body)) {
-    lengthHeader['content-length'] = options.body.length
+  } else if (options.body && bodyType !== 'stream') {
+    lengthHeader['content-length'] = Buffer.byteLength(options.body)
   }
 
   // Make sure callback is not called in the event of a cancellation
