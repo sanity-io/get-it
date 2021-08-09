@@ -1,6 +1,6 @@
 {
   "name": "get-it",
-  "version": "5.0.4",
+  "version": "5.0.5",
   "description": "Generic HTTP request library for node and browsers",
   "main": "index.js",
   "engines": {
