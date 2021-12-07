@@ -1,15 +1,25 @@
 /* eslint max-depth: ["error", 4] */
 const sameOrigin = require('same-origin')
 const parseHeaders = require('parse-headers')
+const FetchXhr = require('./browser/fetchXhr')
+
 const noop = function() {
   /* intentional noop */
 }
 
-const win = window
-const XmlHttpRequest = win.XMLHttpRequest || noop
+const win = typeof window === 'undefined' ? undefined : window
+const adapter = win ? 'xhr' : 'fetch'
+
+let XmlHttpRequest = typeof XMLHttpRequest === 'function' ? XMLHttpRequest : noop
 const hasXhr2 = 'withCredentials' in new XmlHttpRequest()
-const XDomainRequest = hasXhr2 ? XmlHttpRequest : win.XDomainRequest
-const adapter = 'xhr'
+const XDR = typeof XDomainRequest === 'undefined' ? undefined : XDomainRequest
+let CrossDomainRequest = hasXhr2 ? XmlHttpRequest : XDR
+
+// Fallback to fetch-based XHR polyfill for non-browser environments like Workers
+if (!win) {
+  XmlHttpRequest = FetchXhr
+  CrossDomainRequest = FetchXhr
+}
 
 module.exports = (context, callback) => {
   const opts = context.options
@@ -34,9 +44,9 @@ module.exports = (context, callback) => {
   }
 
   // We'll want to null out the request on success/failure
-  let xhr = cors ? new XDomainRequest() : new XmlHttpRequest()
+  let xhr = cors ? new CrossDomainRequest() : new XmlHttpRequest()
 
-  const isXdr = win.XDomainRequest && xhr instanceof win.XDomainRequest
+  const isXdr = win && win.XDomainRequest && xhr instanceof win.XDomainRequest
   const headers = options.headers
 
   // Request state
@@ -151,7 +161,7 @@ module.exports = (context, callback) => {
     }
   }
 
-  function onError() {
+  function onError(error) {
     if (loaded) {
       return
     }
@@ -163,7 +173,7 @@ module.exports = (context, callback) => {
 
     // Annoyingly, details are extremely scarce and hidden from us.
     // We only really know that it is a network error
-    const err = new Error(`Network error while attempting to reach ${options.url}`)
+    const err = error || new Error(`Network error while attempting to reach ${options.url}`)
     err.isNetworkError = true
     err.request = options
     callback(err)
