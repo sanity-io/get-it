@@ -2,7 +2,7 @@ const pubsub = require('nano-pubsub')
 const middlewareReducer = require('./util/middlewareReducer')
 const processOptions = require('./middleware/defaultOptionsProcessor')
 const validateOptions = require('./middleware/defaultOptionsValidator')
-const httpRequest = require('./request') // node-request in node, browser-request in browsers
+const httpRequester = require('./request') // node-request in node, browser-request in browsers
 
 const channelNames = ['request', 'response', 'progress', 'error', 'abort']
 const middlehooks = [
@@ -17,7 +17,7 @@ const middlehooks = [
   'onHeaders'
 ]
 
-module.exports = function createRequester(initMiddleware = []) {
+module.exports = function createRequester(initMiddleware = [], httpRequest = httpRequester) {
   const loadedMiddleware = []
   const middleware = middlehooks.reduce(
     (ware, name) => {
