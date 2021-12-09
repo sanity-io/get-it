@@ -38,7 +38,7 @@
     "karma": "karma start",
     "lint": "eslint .",
     "posttest": "npm run lint",
-    "prepublish": "in-publish && npm run build && npm test || not-in-publish",
+    "prepublishOnly": "npm run build && npm test",
     "test": "BABEL_ENV=node mocha"
   },
   "keywords": [
@@ -55,7 +55,6 @@
     "decompress-response": "^3.3.0",
     "follow-redirects": "^1.2.4",
     "form-urlencoded": "^2.0.7",
-    "in-publish": "^2.0.0",
     "into-stream": "^3.1.0",
     "is-plain-object": "^2.0.4",
     "is-retry-allowed": "^1.1.0",
