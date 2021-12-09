@@ -1,13 +1,14 @@
 const once = require('lodash.once')
 const fetch = require('node-fetch')
-const {jsonResponse} = require('../src/middleware')
+const bufferFrom = require('buffer-from')
+const {jsonResponse, jsonRequest} = require('../src/middleware')
 const requester = require('../src/index')
 const browserRequest = require('../src/request/browser-request')
-const {expect, expectRequest, expectRequestBody, baseUrl} = require('./helpers')
+const {expect, expectRequest, expectRequestBody, baseUrl, describeNode} = require('./helpers')
 
 const originalFetch = global.fetch
 
-describe('fetch', function() {
+describeNode('fetch', function() {
   this.timeout(15000)
 
   this.beforeEach(() => {
@@ -27,6 +28,24 @@ describe('fetch', function() {
     const request = requester([baseUrl], browserRequest)
     const req = request('/plain-text')
     return expectRequest(req).to.eventually.have.property('body', body)
+  })
+
+  it('should be able to post a Buffer as body', () => {
+    const request = requester([baseUrl], browserRequest)
+    const req = request({url: '/echo', body: bufferFrom('Foo bar')})
+    return expectRequestBody(req).to.eventually.eql('Foo bar')
+  })
+
+  it('should be able to post a string as body', () => {
+    const request = requester([baseUrl], browserRequest)
+    const req = request({url: '/echo', body: 'Does this work?'})
+    return expectRequestBody(req).to.eventually.eql('Does this work?')
+  })
+
+  it('should be able to use JSON request middleware', () => {
+    const request = requester([baseUrl, jsonRequest()], browserRequest)
+    const req = request({url: '/echo', body: {foo: 'bar'}})
+    return expectRequestBody(req).to.eventually.eql('{"foo":"bar"}')
   })
 
   it('should be able to set http headers', () => {
