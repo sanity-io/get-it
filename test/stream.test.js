@@ -1,5 +1,7 @@
-const getUri = require('./helpers/getUri')
+const {expect} = require('chai')
 const toStream = require('into-stream')
+const concat = require('simple-concat')
+const getUri = require('./helpers/getUri')
 const requester = require('../src/index')
 const {
   expectRequest,
@@ -10,7 +12,7 @@ const {
   baseUrl
 } = require('./helpers')
 
-describeNode('streams', function () {
+describeNode('streams', function() {
   this.timeout(15000)
 
   it('should be able to send a stream to a remote endpoint', () => {
@@ -26,13 +28,26 @@ describeNode('streams', function () {
       const request = requester([baseUrl, debugRequest])
       const req = request({url: '/echo', body: stream})
       return expectRequestBody(req).to.eventually.equal(expected)
-    })
-  )
+    }))
 
   it('does not retry failed requests when using streams', () => {
     const body = 'Just some plain text for you to consume'
     const request = requester([baseUrl, debugRequest])
     const req = request({url: '/fail?n=3', body: toStream(body)})
     return expectRequest(req).to.eventually.be.rejectedWith(Error)
+  })
+
+  it('can get a response stream', done => {
+    const request = requester([baseUrl, debugRequest])
+    const req = request({url: '/drip', stream: true})
+    req.response.subscribe(res => {
+      expect(res.body).to.have.property('pipe')
+      expect(res.body.pipe).to.be.a('function')
+      concat(res.body, (err, body) => {
+        expect(err).to.eq(null)
+        expect(body.toString('utf8')).to.eq('chunkchunkchunkchunkchunkchunkchunkchunkchunk')
+        done()
+      })
+    })
   })
 })

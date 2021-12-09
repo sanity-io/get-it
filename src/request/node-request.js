@@ -124,6 +124,14 @@ module.exports = (context, cb) => {
       context
     })
 
+    // On redirects, `responseUrl` is set
+    const reqUrl = response.responseUrl || options.url
+
+    if (options.stream) {
+      callback(null, reduceResponse(res, reqUrl, reqOpts.method, resStream))
+      return
+    }
+
     // Concatenate the response body, then parse the response with middlewares
     concat(resStream, (err, data) => {
       if (err) {
@@ -131,13 +139,7 @@ module.exports = (context, cb) => {
       }
 
       const body = options.rawBody ? data : data.toString()
-      const reduced = reduceResponse(
-        res,
-        response.responseUrl || options.url, // On redirects, `responseUrl` is set
-        reqOpts.method,
-        body
-      )
-
+      const reduced = reduceResponse(res, reqUrl, reqOpts.method, body)
       return callback(null, reduced)
     })
   })
