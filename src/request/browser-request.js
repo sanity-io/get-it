@@ -59,6 +59,7 @@ module.exports = (context, callback) => {
   xhr.onerror = onError
   xhr.ontimeout = onError
   xhr.onabort = () => {
+    stopTimers(true)
     aborted = true
   }
 
@@ -150,9 +151,9 @@ module.exports = (context, callback) => {
     timers.socket = setTimeout(() => timeoutRequest('ESOCKETTIMEDOUT'), delays.socket)
   }
 
-  function stopTimers() {
+  function stopTimers(force) {
     // Only clear the connect timeout if we've got a connection
-    if (aborted || (xhr.readyState >= 2 && timers.connect)) {
+    if (force || aborted || (xhr.readyState >= 2 && timers.connect)) {
       clearTimeout(timers.connect)
     }
 
@@ -167,7 +168,7 @@ module.exports = (context, callback) => {
     }
 
     // Clean up
-    stopTimers()
+    stopTimers(true)
     loaded = true
     xhr = null
 
