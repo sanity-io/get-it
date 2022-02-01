@@ -12,6 +12,7 @@ const adapter = win ? 'xhr' : 'fetch'
 
 let XmlHttpRequest = typeof XMLHttpRequest === 'function' ? XMLHttpRequest : noop
 const hasXhr2 = 'withCredentials' in new XmlHttpRequest()
+// eslint-disable-next-line no-undef
 const XDR = typeof XDomainRequest === 'undefined' ? undefined : XDomainRequest
 let CrossDomainRequest = hasXhr2 ? XmlHttpRequest : XDR
 
