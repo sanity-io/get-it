@@ -87,7 +87,7 @@
     "get-uri": "^2.0.1",
     "gzip-size": "^3.0.0",
     "lodash.once": "^4.1.1",
-    "mocha": "^3.4.2",
+    "mocha": "^9.2.0",
     "node-fetch": "^2.0.0",
     "nyc": "^15.1.0",
     "prettier": "^1.15.2",
