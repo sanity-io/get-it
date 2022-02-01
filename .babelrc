@@ -3,12 +3,10 @@
     "browser": {
       "presets": [
         [
-          "env",
+          "@babel/env",
           {
             "targets": {
-              "browsers": [
-                "ie >= 9"
-              ]
+              "browsers": ["ie >= 9"]
             }
           }
         ]
@@ -17,16 +15,11 @@
     "node": {
       "presets": [
         [
-          "env",
+          "@babel/env",
           {
             "targets": {
-              "node": 4
-            },
-            "exclude": [
-              // These are not _really_ needed for node@4
-              "transform-es2015-block-scoping",
-              "transform-es2015-arrow-functions"
-            ]
+              "node": 12
+            }
           }
         ]
       ]
