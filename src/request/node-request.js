@@ -112,12 +112,15 @@ module.exports = (context, cb) => {
     )
   }
 
+  // See if we should try to request a compressed response (and decompress on return)
+  const tryCompressed = reqOpts.method !== 'HEAD'
+  if (tryCompressed && !reqOpts.headers['accept-encoding'] && options.compress !== false) {
+    reqOpts.headers['accept-encoding'] = 'br, gzip, deflate'
+  }
+
   const finalOptions = context.applyMiddleware('finalizeOptions', reqOpts)
   const request = transport.request(finalOptions, response => {
-    // See if we should try to decompress the response
-    const tryDecompress = reqOpts.method !== 'HEAD'
-    const res = tryDecompress ? decompressResponse(response) : response
-
+    const res = tryCompressed ? decompressResponse(response) : response
     const resStream = context.applyMiddleware('onHeaders', res, {
       headers: response.headers,
       adapter,

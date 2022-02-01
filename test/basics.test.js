@@ -1,3 +1,5 @@
+require('./init.test')
+
 const {jsonResponse} = require('../src/middleware')
 const requester = require('../src/index')
 const {
@@ -77,15 +79,46 @@ describe('basics', function() {
         }
   )
 
-  it('should unzip gziped responses', () => {
+  it('should request compressed responses by default', () => {
+    const request = requester([baseUrl, jsonResponse()])
+    const req = request({url: '/debug'})
+
+    return expectRequestBody(req)
+      .to.eventually.have.property('headers')
+      .and.containSubset({'accept-encoding': 'br, gzip, deflate'})
+  })
+
+  it('should decompress compressed responses', () => {
     const request = requester([baseUrl, jsonResponse(), debugRequest])
     const req = request({url: '/gzip'})
-    return expectRequestBody(req).to.eventually.deep.equal([
-      'harder',
-      'better',
-      'faster',
-      'stronger'
-    ])
+    return expectRequest(req)
+      .to.eventually.have.property('body')
+      .and.deep.equal(['harder', 'better', 'faster', 'stronger'])
+  })
+
+  it('should not request compressed responses for HEAD requests', () => {
+    const request = requester([baseUrl, jsonResponse()])
+    const req = request({url: '/maybeCompress', method: 'HEAD'})
+
+    return expectRequest(req)
+      .to.eventually.have.property('headers')
+      .and.not.have.property('content-encoding')
+  })
+
+  it('should decompress brotli-encoded responses', () => {
+    const request = requester([baseUrl, jsonResponse(), debugRequest])
+    const req = request({url: '/maybeCompress'})
+    return expectRequest(req)
+      .to.eventually.have.property('body')
+      .and.deep.equal(['smaller', 'better', 'faster', 'stronger'])
+  })
+
+  it('should be able to disable compression', () => {
+    const request = requester([baseUrl, jsonResponse(), debugRequest])
+    const req = request({url: '/maybeCompress', compress: false})
+    return expectRequest(req)
+      .to.eventually.have.property('body')
+      .and.deep.equal(['larger', 'worse', 'slower', 'weaker'])
   })
 
   it('should not return a body on HEAD-requests', () => {

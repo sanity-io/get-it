@@ -32,6 +32,7 @@ function getResponseHandler(proto = 'http') {
     const num = Number(parts.query.n)
     const atMax = num >= 10
     const uuid = parts.query.uuid
+    const acceptedEncodings = (req.headers['accept-encoding'] || '').split(/\s*,\s*/)
     const noCache = () => res.setHeader('Cache-Control', 'private,max-age=0,no-cache,no-store')
     const incrementFailureCount = () => {
       if (!state.failures[uuid]) {
@@ -100,6 +101,18 @@ function getResponseHandler(proto = 'http') {
         simpleConcat(req, (unused, body) => {
           res.end(JSON.stringify(debugRequest(req, body)))
         })
+        break
+      case '/req-test/maybeCompress':
+        res.setHeader('Content-Type', 'application/json')
+        if (acceptedEncodings.includes('br')) {
+          res.setHeader('Content-Encoding', 'br')
+          zlib.brotliCompress(
+            JSON.stringify(['smaller', 'better', 'faster', 'stronger']),
+            (_err, result) => res.end(result)
+          )
+        } else {
+          res.end(JSON.stringify(['larger', 'worse', 'slower', 'weaker']))
+        }
         break
       case '/req-test/gzip':
         res.setHeader('Content-Type', 'application/json')
