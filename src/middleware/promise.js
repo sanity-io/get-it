@@ -1,10 +1,11 @@
-const global = require('../util/global')
 const Cancel = require('./cancel/Cancel')
 const CancelToken = require('./cancel/CancelToken')
 const isCancel = require('./cancel/isCancel')
 
+const globalPromise = typeof Promise === 'function' && Promise
+
 const promise = (options = {}) => {
-  const Promise = options.implementation || global.Promise
+  const Promise = options.implementation || globalPromise
   if (!Promise) {
     throw new Error('`Promise` is not available in global scope, and no implementation was passed')
   }

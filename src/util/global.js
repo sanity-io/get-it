@@ -1,5 +1,8 @@
+/* global globalThis */
 /* eslint-disable no-negated-condition */
-if (typeof window !== 'undefined') {
+if (typeof globalThis !== 'undefined') {
+  module.exports = globalThis
+} else if (typeof window !== 'undefined') {
   module.exports = window
 } else if (typeof global !== 'undefined') {
   module.exports = global
