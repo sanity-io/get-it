@@ -3,9 +3,7 @@ const fs = require('fs')
 const path = require('path')
 const https = require('https')
 
-const port = 9443
-
-module.exports = (serverOpts = {}) =>
+module.exports = (port, serverOpts = {}) =>
   new Promise((resolve, reject) => {
     const httpsServerOptions = {
       ca: fs.readFileSync(path.join(__dirname, '..', 'certs', 'mtls', 'ca-crt.pem')),

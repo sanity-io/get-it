@@ -2,14 +2,19 @@
 const fs = require('fs')
 const path = require('path')
 
-const {mtls} = require('../src/middleware')
+const {base, mtls} = require('../src/middleware')
 const requester = require('../src/index')
-const {expect, testNode, expectRequestBody, baseUrlHttps} = require('./helpers')
+const {expect, testNode, expectRequestBody} = require('./helpers')
 const getMtls = require('./helpers/mtls')
+
+const port = 4443
+const baseUrl = `https://localhost:${port}/req-test`
 
 describe('mtls middleware', () => {
   testNode('should throw on missing options', () => {
-    expect(() => requester([baseUrlHttps, mtls()])).to.throw(/Required mtls option "ca" is missing/)
+    expect(() => requester([base(baseUrl), mtls()])).to.throw(
+      /Required mtls option "ca" is missing/
+    )
   })
 
   testNode('should handle mtls', () => {
@@ -19,8 +24,8 @@ describe('mtls middleware', () => {
       key: fs.readFileSync(path.join(__dirname, 'certs', 'mtls', 'client-key.pem')),
       cert: fs.readFileSync(path.join(__dirname, 'certs', 'mtls', 'client-crt.pem'))
     }
-    const request = requester([baseUrlHttps, mtls(mtlsOpts)])
-    return getMtls().then(async server => {
+    const request = requester([base(baseUrl), mtls(mtlsOpts)])
+    return getMtls(port).then(async server => {
       await expectRequestBody(request({url: '/plain-text'})).to.eventually.eql(body)
       return server.close()
     })
@@ -28,7 +33,7 @@ describe('mtls middleware', () => {
 
   testNode('should fail on invalid mtls cert', async () => {
     const request = requester([
-      baseUrlHttps,
+      base(baseUrl),
       mtls({
         ca: fs.readFileSync(path.join(__dirname, 'certs', 'mtls', 'ca-crt.pem')).toString(),
         key: fs.readFileSync(path.join(__dirname, 'certs', 'client', 'client_key.pem')).toString(),
@@ -36,7 +41,7 @@ describe('mtls middleware', () => {
       })
     ])
 
-    const server = await getMtls()
+    const server = await getMtls(port)
     await expect(() => request({url: '/plain-text'})).to.throw()
 
     return server.close()
