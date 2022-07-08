@@ -1,3 +1,6 @@
+require('./init.test')
+
+const util = require('util')
 const requester = require('../src/index')
 const {debug, jsonRequest, jsonResponse} = require('../src/middleware')
 const {baseUrl, expect} = require('./helpers')
@@ -37,5 +40,21 @@ describe('debug middleware', () => {
     const logger = debug({log, verbose: true})
     const request = requester([baseUrl, logger])
     request({url: '/invalid-json'}).response.subscribe(() => done())
+  })
+
+  it('should redact sensitive headers in verbose mode', done => {
+    const lines = []
+    const logIt = (line, ...args) => lines.push(util.format(line, ...args))
+    const logger = debug({log: logIt, verbose: true})
+    const request = requester([baseUrl, logger])
+    request({
+      url: '/echo',
+      headers: {CoOkIe: 'yes cookie', authorization: 'bearer auth'},
+      body: 'Just some text'
+    }).response.subscribe(() => {
+      expect(lines.join('\n')).not.to.contain('yes cookie')
+      expect(lines.join('\n')).to.contain('<redacted>')
+      done()
+    })
   })
 })

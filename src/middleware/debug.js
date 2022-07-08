@@ -1,13 +1,13 @@
 const debugIt = require('debug')
 
-const SENSITIVE_HEADERS = ['Cookie', 'Authorization']
+const SENSITIVE_HEADERS = ['cookie', 'authorization']
 
 const hasOwn = Object.prototype.hasOwnProperty
-const redactKeys = (source, keys) => {
+const redactKeys = (source, redacted) => {
   const target = {}
   for (const key in source) {
     if (hasOwn.call(source, key)) {
-      target[key] = keys.indexOf(key) > -1 ? '<redacted>' : source[key]
+      target[key] = redacted.indexOf(key.toLowerCase()) > -1 ? '<redacted>' : source[key]
     }
   }
   return target
