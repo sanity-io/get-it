@@ -23,6 +23,9 @@ Deno.test('named middleware imports', async () => {
   console.log({promise: typeof promise})
 })
 
+// @TODO disable tests until Deno adds support for export subpath patterns
+// https://github.com/denoland/deno/issues/15605
+/*
 Deno.test('direct middleware imports', async () => {
   // https://github.com/sanity-io/client/blob/428bc53ab4d9879baf466030e0fc9e048e9eb9ef/src/http/request.js#L3-L7
   const {default: observable} = await import('get-it/lib/middleware/observable')
@@ -46,3 +49,4 @@ Deno.test('direct lib-node middleware imports', async () => {
   console.log({debug: typeof debug})
   console.log({headers: typeof headers})
 })
+// */
