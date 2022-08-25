@@ -132,6 +132,7 @@
     "@babel/cli": "^7.16.8",
     "@babel/preset-env": "^7.16.11",
     "@babel/register": "^7.16.9",
+    "@sanity/semantic-release-preset": "^2.0.1",
     "browserify": "^14.4.0",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
