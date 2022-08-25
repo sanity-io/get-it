@@ -99,7 +99,8 @@
     "posttest": "npm run lint",
     "prepublishOnly": "npm run build && npm test",
     "test": "BABEL_ENV=node mocha",
-    "test:esm": "node --test test-esm/ | faucet"
+    "test:esm": "node --test test-esm/ | faucet",
+    "test:deno": "deno test --allow-net --unstable --compat --allow-read test-esm/test.ts"
   },
   "keywords": [
     "request",

@@ -38,6 +38,7 @@ jobs:
 
   test:
     name: Node.js ${{ matrix.node }} / ${{ matrix.platform }}
+    needs: build
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -62,8 +63,9 @@ jobs:
       - run: npm test
 
   test-esm:
-    runs-on: ubuntu-latest
     name: Test ESM exports
+    needs: build
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -76,9 +78,19 @@ jobs:
       - run: npm run build
       - run: npm run test:esm
 
+  test-deno:
+     name: Test Deno in Node compatibility mode
+     needs: build
+     runs-on: ubuntu-latest
+     steps:
+       - uses: actions/checkout@v3
+       - uses: denoland/setup-deno@v1
+       - run: npm run test:deno
+
   release:
     name: Semantic release
     runs-on: ubuntu-latest
+    # needs: [test, test-esm, test-deno]
     needs: [test, test-esm]
     if: inputs.release == true
     steps:
