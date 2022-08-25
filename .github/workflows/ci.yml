@@ -75,8 +75,14 @@ jobs:
           node-version: 18
           cache: npm
       - run: npm ci
-      - run: npm run build
+      - run: npm run build:esm
       - run: npm run test:esm
+        # This test will run both in a CJS and an ESM mode in Node.js to ensure backwards compatibility
+        name: Ensure pkg.exports don't break anything in modern Node.js envs
+      - run: npm run test:esm:browser
+        # This test is just ensuring the pkg.exports defined by 'browser' conditionals don't point to files that don't exist and have valid syntax (no CJS)
+        # Please note that this test DOES support Node.js APIs, we need to test in a Cloudflare Worker v8 runtime, or Vercel Edge Runtime, to fully test e2e
+        name: Test the 'browser' conditional using Node.js
 
   test-deno:
      name: Test Deno in Node compatibility mode
@@ -89,15 +95,17 @@ jobs:
             node-version: lts/*
             cache: npm
         - run: npm ci
-        - run: npm run build
+        - run: npm run build:esm
         - uses: denoland/setup-deno@v1
         - run: npm run test:deno
+          # When not in Node Compat mode it's likely using something like https://esm.sh/get-it, which supports the same `deno` conditional
+          # and thus it's not necessary to run a test outside compat mode here
+          name: Test that pkg.exports supports Deno running in Node Compatibility mode
 
   release:
     name: Semantic release
     runs-on: ubuntu-latest
-    # needs: [test, test-esm, test-deno]
-    needs: [test, test-esm]
+    needs: [test, test-esm, test-deno]
     if: inputs.release == true
     steps:
       - uses: actions/checkout@v3
