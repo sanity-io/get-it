@@ -8,8 +8,8 @@ pids
 *.seed
 
 # Built sources
+/dist
 /lib
-/lib-esm
 /lib-node
 /umd
 
