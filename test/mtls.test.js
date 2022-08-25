@@ -9,8 +9,9 @@ const getMtls = require('./helpers/mtls')
 
 const port = 4443
 const baseUrl = `https://localhost:${port}/req-test`
+const describeOrSkip = process.env.SKIP_MTLS_TEST === 'true' ? describe.skip : describe
 
-describe('mtls middleware', () => {
+describeOrSkip('mtls middleware', () => {
   testNode('should throw on missing options', () => {
     expect(() => requester([base(baseUrl), mtls()])).to.throw(
       /Required mtls option "ca" is missing/
