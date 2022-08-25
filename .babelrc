@@ -12,6 +12,19 @@
         ]
       ]
     },
+    "esm": {
+      "presets": [
+        [
+          "@babel/env",
+          {
+            "targets": {
+              "esmodules": true
+            },
+            "modules": ""
+          }
+        ]
+      ]
+    },
     "node": {
       "presets": [
         [

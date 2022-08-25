@@ -9,6 +9,7 @@ pids
 
 # Built sources
 /lib
+/lib-esm
 /lib-node
 /umd
 

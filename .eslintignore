@@ -1,5 +1,6 @@
 /coverage
 /lib
+/lib-esm
 /lib-node
 /umd
 # ESLint isn't configured to deal with ESM yet
