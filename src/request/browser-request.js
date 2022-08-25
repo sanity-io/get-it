@@ -7,7 +7,7 @@ const noop = function() {
   /* intentional noop */
 }
 
-const win = typeof window === 'undefined' ? undefined : window
+const win = typeof document === 'undefined' || typeof window === 'undefined' ? undefined : window
 const adapter = win ? 'xhr' : 'fetch'
 
 let XmlHttpRequest = typeof XMLHttpRequest === 'function' ? XMLHttpRequest : noop
