@@ -1,8 +1,11 @@
-import pubsub from 'nano-pubsub'
+import _pubsub from 'nano-pubsub'
 import middlewareReducer from './util/middlewareReducer'
 import processOptions from './middleware/defaultOptionsProcessor'
 import validateOptions from './middleware/defaultOptionsValidator'
 import httpRequester from './request' // node-request in node, browser-request in browsers
+
+// Workaround default export weirdness
+const pubsub = 'default' in _pubsub ? _pubsub.default : _pubsub
 
 const channelNames = ['request', 'response', 'progress', 'error', 'abort']
 const middlehooks = [
