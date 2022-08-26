@@ -43,6 +43,12 @@
       "deno": "./dist/esm/middleware.mjs",
       "default": "./middleware.js"
     },
+    "./middleware/*": {
+      "browser": "./dist/esm/middleware/*.mjs",
+      "deno": "./dist/esm/middleware/*.mjs",
+      "node": "./lib-node/middleware/*.js",
+      "default": "./lib/middleware/*.js"
+    },
     "./middleware.js": "./middleware.js",
     "./lib": "./lib/index.js",
     "./lib/*": "./lib/*.js",
