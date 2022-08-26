@@ -1,6 +1,6 @@
 {
   "name": "get-it",
-  "version": "6.1.1-esm.5",
+  "version": "6.1.1",
   "description": "Generic HTTP request library for node, browsers and workers",
   "type": "commonjs",
   "main": "index.js",
