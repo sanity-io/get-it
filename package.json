@@ -47,13 +47,13 @@
     "./index": "./index.js",
     "./index.js": "./index.js",
     "./middleware": {
-      "browser": "./dist/esm/middleware.mjs",
-      "deno": "./dist/esm/middleware.mjs",
+      "browser": "./dist/esm/middleware/index.mjs",
+      "deno": "./dist/esm/middleware/index.mjs",
       "default": "./middleware.js"
     },
     "./middleware.js": {
-      "browser": "./dist/esm/middleware.mjs",
-      "deno": "./dist/esm/middleware.mjs",
+      "browser": "./dist/esm/middleware/index.mjs",
+      "deno": "./dist/esm/middleware/index.mjs",
       "default": "./middleware.js"
     },
     "./middleware/*": {
@@ -66,8 +66,8 @@
     "./lib/*": "./lib/*.js",
     "./lib/*.js": "./lib/*.js",
     "./lib/middleware": {
-      "browser": "./dist/esm/middleware.mjs",
-      "deno": "./dist/esm/middleware.mjs",
+      "browser": "./dist/esm/middleware/index.mjs",
+      "deno": "./dist/esm/middleware/index.mjs",
       "default": "./lib/middleware.js"
     },
     "./lib/middleware/*": {
