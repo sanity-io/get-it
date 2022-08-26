@@ -1,5 +1,3 @@
-const objectAssign = require('object-assign')
-
 module.exports = (config = {}) => {
   if (!config.ca) {
     throw new Error('Required mtls option "ca" is missing')
@@ -18,7 +16,7 @@ module.exports = (config = {}) => {
         key: config.key,
         ca: config.ca
       }
-      return objectAssign({}, options, mtlsOpts)
+      return Object.assign({}, options, mtlsOpts)
     }
   }
 }

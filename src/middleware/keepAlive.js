@@ -1,6 +1,5 @@
 const http = require('http')
 const https = require('https')
-const objectAssign = require('object-assign')
 
 const isHttpsProto = /^https:/i
 
@@ -22,7 +21,7 @@ module.exports = (config = {}) => {
       const keepOpts =
         options.maxRedirects === 0 ? {agent: isHttps ? httpsAgent : httpAgent} : {agents}
 
-      return objectAssign({}, options, keepOpts)
+      return Object.assign({}, options, keepOpts)
     }
   }
 }

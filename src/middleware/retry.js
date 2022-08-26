@@ -1,4 +1,3 @@
-const objectAssign = require('object-assign')
 const defaultShouldRetry = require('../util/node-shouldRetry')
 
 const isStream = stream =>
@@ -27,8 +26,8 @@ const retry = (opts = {}) => {
       }
 
       // Create a new context with an increased attempt number, so we can exit if we reach a limit
-      const newContext = objectAssign({}, context, {
-        options: objectAssign({}, options, {attemptNumber: attemptNumber + 1})
+      const newContext = Object.assign({}, context, {
+        options: Object.assign({}, options, {attemptNumber: attemptNumber + 1})
       })
 
       // Wait a given amount of time before doing the request again

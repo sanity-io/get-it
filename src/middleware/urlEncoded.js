@@ -1,4 +1,3 @@
-const objectAssign = require('object-assign')
 const isPlainObject = require('is-plain-object')
 const urlEncode = require('form-urlencoded')
 
@@ -23,9 +22,9 @@ module.exports = () => ({
       return options
     }
 
-    return objectAssign({}, options, {
+    return Object.assign({}, options, {
       body: encode(options.body),
-      headers: objectAssign({}, options.headers, {
+      headers: Object.assign({}, options.headers, {
         'Content-Type': 'application/x-www-form-urlencoded'
       })
     })

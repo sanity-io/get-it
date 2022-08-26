@@ -8,7 +8,6 @@ const follow = require('follow-redirects')
 const timedOut = require('@sanity/timed-out')
 const isStream = require('is-stream')
 const toStream = require('into-stream')
-const objectAssign = require('object-assign')
 const progressStream = require('progress-stream')
 const decompressResponse = require('decompress-response')
 const {getProxyOptions, rewriteUriForProxy} = require('./node/proxy')
@@ -29,7 +28,7 @@ const reduceResponse = (res, reqUrl, method, body) => ({
 
 module.exports = (context, cb) => {
   const options = context.options
-  const uri = objectAssign({}, url.parse(options.url))
+  const uri = Object.assign({}, url.parse(options.url))
   const bodyType = isStream(options.body) ? 'stream' : typeof options.body
 
   if (
@@ -56,9 +55,9 @@ module.exports = (context, cb) => {
   })
 
   // Create a reduced subset of options meant for the http.request() method
-  let reqOpts = objectAssign({}, uri, {
+  let reqOpts = Object.assign({}, uri, {
     method: options.method,
-    headers: objectAssign({}, lowerCaseHeaders(options.headers), lengthHeader),
+    headers: Object.assign({}, lowerCaseHeaders(options.headers), lengthHeader),
     maxRedirects: options.maxRedirects
   })
 

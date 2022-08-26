@@ -1,5 +1,4 @@
 const global = require('../util/global')
-const objectAssign = require('object-assign')
 
 module.exports = (opts = {}) => {
   const Observable = opts.implementation || global.Observable
@@ -13,9 +12,11 @@ module.exports = (opts = {}) => {
     onReturn: (channels, context) =>
       new Observable(observer => {
         channels.error.subscribe(err => observer.error(err))
-        channels.progress.subscribe(event => observer.next(objectAssign({type: 'progress'}, event)))
+        channels.progress.subscribe(event =>
+          observer.next(Object.assign({type: 'progress'}, event))
+        )
         channels.response.subscribe(response => {
-          observer.next(objectAssign({type: 'response'}, response))
+          observer.next(Object.assign({type: 'response'}, response))
           observer.complete()
         })
 

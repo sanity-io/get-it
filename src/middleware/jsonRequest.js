@@ -1,4 +1,3 @@
-const objectAssign = require('object-assign')
 const isPlainObject = require('is-plain-object')
 
 const serializeTypes = ['boolean', 'string', 'number']
@@ -24,9 +23,9 @@ module.exports = () => ({
       return options
     }
 
-    return objectAssign({}, options, {
+    return Object.assign({}, options, {
       body: JSON.stringify(options.body),
-      headers: objectAssign({}, options.headers, {
+      headers: Object.assign({}, options.headers, {
         'Content-Type': 'application/json'
       })
     })

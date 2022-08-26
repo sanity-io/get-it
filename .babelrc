@@ -7,10 +7,11 @@
           {
             "targets": {
               "browsers": ["ie >= 9"]
-            }
+            },
           }
         ]
-      ]
+      ],
+      "plugins": ["@babel/plugin-transform-object-assign"]
     },
     "node": {
       "presets": [

@@ -5,7 +5,6 @@
  */
 const url = require('url')
 const tunnel = require('tunnel-agent')
-const objectAssign = require('object-assign')
 
 const uriParts = [
   'protocol',
@@ -67,7 +66,7 @@ exports.shouldEnable = (options, tunnelOption) => {
 }
 
 exports.applyAgent = (opts = {}, proxy) => {
-  const options = objectAssign({}, opts)
+  const options = Object.assign({}, opts)
 
   // Setup proxy header exclusive list and whitelist
   const proxyHeaderWhiteList = defaultProxyHeaderWhiteList

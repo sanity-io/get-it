@@ -1,5 +1,3 @@
-const objectAssign = require('object-assign')
-
 module.exports = opts => ({
   onResponse: response => {
     const contentType = response.headers['content-type'] || ''
@@ -8,12 +6,12 @@ module.exports = opts => ({
       return response
     }
 
-    return objectAssign({}, response, {body: tryParse(response.body)})
+    return Object.assign({}, response, {body: tryParse(response.body)})
   },
 
   processOptions: options =>
-    objectAssign({}, options, {
-      headers: objectAssign({Accept: 'application/json'}, options.headers)
+    Object.assign({}, options, {
+      headers: Object.assign({Accept: 'application/json'}, options.headers)
     })
 })
 

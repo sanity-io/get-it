@@ -151,7 +151,6 @@
     "is-retry-allowed": "^1.1.0",
     "is-stream": "^1.1.0",
     "nano-pubsub": "^1.0.2",
-    "object-assign": "^4.1.1",
     "parse-headers": "^2.0.4",
     "progress-stream": "^2.0.0",
     "same-origin": "^0.1.1",
@@ -161,6 +160,7 @@
   },
   "devDependencies": {
     "@babel/cli": "^7.16.8",
+    "@babel/plugin-transform-object-assign": "^7.16.7",
     "@babel/preset-env": "^7.16.11",
     "@babel/register": "^7.16.9",
     "@sanity/semantic-release-preset": "^2.0.1",

@@ -5,7 +5,6 @@
 
 /* eslint-disable no-process-env */
 const url = require('url')
-const objectAssign = require('object-assign')
 
 function formatHostname(hostname) {
   // canonicalize the hostname, so that 'oogle.com' won't match 'google.com'
@@ -101,12 +100,12 @@ function getHostHeaderWithPort(uri) {
 
 function rewriteUriForProxy(reqOpts, uri, proxy) {
   const headers = reqOpts.headers || {}
-  const options = objectAssign({}, reqOpts, {headers})
+  const options = Object.assign({}, reqOpts, {headers})
   headers.host = headers.host || getHostHeaderWithPort(uri)
   options.protocol = proxy.protocol || options.protocol
   options.hostname = proxy.host.replace(/:\d+/, '')
   options.port = proxy.port
-  options.host = getHostFromUri(objectAssign({}, uri, proxy))
+  options.host = getHostFromUri(Object.assign({}, uri, proxy))
   options.href = `${options.protocol}//${options.host}${options.path}`
   options.path = url.format(uri)
   return options
