@@ -10,7 +10,7 @@ function normalizer(stage) {
   })
 }
 
-module.exports = () => ({
+export default () => ({
   onHeaders: (response, evt) => {
     const progress = progressStream({time: 16})
     const normalize = normalizer('download')

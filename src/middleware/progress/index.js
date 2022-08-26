@@ -1,1 +1,1 @@
-module.exports = require('./node-progress')
+export default require('./node-progress')

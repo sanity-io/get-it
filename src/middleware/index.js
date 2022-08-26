@@ -1,15 +1,15 @@
-exports.base = require('./base')
-exports.debug = require('./debug')
-exports.jsonRequest = require('./jsonRequest')
-exports.jsonResponse = require('./jsonResponse')
-exports.httpErrors = require('./httpErrors')
-exports.retry = require('./retry')
-exports.promise = require('./promise')
-exports.observable = require('./observable')
-exports.progress = require('./progress')
-exports.headers = require('./headers')
-exports.injectResponse = require('./injectResponse')
-exports.urlEncoded = require('./urlEncoded')
-exports.proxy = require('./proxy')
-exports.keepAlive = require('./keepAlive')
-exports.mtls = require('./mtls')
+export {default as base} from './base'
+export {default as debug} from './debug'
+export {default as jsonRequest} from './jsonRequest'
+export {default as jsonResponse} from './jsonResponse'
+export {default as httpErrors} from './httpErrors'
+export {default as retry} from './retry'
+export {default as promise} from './promise'
+export {default as observable} from './observable'
+export {default as progress} from './progress'
+export {default as headers} from './headers'
+export {default as injectResponse} from './injectResponse'
+export {default as urlEncoded} from './urlEncoded'
+export {default as proxy} from './proxy'
+export {default as keepAlive} from './keepAlive'
+export {default as mtls} from './mtls'

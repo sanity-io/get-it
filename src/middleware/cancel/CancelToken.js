@@ -33,4 +33,4 @@ CancelToken.source = function() {
   }
 }
 
-module.exports = CancelToken
+export default CancelToken
