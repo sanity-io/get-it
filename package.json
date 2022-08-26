@@ -96,13 +96,13 @@
       "default": "./lib/middleware/progress/index.js"
     },
     "./lib/middleware/progress/*": {
-      "browser": "./dist/esm/middleware/progress/*.mjs",
-      "deno": "./dist/esm/middleware/progress/*.mjs",
+      "browser": "./dist/esm/middleware/progress/index.mjs",
+      "deno": "./dist/esm/middleware/progress/index.mjs",
       "default": "./lib/middleware/progress/*.js"
     },
     "./lib/middleware/progress/*.js": {
-      "browser": "./dist/esm/middleware/progress/*.mjs",
-      "deno": "./dist/esm/middleware/progress/*.mjs",
+      "browser": "./dist/esm/middleware/progress/index.mjs",
+      "deno": "./dist/esm/middleware/progress/index.mjs",
       "default": "./lib/middleware/progress/*.js"
     },
     "./lib/request": "./lib/request/index.js",
