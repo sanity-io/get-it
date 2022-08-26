@@ -5,7 +5,7 @@ const isReactNative = typeof navigator === 'undefined' ? false : navigator.produ
 const has = Object.prototype.hasOwnProperty
 const defaultOptions = {timeout: isReactNative ? 60000 : 120000}
 
-module.exports = opts => {
+export default opts => {
   const options =
     typeof opts === 'string'
       ? Object.assign({url: opts}, defaultOptions)

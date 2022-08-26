@@ -1,5 +1,5 @@
-const getIt = require('./index')
+import getIt from './index'
 
 getIt.middleware = require('./middleware')
 
-module.exports = getIt
+export default getIt

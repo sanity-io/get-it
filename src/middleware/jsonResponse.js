@@ -1,4 +1,4 @@
-module.exports = opts => ({
+export default opts => ({
   onResponse: response => {
     const contentType = response.headers['content-type'] || ''
     const shouldDecode = (opts && opts.force) || contentType.indexOf('application/json') !== -1

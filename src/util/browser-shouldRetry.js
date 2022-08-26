@@ -1,4 +1,4 @@
-module.exports = (err, attempt, options) => {
+export default (err, attempt, options) => {
   if (options.method !== 'GET' && options.method !== 'HEAD') {
     return false
   }

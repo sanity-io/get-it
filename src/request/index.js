@@ -1,1 +1,3 @@
-module.exports = require('./node-request')
+import request from './node-request'
+
+export default request

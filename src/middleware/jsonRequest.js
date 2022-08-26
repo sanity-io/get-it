@@ -6,7 +6,7 @@ const isBuffer = obj =>
   typeof obj.constructor.isBuffer === 'function' &&
   obj.constructor.isBuffer(obj)
 
-module.exports = () => ({
+export default () => ({
   processOptions: options => {
     const body = options.body
     if (!body) {

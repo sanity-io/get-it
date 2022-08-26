@@ -1,7 +1,7 @@
 /* eslint max-depth: ["error", 4] */
 import sameOrigin from 'same-origin'
 import parseHeaders from 'parse-headers'
-const FetchXhr = require('./browser/fetchXhr')
+import FetchXhr from './browser/fetchXhr'
 
 const noop = function() {
   /* intentional noop */
@@ -22,7 +22,7 @@ if (!win) {
   CrossDomainRequest = FetchXhr
 }
 
-module.exports = (context, callback) => {
+export default (context, callback) => {
   const opts = context.options
   const options = context.applyMiddleware('finalizeOptions', opts)
   const timers = {}

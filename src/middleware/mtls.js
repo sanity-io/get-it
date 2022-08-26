@@ -1,4 +1,4 @@
-module.exports = (config = {}) => {
+export default (config = {}) => {
   if (!config.ca) {
     throw new Error('Required mtls option "ca" is missing')
   }

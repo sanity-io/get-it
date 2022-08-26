@@ -10,7 +10,7 @@ const HttpError = createErrorClass('HttpError', function(res, ctx) {
   this.request = ctx.options
 })
 
-module.exports = () => ({
+export default () => ({
   onResponse: (res, ctx) => {
     const isHttpError = res.statusCode >= 400
     if (!isHttpError) {

@@ -17,7 +17,6 @@
   ],
   "browser": {
     "./middleware.js": "./lib/middleware/index.js",
-    "./src/index.js": "./lib/index.js",
     "./lib-node": "./lib",
     "./lib-node/index.js": "./lib/index.js",
     "./src/request/node-request.js": "./src/request/browser-request.js",
@@ -126,7 +125,7 @@
     "bundle:minify": "uglifyjs -c -m -- umd/get-it.js > umd/get-it.min.js",
     "bundle:minify:all": "uglifyjs -c -m -- umd/get-it-all.js > umd/get-it-all.min.js",
     "build": "npm run compile && npm run bundle",
-    "build:esm": "esbuild --platform=browser --outdir=dist/esm --format=esm --splitting --bundle --out-extension:.js=.mjs --sourcemap --define:process.env.DEBUG=false --define:process=undefined --external:create-error-class --external:debug --external:form-urlencoded --external:is-plain-object --external:is-stream --external:nano-pubsub --external:parse-headers --external:same-origin --external:url-parse src-esm-exports/*.mjs src-esm-exports/middleware/*.mjs",
+    "build:esm": "esbuild --platform=browser --outdir=dist/esm --format=esm --splitting --bundle --out-extension:.js=.mjs --sourcemap --define:process.env.DEBUG=false --define:process=undefined --external:create-error-class --external:debug --external:form-urlencoded --external:is-plain-object --external:is-stream --external:nano-pubsub --external:parse-headers --external:same-origin --external:url-parse src-esm-exports/*.mjs --main-fields=es2015,browser,module,main src-esm-exports/middleware/*.mjs",
     "ci": "npm run coverage && npm run lint",
     "clean": "rimraf dist lib-node lib .nyc_output coverage npm-debug.log yarn-debug.log umd/*.js",
     "compile": "cross-env BABEL_ENV=node babel --source-maps --copy-files -d lib-node/ src/ && cross-env BABEL_ENV=browser babel --source-maps --copy-files -d lib/ src/",
@@ -157,13 +156,13 @@
     "is-plain-object": "^5.0.0",
     "is-retry-allowed": "^1.1.0",
     "is-stream": "^1.1.0",
-    "nano-pubsub": "^1.0.2",
+    "nano-pubsub": "^2.0.1",
     "parse-headers": "^2.0.5",
     "progress-stream": "^2.0.0",
     "same-origin": "^0.1.1",
     "simple-concat": "^1.0.1",
     "tunnel-agent": "^0.6.0",
-    "url-parse": "^1.1.9"
+    "url-parse": "^1.5.10"
   },
   "devDependencies": {
     "@babel/cli": "^7.16.8",

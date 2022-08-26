@@ -1,6 +1,6 @@
-const Cancel = require('./cancel/Cancel')
-const CancelToken = require('./cancel/CancelToken')
-const isCancel = require('./cancel/isCancel')
+import Cancel from './cancel/Cancel'
+import CancelToken from './cancel/CancelToken'
+import isCancel from './cancel/isCancel'
 
 const globalPromise = typeof Promise === 'function' && Promise
 
@@ -42,4 +42,4 @@ promise.Cancel = Cancel
 promise.CancelToken = CancelToken
 promise.isCancel = isCancel
 
-module.exports = promise
+export default promise

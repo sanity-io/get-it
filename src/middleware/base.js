@@ -1,7 +1,7 @@
 const leadingSlash = /^\//
 const trailingSlash = /\/$/
 
-module.exports = baseUrl => {
+export default baseUrl => {
   const baseUri = baseUrl.replace(trailingSlash, '')
   return {
     processOptions: options => {

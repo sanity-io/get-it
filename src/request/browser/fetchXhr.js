@@ -70,4 +70,4 @@ FetchXhr.prototype.send = function(body) {
     })
 }
 
-module.exports = FetchXhr
+export default FetchXhr

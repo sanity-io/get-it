@@ -1,4 +1,4 @@
-module.exports = (opts = {}) => {
+export default (opts = {}) => {
   if (typeof opts.inject !== 'function') {
     throw new Error('`injectResponse` middleware requires a `inject` function')
   }

@@ -1,9 +1,9 @@
-const http = require('http')
-const https = require('https')
+import http from 'http'
+import https from 'https'
 
 const isHttpsProto = /^https:/i
 
-module.exports = (config = {}) => {
+export default (config = {}) => {
   const ms = config.ms || 1000
   const maxFree = config.maxFree || 256
   const agentOptions = {keepAlive: true, keepAliveMsecs: ms, maxFreeSockets: maxFree}

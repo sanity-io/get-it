@@ -1,4 +1,4 @@
-const defaultShouldRetry = require('../util/node-shouldRetry')
+import defaultShouldRetry from '../util/node-shouldRetry'
 
 const isStream = stream =>
   stream !== null && typeof stream === 'object' && typeof stream.pipe === 'function'
@@ -41,7 +41,7 @@ const retry = (opts = {}) => {
 
 retry.shouldRetry = defaultShouldRetry
 
-module.exports = retry
+export default retry
 
 function getRetryDelay(attemptNum) {
   return 100 * Math.pow(2, attemptNum) + Math.random() * 100

@@ -1,6 +1,6 @@
-const global = require('../util/global')
+import global from '../util/global'
 
-module.exports = (opts = {}) => {
+export default (opts = {}) => {
   const Observable = opts.implementation || global.Observable
   if (!Observable) {
     throw new Error(
