@@ -1,4 +1,4 @@
-const debugIt = require('debug')
+import debugIt from 'debug'
 
 const SENSITIVE_HEADERS = ['cookie', 'authorization']
 

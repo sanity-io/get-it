@@ -1,5 +1,5 @@
-const isPlainObject = require('is-plain-object')
-const urlEncode = require('form-urlencoded')
+import {isPlainObject} from 'is-plain-object'
+import urlEncode from 'form-urlencoded'
 
 const encode = urlEncode.default || urlEncode
 

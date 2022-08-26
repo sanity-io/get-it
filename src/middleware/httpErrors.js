@@ -1,4 +1,4 @@
-const createErrorClass = require('create-error-class')
+import createErrorClass from 'create-error-class'
 
 const HttpError = createErrorClass('HttpError', function(res, ctx) {
   const truncatedUrl = res.url.length > 400 ? `${res.url.slice(0, 399)}…` : res.url

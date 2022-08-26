@@ -1,4 +1,4 @@
-const isPlainObject = require('is-plain-object')
+import {isPlainObject} from 'is-plain-object'
 
 const serializeTypes = ['boolean', 'string', 'number']
 const isBuffer = obj =>

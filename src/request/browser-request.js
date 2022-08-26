@@ -1,6 +1,6 @@
 /* eslint max-depth: ["error", 4] */
-const sameOrigin = require('same-origin')
-const parseHeaders = require('parse-headers')
+import sameOrigin from 'same-origin'
+import parseHeaders from 'parse-headers'
 const FetchXhr = require('./browser/fetchXhr')
 
 const noop = function() {

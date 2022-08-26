@@ -1,4 +1,4 @@
-const pubsub = require('nano-pubsub')
+import pubsub from 'nano-pubsub'
 const middlewareReducer = require('./util/middlewareReducer')
 const processOptions = require('./middleware/defaultOptionsProcessor')
 const validateOptions = require('./middleware/defaultOptionsValidator')

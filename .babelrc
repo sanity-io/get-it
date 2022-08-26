@@ -23,7 +23,8 @@
             }
           }
         ]
-      ]
+      ],
+      "plugins": ["@babel/plugin-transform-modules-commonjs"]
     },
     "test": {
       "presets": [
@@ -35,7 +36,8 @@
             }
           }
         ]
-      ]
+      ],
+      "plugins": ["@babel/plugin-transform-modules-commonjs"]
     }
   }
 }

@@ -1,4 +1,4 @@
-const urlParse = require('url-parse')
+import urlParse from 'url-parse'
 
 const isReactNative = typeof navigator === 'undefined' ? false : navigator.product === 'ReactNative'
 
