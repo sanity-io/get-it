@@ -17,7 +17,7 @@ const middlehooks = [
   'onHeaders'
 ]
 
-module.exports = function createRequester(initMiddleware = [], httpRequest = httpRequester) {
+export default function createRequester(initMiddleware = [], httpRequest = httpRequester) {
   const loadedMiddleware = []
   const middleware = middlehooks.reduce(
     (ware, name) => {

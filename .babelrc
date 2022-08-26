@@ -24,7 +24,7 @@
           }
         ]
       ],
-      "plugins": ["@babel/plugin-transform-modules-commonjs"]
+      "plugins": ["@babel/plugin-transform-modules-commonjs", "add-module-exports"]
     },
     "test": {
       "presets": [
@@ -37,7 +37,7 @@
           }
         ]
       ],
-      "plugins": ["@babel/plugin-transform-modules-commonjs", "istanbul"]
+      "plugins": ["@babel/plugin-transform-modules-commonjs", "istanbul", "add-module-exports"]
     }
   }
 }
