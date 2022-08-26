@@ -34,11 +34,13 @@ test('commonly used imports', async t => {
     const jsonRequest = require('get-it/lib/middleware/jsonRequest')
     const jsonResponse = require('get-it/lib/middleware/jsonResponse')
     const progress = require('get-it/lib/middleware/progress')
+    const keepAlive = require('get-it/lib/middleware/keepAlive')
 
     assert.equal(typeof observable, 'function')
     assert.equal(typeof jsonRequest, 'function')
     assert.equal(typeof jsonResponse, 'function')
     assert.equal(typeof progress, 'function')
+    assert.equal(typeof keepAlive, 'function')
   })
 
   await t.test('direct lib-node middleware imports', t => {

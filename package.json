@@ -16,13 +16,14 @@
     "middleware.js"
   ],
   "browser": {
-    "./middleware.js": "./lib/middleware/index.js",
     "./lib-node": "./lib",
     "./lib-node/index.js": "./lib/index.js",
     "./src/request/node-request.js": "./src/request/browser-request.js",
     "./lib/request/node-request.js": "./lib/request/browser-request.js",
     "./src/middleware/progress/node-progress.js": "./src/middleware/progress/browser-progress.js",
     "./lib/middleware/progress/node-progress.js": "./lib/middleware/progress/browser-progress.js",
+    "./src/middleware/keepAlive.js": "./src/middleware/keepAlive-browser.js",
+    "./lib/middleware/keepAlive.js": "./lib/middleware/keepAlive-browser.js",
     "./src/util/node-shouldRetry.js": "./src/util/browser-shouldRetry.js",
     "./lib/util/node-shouldRetry.js": "./lib/util/browser-shouldRetry.js",
     "@sanity/timed-out": "./test/helpers/noop.js",
