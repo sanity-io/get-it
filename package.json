@@ -28,7 +28,9 @@
     "./lib/util/node-shouldRetry.js": "./lib/util/browser-shouldRetry.js",
     "fs": "./test/helpers/noop.js",
     "get-uri": "./test/helpers/noop.js",
-    "into-stream": "./test/helpers/noop.js"
+    "into-stream": "./test/helpers/noop.js",
+    "http": "./test/helpers/noop.js",
+    "https": "./test/helpers/noop.js"
   },
   "exports": {
     ".": {
@@ -43,13 +45,17 @@
       "deno": "./dist/esm/middleware.mjs",
       "default": "./middleware.js"
     },
+    "./middleware.js": {
+      "browser": "./dist/esm/middleware.mjs",
+      "deno": "./dist/esm/middleware.mjs",
+      "default": "./middleware.js"
+    },
     "./middleware/*": {
       "browser": "./dist/esm/middleware/*.mjs",
       "deno": "./dist/esm/middleware/*.mjs",
       "node": "./lib-node/middleware/*.js",
       "default": "./lib/middleware/*.js"
     },
-    "./middleware.js": "./middleware.js",
     "./lib": "./lib/index.js",
     "./lib/*": "./lib/*.js",
     "./lib/*.js": "./lib/*.js",
