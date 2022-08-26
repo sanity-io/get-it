@@ -43,19 +43,32 @@
     ".": {
       "browser": "./dist/esm/index.mjs",
       "deno": "./dist/esm/index.mjs",
+      "node": "./lib-node/index.js",
       "default": "./index.js"
     },
-    "./index": "./index.js",
-    "./index.js": "./index.js",
+    "./index": {
+      "browser": "./dist/esm/index.mjs",
+      "deno": "./dist/esm/index.mjs",
+      "node": "./lib-node/index.js",
+      "default": "./index.js"
+    },
+    "./index.js": {
+      "browser": "./dist/esm/index.mjs",
+      "deno": "./dist/esm/index.mjs",
+      "node": "./lib-node/index.js",
+      "default": "./index.js"
+    },
     "./middleware": {
       "browser": "./dist/esm/middleware/index.mjs",
       "deno": "./dist/esm/middleware/index.mjs",
-      "default": "./middleware.js"
+      "node": "./lib-node/middleware/index.js",
+      "default": "./lib/middleware/index.js"
     },
-    "./middleware.js": {
+    "./middleware.js":{
       "browser": "./dist/esm/middleware/index.mjs",
       "deno": "./dist/esm/middleware/index.mjs",
-      "default": "./middleware.js"
+      "node": "./lib-node/middleware/index.js",
+      "default": "./lib/middleware/index.js"
     },
     "./middleware/*": {
       "browser": "./dist/esm/middleware/*.mjs",
