@@ -32,8 +32,8 @@ jobs:
           node-version: lts/*
           cache: npm
       - run: npm ci
-      - run: npm run lint
       - run: npm run build
+      - run: npm run lint
       - run: npm run coverage
 
   test:
@@ -60,7 +60,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-      - run: npm test
+      - run: npm run build:esm
+      - run: npm run coverage
         env:
           SKIP_MTLS_TEST: "${{ matrix.os == 'ubuntu-latest' && 'true' || 'false' }}"
 
@@ -78,6 +79,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      - run: npm run build:esm
       - run: npm run test:esm
         # This test will run both in a CJS and an ESM mode in Node.js to ensure backwards compatibility
         name: Ensure pkg.exports don't break anything in modern Node.js envs
