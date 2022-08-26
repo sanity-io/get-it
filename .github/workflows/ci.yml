@@ -60,7 +60,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-      - run: npm run build:esm
       - run: npm run coverage
         env:
           SKIP_MTLS_TEST: "${{ matrix.os == 'ubuntu-latest' && 'true' || 'false' }}"
@@ -100,6 +99,7 @@ jobs:
             cache: npm
         - run: npm ci
         - run: npm run build
+        - run: npm run build:esm
         - uses: denoland/setup-deno@v1
         - run: npm run test:esm:deno
           # When not in Node Compat mode it's likely using something like https://esm.sh/get-it, which supports the same `deno` conditional

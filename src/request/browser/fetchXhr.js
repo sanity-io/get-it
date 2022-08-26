@@ -30,14 +30,14 @@ FetchXhr.prototype.send = function(body) {
   const options = {
     method: this._method,
     headers: this._headers,
-    signal: ctrl && ctrl.signal,
+    signal: (ctrl && ctrl.signal) || undefined,
     body
   }
 
   // Some environments (like CloudFlare workers) don't support credentials in
   // RequestInitDict, and there doesn't seem to be any easy way to check for it,
   // so for now let's just make do with a window check :/
-  if (typeof window !== 'undefined') {
+  if (typeof document !== 'undefined') {
     options.credentials = this.withCredentials ? 'include' : 'omit'
   }
 
