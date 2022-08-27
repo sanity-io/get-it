@@ -4,7 +4,6 @@
   "description": "Generic HTTP request library for node, browsers and workers",
   "type": "commonjs",
   "main": "index.js",
-  "module": "index.module.js",
   "engines": {
     "node": ">=12.0.0"
   },
