@@ -1,6 +1,5 @@
-const objectAssign = require('object-assign')
-const isPlainObject = require('is-plain-object')
-const urlEncode = require('form-urlencoded')
+import {isPlainObject} from 'is-plain-object'
+import urlEncode from 'form-urlencoded'
 
 const encode = urlEncode.default || urlEncode
 
@@ -9,7 +8,7 @@ const isBuffer = obj =>
   typeof obj.constructor.isBuffer === 'function' &&
   obj.constructor.isBuffer(obj)
 
-module.exports = () => ({
+export default () => ({
   processOptions: options => {
     const body = options.body
     if (!body) {
@@ -23,9 +22,9 @@ module.exports = () => ({
       return options
     }
 
-    return objectAssign({}, options, {
+    return Object.assign({}, options, {
       body: encode(options.body),
-      headers: objectAssign({}, options.headers, {
+      headers: Object.assign({}, options.headers, {
         'Content-Type': 'application/x-www-form-urlencoded'
       })
     })

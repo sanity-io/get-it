@@ -1,1 +1,1 @@
-module.exports = value => !!(value && value.__CANCEL__)
+export default value => !!(value && value.__CANCEL__)

@@ -192,3 +192,10 @@ This module was inspired by the great work of others:
 ## License
 
 MIT-licensed. See LICENSE.
+
+## Release new version
+
+Run the ["CI & Release" workflow](https://github.com/sanity-io/get-it/actions).
+Make sure to select the main branch and check "Release new version".
+
+Semantic release will only release on configured branches, so it is safe to run release on any branch.

@@ -1,13 +1,16 @@
+let actualGlobal
 /* global globalThis */
 /* eslint-disable no-negated-condition */
 if (typeof globalThis !== 'undefined') {
-  module.exports = globalThis
+  actualGlobal = globalThis
 } else if (typeof window !== 'undefined') {
-  module.exports = window
+  actualGlobal = window
 } else if (typeof global !== 'undefined') {
-  module.exports = global
+  actualGlobal = global
 } else if (typeof self !== 'undefined') {
-  module.exports = self
+  actualGlobal = self
 } else {
-  module.exports = {}
+  actualGlobal = {}
 }
+
+export default actualGlobal

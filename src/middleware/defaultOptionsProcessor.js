@@ -1,16 +1,15 @@
-const objectAssign = require('object-assign')
-const urlParse = require('url-parse')
+import urlParse from 'url-parse'
 
 const isReactNative = typeof navigator === 'undefined' ? false : navigator.product === 'ReactNative'
 
 const has = Object.prototype.hasOwnProperty
 const defaultOptions = {timeout: isReactNative ? 60000 : 120000}
 
-module.exports = opts => {
+export default opts => {
   const options =
     typeof opts === 'string'
-      ? objectAssign({url: opts}, defaultOptions)
-      : objectAssign({}, defaultOptions, opts)
+      ? Object.assign({url: opts}, defaultOptions)
+      : Object.assign({}, defaultOptions, opts)
 
   // Parse URL into parts
   const url = urlParse(
@@ -24,7 +23,7 @@ module.exports = opts => {
 
   // Shallow-merge (override) existing query params
   if (options.query) {
-    url.query = objectAssign({}, url.query, removeUndefined(options.query))
+    url.query = Object.assign({}, url.query, removeUndefined(options.query))
   }
 
   // Implicit POST if we have not specified a method but have a body

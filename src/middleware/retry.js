@@ -1,5 +1,4 @@
-const objectAssign = require('object-assign')
-const defaultShouldRetry = require('../util/node-shouldRetry')
+import defaultShouldRetry from '../util/node-shouldRetry'
 
 const isStream = stream =>
   stream !== null && typeof stream === 'object' && typeof stream.pipe === 'function'
@@ -27,8 +26,8 @@ const retry = (opts = {}) => {
       }
 
       // Create a new context with an increased attempt number, so we can exit if we reach a limit
-      const newContext = objectAssign({}, context, {
-        options: objectAssign({}, options, {attemptNumber: attemptNumber + 1})
+      const newContext = Object.assign({}, context, {
+        options: Object.assign({}, options, {attemptNumber: attemptNumber + 1})
       })
 
       // Wait a given amount of time before doing the request again
@@ -42,7 +41,7 @@ const retry = (opts = {}) => {
 
 retry.shouldRetry = defaultShouldRetry
 
-module.exports = retry
+export default retry
 
 function getRetryDelay(attemptNum) {
   return 100 * Math.pow(2, attemptNum) + Math.random() * 100

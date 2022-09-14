@@ -8,6 +8,7 @@ pids
 *.seed
 
 # Built sources
+/dist
 /lib
 /lib-node
 /umd

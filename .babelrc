@@ -1,4 +1,5 @@
 {
+  "plugins": ["add-module-exports"],
   "env": {
     "browser": {
       "presets": [
@@ -7,10 +8,11 @@
           {
             "targets": {
               "browsers": ["ie >= 9"]
-            }
+            },
           }
         ]
-      ]
+      ],
+      "plugins": ["@babel/plugin-transform-object-assign"]
     },
     "node": {
       "presets": [
@@ -22,7 +24,21 @@
             }
           }
         ]
-      ]
+      ],
+      "plugins": ["@babel/plugin-transform-modules-commonjs"]
+    },
+    "test": {
+      "presets": [
+        [
+          "@babel/env",
+          {
+            "targets": {
+              "node": "current"
+            }
+          }
+        ]
+      ],
+      "plugins": ["@babel/plugin-transform-modules-commonjs", "istanbul"]
     }
   }
 }

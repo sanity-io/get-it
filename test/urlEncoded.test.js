@@ -1,19 +1,13 @@
-const objectAssign = require('object-assign')
 const {urlEncoded, jsonResponse} = require('../src/middleware')
 const requester = require('../src/index')
-const {
-  testNode,
-  debugRequest,
-  expectRequestBody,
-  baseUrl
-} = require('./helpers')
+const {testNode, debugRequest, expectRequestBody, baseUrl} = require('./helpers')
 
 describe('urlEncoded middleware', () => {
   it('should be able to send urlencoded data to an endpoint and get JSON back', () => {
     const request = requester([baseUrl, urlEncoded(), jsonResponse(), debugRequest])
     const body = {randomValue: Date.now(), someThing: 'spaces & commas - all sorts!'}
     const strBody = Object.keys(body).reduce(
-      (acc, key) => objectAssign(acc, {[key]: `${body[key]}`}),
+      (acc, key) => Object.assign(acc, {[key]: `${body[key]}`}),
       {}
     )
     const req = request({url: '/urlencoded', body})

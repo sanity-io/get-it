@@ -1,8 +1,11 @@
-const pubsub = require('nano-pubsub')
-const middlewareReducer = require('./util/middlewareReducer')
-const processOptions = require('./middleware/defaultOptionsProcessor')
-const validateOptions = require('./middleware/defaultOptionsValidator')
-const httpRequester = require('./request') // node-request in node, browser-request in browsers
+import _pubsub from 'nano-pubsub'
+import middlewareReducer from './util/middlewareReducer'
+import processOptions from './middleware/defaultOptionsProcessor'
+import validateOptions from './middleware/defaultOptionsValidator'
+import httpRequester from './request' // node-request in node, browser-request in browsers
+
+// Workaround default export weirdness
+const pubsub = 'default' in _pubsub ? _pubsub.default : _pubsub
 
 const channelNames = ['request', 'response', 'progress', 'error', 'abort']
 const middlehooks = [
@@ -17,7 +20,7 @@ const middlehooks = [
   'onHeaders'
 ]
 
-module.exports = function createRequester(initMiddleware = [], httpRequest = httpRequester) {
+export default function createRequester(initMiddleware = [], httpRequest = httpRequester) {
   const loadedMiddleware = []
   const middleware = middlehooks.reduce(
     (ware, name) => {

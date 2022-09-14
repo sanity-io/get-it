@@ -1,13 +1,13 @@
 /* eslint max-depth: ["error", 4] */
-const sameOrigin = require('same-origin')
-const parseHeaders = require('parse-headers')
-const FetchXhr = require('./browser/fetchXhr')
+import sameOrigin from 'same-origin'
+import parseHeaders from 'parse-headers'
+import FetchXhr from './browser/fetchXhr'
 
 const noop = function() {
   /* intentional noop */
 }
 
-const win = typeof window === 'undefined' ? undefined : window
+const win = typeof document === 'undefined' || typeof window === 'undefined' ? undefined : window
 const adapter = win ? 'xhr' : 'fetch'
 
 let XmlHttpRequest = typeof XMLHttpRequest === 'function' ? XMLHttpRequest : noop
@@ -22,7 +22,7 @@ if (!win) {
   CrossDomainRequest = FetchXhr
 }
 
-module.exports = (context, callback) => {
+export default (context, callback) => {
   const opts = context.options
   const options = context.applyMiddleware('finalizeOptions', opts)
   const timers = {}

@@ -1,4 +1,4 @@
-module.exports = () => ({
+export default () => ({
   onRequest: evt => {
     if (evt.adapter !== 'xhr') {
       return

@@ -1,4 +1,4 @@
-module.exports = middleware => {
+export default middleware => {
   const applyMiddleware = (hook, defaultValue, ...args) => {
     const bailEarly = hook === 'onError'
 

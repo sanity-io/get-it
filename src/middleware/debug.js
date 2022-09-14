@@ -1,4 +1,4 @@
-const debugIt = require('debug')
+import debugIt from 'debug'
 
 const SENSITIVE_HEADERS = ['cookie', 'authorization']
 
@@ -13,7 +13,7 @@ const redactKeys = (source, redacted) => {
   return target
 }
 
-module.exports = (opts = {}) => {
+export default (opts = {}) => {
   const verbose = opts.verbose
   const namespace = opts.namespace || 'get-it'
   const defaultLogger = debugIt(namespace)

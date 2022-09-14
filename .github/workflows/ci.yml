@@ -1,0 +1,136 @@
+name: CI & Release
+
+on:
+  # Build on pushes to release branches
+  push:
+    branches: [main]
+  # Build on pull requests targeting release branches
+  pull_request:
+    branches: [main]
+  # https://docs.github.com/en/actions/managing-workflow-runs/manually-running-a-workflow
+  # https://github.com/sanity-io/semantic-release-preset/actions/workflows/ci.yml
+  workflow_dispatch:
+    inputs:
+      release:
+        description: 'Release new version'
+        required: true
+        default: false
+        type: boolean
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}-${{ github.event.inputs.release || 'no-release' }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build, lint and test coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run lint
+      - run: npm run coverage
+
+  test:
+    name: Node.js ${{ matrix.node }} on ${{ matrix.os }}
+    needs: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        # Test the oldest Node.js version we support, and the latest in development
+        node: [12, current]
+        include:
+          # ubuntu and lts already runs tests in the `build` job, so we only need to add windows and mac here
+          - os: macos-latest
+            node: lts/*
+          - os: windows-latest
+            node: lts/*
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run coverage
+        env:
+          SKIP_MTLS_TEST: "${{ matrix.os == 'ubuntu-latest' && 'true' || 'false' }}"
+
+  test-esm:
+    name: Test ESM exports
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          # The testing suite uses the native test runner introduced in Node.js v18
+          # https://nodejs.org/api/test.html
+          node-version: 18
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run build:esm
+      - run: npm run test:esm
+        # This test will run both in a CJS and an ESM mode in Node.js to ensure backwards compatibility
+        name: Ensure pkg.exports don't break anything in modern Node.js envs
+      - run: npm run test:esm:browser
+        # This test is just ensuring the pkg.exports defined by 'browser' conditionals don't point to files that don't exist and have valid syntax (no CJS)
+        # Please note that this test DOES support Node.js APIs, we need to test in a Cloudflare Worker v8 runtime, or Vercel Edge Runtime, to fully test e2e
+        name: Test the 'browser' conditional using Node.js
+
+  test-deno:
+     name: Test Deno in Node compatibility mode
+     needs: build
+     runs-on: ubuntu-latest
+     steps:
+        - uses: actions/checkout@v3
+        - uses: actions/setup-node@v3
+          with:
+            node-version: lts/*
+            cache: npm
+        - run: npm ci
+        - run: npm run build
+        - run: npm run build:esm
+        - uses: denoland/setup-deno@v1
+        - run: npm run test:esm:deno
+          # When not in Node Compat mode it's likely using something like https://esm.sh/get-it, which supports the same `deno` conditional
+          # and thus it's not necessary to run a test outside compat mode here
+          name: Test that pkg.exports supports Deno running in Node Compatibility mode
+
+  release:
+    name: Semantic release
+    runs-on: ubuntu-latest
+    needs: [test, test-esm, test-deno]
+    if: inputs.release == true
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+          cache: npm
+      - run: npm ci
+        # @TODO Runs with --dry-run initially, remove once it's confirmed it'll publish the right thing(tm)
+      - run: npx semantic-release  --dry-run
+        # Don't allow interrupting the release step if the job is cancelled, as it can lead to an inconsistent state
+        # e.g. git tags were pushed but it exited before `npm publish`
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+      # Should release fail, dry rerun with debug on for richer logs
+      - run: npx semantic-release --dry-run --debug
+        if: ${{ failure() }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
