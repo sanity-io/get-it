@@ -101,6 +101,8 @@ jobs:
         - run: npm run build
         - run: npm run build:esm
         - uses: denoland/setup-deno@v1
+          with:
+            deno-version: v1.24.x
         - run: npm run test:esm:deno
           # When not in Node Compat mode it's likely using something like https://esm.sh/get-it, which supports the same `deno` conditional
           # and thus it's not necessary to run a test outside compat mode here
