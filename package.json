@@ -167,7 +167,7 @@
     "coverage": "cross-env BABEL_ENV=test nyc --reporter=html --reporter=lcov --reporter=text _mocha",
     "lint": "eslint .",
     "posttest": "npm run lint",
-    "prepublishOnly": "npm run build && npm run build:esm && npm test",
+    "prepublishOnly": "npm run build && npm run build:esm",
     "test": "cross-env BABEL_ENV=test mocha --require @babel/register",
     "test:esm": "node --test test-esm/ | faucet",
     "test:esm:browser": "node -C browser --test test-esm/test.mjs | faucet",
