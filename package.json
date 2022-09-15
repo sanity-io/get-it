@@ -1,6 +1,6 @@
 {
   "name": "get-it",
-  "version": "6.1.1",
+  "version": "7.0.0",
   "description": "Generic HTTP request library for node, browsers and workers",
   "type": "commonjs",
   "main": "index.js",
@@ -64,7 +64,7 @@
       "node": "./lib-node/middleware/index.js",
       "default": "./lib/middleware/index.js"
     },
-    "./middleware.js":{
+    "./middleware.js": {
       "browser": "./dist/esm/middleware/index.mjs",
       "deno": "./dist/esm/middleware/index.mjs",
       "node": "./lib-node/middleware/index.js",
