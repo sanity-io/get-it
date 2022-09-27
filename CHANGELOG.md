@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [7.0.2](https://github.com/sanity-io/get-it/compare/v7.0.1...v7.0.2) (2022-09-27)
+
+### Bug Fixes
+
+- **deps:** lock file maintenance ([#48](https://github.com/sanity-io/get-it/issues/48)) ([6d4f65f](https://github.com/sanity-io/get-it/commit/6d4f65fb136920f8bec090dd776294d70b2d25ad))
+
 ## [7.0.1](https://github.com/sanity-io/get-it/compare/v7.0.0...v7.0.1) (2022-09-15)
 
 ### Bug Fixes

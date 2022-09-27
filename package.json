@@ -1,6 +1,6 @@
 {
   "name": "get-it",
-  "version": "7.0.1",
+  "version": "7.0.2",
   "description": "Generic HTTP request library for node, browsers and workers",
   "type": "commonjs",
   "main": "index.js",
