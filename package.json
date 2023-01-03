@@ -184,7 +184,7 @@
     "@sanity/timed-out": "^4.0.2",
     "create-error-class": "^3.0.2",
     "debug": "^4.3.4",
-    "decompress-response": "^6.0.0",
+    "decompress-response": "^7.0.0",
     "follow-redirects": "^1.15.2",
     "form-urlencoded": "^2.0.9",
     "into-stream": "^3.1.0",
