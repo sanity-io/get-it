@@ -21,12 +21,12 @@ describeOrSkip('mtls middleware', () => {
   testNode('should handle mtls', () => {
     const body = 'hello from mtls'
     const mtlsOpts = {
-      ca: fs.readFileSync(path.join(__dirname, 'certs', 'mtls', 'ca-crt.pem')),
-      key: fs.readFileSync(path.join(__dirname, 'certs', 'mtls', 'client-key.pem')),
-      cert: fs.readFileSync(path.join(__dirname, 'certs', 'mtls', 'client-crt.pem'))
+      ca: fs.readFileSync(path.join(__dirname, 'certs', 'mtls', 'ca.pem')),
+      key: fs.readFileSync(path.join(__dirname, 'certs', 'mtls', 'client.key')),
+      cert: fs.readFileSync(path.join(__dirname, 'certs', 'mtls', 'client.pem')),
     }
     const request = requester([base(baseUrl), mtls(mtlsOpts)])
-    return getMtls(port).then(async server => {
+    return getMtls(port).then(async (server) => {
       await expectRequestBody(request({url: '/plain-text'})).to.eventually.eql(body)
       return server.close()
     })
@@ -36,10 +36,12 @@ describeOrSkip('mtls middleware', () => {
     const request = requester([
       base(baseUrl),
       mtls({
-        ca: fs.readFileSync(path.join(__dirname, 'certs', 'mtls', 'ca-crt.pem')).toString(),
+        ca: fs.readFileSync(path.join(__dirname, 'certs', 'mtls', 'ca.pem')).toString(),
         key: fs.readFileSync(path.join(__dirname, 'certs', 'client', 'client_key.pem')).toString(),
-        cert: fs.readFileSync(path.join(__dirname, 'certs', 'client', 'client_cert.crt')).toString()
-      })
+        cert: fs
+          .readFileSync(path.join(__dirname, 'certs', 'client', 'client_cert.crt'))
+          .toString(),
+      }),
     ])
 
     const server = await getMtls(port)
