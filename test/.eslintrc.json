@@ -1,0 +1,11 @@
+{
+  "env": {
+    "browser": true,
+    "node": true
+  },
+  "rules": {
+    "max-nested-callbacks": [2, {"max": 4}],
+    "@typescript-eslint/no-explicit-any": "off",
+    "no-warning-comments": "off"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "imports": {
+    "get-it": "../dist/index.browser.js",
+    "get-it/package.json": "../package.json",
+    "get-it/middleware": "../dist/middleware.browser.js",
+    "url-parse": "https://esm.sh/url-parse",
+    "create-error-class": "https://esm.sh/create-error-class",
+    "debug": "https://esm.sh/debug",
+    "form-urlencoded": "https://esm.sh/form-urlencoded",
+    "is-plain-object": "https://esm.sh/is-plain-object",
+    "nano-pubsub": "https://esm.sh/nano-pubsub",
+    "parse-headers": "https://esm.sh/parse-headers",
+    "same-origin": "https://esm.sh/same-origin"
+  }
+}

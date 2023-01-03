@@ -2,242 +2,139 @@
   "name": "get-it",
   "version": "7.0.2",
   "description": "Generic HTTP request library for node, browsers and workers",
-  "type": "commonjs",
-  "main": "index.js",
-  "engines": {
-    "node": ">=12.0.0"
-  },
-  "files": [
-    "dist",
-    "lib",
-    "lib-node",
-    "umd",
-    "index.js",
-    "middleware.js"
-  ],
-  "browser": {
-    "./lib-node": "./lib",
-    "./lib-node/index.js": "./lib/index.js",
-    "./src/request/node-request.js": "./src/request/browser-request.js",
-    "./lib/request/node-request.js": "./lib/request/browser-request.js",
-    "./src/middleware/progress/node-progress.js": "./src/middleware/progress/browser-progress.js",
-    "./lib/middleware/progress/node-progress.js": "./lib/middleware/progress/browser-progress.js",
-    "./src/middleware/keepAlive.js": "./src/middleware/keepAlive-browser.js",
-    "./lib/middleware/keepAlive.js": "./lib/middleware/keepAlive-browser.js",
-    "./src/util/node-shouldRetry.js": "./src/util/browser-shouldRetry.js",
-    "./lib/util/node-shouldRetry.js": "./lib/util/browser-shouldRetry.js",
-    "@sanity/timed-out": "./test/helpers/noop.js",
-    "decompress-response": "./test/helpers/noop.js",
-    "follow-redirects": "./test/helpers/noop.js",
-    "fs": "./test/helpers/noop.js",
-    "get-uri": "./test/helpers/noop.js",
-    "http": "./test/helpers/noop.js",
-    "https": "./test/helpers/noop.js",
-    "into-stream": "./test/helpers/noop.js",
-    "is-retry-allowed": "./test/helpers/noop.js",
-    "progress-stream": "./test/helpers/noop.js",
-    "simple-concat": "./test/helpers/noop.js",
-    "tunnel-agent": "./test/helpers/noop.js"
-  },
-  "exports": {
-    ".": {
-      "browser": "./dist/esm/index.mjs",
-      "deno": "./dist/esm/index.mjs",
-      "node": "./lib-node/index.js",
-      "default": "./index.js"
-    },
-    "./index": {
-      "browser": "./dist/esm/index.mjs",
-      "deno": "./dist/esm/index.mjs",
-      "node": "./lib-node/index.js",
-      "default": "./index.js"
-    },
-    "./index.js": {
-      "browser": "./dist/esm/index.mjs",
-      "deno": "./dist/esm/index.mjs",
-      "node": "./lib-node/index.js",
-      "default": "./index.js"
-    },
-    "./middleware": {
-      "browser": "./dist/esm/middleware/index.mjs",
-      "deno": "./dist/esm/middleware/index.mjs",
-      "node": "./lib-node/middleware/index.js",
-      "default": "./lib/middleware/index.js"
-    },
-    "./middleware.js": {
-      "browser": "./dist/esm/middleware/index.mjs",
-      "deno": "./dist/esm/middleware/index.mjs",
-      "node": "./lib-node/middleware/index.js",
-      "default": "./lib/middleware/index.js"
-    },
-    "./middleware/*": {
-      "browser": "./dist/esm/middleware/*.mjs",
-      "deno": "./dist/esm/middleware/*.mjs",
-      "node": "./lib-node/middleware/*.js",
-      "default": "./lib/middleware/*.js"
-    },
-    "./lib": "./lib/index.js",
-    "./lib/*": "./lib/*.js",
-    "./lib/*.js": "./lib/*.js",
-    "./lib/middleware": {
-      "browser": "./dist/esm/middleware/index.mjs",
-      "deno": "./dist/esm/middleware/index.mjs",
-      "default": "./lib/middleware.js"
-    },
-    "./lib/middleware/*": {
-      "browser": "./dist/esm/middleware/*.mjs",
-      "deno": "./dist/esm/middleware/*.mjs",
-      "default": "./lib/middleware/*.js"
-    },
-    "./lib/middleware/*.js": {
-      "browser": "./dist/esm/middleware/*.mjs",
-      "deno": "./dist/esm/middleware/*.mjs",
-      "default": "./lib/middleware/*.js"
-    },
-    "./lib/middleware/cancel/*": {
-      "browser": "./dist/esm/middleware/cancel/*.mjs",
-      "deno": "./dist/esm/middleware/cancel/*.mjs",
-      "default": "./lib/middleware/cancel/*.js"
-    },
-    "./lib/middleware/cancel/*.js": {
-      "browser": "./dist/esm/middleware/cancel/*.mjs",
-      "deno": "./dist/esm/middleware/cancel/*.mjs",
-      "default": "./lib/middleware/cancel/*.js"
-    },
-    "./lib/middleware/progress": {
-      "browser": "./dist/esm/middleware/progress/index.mjs",
-      "deno": "./dist/esm/middleware/progress/index.mjs",
-      "default": "./lib/middleware/progress/index.js"
-    },
-    "./lib/middleware/progress/*": {
-      "browser": "./dist/esm/middleware/progress/index.mjs",
-      "deno": "./dist/esm/middleware/progress/index.mjs",
-      "default": "./lib/middleware/progress/*.js"
-    },
-    "./lib/middleware/progress/*.js": {
-      "browser": "./dist/esm/middleware/progress/index.mjs",
-      "deno": "./dist/esm/middleware/progress/index.mjs",
-      "default": "./lib/middleware/progress/*.js"
-    },
-    "./lib/request": "./lib/request/index.js",
-    "./lib/request/*": "./lib/request/*.js",
-    "./lib/request/*.js": "./lib/request/*.js",
-    "./lib/request/browser/*": "./lib/request/browser/*.js",
-    "./lib/request/browser/*.js": "./lib/request/browser/*.js",
-    "./lib/request/node/*": "./lib/request/node/*.js",
-    "./lib/request/node/*.js": "./lib/request/node/*.js",
-    "./lib/util/*": "./lib/util/*.js",
-    "./lib/util/*.js": "./lib/util/*.js",
-    "./lib-node": "./lib-node/index.js",
-    "./lib-node/*": "./lib-node/*.js",
-    "./lib-node/*.js": "./lib-node/*.js",
-    "./lib-node/middleware": "./lib-node/middleware/index.js",
-    "./lib-node/middleware/*": "./lib-node/middleware/*.js",
-    "./lib-node/middleware/*.js": "./lib-node/middleware/*.js",
-    "./lib-node/middleware/cancel/*": "./lib-node/middleware/cancel/*.js",
-    "./lib-node/middleware/cancel/*.js": "./lib-node/middleware/cancel/*.js",
-    "./lib-node/middleware/progress": "./lib-node/middleware/progress/index.js",
-    "./lib-node/middleware/progress/*": "./lib-node/middleware/progress/*.js",
-    "./lib-node/middleware/progress/*.js": "./lib-node/middleware/progress/*.js",
-    "./lib-node/request": "./lib-node/request/index.js",
-    "./lib-node/request/*": "./lib-node/request/*.js",
-    "./lib-node/request/*.js": "./lib-node/request/*.js",
-    "./lib-node/request/browser/*": "./lib-node/request/browser/*.js",
-    "./lib-node/request/browser/*.js": "./lib-node/request/browser/*.js",
-    "./lib-node/request/node/*": "./lib-node/request/node/*.js",
-    "./lib-node/request/node/*.js": "./lib-node/request/node/*.js",
-    "./lib-node/util/*": "./lib-node/util/*.js",
-    "./lib-node/util/*.js": "./lib-node/util/*.js",
-    "./umd/*": "./umd/*.js",
-    "./umd/*.js": "./umd/*.js",
-    "./package.json": "./package.json"
-  },
-  "scripts": {
-    "bundle": "npm run bundle:build && npm run bundle:build:all && npm run bundle:minify && npm run bundle:minify:all",
-    "bundle:build": "npm run compile && cross-env NODE_ENV=production DEBUG='' browserify -t envify -g uglifyify lib/index.js -o umd/get-it.js --standalone=getIt",
-    "bundle:build:all": "npm run compile && cross-env NODE_ENV=production DEBUG='' browserify -t envify -g uglifyify lib/bundle-all.js -o umd/get-it-all.js --standalone=getIt",
-    "bundle:minify": "uglifyjs -c -m -- umd/get-it.js > umd/get-it.min.js",
-    "bundle:minify:all": "uglifyjs -c -m -- umd/get-it-all.js > umd/get-it-all.min.js",
-    "build": "npm run compile && npm run bundle",
-    "build:esm": "esbuild --platform=browser --outdir=dist/esm --format=esm --splitting --bundle --out-extension:.js=.mjs --sourcemap --define:process.env.DEBUG=false --define:process=undefined src/index.js src/middleware/*.js src/middleware/progress/index.js",
-    "build:esm-when-upstream-deps-works-in-deno-cloudflare-and-vercel": "esbuild --platform=browser --outdir=dist/esm --format=esm --splitting --bundle --out-extension:.js=.mjs --sourcemap --define:process.env.DEBUG=false --define:process=undefined --external:create-error-class --external:debug --external:form-urlencoded --external:is-plain-object --external:is-stream --external:nano-pubsub --external:parse-headers --external:same-origin --external:url-parse src/index.js src/middleware/*.js src/middleware/progress/index.js",
-    "ci": "npm run coverage && npm run lint",
-    "clean": "rimraf dist lib-node lib .nyc_output coverage npm-debug.log yarn-debug.log umd/*.js",
-    "compile": "cross-env BABEL_ENV=node babel --source-maps --copy-files -d lib-node/ src/ && cross-env BABEL_ENV=browser babel --source-maps --copy-files -d lib/ src/",
-    "coverage": "cross-env BABEL_ENV=test nyc --reporter=html --reporter=lcov --reporter=text _mocha",
-    "lint": "eslint .",
-    "posttest": "npm run lint",
-    "prepublishOnly": "npm run build && npm run build:esm",
-    "test": "cross-env BABEL_ENV=test mocha --require @babel/register",
-    "test:esm": "node --test test-esm/ | faucet",
-    "test:esm:browser": "node -C browser --test test-esm/test.mjs | faucet",
-    "test:esm:deno": "deno test --allow-net --unstable --compat --allow-read --allow-env test-esm/test.ts"
-  },
   "keywords": [
     "request",
     "http",
     "fetch"
   ],
-  "author": "Sanity.io <hello@sanity.io>",
-  "license": "MIT",
-  "dependencies": {
-    "@sanity/timed-out": "^4.0.2",
-    "create-error-class": "^3.0.2",
-    "debug": "^4.3.4",
-    "decompress-response": "^6.0.0",
-    "follow-redirects": "^1.15.2",
-    "form-urlencoded": "^2.0.9",
-    "into-stream": "^3.1.0",
-    "is-plain-object": "^5.0.0",
-    "is-retry-allowed": "^1.2.0",
-    "is-stream": "^2.0.1",
-    "nano-pubsub": "^2.0.1",
-    "parse-headers": "^2.0.5",
-    "progress-stream": "^2.0.0",
-    "same-origin": "^0.1.1",
-    "simple-concat": "^1.0.1",
-    "tunnel-agent": "^0.6.0",
-    "url-parse": "^1.5.10"
-  },
-  "devDependencies": {
-    "@babel/cli": "^7.19.3",
-    "@babel/plugin-transform-object-assign": "^7.18.6",
-    "@babel/preset-env": "^7.19.3",
-    "@babel/register": "^7.18.9",
-    "@istanbuljs/nyc-config-babel": "^3.0.0",
-    "@sanity/semantic-release-preset": "^2.0.1",
-    "babel-plugin-add-module-exports": "^1.0.4",
-    "babel-plugin-istanbul": "^6.1.1",
-    "browserify": "^14.5.0",
-    "chai": "^3.5.0",
-    "chai-as-promised": "^7.1.1",
-    "chai-subset": "^1.6.0",
-    "cross-env": "^7.0.3",
-    "envify": "^4.1.0",
-    "es6-promise": "^4.2.8",
-    "esbuild": "^0.15.9",
-    "eslint": "^8.24.0",
-    "eslint-config-prettier": "^8.5.0",
-    "eslint-config-sanity": "^6.0.0",
-    "faucet": "^0.0.3",
-    "get-uri": "^4.0.0",
-    "lodash.once": "^4.1.1",
-    "mocha": "^10.0.0",
-    "node-fetch": "^2.6.7",
-    "nyc": "^15.1.0",
-    "pinkie-promise": "^2.0.1",
-    "prettier": "^2.7.1",
-    "rimraf": "^3.0.2",
-    "uglify-js": "^3.17.2",
-    "uglifyify": "^5.0.2",
-    "zen-observable": "^0.8.15"
+  "homepage": "https://github.com/sanity-io/get-it#readme",
+  "bugs": {
+    "url": "https://github.com/sanity-io/get-it/issues"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/sanity-io/get-it.git"
   },
-  "bugs": {
-    "url": "https://github.com/sanity-io/get-it/issues"
+  "license": "MIT",
+  "author": "Sanity.io <hello@sanity.io>",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "browser": {
+        "source": "./src/index.browser.ts",
+        "require": "./dist/index.browser.cjs",
+        "import": "./dist/index.browser.js"
+      },
+      "source": "./src/index.ts",
+      "require": "./dist/index.cjs",
+      "node": {
+        "import": "./dist/index.cjs.js",
+        "require": "./dist/index.cjs"
+      },
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./middleware": {
+      "types": "./dist/middleware.d.ts",
+      "browser": {
+        "source": "./src/middleware.browser.ts",
+        "require": "./dist/middleware.browser.cjs",
+        "import": "./dist/middleware.browser.js"
+      },
+      "source": "./src/middleware.ts",
+      "require": "./dist/middleware.cjs",
+      "node": {
+        "import": "./dist/middleware.cjs.js",
+        "require": "./dist/middleware.cjs"
+      },
+      "import": "./dist/middleware.js",
+      "default": "./dist/middleware.js"
+    },
+    "./package.json": "./package.json"
   },
-  "homepage": "https://github.com/sanity-io/get-it#readme"
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "source": "./src/index.ts",
+  "browser": {
+    "./dist/index.cjs": "./dist/index.browser.cjs",
+    "./dist/index.js": "./dist/index.browser.js",
+    "./dist/middleware.cjs": "./dist/middleware.browser.cjs",
+    "./dist/middleware.js": "./dist/middleware.browser.js"
+  },
+  "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "extra": [
+        "./dist/middleware.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "npm run clean && pkg build --strict && pkg --strict",
+    "clean": "npx rimraf dist",
+    "coverage": "vitest run --coverage",
+    "lint": "eslint . --ext .cjs,.js,.ts",
+    "prepublishOnly": "npm run build",
+    "test": "vitest run",
+    "test:esm": "node --test test-esm/ | faucet",
+    "test:esm:browser": "node -C browser --test test-esm/test.mjs | faucet",
+    "test:esm:deno": "deno test --allow-read --allow-net --allow-env --import-map=test-esm/import_map.json test-esm/test.ts"
+  },
+  "browserslist": [
+    "> 0.2% and supports es6-module and supports es6-module-dynamic-import and not dead and not IE 11",
+    "maintained node versions"
+  ],
+  "dependencies": {
+    "create-error-class": "^3.0.2",
+    "debug": "^4.3.4",
+    "decompress-response": "^7.0.0",
+    "follow-redirects": "^1.15.2",
+    "form-urlencoded": "^6.1.0",
+    "into-stream": "^6.0.0",
+    "is-plain-object": "^5.0.0",
+    "is-retry-allowed": "^2.2.0",
+    "is-stream": "^2.0.1",
+    "nano-pubsub": "^2.0.1",
+    "parse-headers": "^2.0.5",
+    "progress-stream": "^2.0.0",
+    "same-origin": "^0.1.1",
+    "tunnel-agent": "^0.6.0",
+    "url-parse": "^1.5.10"
+  },
+  "devDependencies": {
+    "@sanity/pkg-utils": "^2.1.0",
+    "@sanity/semantic-release-preset": "^2.0.5",
+    "@types/debug": "^4.1.7",
+    "@types/follow-redirects": "^1.14.1",
+    "@types/node": "^18.11.18",
+    "@types/progress-stream": "^2.0.2",
+    "@types/url-parse": "^1.4.8",
+    "@typescript-eslint/eslint-plugin": "^5.48.0",
+    "@typescript-eslint/parser": "^5.48.0",
+    "@vitest/coverage-c8": "^0.26.3",
+    "eslint": "^8.31.0",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-simple-import-sort": "^8.0.0",
+    "faucet": "^0.0.3",
+    "get-uri": "^4.0.0",
+    "node-fetch": "^2.6.7",
+    "pinkie-promise": "^2.0.1",
+    "prettier": "^2.8.1",
+    "prettier-plugin-packagejson": "^2.3.0",
+    "rimraf": "^3.0.2",
+    "typescript": "^4.9.4",
+    "vite": "^4.0.4",
+    "vitest": "^0.26.3",
+    "zen-observable": "^0.10.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
 }

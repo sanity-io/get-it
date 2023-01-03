@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.settings",
+  "include": ["./src", "./modules.d.ts"],
+  "exclude": ["./test-esm/test.ts"],
+  "compilerOptions": {
+    "noEmit": true
+  }
+}
