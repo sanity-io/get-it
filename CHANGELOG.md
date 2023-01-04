@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.0.1](https://github.com/sanity-io/get-it/compare/v8.0.0...v8.0.1) (2023-01-04)
+
+### Bug Fixes
+
+- typo in `pkg.typesVersions` ([03ead62](https://github.com/sanity-io/get-it/commit/03ead6283f0e0a6db5ca73974a3c206649567242))
+
 ## [8.0.0](https://github.com/sanity-io/get-it/compare/v7.0.2...v8.0.0) (2023-01-04)
 
 ### ⚠ BREAKING CHANGES
