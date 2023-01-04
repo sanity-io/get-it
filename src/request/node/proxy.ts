@@ -3,7 +3,6 @@
  * Apache License 2.0
  */
 
-/* eslint-disable no-process-env */
 import url from 'url'
 
 function formatHostname(hostname: string) {

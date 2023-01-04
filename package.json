@@ -79,7 +79,7 @@
     "build": "npm run clean && pkg build --strict && pkg --strict",
     "clean": "npx rimraf dist coverage",
     "coverage": "vitest run --coverage",
-    "lint": "eslint . --ext .cjs,.js,.ts",
+    "lint": "eslint . --ext .cjs,.js,.ts --report-unused-disable-directives",
     "prepublishOnly": "npm run build",
     "test": "vitest run",
     "test:esm": "node --test test-esm/ | faucet",

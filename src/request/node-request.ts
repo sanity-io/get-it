@@ -1,4 +1,3 @@
-/* eslint-disable no-process-env */
 import decompressResponse from 'decompress-response'
 import follow from 'follow-redirects'
 import http from 'http'

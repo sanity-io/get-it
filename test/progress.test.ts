@@ -90,7 +90,7 @@ describe('progress', () => {
 
         const request = getIt([baseUrl, progress()])
         const body = fs.createReadStream(__filename)
-        const bodySize = fs.statSync(__filename).size // eslint-disable-line no-sync
+        const bodySize = fs.statSync(__filename).size
         const req = request({url: '/plain-text', body, bodySize})
         let events = 0
 

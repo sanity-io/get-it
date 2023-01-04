@@ -24,7 +24,6 @@ FetchXhr.prototype.setRequestHeader = function (key: any, value: any) {
   this._headers[key] = value
 }
 FetchXhr.prototype.send = function (body: any) {
-  // eslint-disable-next-line no-multi-assign
   const ctrl = (this._controller = typeof AbortController === 'function' && new AbortController())
   const textBody = this.responseType !== 'arraybuffer'
   const options: any = {

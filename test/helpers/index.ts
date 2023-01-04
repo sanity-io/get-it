@@ -24,6 +24,5 @@ export const baseUrl = base(baseUrlPrefix)
 export const baseUrlHttps = base(baseUrlPrefixHttps.replace(/^http:/, 'https:'))
 export const bufferFrom = (str) => {
   const nodeVersion = parseInt(process.version.replace('v', ''), 10)
-  // eslint-disable-next-line no-buffer-constructor
   return nodeVersion >= 6 ? Buffer.from(str, 'utf8') : new Buffer(str, 'utf8')
 }

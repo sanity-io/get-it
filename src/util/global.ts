@@ -1,6 +1,5 @@
 let actualGlobal: any
-/* global globalThis */
-/* eslint-disable no-negated-condition */
+
 if (typeof globalThis !== 'undefined') {
   actualGlobal = globalThis
 } else if (typeof window !== 'undefined') {
