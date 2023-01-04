@@ -32,13 +32,11 @@ Using a middleware approach, `get-it` has the following feature set:
 How `get-it` behaves depends on which middleware you've loaded, but common to all approaches is the setup process.
 
 ```js
-// Require the core get-it package, which is used to generate a requester
-const getIt = require('get-it')
+// Import the core get-it package, which is used to generate a requester
+import {getIt} from 'get-it'
 
-// And require whatever middleware you want to use
-const base = require('get-it/lib/middleware/base')
-const jsonResponse = require('get-it/lib/middleware/jsonResponse')
-const promise = require('get-it/lib/middleware/promise')
+// And import whatever middleware you want to use
+import {base, jsonResponse, promise} from 'get-it/middleware'
 
 // Now compose the middleware you want to use
 const request = getIt([base('https://api.your.service/v1'), jsonResponse()])
@@ -48,8 +46,8 @@ request.use(promise())
 
 // Now you're ready to use the requester:
 request({url: '/projects'})
-  .then(response => console.log(response.body))
-  .catch(err => console.error(err))
+  .then((response) => console.log(response.body))
+  .catch((err) => console.error(err))
 ```
 
 In most larger projects, you'd probably make a `httpClient.js` or similar, where you would instantiate the requester and export it for other modules to reuse.
@@ -97,22 +95,13 @@ By default, `get-it` will return an object of single-channel event emitters. Thi
 For the most part, you simply have to register the middleware and you should be good to go. Sometimes you only need the response body, in which case you can set the `onlyBody` option to `true`. Otherwise the promise will be resolved with the response object mentioned earlier.
 
 ```js
-const getIt = require('get-it')
-const promise = require('get-it/lib/middleware/promise')
+import {getIt} from 'get-it'
+import {promise} from 'get-it/middleware'
 const request = getIt([promise({onlyBody: true})])
 
 request({url: 'http://foo.bar/api/projects'})
-  .then(projects => console.log(projects))
-  .catch(err => console.error(err))
-```
-
-If you are targetting older browsers that do not have a global Promise implementation, you must register one globally using a polyfill such as [es6-promise](https://github.com/stefanpenner/es6-promise):
-
-```js
-require('es6-promise/auto')
-
-const promise = require('get-it/lib/middleware/promise')
-const request = getIt([promise()])
+  .then((projects) => console.log(projects))
+  .catch((err) => console.error(err))
 ```
 
 ### Cancelling promise-based requests
@@ -122,7 +111,7 @@ With the Promise API, you can cancel requests using a _cancel token_. This API i
 You can create a cancel token using the `CancelToken.source` factory as shown below:
 
 ```js
-const promise = require('get-it/lib/middleware/promise')
+import {promise} from 'get-it/middleware'
 const request = getIt([promise()])
 
 const source = promise.CancelToken.source()
@@ -130,9 +119,9 @@ const source = promise.CancelToken.source()
 request
   .get({
     url: 'http://foo.bar/baz',
-    cancelToken: source.token
+    cancelToken: source.token,
   })
-  .catch(err => {
+  .catch((err) => {
     if (promise.isCancel(err)) {
       console.log('Request canceled', err.message)
     } else {
@@ -149,21 +138,23 @@ source.cancel('Operation canceled by the user')
 The observable API requires you to pass an Observable-implementation that you want to use. Optionally, you can register it under the global `Observable`, but this is not recommended.
 
 ```js
-const getIt = require('get-it')
-const observable = require('get-it/lib/middleware/observable')
+import {getIt} from 'get-it'
+import {observable} from 'get-it/middleware'
+import zenObservable from 'zen-observable'
+
 const request = getIt()
 
 request.use(
   observable({
-    implementation: require('zen-observable')
+    implementation: zenObservable,
   })
 )
 
 const observer = request({url: 'http://foo.bar/baz'})
-  .filter(ev => ev.type === 'response')
+  .filter((ev) => ev.type === 'response')
   .subscribe({
-    next: res => console.log(res.body),
-    error: err => console.error(err)
+    next: (res) => console.log(res.body),
+    error: (err) => console.error(err),
   })
 
 // If you want to cancel the request, simply unsubscribe:

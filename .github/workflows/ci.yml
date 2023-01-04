@@ -33,7 +33,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-      - run: npm run lint
+      - run: npm run lint -- --quiet
       - run: npm run coverage
 
   test:
@@ -43,24 +43,26 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
-        # Test the oldest Node.js version we support, and the latest in development
-        node: [12, current]
+        # Run the testing suite on each major OS with the latest LTS release of Node.js
+        os: [macos-latest, ubuntu-latest, windows-latest]
+        node: [lts/*]
+        # It makes sense to also test the oldest, and latest, versions of Node.js, on ubuntu-only since it's the fastest CI runner
         include:
-          # ubuntu and lts already runs tests in the `build` job, so we only need to add windows and mac here
-          - os: macos-latest
-            node: lts/*
-          - os: windows-latest
-            node: lts/*
+          - os: ubuntu-latest
+            # Test the oldest LTS release of Node that's still receiving bugfixes and security patches, versions older than that have reached End-of-Life
+            node: lts/-2
+          - os: ubuntu-latest
+            # Test the actively developed version that will become the latest LTS release next October
+            node: current
     steps:
       - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3
       - uses: actions/setup-node@8c91899e586c5b171469028077307d293428b516 # v3
         with:
           node-version: ${{ matrix.node }}
           cache: npm
-      - run: npm ci
+      - run: npm i
       - run: npm run build
-      - run: npm run coverage
+      - run: npm test
         env:
           SKIP_MTLS_TEST: "${{ matrix.os == 'ubuntu-latest' && 'true' || 'false' }}"
 
@@ -74,11 +76,10 @@ jobs:
         with:
           # The testing suite uses the native test runner introduced in Node.js v18
           # https://nodejs.org/api/test.html
-          node-version: 18
+          node-version: lts/*
           cache: npm
       - run: npm ci
       - run: npm run build
-      - run: npm run build:esm
       - run: npm run test:esm
         # This test will run both in a CJS and an ESM mode in Node.js to ensure backwards compatibility
         name: Ensure pkg.exports don't break anything in modern Node.js envs
@@ -88,26 +89,22 @@ jobs:
         name: Test the 'browser' conditional using Node.js
 
   test-deno:
-     name: Test Deno in Node compatibility mode
-     needs: build
-     runs-on: ubuntu-latest
-     steps:
-        - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3
-        - uses: actions/setup-node@8c91899e586c5b171469028077307d293428b516 # v3
-          with:
-            node-version: lts/*
-            cache: npm
-        - run: npm ci
-        - run: npm run build
-        - run: npm run build:esm
-        - uses: denoland/setup-deno@v1
-          with:
-            # @todo: stop overriding the version after migrating from `--compat` (https://github.com/sanity-io/get-it/issues/33)
-            deno-version: v1.24.x
-        - run: npm run test:esm:deno
-          # When not in Node Compat mode it's likely using something like https://esm.sh/get-it, which supports the same `deno` conditional
-          # and thus it's not necessary to run a test outside compat mode here
-          name: Test that pkg.exports supports Deno running in Node Compatibility mode
+    name: Test Deno in Node compatibility mode
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3
+      - uses: actions/setup-node@8c91899e586c5b171469028077307d293428b516 # v3
+        with:
+          node-version: lts/*
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: vx.x.x
+      - run: npm run test:esm:deno
+        name: Test that pkg.exports supports Deno running in Node Compatibility mode
 
   release:
     name: Semantic release
