@@ -77,7 +77,7 @@
   ],
   "scripts": {
     "build": "npm run clean && pkg build --strict && pkg --strict",
-    "clean": "npx rimraf dist",
+    "clean": "npx rimraf dist coverage",
     "coverage": "vitest run --coverage",
     "lint": "eslint . --ext .cjs,.js,.ts",
     "prepublishOnly": "npm run build",
