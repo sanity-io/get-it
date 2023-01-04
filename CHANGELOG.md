@@ -5,6 +5,28 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.0.0](https://github.com/sanity-io/get-it/compare/v7.0.2...v8.0.0) (2023-01-04)
+
+### ⚠ BREAKING CHANGES
+
+- umd builds are removed and all middleware imports are moved to `get-it/middleware`. Imports such as `import promise from 'get-it/lib-node/middleware/promise'` are no longer supported. The default import is replaced with a named one: change `import getIt from 'get-it'` to `import {getIt} from 'get-it'`
+
+Other changes
+
+- Migrated codebase to TypeScript, moving away from using `any` is out of scope for this PR but linter rules are setup to make it easier to do this refactor in a later PR.
+- The required Node.js version is moved from 12 to 14, as 12 does not support `pkg.exports`.
+- Tooling have moved to `@sanity/pkg-utils`, gone is `@babel/cli`, `browserify`, `esbuild`, `uglifyjs`, and more.
+- Replaced `mocha` testing suite with `vitest` to ensure the new ESM codebase runs the same way it'll run in production with codebases such as `sanity`.
+- The `pkg.exports` are refactored to follow our updated ESM best practices, spearheaded by `@sanity/pkg-utils`. It implements the Node.js `dual package hazard` technique to steer the Node.js ESM runtime back into CJS mode as half our `dependencies` aren't shipping ESM-runtime code yet.
+
+### Features
+
+- full Node.js ESM runtime support ([#54](https://github.com/sanity-io/get-it/issues/54)) ([ab8a4fd](https://github.com/sanity-io/get-it/commit/ab8a4fd4ffbea0711defce6df564bb2ab315c0d2)), closes [/github.com/sanity-io/get-it/blob/8fecf9ff77e8805bb9ae1aac74b74d4d786a11ca/package.json#L42-L154](https://github.com/sanity-io//github.com/sanity-io/get-it/blob/8fecf9ff77e8805bb9ae1aac74b74d4d786a11ca/package.json/issues/L42-L154) [/github.com/sanity-io/get-it/blob/8fecf9ff77e8805bb9ae1aac74b74d4d786a11ca/package.json#L18-L41](https://github.com/sanity-io//github.com/sanity-io/get-it/blob/8fecf9ff77e8805bb9ae1aac74b74d4d786a11ca/package.json/issues/L18-L41)
+
+### Bug Fixes
+
+- **deps:** update dependency is-stream to v2 ([#43](https://github.com/sanity-io/get-it/issues/43)) ([6dbeffc](https://github.com/sanity-io/get-it/commit/6dbeffca1c5336203be5951aa194cdd253d865a7))
+
 ## [7.0.2](https://github.com/sanity-io/get-it/compare/v7.0.1...v7.0.2) (2022-09-27)
 
 ### Bug Fixes
