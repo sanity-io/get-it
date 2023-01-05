@@ -108,7 +108,7 @@
     "url-parse": "^1.5.10"
   },
   "devDependencies": {
-    "@sanity/pkg-utils": "^2.1.0",
+    "@sanity/pkg-utils": "^2.1.1",
     "@sanity/semantic-release-preset": "^2.0.5",
     "@types/debug": "^4.1.7",
     "@types/follow-redirects": "^1.14.1",
