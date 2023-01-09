@@ -6,7 +6,7 @@ import implementation from 'zen-observable'
 
 import {getIt} from '../src/index'
 import {observable, progress} from '../src/middleware'
-import {baseUrl, testNode, testNonIE} from './helpers'
+import {baseUrl, isNode} from './helpers'
 
 describe('progress', () => {
   it('should be able to use progress middleware without side-effects', () =>
@@ -20,7 +20,7 @@ describe('progress', () => {
       req.response.subscribe(() => resolve(undefined))
     }))
 
-  testNonIE(
+  it(
     'should emit download progress events',
     () =>
       new Promise((resolve, reject) => {
@@ -47,7 +47,7 @@ describe('progress', () => {
     {timeout: 10000}
   )
 
-  testNode(
+  it.runIf(isNode)(
     '[node] should emit upload progress events on strings',
     () =>
       new Promise((resolve, reject) => {
@@ -77,7 +77,7 @@ describe('progress', () => {
       })
   )
 
-  testNode(
+  it.runIf(isNode)(
     '[node] can tell requester how large the body is',
     () =>
       new Promise((resolve, reject) => {
@@ -116,7 +116,7 @@ describe('progress', () => {
       })
   )
 
-  testNonIE(
+  it(
     'progress events should be emitted on observable',
     () =>
       new Promise((resolve) => {

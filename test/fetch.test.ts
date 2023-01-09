@@ -1,17 +1,16 @@
 import './helpers/server'
 
-import bufferFrom from 'buffer-from'
 import fetch from 'node-fetch'
-import {afterEach, beforeEach, expect, it} from 'vitest'
+import {afterEach, beforeEach, describe, expect, it} from 'vitest'
 
 import {getIt} from '../src/index'
 import {jsonRequest, jsonResponse} from '../src/middleware'
 import browserRequest from '../src/request/browser-request'
-import {baseUrl, describeNode, expectRequest, expectRequestBody, promiseRequest} from './helpers'
+import {baseUrl, expectRequest, expectRequestBody, isNode, promiseRequest} from './helpers'
 
 const originalFetch = global.fetch
 
-describeNode(
+describe.runIf(isNode)(
   'fetch',
   () => {
     beforeEach(() => {
@@ -35,7 +34,7 @@ describeNode(
 
     it('should be able to post a Buffer as body', async () => {
       const request = getIt([baseUrl], browserRequest)
-      const req = request({url: '/echo', body: bufferFrom('Foo bar')})
+      const req = request({url: '/echo', body: Buffer.from('Foo bar')})
       await expectRequestBody(req).resolves.toEqual('Foo bar')
     })
 

@@ -4,7 +4,7 @@ import {describe, expect, it} from 'vitest'
 
 import {getIt} from '../src/index'
 import {headers, jsonResponse} from '../src/middleware'
-import {baseUrl, promiseRequest} from './helpers'
+import {baseUrl, isEdge, promiseRequest} from './helpers'
 
 describe('headers', () => {
   it('should be able to set http headers', async () => {
@@ -52,7 +52,7 @@ describe('headers', () => {
     })
   })
 
-  it('should set Content-Length based on body (Buffer)', async () => {
+  it.skipIf(isEdge)('should set Content-Length based on body (Buffer)', async () => {
     const request = getIt([baseUrl, jsonResponse()])
     const req = request({method: 'POST', url: '/debug', body: Buffer.from('hello')})
 
@@ -61,7 +61,7 @@ describe('headers', () => {
     expect(body.headers).toHaveProperty('content-length', '5')
   })
 
-  it('should set Content-Length based on body (string)', async () => {
+  it.skipIf(isEdge)('should set Content-Length based on body (string)', async () => {
     const request = getIt([baseUrl, jsonResponse()])
     const req = request({method: 'POST', url: '/debug', body: 'hello'})
 
@@ -70,7 +70,7 @@ describe('headers', () => {
     expect(body.headers).toHaveProperty('content-length', '5')
   })
 
-  it('should set Content-Length based on body (string)', async () => {
+  it.skipIf(isEdge)('should set Content-Length based on body (string)', async () => {
     const request = getIt([baseUrl, jsonResponse()])
     const req = request({method: 'POST', url: '/debug', body: 'hello 🚀'})
 

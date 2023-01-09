@@ -4,7 +4,7 @@ import {describe, expect, it} from 'vitest'
 
 import {getIt} from '../src/index'
 import {httpErrors, promise} from '../src/middleware'
-import {baseUrl, debugRequest, testNonIE} from './helpers'
+import {baseUrl, debugRequest} from './helpers'
 
 describe(
   'promise middleware',
@@ -25,7 +25,7 @@ describe(
       await expect(req).resolves.toEqual('Just some plain text for you to consume')
     })
 
-    testNonIE('should reject network errors', async () => {
+    it('should reject network errors', async () => {
       const request = getIt([baseUrl, promise()])
       const req = request({url: '/permafail'})
       await expect(req).rejects.toThrow(/(socket|network)/i)

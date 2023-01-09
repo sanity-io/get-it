@@ -1,13 +1,13 @@
 import './helpers/server'
 
-import {describe} from 'vitest'
+import {describe, it} from 'vitest'
 
 import {getIt} from '../src/index'
 import {keepAlive} from '../src/middleware'
-import {baseUrl, expectRequestBody, testNode} from './helpers'
+import {baseUrl, expectRequestBody, isNode} from './helpers'
 
 describe('keepAlive middleware', () => {
-  testNode('should work with redirects (passing `agents`)', async () => {
+  it.runIf(isNode)('should work with redirects (passing `agents`)', async () => {
     const body = 'Just some plain text for you to consume'
     const request = getIt([baseUrl, keepAlive()])
     await Promise.all([
@@ -18,7 +18,7 @@ describe('keepAlive middleware', () => {
     ])
   })
 
-  testNode('should work without redirects (passing `agent`)', async () => {
+  it.runIf(isNode)('should work without redirects (passing `agent`)', async () => {
     const body = 'Just some plain text for you to consume'
     const request = getIt([baseUrl, keepAlive()])
     const options = {url: '/plain-text', maxRedirects: 0}

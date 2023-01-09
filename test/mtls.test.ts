@@ -1,10 +1,10 @@
 import fs from 'fs'
 import path from 'path'
-import {describe, expect} from 'vitest'
+import {describe, expect, it} from 'vitest'
 
 import {getIt} from '../src/index'
 import {base, mtls} from '../src/middleware'
-import {expectRequestBody, testNode} from './helpers'
+import {expectRequestBody, isNode} from './helpers'
 import getMtls from './helpers/mtls'
 
 const port = 4443
@@ -12,11 +12,11 @@ const baseUrl = `https://localhost:${port}/req-test`
 const describeOrSkip = process.env.SKIP_MTLS_TEST === 'true' ? describe.skip : describe
 
 describeOrSkip('mtls middleware', () => {
-  testNode('should throw on missing options', () => {
+  it.runIf(isNode)('should throw on missing options', () => {
     expect(() => getIt([base(baseUrl), mtls()])).to.throw(/Required mtls option "ca" is missing/)
   })
 
-  testNode('should handle mtls', async () => {
+  it.runIf(isNode)('should handle mtls', async () => {
     const body = 'hello from mtls'
     const mtlsOpts = {
       ca: fs.readFileSync(path.join(__dirname, 'certs', 'mtls', 'ca.pem')),
@@ -30,7 +30,7 @@ describeOrSkip('mtls middleware', () => {
     })
   })
 
-  testNode('should fail on invalid mtls cert', async () => {
+  it.runIf(isNode)('should fail on invalid mtls cert', async () => {
     const request = getIt([
       base(baseUrl),
       mtls({

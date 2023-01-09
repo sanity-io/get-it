@@ -1,7 +1,7 @@
 import './helpers/server'
 
 import toStream from 'into-stream'
-import {expect, it} from 'vitest'
+import {describe, expect, it} from 'vitest'
 
 import {getIt} from '../src/index'
 import {concat} from '../src/request/node/simpleConcat'
@@ -9,13 +9,13 @@ import {
   baseUrl,
   baseUrlPrefix,
   debugRequest,
-  describeNode,
   expectRequest,
   expectRequestBody,
+  isNode,
 } from './helpers'
 import getUri from './helpers/getUri'
 
-describeNode(
+describe.runIf(isNode)(
   'streams',
   () => {
     it('should be able to send a stream to a remote endpoint', async () => {

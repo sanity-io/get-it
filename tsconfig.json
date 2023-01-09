@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.settings",
   "include": ["./src", "./modules.d.ts"],
-  "exclude": ["./test-esm/test.ts"],
+  "exclude": ["./test-deno/test.ts"],
   "compilerOptions": {
     "noEmit": true
   }

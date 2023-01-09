@@ -7,14 +7,12 @@ import {jsonResponse} from '../src/middleware'
 import {
   baseUrl,
   baseUrlPrefix,
-  bufferFrom,
   debugRequest,
   expectRequest,
   expectRequestBody,
+  isEdge,
   isNode,
   promiseRequest,
-  testNode,
-  testNonIE9,
 } from './helpers'
 
 describe(
@@ -46,20 +44,20 @@ describe(
       await expectRequest(req).resolves.toHaveProperty('body', body)
     })
 
-    testNode('should be able to post a Buffer as body in node', async () => {
+    it.runIf(isNode)('should be able to post a Buffer as body in node', async () => {
       const request = getIt([baseUrl, debugRequest])
-      const req = request({url: '/echo', body: bufferFrom('Foo bar')})
+      const req = request({url: '/echo', body: Buffer.from('Foo bar')})
       await expectRequestBody(req).resolves.toEqual('Foo bar')
     })
 
-    testNode('should throw when trying to post invalid stuff', () => {
+    it.runIf(isNode)('should throw when trying to post invalid stuff', () => {
       const request = getIt([baseUrl, debugRequest])
       expect(() => {
         request({url: '/echo', method: 'post', body: {}})
       }).toThrow(/string, buffer or stream/)
     })
 
-    testNonIE9(
+    it.skipIf(isEdge)(
       'should be able to get a raw, unparsed body back',
       isNode
         ? () => {
@@ -68,7 +66,7 @@ describe(
             const req = request({url: '/plain-text', rawBody: true})
             return promiseRequest(req).then((res) => {
               expect(
-                res.body.equals(bufferFrom('Just some plain text for you to consume'))
+                res.body.equals(Buffer.from('Just some plain text for you to consume'))
               ).toEqual(true)
             })
           }
@@ -131,7 +129,7 @@ describe(
       })
     })
 
-    it('should be able to send PUT-requests with raw bodies', async () => {
+    it.skipIf(isEdge)('should be able to send PUT-requests with raw bodies', async () => {
       const request = getIt([baseUrl, jsonResponse(), debugRequest])
       const req = request({url: '/debug', method: 'PUT', body: 'just a plain body'})
       await expectRequestBody(req).resolves.toMatchObject({
@@ -141,7 +139,7 @@ describe(
     })
 
     // IE9 fails on cross-origin requests from http to https
-    testNonIE9('should handle https without issues', async () => {
+    it('should handle https without issues', async () => {
       const request = getIt()
       const req = request({url: 'https://httpbin.org/robots.txt'})
       const res = await promiseRequest(req)

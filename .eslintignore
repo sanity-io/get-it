@@ -2,3 +2,5 @@
 /dist
 # ESLint isn't configured to deal with ESM yet
 /test-esm
+# ESLint isn't configured to deal with Deno yet
+/test-deno

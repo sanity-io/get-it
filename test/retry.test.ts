@@ -5,7 +5,7 @@ import {describe, expect, it} from 'vitest'
 
 import {getIt} from '../src/index'
 import {httpErrors, retry} from '../src/middleware'
-import {baseUrl, debugRequest, expectRequest, isIE9, isNode, testNode, testNonIE} from './helpers'
+import {baseUrl, debugRequest, expectRequest, isEdge, isNode} from './helpers'
 
 describe(
   'retry middleware',
@@ -16,10 +16,9 @@ describe(
       expect(retry.shouldRetry).to.be.a('function')
     })
 
-    testNonIE('should handle retries when retry middleware is used', () => {
+    it.skipIf(isEdge)('should handle retries when retry middleware is used', () => {
       const request = getIt([baseUrl, debugRequest, retry()])
-      const browserAt = isIE9 ? 4 : 7
-      const successAt = isNode ? 4 : browserAt // Browsers have a weird thing where they might auto-retry on network errors
+      const successAt = isNode ? 4 : 7 // Browsers have a weird thing where they might auto-retry on network errors
       const req = request({url: `/fail?uuid=${Math.random()}&n=${successAt}`})
 
       return expectRequest(req).resolves.toMatchObject({
@@ -42,7 +41,7 @@ describe(
       {timeout: 400}
     )
 
-    testNode(
+    it.runIf(isNode)(
       'should not retry if it body is a stream',
       () => {
         const request = getIt([
@@ -84,7 +83,7 @@ describe(
       return expectRequest(req).rejects.toThrow(/HTTP 503/)
     })
 
-    it('should not retry non-GET-requests by default', () => {
+    it.skipIf(isEdge)('should not retry non-GET-requests by default', () => {
       // Browsers have a weird thing where they might auto-retry on network errors
       const request = getIt([baseUrl, debugRequest, retry()])
       const req = request({url: `/fail?uuid=${Math.random()}&n=2`, method: 'POST', body: 'Heisann'})
@@ -92,7 +91,7 @@ describe(
     })
 
     // @todo Browsers are really flaky with retries, revisit later
-    testNode('should handle retries with a delay function ', () => {
+    it.runIf(isNode)('should handle retries with a delay function ', () => {
       const retryDelay = () => 375
       const request = getIt([baseUrl, retry({retryDelay})])
 
