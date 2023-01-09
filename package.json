@@ -1,6 +1,6 @@
 {
   "name": "get-it",
-  "version": "8.0.2",
+  "version": "8.0.3-esm.0",
   "description": "Generic HTTP request library for node, browsers and workers",
   "keywords": [
     "request",
@@ -27,6 +27,8 @@
         "require": "./dist/index.browser.cjs",
         "import": "./dist/index.browser.js"
       },
+      "deno": "./dist/index.browser.js",
+      "worker": "./dist/index.browser.js",
       "source": "./src/index.ts",
       "require": "./dist/index.cjs",
       "node": {
@@ -43,6 +45,8 @@
         "require": "./dist/middleware.browser.cjs",
         "import": "./dist/middleware.browser.js"
       },
+      "deno": "./dist/middleware.browser.js",
+      "worker": "./dist/middleware.browser.js",
       "source": "./src/middleware.ts",
       "require": "./dist/middleware.cjs",
       "node": {
