@@ -86,10 +86,10 @@
     "lint": "eslint . --ext .cjs,.js,.ts --report-unused-disable-directives",
     "prepublishOnly": "npm run build",
     "test": "vitest",
+    "test:edge-runtime": "npm test -- --environment edge-runtime",
     "test:esm": "node --test test-esm/ | faucet",
     "test:esm:browser": "node -C browser --test test-esm/test.mjs | faucet",
-    "test:esm:deno": "deno test --allow-read --allow-net --allow-env --import-map=test-deno/import_map.json test-deno",
-    "test:edge-runtime": "npm test -- --environment edge-runtime"
+    "test:esm:deno": "deno test --allow-read --allow-net --allow-env --import-map=test-deno/import_map.json test-deno"
   },
   "browserslist": [
     "> 0.2% and supports es6-module and supports es6-module-dynamic-import and not dead and not IE 11",
