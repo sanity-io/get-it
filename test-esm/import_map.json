@@ -3,13 +3,13 @@
     "get-it": "../dist/index.browser.js",
     "get-it/package.json": "../package.json",
     "get-it/middleware": "../dist/middleware.browser.js",
-    "url-parse": "https://esm.sh/url-parse",
-    "create-error-class": "https://esm.sh/create-error-class",
-    "debug": "https://esm.sh/debug",
-    "form-urlencoded": "https://esm.sh/form-urlencoded",
-    "is-plain-object": "https://esm.sh/is-plain-object",
-    "nano-pubsub": "https://esm.sh/nano-pubsub",
-    "parse-headers": "https://esm.sh/parse-headers",
-    "same-origin": "https://esm.sh/same-origin"
+    "create-error-class": "https://esm.sh/create-error-class@^3.0.2",
+    "debug": "https://esm.sh/debug@^4.3.4",
+    "form-urlencoded": "https://esm.sh/form-urlencoded@^6.1.0",
+    "is-plain-object": "https://esm.sh/is-plain-object@^5.0.0",
+    "nano-pubsub": "https://esm.sh/nano-pubsub@^2.0.1",
+    "parse-headers": "https://esm.sh/parse-headers@^2.0.5",
+    "same-origin": "https://esm.sh/same-origin@^0.1.1",
+    "url-parse": "https://esm.sh/url-parse@^1.5.10"
   }
 }
