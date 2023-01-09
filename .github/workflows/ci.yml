@@ -26,7 +26,7 @@ jobs:
     name: Build, lint and test coverage
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3
       - uses: actions/setup-node@8c91899e586c5b171469028077307d293428b516 # v3
         with:
           node-version: lts/*
@@ -55,7 +55,7 @@ jobs:
             # Test the actively developed version that will become the latest LTS release next October
             node: current
     steps:
-      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3
       - uses: actions/setup-node@8c91899e586c5b171469028077307d293428b516 # v3
         with:
           node-version: ${{ matrix.node }}
@@ -71,7 +71,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3
       - uses: actions/setup-node@8c91899e586c5b171469028077307d293428b516 # v3
         with:
           # The testing suite uses the native test runner introduced in Node.js v18
@@ -93,7 +93,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3
       - uses: actions/setup-node@8c91899e586c5b171469028077307d293428b516 # v3
         with:
           node-version: lts/*
@@ -112,7 +112,7 @@ jobs:
     needs: [test, test-esm, test-deno]
     if: inputs.release == true
     steps:
-      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3
         with:
           fetch-depth: 0
       - uses: actions/setup-node@8c91899e586c5b171469028077307d293428b516 # v3
