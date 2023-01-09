@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.0.3](https://github.com/sanity-io/get-it/compare/v8.0.2...v8.0.3) (2023-01-09)
+
+### Bug Fixes
+
+- add support for deno and worker conditions ([5a1a263](https://github.com/sanity-io/get-it/commit/5a1a2636f4a07146008b9f928c569361d258f1d1))
+
 ## [8.0.2](https://github.com/sanity-io/get-it/compare/v8.0.1...v8.0.2) (2023-01-06)
 
 ### Bug Fixes
