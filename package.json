@@ -128,6 +128,7 @@
     "eslint-plugin-simple-import-sort": "^8.0.0",
     "faucet": "^0.0.3",
     "get-uri": "^4.0.0",
+    "ls-engines": "^0.8.0",
     "node-fetch": "^2.6.7",
     "pinkie-promise": "^2.0.1",
     "prettier": "^2.8.2",

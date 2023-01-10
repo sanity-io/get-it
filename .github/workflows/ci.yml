@@ -32,6 +32,7 @@ jobs:
           cache: npm
           node-version: lts/*
       - run: npm ci
+      - run: npx ls-engines
       - run: npm run build
       - run: npm run lint -- --quiet
       - run: npm run coverage
@@ -67,6 +68,7 @@ jobs:
           cache: npm
           node-version: ${{ matrix.node }}
       - run: npm i
+      - run: npx ls-engines
       - run: npm run build
       - run: npm test
         env:
