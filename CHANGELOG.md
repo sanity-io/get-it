@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.0.4](https://github.com/sanity-io/get-it/compare/v8.0.3...v8.0.4) (2023-01-10)
+
+### Bug Fixes
+
+- improve `fetch` fallback, drop dead IE legacy ([#64](https://github.com/sanity-io/get-it/issues/64)) ([8fe6734](https://github.com/sanity-io/get-it/commit/8fe6734a61e3c183d0b0b776ebc711674d3de387))
+
 ## [8.0.3](https://github.com/sanity-io/get-it/compare/v8.0.2...v8.0.3) (2023-01-09)
 
 ### Bug Fixes
