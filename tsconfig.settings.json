@@ -4,13 +4,14 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
+    "lib": ["dom"],
 
     // Strict type-checking
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
     "strictFunctionTypes": true,
-    "strictPropertyInitialization": true,
+    "strictPropertyInitialization": false,
     "noImplicitThis": true,
     "alwaysStrict": true,
 

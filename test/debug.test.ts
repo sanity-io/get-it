@@ -15,14 +15,14 @@ describe('debug middleware', () => {
   })
 
   it('should be able to pass custom logger', () =>
-    new Promise((resolve) => {
+    new Promise<void>((resolve) => {
       const logger = debug({log})
       const request = getIt([baseUrl, logger])
       request({url: '/plain-text'}).response.subscribe(() => resolve(undefined))
     }))
 
   it('should be able to pass custom logger (verbose mode)', () =>
-    new Promise((resolve) => {
+    new Promise<void>((resolve) => {
       const logger = debug({log, verbose: true})
       const request = getIt([baseUrl, logger])
       request({url: '/plain-text'}).response.subscribe(() => resolve(undefined))

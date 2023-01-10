@@ -1,9 +1,8 @@
-import pubsub from 'nano-pubsub'
-
 import {processOptions} from './middleware/defaultOptionsProcessor'
 import {validateOptions} from './middleware/defaultOptionsValidator'
 import type {HttpRequest, Middleware, Middlewares, Requester} from './types'
 import middlewareReducer from './util/middlewareReducer'
+import pubsub from './util/pubsub'
 
 const channelNames = ['request', 'response', 'progress', 'error', 'abort']
 const middlehooks = [

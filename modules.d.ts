@@ -5,10 +5,6 @@ declare module 'tunnel-agent' {
   export function httpsOverHttps(options: any): any
 }
 
-declare module 'same-origin' {
-  export default function sameOrigin(uri1: string, uri2: string, ieMode?: boolean): boolean
-}
-
 declare module 'create-error-class' {
   interface ErrorClass {
     new (res: any, ctx: any): Error

@@ -162,7 +162,7 @@ describe(
     })
 
     it('should be able to clone a requester, keeping the same middleware', () =>
-      new Promise((resolve) => {
+      new Promise<void>((resolve) => {
         let i = 0
         const onRequest = () => i++
         const base = getIt([baseUrl, {onRequest}])
@@ -173,7 +173,7 @@ describe(
 
         setTimeout(() => {
           expect(i).to.equal(2, 'two requests should have been initiated')
-          resolve(undefined)
+          resolve()
         }, 15)
       }))
   },

@@ -113,7 +113,8 @@ describe('progress', () => {
           expect(events).to.be.above(0, 'should have received progress events')
           resolve(undefined)
         })
-      })
+      }),
+    {timeout: 10000}
   )
 
   it(

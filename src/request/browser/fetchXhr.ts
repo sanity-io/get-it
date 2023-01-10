@@ -1,72 +1,101 @@
 /**
  * Mimicks the XMLHttpRequest API with only the parts needed for get-it's XHR adapter
  */
-function FetchXhr(this: any) {
-  this.readyState = 0 // Unsent
-}
-FetchXhr.prototype.open = function (method: any, url: any) {
-  this._method = method
-  this._url = url
-  this._resHeaders = ''
-  this.readyState = 1 // Open
-  this.onreadystatechange()
-}
-FetchXhr.prototype.abort = function () {
-  if (this._controller) {
-    this._controller.abort()
-  }
-}
-FetchXhr.prototype.getAllResponseHeaders = function () {
-  return this._resHeaders
-}
-FetchXhr.prototype.setRequestHeader = function (key: any, value: any) {
-  this._headers = this._headers || {}
-  this._headers[key] = value
-}
-FetchXhr.prototype.send = function (body: any) {
-  const ctrl = (this._controller = typeof AbortController === 'function' && new AbortController())
-  const textBody = this.responseType !== 'arraybuffer'
-  const options: any = {
-    method: this._method,
-    headers: this._headers,
-    signal: (ctrl && ctrl.signal) || undefined,
-    body,
-  }
+export class FetchXhr
+  implements Pick<XMLHttpRequest, 'open' | 'abort' | 'getAllResponseHeaders' | 'setRequestHeader'>
+{
+  /**
+   * Public interface, interop with real XMLHttpRequest
+   */
+  onabort: () => void
+  onerror: (error?: any) => void
+  onreadystatechange: () => void
+  ontimeout: XMLHttpRequest['ontimeout']
+  /**
+   * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/readyState
+   */
+  readyState: 0 | 1 | 2 | 3 | 4 = 0
+  response: XMLHttpRequest['response']
+  responseText: XMLHttpRequest['responseText']
+  responseType: XMLHttpRequest['responseType']
+  status: XMLHttpRequest['status']
+  statusText: XMLHttpRequest['statusText']
+  withCredentials: XMLHttpRequest['withCredentials']
 
-  // Some environments (like CloudFlare workers) don't support credentials in
-  // RequestInitDict, and there doesn't seem to be any easy way to check for it,
-  // so for now let's just make do with a window check :/
-  if (typeof document !== 'undefined') {
-    options.credentials = this.withCredentials ? 'include' : 'omit'
+  /**
+   * Private implementation details
+   */
+  #method: string
+  #url: string
+  #resHeaders: string
+  #headers: Record<string, string> = {}
+  #controller?: AbortController
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- _async is only declared for typings compatibility
+  open(method: string, url: string, _async?: boolean) {
+    this.#method = method
+    this.#url = url
+    this.#resHeaders = ''
+    this.readyState = 1 // Open
+    this.onreadystatechange()
+    this.#controller = undefined
   }
+  abort() {
+    if (this.#controller) {
+      this.#controller.abort()
+    }
+  }
+  getAllResponseHeaders() {
+    return this.#resHeaders
+  }
+  setRequestHeader(name: string, value: string) {
+    this.#headers[name] = value
+  }
+  send(body: BodyInit) {
+    const textBody = this.responseType !== 'arraybuffer'
+    const options: RequestInit = {
+      method: this.#method,
+      headers: this.#headers,
+      signal: null,
+      body,
+    }
+    if (typeof AbortController === 'function') {
+      this.#controller = new AbortController()
+      options.signal = this.#controller.signal
+    }
 
-  fetch(this._url, options)
-    .then((res: any) => {
-      res.headers.forEach((value: any, key: any) => {
-        this._resHeaders += `${key}: ${value}\r\n`
+    // Some environments (like CloudFlare workers) don't support credentials in
+    // RequestInitDict, and there doesn't seem to be any easy way to check for it,
+    // so for now let's just make do with a document check :/
+    if (typeof document !== 'undefined') {
+      options.credentials = this.withCredentials ? 'include' : 'omit'
+    }
+
+    fetch(this.#url, options)
+      .then((res): Promise<string | ArrayBuffer> => {
+        res.headers.forEach((value: any, key: any) => {
+          this.#resHeaders += `${key}: ${value}\r\n`
+        })
+        this.status = res.status
+        this.statusText = res.statusText
+        this.readyState = 3 // Loading
+        return textBody ? res.text() : res.arrayBuffer()
       })
-      this.status = res.status
-      this.statusText = res.statusText
-      this.readyState = 3 // Loading
-      return textBody ? res.text() : res.arrayBuffer()
-    })
-    .then((resBody) => {
-      if (textBody) {
-        this.responseText = resBody
-      } else {
-        this.response = resBody
-      }
-      this.readyState = 4 // Done
-      this.onreadystatechange()
-    })
-    .catch((err) => {
-      if (err.name === 'AbortError') {
-        this.onabort()
-        return
-      }
+      .then((resBody) => {
+        if (typeof resBody === 'string') {
+          this.responseText = resBody
+        } else {
+          this.response = resBody
+        }
+        this.readyState = 4 // Done
+        this.onreadystatechange()
+      })
+      .catch((err: Error) => {
+        if (err.name === 'AbortError') {
+          this.onabort()
+          return
+        }
 
-      this.onerror(err)
-    })
+        this.onerror?.(err)
+      })
+  }
 }
-
-export default FetchXhr
