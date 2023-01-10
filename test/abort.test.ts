@@ -7,7 +7,7 @@ import {baseUrl, debugRequest} from './helpers'
 
 describe('aborting requests', () => {
   it('should be able to abort requests', () => {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       const request = getIt([baseUrl, debugRequest])
       const req = request({url: '/delay'})
 
@@ -21,7 +21,7 @@ describe('aborting requests', () => {
       )
 
       setTimeout(() => req.abort.publish(), 15)
-      setTimeout(() => resolve(undefined), 250)
+      setTimeout(resolve, 250)
     })
   })
 })

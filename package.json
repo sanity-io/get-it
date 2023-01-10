@@ -1,6 +1,6 @@
 {
   "name": "get-it",
-  "version": "8.0.3",
+  "version": "8.0.4-fetch.0",
   "description": "Generic HTTP request library for node, browsers and workers",
   "keywords": [
     "request",
@@ -105,10 +105,8 @@
     "is-plain-object": "^5.0.0",
     "is-retry-allowed": "^2.2.0",
     "is-stream": "^2.0.1",
-    "nano-pubsub": "^2.0.1",
     "parse-headers": "^2.0.5",
     "progress-stream": "^2.0.0",
-    "same-origin": "^0.1.1",
     "tunnel-agent": "^0.6.0",
     "url-parse": "^1.5.10"
   },

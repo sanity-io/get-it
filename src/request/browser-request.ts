@@ -1,36 +1,17 @@
 import parseHeaders from 'parse-headers'
-import sameOrigin from 'same-origin'
 
-import FetchXhr from './browser/fetchXhr'
+import {FetchXhr} from './browser/fetchXhr'
 
-const noop = function () {
-  /* intentional noop */
-}
-
-// eslint-disable-next-line no-var
-declare var XDomainRequest: any
-
-const win = typeof document === 'undefined' || typeof window === 'undefined' ? undefined : window
-const adapter = win ? 'xhr' : 'fetch'
-
-let XmlHttpRequest: any = typeof XMLHttpRequest === 'function' ? XMLHttpRequest : noop
-const hasXhr2 = 'withCredentials' in new XmlHttpRequest()
-const XDR = typeof XDomainRequest === 'undefined' ? undefined : XDomainRequest
-let CrossDomainRequest = hasXhr2 ? XmlHttpRequest : XDR
+// Use fetch if it's available, non-browser environments such as Deno, Edge Runtime and more provide fetch as a global but doesn't provide xhr
+const adapter = typeof XMLHttpRequest === 'function' ? 'xhr' : 'fetch'
 
 // Fallback to fetch-based XHR polyfill for non-browser environments like Workers
-if (!win) {
-  XmlHttpRequest = FetchXhr
-  CrossDomainRequest = FetchXhr
-}
+const XmlHttpRequest = adapter === 'xhr' ? XMLHttpRequest : FetchXhr
 
 export default (context: any, callback: any) => {
   const opts = context.options
   const options = context.applyMiddleware('finalizeOptions', opts)
   const timers: any = {}
-
-  // Deep-checking window.location because of react native, where `location` doesn't exist
-  const cors = win && win.location && !sameOrigin(win.location.href, options.url)
 
   // Allow middleware to inject a response, for instance in the case of caching or mocking
   const injectedResponse = context.applyMiddleware('interceptRequest', undefined, {
@@ -47,9 +28,8 @@ export default (context: any, callback: any) => {
   }
 
   // We'll want to null out the request on success/failure
-  let xhr = cors ? new CrossDomainRequest() : new XmlHttpRequest()
+  let xhr = new XmlHttpRequest()
 
-  const isXdr = win && (win as any).XDomainRequest && xhr instanceof (win as any).XDomainRequest
   const headers = options.headers
   const delays = options.timeout
 
@@ -66,17 +46,11 @@ export default (context: any, callback: any) => {
     aborted = true
   }
 
-  // IE9 must have onprogress be set to a unique function
-  xhr.onprogress = () => {
-    /* intentional noop */
-  }
-
-  const loadEvent = isXdr ? 'onload' : 'onreadystatechange'
-  xhr[loadEvent] = () => {
+  xhr.onreadystatechange = () => {
     // Prevent request from timing out
     resetTimers()
 
-    if (aborted || (xhr.readyState !== 4 && !isXdr)) {
+    if (aborted || xhr.readyState !== 4) {
       return
     }
 
@@ -106,8 +80,6 @@ export default (context: any, callback: any) => {
         xhr.setRequestHeader(key, headers[key])
       }
     }
-  } else if (headers && isXdr) {
-    throw new Error('Headers cannot be set on an XDomainRequest object')
   }
 
   if (options.rawBody) {
@@ -174,7 +146,7 @@ export default (context: any, callback: any) => {
     // Clean up
     stopTimers(true)
     loaded = true
-    xhr = null
+    ;(xhr as any) = null
 
     // Annoyingly, details are extremely scarce and hidden from us.
     // We only really know that it is a network error
@@ -185,29 +157,13 @@ export default (context: any, callback: any) => {
   }
 
   function reduceResponse() {
-    let statusCode = xhr.status
-    let statusMessage = xhr.statusText
-
-    if (isXdr && statusCode === undefined) {
-      // IE8 CORS GET successful response doesn't have a status field, but body is fine
-      statusCode = 200
-    } else if (statusCode > 12000 && statusCode < 12156) {
-      // Yet another IE quirk where it emits weird status codes on network errors
-      // https://support.microsoft.com/en-us/kb/193625
-      return onError()
-    } else {
-      // Another IE bug where HTTP 204 somehow ends up as 1223
-      statusCode = xhr.status === 1223 ? 204 : xhr.status
-      statusMessage = xhr.status === 1223 ? 'No Content' : statusMessage
-    }
-
     return {
       body: xhr.response || xhr.responseText,
       url: options.url,
       method: options.method,
-      headers: isXdr ? {} : parseHeaders(xhr.getAllResponseHeaders()),
-      statusCode: statusCode,
-      statusMessage: statusMessage,
+      headers: parseHeaders(xhr.getAllResponseHeaders()),
+      statusCode: xhr.status,
+      statusMessage: xhr.statusText,
     }
   }
 
