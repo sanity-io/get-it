@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.0.5](https://github.com/sanity-io/get-it/compare/v8.0.4...v8.0.5) (2023-01-11)
+
+### Bug Fixes
+
+- replace `url-parse` with native `URL` ([f6317e3](https://github.com/sanity-io/get-it/commit/f6317e3575b8eda713e66730dc0bff81f018826e))
+
 ## [8.0.4](https://github.com/sanity-io/get-it/compare/v8.0.3...v8.0.4) (2023-01-10)
 
 ### Bug Fixes
