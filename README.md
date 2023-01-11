@@ -1,6 +1,9 @@
 # get-it
 
-[![npm version](http://img.shields.io/npm/v/get-it.svg)](https://www.npmjs.com/package/get-it) [![CI & Release](https://github.com/sanity-io/get-it/actions/workflows/ci.yml/badge.svg)](https://github.com/sanity-io/get-it/actions/workflows/ci.yml)
+[![npm stat](https://img.shields.io/npm/dm/get-it.svg?style=flat-square)](https://npm-stat.com/charts.html?package=get-it)
+[![npm version](https://img.shields.io/npm/v/get-it.svg?style=flat-square)](https://www.npmjs.com/package/get-it)
+[![gzip size][gzip-badge]][bundlephobia]
+[![size][size-badge]][bundlephobia]
 
 Generic HTTP request library for node.js (>= 12) and browsers (IE9 and newer)
 
@@ -190,3 +193,7 @@ Run the ["CI & Release" workflow](https://github.com/sanity-io/get-it/actions).
 Make sure to select the main branch and check "Release new version".
 
 Semantic release will only release on configured branches, so it is safe to run release on any branch.
+
+[gzip-badge]: https://img.shields.io/bundlephobia/minzip/get-it?label=gzip%20size&style=flat-square
+[size-badge]: https://img.shields.io/bundlephobia/min/get-it?label=size&style=flat-square
+[bundlephobia]: https://bundlephobia.com/package/get-it

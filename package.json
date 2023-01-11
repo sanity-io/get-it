@@ -107,8 +107,7 @@
     "is-stream": "^2.0.1",
     "parse-headers": "^2.0.5",
     "progress-stream": "^2.0.0",
-    "tunnel-agent": "^0.6.0",
-    "url-parse": "^1.5.10"
+    "tunnel-agent": "^0.6.0"
   },
   "devDependencies": {
     "@edge-runtime/vm": "^2.0.2",
@@ -118,7 +117,6 @@
     "@types/follow-redirects": "^1.14.1",
     "@types/node": "^18.11.18",
     "@types/progress-stream": "^2.0.2",
-    "@types/url-parse": "^1.4.8",
     "@typescript-eslint/eslint-plugin": "^5.48.1",
     "@typescript-eslint/parser": "^5.48.1",
     "@vitest/coverage-c8": "^0.27.0",

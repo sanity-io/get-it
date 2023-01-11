@@ -4,7 +4,6 @@
     "debug": "https://esm.sh/debug@^4.3.4",
     "form-urlencoded": "https://esm.sh/form-urlencoded@^6.1.0",
     "is-plain-object": "https://esm.sh/is-plain-object@^5.0.0",
-    "parse-headers": "https://esm.sh/parse-headers@^2.0.5",
-    "url-parse": "https://esm.sh/url-parse@^1.5.10"
+    "parse-headers": "https://esm.sh/parse-headers@^2.0.5"
   }
 }
