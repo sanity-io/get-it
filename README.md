@@ -5,7 +5,7 @@
 [![gzip size][gzip-badge]][bundlephobia]
 [![size][size-badge]][bundlephobia]
 
-Generic HTTP request library for node.js (>= 12) and browsers (IE9 and newer)
+Generic HTTP request library for node.js (>= 14) and [modern browsers].
 
 ## Motivation
 
@@ -197,3 +197,4 @@ Semantic release will only release on configured branches, so it is safe to run 
 [gzip-badge]: https://img.shields.io/bundlephobia/minzip/get-it?label=gzip%20size&style=flat-square
 [size-badge]: https://img.shields.io/bundlephobia/min/get-it?label=size&style=flat-square
 [bundlephobia]: https://bundlephobia.com/package/get-it
+[modern browsers]: https://browsersl.ist/#q=%3E+0.2%25+and+supports+es6-module+and+supports+es6-module-dynamic-import+and+not+dead+and+not+IE+11
