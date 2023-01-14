@@ -131,7 +131,7 @@
     "pinkie-promise": "^2.0.1",
     "prettier": "^2.8.2",
     "prettier-plugin-packagejson": "^2.3.0",
-    "rimraf": "^3.0.2",
+    "rimraf": "^4.0.4",
     "typescript": "^4.9.4",
     "vite": "^4.0.4",
     "vitest": "^0.27.1",
