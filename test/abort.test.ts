@@ -1,5 +1,3 @@
-import './helpers/server'
-
 import {describe, it} from 'vitest'
 
 import {getIt} from '../src/index'

@@ -1,5 +1,3 @@
-import './helpers/server'
-
 import intoStream from 'into-stream'
 import {describe, it} from 'vitest'
 

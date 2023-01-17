@@ -1,5 +1,3 @@
-import './helpers/server'
-
 import {describe, expect, it} from 'vitest'
 import zenObservable from 'zen-observable'
 

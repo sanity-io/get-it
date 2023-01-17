@@ -1,5 +1,3 @@
-import './helpers/server'
-
 import fetch from 'node-fetch'
 import {afterEach, beforeEach, describe, expect, it} from 'vitest'
 

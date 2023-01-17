@@ -4,13 +4,12 @@ import https from 'https'
 import path from 'path'
 import qs from 'querystring'
 import url from 'url'
-import {afterAll, beforeAll} from 'vitest'
 import zlib from 'zlib'
 
 import {concat} from '../../src/request/node/simpleConcat'
 import debugRequest from './debugRequest'
 
-const httpsServerOptions = {
+const httpsServerOptions: https.ServerOptions = {
   key: fs.readFileSync(path.join(__dirname, '..', 'certs', 'server', 'key.pem')),
   cert: fs.readFileSync(path.join(__dirname, '..', 'certs', 'server', 'certificate.pem')),
 }
@@ -23,7 +22,6 @@ const createError = (code: any, msg?: string) => {
 
 const httpPort = 9980
 const httpsPort = 9443
-const isNode = typeof document === 'undefined'
 const state = {failures: {}}
 
 function getResponseHandler(proto = 'http'): any {
@@ -167,7 +165,7 @@ function getResponseHandler(proto = 'http'): any {
   }
 }
 
-function drip(res) {
+function drip(res: http.ServerResponse) {
   let iterations = 0
   let interval: any = null
 
@@ -185,45 +183,17 @@ function drip(res) {
   }, 500)
 }
 
-const createServer = (proto = 'http', opts = {}) => {
+export function createServer(proto?: 'http'): Promise<http.Server>
+export function createServer(proto: 'https'): Promise<https.Server>
+export function createServer(proto: 'http' | 'https' = 'http') {
   const isHttp = proto === 'http'
-  const protoOpts = isHttp ? {} : httpsServerOptions
   const protoPort = isHttp ? httpPort : httpsPort
-  const options = Object.assign({}, protoOpts, opts)
   const server = isHttp
     ? http.createServer(getResponseHandler(proto))
-    : https.createServer(options, getResponseHandler(proto))
+    : https.createServer(httpsServerOptions, getResponseHandler(proto))
 
   return new Promise((resolve, reject) => {
     server.on('error', reject)
     server.listen(protoPort, () => resolve(server))
   })
-}
-
-createServer.responseHandlerFactory = getResponseHandler
-
-const hookState: any = {}
-
-if (isNode) {
-  beforeAll(async () => {
-    await Promise.all([
-      createServer('http').then((httpServer) => Object.assign(hookState, {httpServer})),
-      createServer('https').then((httpsServer) => Object.assign(hookState, {httpsServer})),
-    ])
-  })
-} else {
-  beforeAll(() => {
-    if (!window.EventSource) {
-      // IE only
-      localStorage.debug = 'get-it*'
-    }
-  })
-}
-
-afterAll(async () => {
-  await Promise.all([closeServer(hookState.httpServer), closeServer(hookState.httpsServer)])
-})
-
-function closeServer(server) {
-  return new Promise<any>((resolve) => (server ? server.close(resolve) : resolve(undefined)))
 }

@@ -1,5 +1,3 @@
-import './helpers/server'
-
 import {afterEach, describe, expect, it} from 'vitest'
 
 import {getIt} from '../src/index'
@@ -11,8 +9,8 @@ import {
   baseUrlPrefixHttps,
   debugRequest,
   expectRequest,
-  promiseRequest,
   isNode,
+  promiseRequest,
 } from './helpers'
 import getProxy from './helpers/proxy'
 

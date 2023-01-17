@@ -1,5 +1,3 @@
-import './helpers/server'
-
 import toStream from 'into-stream'
 import {describe, expect, it} from 'vitest'
 
