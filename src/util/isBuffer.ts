@@ -1,3 +1,2 @@
-import global from './global'
-
-export const isBuffer = 'Buffer' in global ? (obj: unknown) => Buffer.isBuffer(obj) : () => false
+export const isBuffer =
+  typeof Buffer === 'undefined' ? () => false : (obj: unknown) => Buffer.isBuffer(obj)

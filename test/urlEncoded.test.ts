@@ -4,7 +4,7 @@ import {describe, it} from 'vitest'
 import {baseUrl, debugRequest, expectRequestBody, getIt, isNode, middleware} from './helpers'
 const {jsonResponse, urlEncoded} = middleware
 
-describe('urlEncoded middleware', () => {
+describe.runIf(typeof ArrayBuffer !== 'undefined')('urlEncoded middleware', () => {
   it('should be able to send urlencoded data to an endpoint and get JSON back', () => {
     const request = getIt([baseUrl, urlEncoded(), jsonResponse(), debugRequest])
     const body = {randomValue: Date.now(), someThing: 'spaces & commas - all sorts!'}

@@ -1,14 +1,17 @@
-import createErrorClass from 'create-error-class'
+class HttpError extends Error {
+  response: any
+  request: any
+  constructor(res: any, ctx: any) {
+    super()
+    const truncatedUrl = res.url.length > 400 ? `${res.url.slice(0, 399)}…` : res.url
+    let msg = `${res.method}-request to ${truncatedUrl} resulted in `
+    msg += `HTTP ${res.statusCode} ${res.statusMessage}`
 
-const HttpError = createErrorClass('HttpError', function (res, ctx) {
-  const truncatedUrl = res.url.length > 400 ? `${res.url.slice(0, 399)}…` : res.url
-  let msg = `${res.method}-request to ${truncatedUrl} resulted in `
-  msg += `HTTP ${res.statusCode} ${res.statusMessage}`
-
-  this.message = msg.trim()
-  this.response = res
-  this.request = ctx.options
-})
+    this.message = msg.trim()
+    this.response = res
+    this.request = ctx.options
+  }
+}
 
 /** @public */
 export function httpErrors() {

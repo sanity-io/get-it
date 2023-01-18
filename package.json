@@ -96,7 +96,6 @@
     "maintained node versions"
   ],
   "dependencies": {
-    "create-error-class": "^3.0.2",
     "debug": "^4.3.4",
     "decompress-response": "^7.0.0",
     "follow-redirects": "^1.15.2",
