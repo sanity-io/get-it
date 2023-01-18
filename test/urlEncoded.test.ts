@@ -55,7 +55,8 @@ describe('urlEncoded middleware', () => {
       'obj[prop2][0]': 'elem',
       str: 'val',
       emoji: '😀',
-      set: '1,two',
+      'set[0]': '1',
+      'set[1]': 'two',
     })
   })
 

@@ -100,7 +100,6 @@
     "debug": "^4.3.4",
     "decompress-response": "^7.0.0",
     "follow-redirects": "^1.15.2",
-    "form-urlencoded": "^6.1.0",
     "into-stream": "^6.0.0",
     "is-plain-object": "^5.0.0",
     "is-retry-allowed": "^2.2.0",

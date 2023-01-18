@@ -2,7 +2,6 @@
   "imports": {
     "create-error-class": "https://esm.sh/create-error-class@^3.0.2",
     "debug": "https://esm.sh/debug@^4.3.4",
-    "form-urlencoded": "https://esm.sh/form-urlencoded@^6.1.0",
     "is-plain-object": "https://esm.sh/is-plain-object@^5.0.0",
     "parse-headers": "https://esm.sh/parse-headers@^2.0.5"
   }
