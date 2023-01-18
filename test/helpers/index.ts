@@ -3,7 +3,7 @@ import {base, debug} from '../../src/middleware'
 export {expectRequest, expectRequestBody, promiseRequest} from './expectRequest'
 
 export const isEdge = typeof globalThis.EdgeRuntime === 'string'
-export const isNode = !isEdge && typeof window === 'undefined'
+export const isNode = !isEdge && typeof document === 'undefined'
 
 export const hostname = isNode || isEdge ? 'localhost' : window.location.hostname
 export const debugRequest = debug({verbose: true})

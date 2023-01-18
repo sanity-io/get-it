@@ -71,8 +71,6 @@ jobs:
       - run: npx ls-engines
       - run: npm run build
       - run: npm test
-        env:
-          SKIP_MTLS_TEST: "${{ matrix.os == 'ubuntu-latest' && 'true' || 'false' }}"
 
   test-esm:
     name: Test ESM exports
