@@ -1,9 +1,8 @@
 import intoStream from 'into-stream'
 import {describe, it} from 'vitest'
 
-import {getIt} from '../src/index'
-import {jsonResponse, urlEncoded} from '../src/middleware'
-import {baseUrl, debugRequest, expectRequestBody, isNode} from './helpers'
+import {baseUrl, debugRequest, expectRequestBody, getIt, isNode, middleware} from './helpers'
+const {jsonResponse, urlEncoded} = middleware
 
 describe('urlEncoded middleware', () => {
   it('should be able to send urlencoded data to an endpoint and get JSON back', () => {
@@ -41,21 +40,23 @@ describe('urlEncoded middleware', () => {
       num: 0,
       arr: [3, {prop: false}, 1, null, 6],
       obj: {prop1: null, prop2: ['elem']},
+      emoji: '😀',
+      set: new Set([1, 'two']),
     }
     const req = request({url: '/urlencoded', method: 'PUT', body})
-    return expectRequestBody(req).resolves.toMatchInlineSnapshot(`
-      {
-        "arr[0]": "3",
-        "arr[1][prop]": "false",
-        "arr[2]": "1",
-        "arr[3]": "null",
-        "arr[4]": "6",
-        "num": "0",
-        "obj[prop1]": "null",
-        "obj[prop2][0]": "elem",
-        "str": "val",
-      }
-    `)
+    return expectRequestBody(req).resolves.toEqual({
+      'arr[0]': '3',
+      'arr[1][prop]': 'false',
+      'arr[2]': '1',
+      'arr[3]': 'null',
+      'arr[4]': '6',
+      num: '0',
+      'obj[prop1]': 'null',
+      'obj[prop2][0]': 'elem',
+      str: 'val',
+      emoji: '😀',
+      set: '1,two',
+    })
   })
 
   it.runIf(isNode)('should not serialize buffers', () => {

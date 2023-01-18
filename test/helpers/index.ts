@@ -1,9 +1,15 @@
-import {base, debug} from '../../src/middleware'
+import {getIt as nodeGetIt} from '../../src/index'
+import {getIt as browserGetIt} from '../../src/index.browser'
+import * as nodeMiddleware from '../../src/middleware'
+import * as browserMiddleware from '../../src/middleware.browser'
 
 export {expectRequest, expectRequestBody, promiseRequest} from './expectRequest'
 
 export const isEdge = typeof globalThis.EdgeRuntime === 'string'
 export const isNode = !isEdge && typeof document === 'undefined'
+export const getIt = isNode ? nodeGetIt : browserGetIt
+export const middleware = isNode ? nodeMiddleware : browserMiddleware
+const {base, debug} = middleware
 
 export const hostname = isNode || isEdge ? 'localhost' : window.location.hostname
 export const debugRequest = debug({verbose: true})

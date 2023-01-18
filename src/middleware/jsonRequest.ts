@@ -1,10 +1,8 @@
 import {isPlainObject} from 'is-plain-object'
 
+import {isBuffer} from '../util/isBuffer'
+
 const serializeTypes = ['boolean', 'string', 'number']
-const isBuffer = (obj: any) =>
-  !!obj.constructor &&
-  typeof obj.constructor.isBuffer === 'function' &&
-  obj.constructor.isBuffer(obj)
 
 /** @public */
 export function jsonRequest() {
