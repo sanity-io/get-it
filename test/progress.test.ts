@@ -45,47 +45,41 @@ describe('progress', () => {
     {timeout: 10000}
   )
 
-  it.runIf(isNode)(
-    '[node] should emit upload progress events on strings',
-    () =>
-      new Promise((resolve, reject) => {
-        const request = getIt([baseUrl, progress()])
-        const req = request({url: '/plain-text', body: new Array(100).join('-')})
-        let events = 0
+  it.runIf(isNode)('[node] should emit upload progress events on strings', async () => {
+    expect.assertions(2)
+    const promise = new Promise((resolve, reject) => {
+      const request = getIt([baseUrl, progress()])
+      const req = request({url: '/plain-text', body: new Array(100).join('-')})
+      let events = 0
 
-        req.progress.subscribe((evt) => {
-          if (evt.stage !== 'upload') {
-            return
-          }
+      req.progress.subscribe((evt) => {
+        if (evt.stage !== 'upload') {
+          return
+        }
 
-          events++
-          expect(evt).to.containSubset({
-            stage: 'upload',
-            lengthComputable: true,
-          })
-        })
-
-        req.error.subscribe((err) =>
-          reject(new Error(`error channel should not be called, got:\n\n${err.message}`))
-        )
-        req.response.subscribe(() => {
-          expect(events).to.be.above(0)
-          resolve(undefined)
+        events++
+        expect(evt).to.containSubset({
+          stage: 'upload',
+          lengthComputable: true,
         })
       })
-  )
+
+      req.error.subscribe((err) =>
+        reject(new Error(`error channel should not be called, got:\n\n${err.message}`))
+      )
+      req.response.subscribe(() => {
+        if (events > 0) {
+          resolve(events)
+        }
+      })
+    })
+    await expect(promise).resolves.toBeGreaterThan(0)
+  })
 
   it.runIf(isNode)(
     '[node] can tell requester how large the body is',
     () =>
       new Promise((resolve, reject) => {
-        // This is flakey on node 6, works on all other versions though.
-        const nodeVersion = parseInt(process.version.replace(/^v/, ''), 10)
-        if (nodeVersion === 6) {
-          resolve(undefined)
-          return
-        }
-
         const request = getIt([baseUrl, progress()])
         const body = fs.createReadStream(__filename)
         const bodySize = fs.statSync(__filename).size
