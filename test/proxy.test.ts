@@ -13,12 +13,6 @@ import {
   promiseRequest,
 } from './helpers'
 
-const getProxy = (...args: any[]) => Promise.resolve(null)
-
-function closeServer(server) {
-  return new Promise((resolve) => (server ? server.close(resolve) : resolve(undefined)))
-}
-
 beforeAll(() => {
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 })
@@ -30,14 +24,10 @@ afterAll(() => {
 describe(
   'proxy',
   () => {
-    let proxyServer
-
     afterEach(async () => {
       delete process.env.http_proxy
       delete process.env.https_proxy
       delete process.env.no_proxy
-
-      await closeServer(proxyServer).then(() => (proxyServer = null))
     })
 
     it('passing non-object to proxy middleware throws', () => {
@@ -53,11 +43,8 @@ describe(
         const body = 'Just some plain text for you to consume + proxy'
         const request = getIt([baseUrl, debugRequest])
 
-        await getProxy().then((proxy) => {
-          proxyServer = proxy
-          const req = request({url: '/plain-text', proxy: {host: 'localhost', port: 4000}})
-          return expectRequest(req).resolves.toHaveProperty('body', body)
-        })
+        const req = request({url: '/plain-text', proxy: {host: 'localhost', port: 4000}})
+        return expectRequest(req).resolves.toHaveProperty('body', body)
       }
     )
 
@@ -67,11 +54,8 @@ describe(
       const body = 'Just some plain text for you to consume'
       const request = getIt([baseUrl, debugRequest])
 
-      await getProxy().then((proxy) => {
-        proxyServer = proxy
-        const req = request({url: '/plain-text', proxy: false})
-        return expectRequest(req).resolves.toHaveProperty('body', body)
-      })
+      const req = request({url: '/plain-text', proxy: false})
+      return expectRequest(req).resolves.toHaveProperty('body', body)
     })
 
     it.runIf(isNode)('http: should support proxy set via env var', async () => {
@@ -79,11 +63,8 @@ describe(
       const request = getIt([baseUrl, debugRequest])
 
       process.env.http_proxy = 'http://localhost:4000/'
-      await getProxy().then((proxy) => {
-        proxyServer = proxy
-        const req = request({url: '/plain-text'})
-        return expectRequest(req).resolves.toHaveProperty('body', body)
-      })
+      const req = request({url: '/plain-text'})
+      return expectRequest(req).resolves.toHaveProperty('body', body)
     })
 
     it.runIf(isNode)('http: should only use proxy for domains not in no_proxy', async () => {
@@ -93,63 +74,50 @@ describe(
 
       process.env.http_proxy = 'http://localhost:4000/'
       process.env.no_proxy = 'foo.com, localhost,bar.net , , quix.co'
-      await getProxy().then((proxy) => {
-        proxyServer = proxy
+      const url = '/plain-text'
+      const absUrl = `${baseUrlPrefix.replace('localhost', '127.0.0.1')}/plain-text`
 
-        const url = '/plain-text'
-        const absUrl = `${baseUrlPrefix.replace('localhost', '127.0.0.1')}/plain-text`
-
-        return Promise.all([
-          expectRequest(request({url})).resolves.toHaveProperty('body', body),
-          expectRequest(request({url: absUrl})).resolves.toHaveProperty('body', proxyBody),
-        ])
-      })
+      return Promise.all([
+        expectRequest(request({url})).resolves.toHaveProperty('body', body),
+        expectRequest(request({url: absUrl})).resolves.toHaveProperty('body', proxyBody),
+      ])
     })
 
     it.runIf(isNode)('http: should support HTTP proxy auth', async () => {
       const request = getIt([baseUrl, debugRequest])
 
-      await getProxy().then(async (proxy) => {
-        proxyServer = proxy
-        const req = request({
-          url: '/plain-text',
-          proxy: {host: 'localhost', port: 4000, auth: {username: 'user', password: 'pass'}},
-        })
-        const res = await promiseRequest(req)
-        expect(res).toHaveProperty('headers')
-        expect(res.headers).toMatchObject({
-          'x-proxy-auth': 'Basic dXNlcjpwYXNz',
-        })
+      const req = request({
+        url: '/plain-text',
+        proxy: {host: 'localhost', port: 4000, auth: {username: 'user', password: 'pass'}},
+      })
+      const res = await promiseRequest(req)
+      expect(res).toHaveProperty('headers')
+      expect(res.headers).toMatchObject({
+        'x-proxy-auth': 'Basic dXNlcjpwYXNz',
       })
     })
 
-    it.runIf(isNode)('http: should support HTTP proxy auth from env', () => {
+    it.runIf(isNode)('http: should support HTTP proxy auth from env', async () => {
       process.env.http_proxy = 'http://user:pass@localhost:4000/'
 
       const request = getIt([baseUrl, debugRequest])
 
-      return getProxy().then(async (proxy) => {
-        proxyServer = proxy
-        const res = await promiseRequest(request({url: '/plain-text'}))
-        expect(res).toHaveProperty('headers')
-        expect(res.headers).toMatchObject({
-          'x-proxy-auth': 'Basic dXNlcjpwYXNz',
-        })
+      const res = await promiseRequest(request({url: '/plain-text'}))
+      expect(res).toHaveProperty('headers')
+      expect(res.headers).toMatchObject({
+        'x-proxy-auth': 'Basic dXNlcjpwYXNz',
       })
     })
 
-    it.runIf(isNode)('http: should use requested hostname as Host header', () => {
+    it.runIf(isNode)('http: should use requested hostname as Host header', async () => {
       process.env.http_proxy = 'http://localhost:4000/'
 
       const request = getIt([base(baseUrlPrefix.replace('localhost', '127.0.0.1')), debugRequest])
 
-      return getProxy().then(async (proxy) => {
-        proxyServer = proxy
-        const res = await promiseRequest(request({url: '/plain-text'}))
-        expect(res).toHaveProperty('headers')
-        expect(res.headers).toMatchObject({
-          'x-proxy-host': '127.0.0.1:9980',
-        })
+      const res = await promiseRequest(request({url: '/plain-text'}))
+      expect(res).toHaveProperty('headers')
+      expect(res.headers).toMatchObject({
+        'x-proxy-host': '127.0.0.1:9980',
       })
     })
 
@@ -161,11 +129,8 @@ describe(
         proxyMiddleware({host: 'localhost', port: 4000}),
       ])
 
-      return getProxy().then((proxy) => {
-        proxyServer = proxy
-        const req = request({url: '/plain-text'})
-        return expectRequest(req).resolves.toHaveProperty('body', body)
-      })
+      const req = request({url: '/plain-text'})
+      return expectRequest(req).resolves.toHaveProperty('body', body)
     })
 
     it.runIf(isNode)('http: proxy middleware with `false` disables env vars', () => {
@@ -174,22 +139,16 @@ describe(
       const body = 'Just some plain text for you to consume'
       const request = getIt([baseUrl, debugRequest, proxyMiddleware(false)])
 
-      return getProxy().then((proxy) => {
-        proxyServer = proxy
-        const req = request({url: '/plain-text'})
-        return expectRequest(req).resolves.toHaveProperty('body', body)
-      })
+      const req = request({url: '/plain-text'})
+      return expectRequest(req).resolves.toHaveProperty('body', body)
     })
 
     it.runIf(isNode)('http: per-request proxy options overrides proxy middleware', () => {
       const body = 'Just some plain text for you to consume + proxy'
       const request = getIt([baseUrl, debugRequest, proxyMiddleware(false)])
 
-      return getProxy().then((proxy) => {
-        proxyServer = proxy
-        const req = request({url: '/plain-text', proxy: {host: 'localhost', port: 4000}})
-        return expectRequest(req).resolves.toHaveProperty('body', body)
-      })
+      const req = request({url: '/plain-text', proxy: {host: 'localhost', port: 4000}})
+      return expectRequest(req).resolves.toHaveProperty('body', body)
     })
 
     // =============
@@ -199,14 +158,11 @@ describe(
       const body = 'Just some plain text for you to consume + proxy'
       const request = getIt([baseUrl, debugRequest])
 
-      return getProxy('https').then((proxy) => {
-        proxyServer = proxy
-        const req = request({
-          url: '/plain-text',
-          proxy: {host: 'localhost', port: 4443, protocol: 'https:'},
-        })
-        return expectRequest(req).resolves.toHaveProperty('body', body)
+      const req = request({
+        url: '/plain-text',
+        proxy: {host: 'localhost', port: 4443, protocol: 'https:'},
       })
+      return expectRequest(req).resolves.toHaveProperty('body', body)
     })
 
     it.runIf(isNode)('https: should support proxy set via env var (http request)', () => {
@@ -214,11 +170,8 @@ describe(
       const request = getIt([baseUrl, debugRequest])
 
       process.env.http_proxy = 'https://localhost:4443/'
-      return getProxy('https').then((proxy) => {
-        proxyServer = proxy
-        const req = request({url: '/plain-text'})
-        return expectRequest(req).resolves.toHaveProperty('body', body)
-      })
+      const req = request({url: '/plain-text'})
+      return expectRequest(req).resolves.toHaveProperty('body', body)
     })
 
     it.runIf(isNode)('https: should not pass through disabled proxy (http request)', () => {
@@ -227,11 +180,8 @@ describe(
       const body = 'Just some plain text for you to consume'
       const request = getIt([baseUrl, debugRequest])
 
-      return getProxy('https').then((proxy) => {
-        proxyServer = proxy
-        const req = request({url: '/plain-text', proxy: false})
-        return expectRequest(req).resolves.toHaveProperty('body', body)
-      })
+      const req = request({url: '/plain-text', proxy: false})
+      return expectRequest(req).resolves.toHaveProperty('body', body)
     })
 
     it.runIf(isNode)(
@@ -243,33 +193,27 @@ describe(
 
         process.env.http_proxy = 'https://localhost:4443/'
         process.env.no_proxy = 'foo.com, localhost,bar.net , , quix.co'
-        return getProxy('https').then((proxy) => {
-          proxyServer = proxy
 
-          const url = '/plain-text'
-          const absUrl = `${baseUrlPrefix.replace('localhost', '127.0.0.1')}/plain-text`
+        const url = '/plain-text'
+        const absUrl = `${baseUrlPrefix.replace('localhost', '127.0.0.1')}/plain-text`
 
-          return Promise.all([
-            expectRequest(request({url})).resolves.toHaveProperty('body', body),
-            expectRequest(request({url: absUrl})).resolves.toHaveProperty('body', proxyBody),
-          ])
-        })
+        return Promise.all([
+          expectRequest(request({url})).resolves.toHaveProperty('body', body),
+          expectRequest(request({url: absUrl})).resolves.toHaveProperty('body', proxyBody),
+        ])
       }
     )
 
-    it.runIf(isNode)('https: should support HTTP proxy auth from env (http request)', () => {
+    it.runIf(isNode)('https: should support HTTP proxy auth from env (http request)', async () => {
       process.env.http_proxy = 'https://user:pass@localhost:4443/'
 
       const request = getIt([baseUrl, debugRequest])
 
-      return getProxy('https').then(async (proxy) => {
-        proxyServer = proxy
-        const req = request({url: '/plain-text'})
-        const res = await promiseRequest(req)
-        expect(res).toHaveProperty('headers')
-        expect(res.headers).toMatchObject({
-          'x-proxy-auth': 'Basic dXNlcjpwYXNz',
-        })
+      const req = request({url: '/plain-text'})
+      const res = await promiseRequest(req)
+      expect(res).toHaveProperty('headers')
+      expect(res.headers).toMatchObject({
+        'x-proxy-auth': 'Basic dXNlcjpwYXNz',
       })
     })
 
@@ -280,17 +224,12 @@ describe(
         const request = getIt([baseUrlHttps, debugRequest])
 
         process.env.https_proxy = 'https://localhost:4443/'
-        return getProxy('https').then((proxy) => {
-          proxyServer = proxy
-          const req = request({url: '/plain-text', tunnel: false})
-          return expectRequest(req).resolves.toHaveProperty('body', body)
-        })
+        const req = request({url: '/plain-text', tunnel: false})
+        return expectRequest(req).resolves.toHaveProperty('body', body)
       }
     )
 
-    it.runIf(isNode)('https: should support proxy set via env var (https request / tunnel)', () => {
-      // @todo
-    })
+    it.todo('https: should support proxy set via env var (https request / tunnel)')
 
     it.runIf(isNode)('https: should not pass through disabled proxy (https request)', () => {
       process.env.https_proxy = 'http://does-not-exists.example.com:4242/'
@@ -298,11 +237,8 @@ describe(
       const body = 'Just some secure, plain text for you to consume'
       const request = getIt([baseUrlHttps, debugRequest])
 
-      return getProxy('https').then((proxy) => {
-        proxyServer = proxy
-        const req = request({url: '/plain-text', proxy: false})
-        return expectRequest(req).resolves.toHaveProperty('body', body)
-      })
+      const req = request({url: '/plain-text', proxy: false})
+      return expectRequest(req).resolves.toHaveProperty('body', body)
     })
 
     it.runIf(isNode)(
@@ -314,65 +250,53 @@ describe(
 
         process.env.https_proxy = 'https://localhost:4443/'
         process.env.no_proxy = 'foo.com, localhost,bar.net , , quix.co'
-        return getProxy('https').then((proxy) => {
-          proxyServer = proxy
+        const tunnel = false
+        const url = '/plain-text'
+        const abUrl = `${baseUrlPrefixHttps.replace('localhost', '127.0.0.1')}/plain-text`
 
-          const tunnel = false
-          const url = '/plain-text'
-          const abUrl = `${baseUrlPrefixHttps.replace('localhost', '127.0.0.1')}/plain-text`
-
-          return Promise.all([
-            expectRequest(request({url, tunnel})).resolves.toHaveProperty('body', body),
-            expectRequest(request({url: abUrl, tunnel})).resolves.toHaveProperty('body', proxyBody),
-          ])
-        })
+        return Promise.all([
+          expectRequest(request({url, tunnel})).resolves.toHaveProperty('body', body),
+          expectRequest(request({url: abUrl, tunnel})).resolves.toHaveProperty('body', proxyBody),
+        ])
       }
     )
 
-    it.runIf(isNode)('https: should proxy domains not in no_proxy (https request / tunnel)', () => {
-      // @todo
-    })
+    it.todo('https: should proxy domains not in no_proxy (https request / tunnel)')
 
     it.runIf(isNode)(
       'https: should support HTTP proxy auth from env (https request / no tunnel)',
-      () => {
+      async () => {
         process.env.https_proxy = 'https://user:pass@localhost:4443/'
 
         const request = getIt([baseUrlHttps, debugRequest])
 
-        return getProxy('https').then(async (proxy) => {
-          proxyServer = proxy
-          const req = request({url: '/plain-text', tunnel: false})
-          const res = await promiseRequest(req)
-          expect(res).toHaveProperty('headers')
-          expect(res.headers).toMatchObject({
-            'x-proxy-auth': 'Basic dXNlcjpwYXNz',
-          })
+        const req = request({url: '/plain-text', tunnel: false})
+        const res = await promiseRequest(req)
+        expect(res).toHaveProperty('headers')
+        expect(res.headers).toMatchObject({
+          'x-proxy-auth': 'Basic dXNlcjpwYXNz',
         })
       }
     )
 
     it.todo('https: should support HTTP proxy auth from env (https request / tunnel)')
 
-    it.runIf(isNode)('https: should support HTTP proxy auth', () => {
+    it.runIf(isNode)('https: should support HTTP proxy auth', async () => {
       const request = getIt([baseUrl, debugRequest])
 
-      return getProxy('https').then(async (proxy) => {
-        proxyServer = proxy
-        const req = request({
-          url: '/plain-text',
-          proxy: {
-            host: 'localhost',
-            port: 4443,
-            protocol: 'https:',
-            auth: {username: 'user', password: 'pass'},
-          },
-        })
-        const res = await promiseRequest(req)
-        expect(res).toHaveProperty('headers')
-        expect(res.headers).toMatchObject({
-          'x-proxy-auth': 'Basic dXNlcjpwYXNz',
-        })
+      const req = request({
+        url: '/plain-text',
+        proxy: {
+          host: 'localhost',
+          port: 4443,
+          protocol: 'https:',
+          auth: {username: 'user', password: 'pass'},
+        },
+      })
+      const res = await promiseRequest(req)
+      expect(res).toHaveProperty('headers')
+      expect(res.headers).toMatchObject({
+        'x-proxy-auth': 'Basic dXNlcjpwYXNz',
       })
     })
 
@@ -384,11 +308,8 @@ describe(
         proxyMiddleware({host: 'localhost', port: 4443, protocol: 'https:'}),
       ])
 
-      return getProxy('https').then((proxy) => {
-        proxyServer = proxy
-        const req = request({url: '/plain-text'})
-        return expectRequest(req).resolves.toHaveProperty('body', body)
-      })
+      const req = request({url: '/plain-text'})
+      return expectRequest(req).resolves.toHaveProperty('body', body)
     })
 
     it.runIf(isNode)(
@@ -399,11 +320,8 @@ describe(
         const body = 'Just some plain text for you to consume'
         const request = getIt([baseUrl, debugRequest, proxyMiddleware(false)])
 
-        return getProxy('https').then((proxy) => {
-          proxyServer = proxy
-          const req = request({url: '/plain-text'})
-          return expectRequest(req).resolves.toHaveProperty('body', body)
-        })
+        const req = request({url: '/plain-text'})
+        return expectRequest(req).resolves.toHaveProperty('body', body)
       }
     )
 
@@ -411,14 +329,11 @@ describe(
       const body = 'Just some plain text for you to consume + proxy'
       const request = getIt([baseUrl, debugRequest, proxyMiddleware(false)])
 
-      return getProxy('https').then((proxy) => {
-        proxyServer = proxy
-        const req = request({
-          url: '/plain-text',
-          proxy: {host: 'localhost', port: 4443, protocol: 'https:'},
-        })
-        return expectRequest(req).resolves.toHaveProperty('body', body)
+      const req = request({
+        url: '/plain-text',
+        proxy: {host: 'localhost', port: 4443, protocol: 'https:'},
       })
+      return expectRequest(req).resolves.toHaveProperty('body', body)
     })
   },
   {timeout: 15000}
