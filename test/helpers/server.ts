@@ -11,7 +11,7 @@ import debugRequest from './debugRequest'
 
 const httpsServerOptions: https.ServerOptions = {
   key: fs.readFileSync(path.join(__dirname, '..', 'certs', 'server', 'key.pem')),
-  cert: fs.readFileSync(path.join(__dirname, '..', 'certs', 'server', 'certificate.pem')),
+  cert: fs.readFileSync(path.join(__dirname, '..', 'certs', 'server', 'cert.pem')),
 }
 
 const createError = (code: any, msg?: string) => {

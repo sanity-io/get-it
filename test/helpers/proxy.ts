@@ -6,24 +6,24 @@ import url from 'url'
 
 const httpsServerOptions = {
   key: fs.readFileSync(path.join(__dirname, '..', 'certs', 'server', 'key.pem')),
-  cert: fs.readFileSync(path.join(__dirname, '..', 'certs', 'server', 'certificate.pem')),
+  cert: fs.readFileSync(path.join(__dirname, '..', 'certs', 'server', 'cert.pem')),
 }
 
 const httpPort = 4000
 const httpsPort = 4443
 
-export default (proto = 'http', serverOpts = {}) =>
-  new Promise((resolve, reject) => {
+export function createProxyServer(proto: 'http' | 'https' = 'http') {
+  return new Promise<http.Server | https.Server>((resolve, reject) => {
     const isHttp = proto === 'http'
-    const protoOpts = isHttp ? {} : httpsServerOptions
     const protoPort = isHttp ? httpPort : httpsPort
-    const options = Object.assign({}, protoOpts, serverOpts)
+    const protoOpts = isHttp ? {} : httpsServerOptions
     const requestHandler = (request, response) => {
       const parsed = url.parse(request.url)
       const opts = {
         host: parsed.hostname,
         port: parsed.port,
         path: parsed.path,
+        rejectUnauthorized: false,
       }
 
       const transport = parsed.protocol === 'https:' ? https : http
@@ -42,7 +42,8 @@ export default (proto = 'http', serverOpts = {}) =>
     }
     const server = isHttp
       ? http.createServer(requestHandler)
-      : https.createServer(options, requestHandler)
+      : https.createServer(protoOpts, requestHandler)
     server.on('error', reject)
     server.listen(protoPort, () => resolve(server))
   })
+}

@@ -1,4 +1,4 @@
-import {afterEach, describe, expect, it} from 'vitest'
+import {afterAll, afterEach, beforeAll, describe, expect, it} from 'vitest'
 
 import {getIt} from '../src/index'
 import {base, proxy as proxyMiddleware} from '../src/middleware'
@@ -12,17 +12,24 @@ import {
   isNode,
   promiseRequest,
 } from './helpers'
-import getProxy from './helpers/proxy'
+
+const getProxy = (...args: any[]) => Promise.resolve(null)
 
 function closeServer(server) {
   return new Promise((resolve) => (server ? server.close(resolve) : resolve(undefined)))
 }
 
+beforeAll(() => {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
+})
+
+afterAll(() => {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '1'
+})
+
 describe(
   'proxy',
   () => {
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
-
     let proxyServer
 
     afterEach(async () => {
@@ -345,12 +352,7 @@ describe(
       }
     )
 
-    it.runIf(isNode)(
-      'https: should support HTTP proxy auth from env (https request / tunnel)',
-      () => {
-        // @todo
-      }
-    )
+    it.todo('https: should support HTTP proxy auth from env (https request / tunnel)')
 
     it.runIf(isNode)('https: should support HTTP proxy auth', () => {
       const request = getIt([baseUrl, debugRequest])

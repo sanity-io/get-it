@@ -7,7 +7,7 @@ import {base, mtls} from '../src/middleware'
 import {expectRequestBody, isNode} from './helpers'
 import getMtls from './helpers/mtls'
 
-const port = 4443
+const port = 4444
 const baseUrl = `https://localhost:${port}/req-test`
 const describeOrSkip = process.env.SKIP_MTLS_TEST === 'true' ? describe.skip : describe
 
@@ -35,9 +35,11 @@ describeOrSkip('mtls middleware', () => {
       base(baseUrl),
       mtls({
         ca: fs.readFileSync(path.join(__dirname, 'certs', 'mtls', 'ca.pem')).toString(),
-        key: fs.readFileSync(path.join(__dirname, 'certs', 'client', 'client_key.pem')).toString(),
+        key: fs
+          .readFileSync(path.join(__dirname, 'certs', 'invalid-mtls', 'client.key'))
+          .toString(),
         cert: fs
-          .readFileSync(path.join(__dirname, 'certs', 'client', 'client_cert.crt'))
+          .readFileSync(path.join(__dirname, 'certs', 'invalid-mtls', 'client.pem'))
           .toString(),
       }),
     ])
