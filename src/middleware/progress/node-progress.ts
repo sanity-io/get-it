@@ -1,4 +1,5 @@
 import progressStream from 'progress-stream'
+import type {MiddlewareHooks} from '../../types'
 
 function normalizer(stage: any) {
   return (prog: any) => ({
@@ -11,7 +12,7 @@ function normalizer(stage: any) {
 }
 
 /** @public */
-export function progress() {
+export const progress = () => {
   return {
     onHeaders: (response: any, evt: any) => {
       const _progress = progressStream({time: 16})
@@ -39,5 +40,5 @@ export function progress() {
         evt.context.channels.progress.publish(normalize(prog))
       )
     },
-  }
+  } satisfies MiddlewareHooks
 }

@@ -1,5 +1,6 @@
 import {isPlainObject} from 'is-plain-object'
 
+import {MiddlewareHooks} from '../types'
 import {isBuffer} from '../util/isBuffer'
 
 function encode(data: Record<string, string | Set<number | string>>): string {
@@ -32,9 +33,9 @@ function encode(data: Record<string, string | Set<number | string>>): string {
 }
 
 /** @public */
-export function urlEncoded(): any {
-  return {
-    processOptions: (options: any) => {
+export const urlEncoded = () =>
+  ({
+    processOptions: (options) => {
       const body = options.body
       if (!body) {
         return options
@@ -56,5 +57,4 @@ export function urlEncoded(): any {
         },
       }
     },
-  }
-}
+  } satisfies MiddlewareHooks)

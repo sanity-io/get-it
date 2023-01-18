@@ -1,3 +1,4 @@
+import type {Context, MiddlewareHooks, RequestChannels} from '../types'
 import global from '../util/global'
 
 /** @public */
@@ -10,13 +11,13 @@ export function observable(opts: any = {}) {
   }
 
   return {
-    onReturn: (channels: any, context: any) =>
-      new Observable((observer: any) => {
-        channels.error.subscribe((err: any) => observer.error(err))
-        channels.progress.subscribe((event: any) =>
+    onReturn: (channels: RequestChannels, context: Context) =>
+      new Observable((observer) => {
+        channels.error.subscribe((err) => observer.error(err))
+        channels.progress.subscribe((event) =>
           observer.next(Object.assign({type: 'progress'}, event))
         )
-        channels.response.subscribe((response: any) => {
+        channels.response.subscribe((response) => {
           observer.next(Object.assign({type: 'response'}, response))
           observer.complete()
         })
@@ -24,5 +25,5 @@ export function observable(opts: any = {}) {
         channels.request.publish(context)
         return () => channels.abort.publish()
       }),
-  }
+  } satisfies MiddlewareHooks
 }

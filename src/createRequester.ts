@@ -1,10 +1,20 @@
 import {processOptions} from './middleware/defaultOptionsProcessor'
 import {validateOptions} from './middleware/defaultOptionsValidator'
-import type {HttpRequest, Middleware, Middlewares, Requester} from './types'
-import middlewareReducer from './util/middlewareReducer'
-import pubsub from './util/pubsub'
+import type {
+  Context,
+  ErrorType,
+  HttpRequest,
+  Middleware,
+  MiddlewareReducer,
+  Middlewares,
+  RequestChannels,
+  Requester,
+  Response,
+} from './types'
+import {middlewareReducer} from './util/middlewareReducer'
+import pubsub, {PubSub} from './util/pubsub'
 
-const channelNames = ['request', 'response', 'progress', 'error', 'abort']
+const channelNames = ['request', 'response', 'progress', 'error', 'abort'] as const
 const middlehooks = [
   'processOptions',
   'validateOptions',
@@ -15,27 +25,28 @@ const middlehooks = [
   'onError',
   'onReturn',
   'onHeaders',
-]
+] as const
 
 /** @public */
 export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRequest): Requester {
-  const loadedMiddleware: any[] = []
-  const middleware = middlehooks.reduce(
-    (ware: any, name: any) => {
-      ware[name] = ware[name] || []
-      return ware
-    },
+  const loadedMiddleware: Middlewares = []
+  const middleware: MiddlewareReducer = middlehooks.reduce(
+    (ware, name) => ({[name]: [], ...ware}),
     {
       processOptions: [processOptions],
       validateOptions: [validateOptions],
-    }
+      // It's ok to use `any` here because `MiddlewareReducer` defines the type and ensures it's used correctly later on
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as Record<(typeof middlehooks)[number], any[]>
   )
 
-  function request(opts: any) {
-    const channels = channelNames.reduce((target: any, name: any): any => {
+  const request: Requester = (opts) => {
+    const channels: RequestChannels = channelNames.reduce((target, name) => {
       target[name] = pubsub()
       return target
-    }, {})
+      // It's ok to use `any` here because `RequestChannels` defines the type and ensures it's used correctly later on
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    }, {} as Record<(typeof channelNames)[number], PubSub<any>>)
 
     // Prepare a middleware reducer that can be reused throughout the lifecycle
     const applyMiddleware = middlewareReducer(middleware)
@@ -47,15 +58,15 @@ export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRe
     applyMiddleware('validateOptions', options)
 
     // Build a context object we can pass to child handlers
-    const context = {options, channels, applyMiddleware}
+    const context: Context = {options, channels, applyMiddleware}
 
     // We need to hold a reference to the current, ongoing request,
     // in order to allow cancellation. In the case of the retry middleware,
     // a new request might be triggered
-    let ongoingRequest: any = null
-    const unsubscribe = channels.request.subscribe((ctx: any) => {
+    let ongoingRequest = null
+    const unsubscribe = channels.request.subscribe((ctx) => {
       // Let request adapters (node/browser) perform the actual request
-      ongoingRequest = httpRequest(ctx, (err: any, res: any) => onResponse(err, res, ctx))
+      ongoingRequest = httpRequest(ctx, (err, res) => onResponse(err, res, ctx))
     })
 
     // If we abort the request, prevent further requests from happening,
@@ -80,9 +91,9 @@ export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRe
 
     return returnValue
 
-    function onResponse(reqErr: any, res: any, ctx: any) {
+    function onResponse(reqErr: ErrorType, res: Response, ctx: Context) {
       let error = reqErr
-      let response = res
+      let response: Response | null = res
 
       // We're processing non-errors first, in case a middleware converts the
       // response into an error (for instance, status >= 400 == HttpError)
@@ -108,7 +119,7 @@ export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRe
     }
   }
 
-  request.use = function use(newMiddleware: Middleware) {
+  request.use = (newMiddleware: Middleware) => {
     if (!newMiddleware) {
       throw new Error('Tried to add middleware that resolved to falsey value')
     }
@@ -135,9 +146,7 @@ export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRe
     return request
   }
 
-  request.clone = function clone() {
-    return createRequester(loadedMiddleware, httpRequest)
-  }
+  request.clone = () => createRequester(loadedMiddleware, httpRequest)
 
   initMiddleware.forEach(request.use)
 

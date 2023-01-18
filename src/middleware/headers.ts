@@ -1,3 +1,5 @@
+import type {MiddlewareHooks} from '../types'
+
 /** @public */
 export function headers(_headers: any, opts: any = {}): any {
   return {
@@ -9,5 +11,5 @@ export function headers(_headers: any, opts: any = {}): any {
 
       return options
     },
-  }
+  } satisfies MiddlewareHooks
 }

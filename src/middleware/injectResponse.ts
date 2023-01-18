@@ -1,5 +1,7 @@
+import type {MiddlewareHooks} from '../types'
+
 /** @public */
-export function injectResponse(opts: any = {}) {
+export const injectResponse = (opts: any = {}) => {
   if (typeof opts.inject !== 'function') {
     throw new Error('`injectResponse` middleware requires a `inject` function')
   }
@@ -26,5 +28,5 @@ export function injectResponse(opts: any = {}) {
     )
   }
 
-  return {interceptRequest: inject}
+  return {interceptRequest: inject} satisfies MiddlewareHooks
 }

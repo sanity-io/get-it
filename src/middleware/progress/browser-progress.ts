@@ -1,4 +1,6 @@
-export function progress() {
+import type {MiddlewareHooks} from '../../types'
+
+export const progress = () => {
   return {
     onRequest: (evt: any) => {
       if (evt.adapter !== 'xhr') {
@@ -29,5 +31,5 @@ export function progress() {
         }
       }
     },
-  }
+  } satisfies MiddlewareHooks
 }

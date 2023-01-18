@@ -1,4 +1,5 @@
-let actualGlobal: typeof globalThis
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let actualGlobal: any
 
 if (typeof globalThis !== 'undefined') {
   actualGlobal = globalThis
@@ -9,7 +10,7 @@ if (typeof globalThis !== 'undefined') {
 } else if (typeof self !== 'undefined') {
   actualGlobal = self
 } else {
-  actualGlobal = {} as any
+  actualGlobal = {}
 }
 
 export default actualGlobal

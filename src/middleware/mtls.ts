@@ -1,5 +1,7 @@
+import type {MiddlewareHooks} from '../types'
+
 /** @public */
-export function mtls(config: any = {}) {
+export const mtls = (config: any = {}) => {
   if (!config.ca) {
     throw new Error('Required mtls option "ca" is missing')
   }
@@ -19,5 +21,5 @@ export function mtls(config: any = {}) {
       }
       return Object.assign({}, options, mtlsOpts)
     },
-  }
+  } satisfies MiddlewareHooks
 }

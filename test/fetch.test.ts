@@ -1,55 +1,50 @@
-import fetch from 'node-fetch'
-import {afterEach, beforeEach, describe, expect, it} from 'vitest'
+import {describe, expect, it} from 'vitest'
 
-import {getIt} from '../src/index'
-import {jsonRequest, jsonResponse} from '../src/middleware'
-import browserRequest from '../src/request/browser-request'
-import {baseUrl, expectRequest, expectRequestBody, isNode, promiseRequest} from './helpers'
+import {httpRequester} from '../src/request/browser-request'
+import {
+  baseUrl,
+  expectRequest,
+  expectRequestBody,
+  getIt,
+  middleware,
+  promiseRequest,
+} from './helpers'
+const {jsonRequest, jsonResponse} = middleware
 
-const originalFetch = global.fetch
-
-describe.runIf(isNode)(
+describe.runIf(typeof fetch !== 'undefined')(
   'fetch',
   () => {
-    beforeEach(() => {
-      global.fetch = fetch
-    })
-
-    afterEach(() => {
-      global.fetch = originalFetch
-    })
-
     it('can use browser request with fetch polyfill', () => {
-      getIt([baseUrl], browserRequest)
+      getIt([baseUrl], httpRequester)
     })
 
     it('should be able to read plain text response', async () => {
       const body = 'Just some plain text for you to consume'
-      const request = getIt([baseUrl], browserRequest)
+      const request = getIt([baseUrl], httpRequester)
       const req = request('/plain-text')
       await expectRequest(req).resolves.toHaveProperty('body', body)
     })
 
     it('should be able to post a Buffer as body', async () => {
-      const request = getIt([baseUrl], browserRequest)
+      const request = getIt([baseUrl], httpRequester)
       const req = request({url: '/echo', body: Buffer.from('Foo bar')})
       await expectRequestBody(req).resolves.toEqual('Foo bar')
     })
 
     it('should be able to post a string as body', async () => {
-      const request = getIt([baseUrl], browserRequest)
+      const request = getIt([baseUrl], httpRequester)
       const req = request({url: '/echo', body: 'Does this work?'})
       await expectRequestBody(req).resolves.toEqual('Does this work?')
     })
 
     it('should be able to use JSON request middleware', async () => {
-      const request = getIt([baseUrl, jsonRequest()], browserRequest)
+      const request = getIt([baseUrl, jsonRequest()], httpRequester)
       const req = request({url: '/echo', body: {foo: 'bar'}})
       await expectRequestBody(req).resolves.toEqual('{"foo":"bar"}')
     })
 
     it('should be able to set http headers', async () => {
-      const request = getIt([baseUrl, jsonResponse()], browserRequest)
+      const request = getIt([baseUrl, jsonResponse()], httpRequester)
       const req = request({url: '/debug', headers: {'X-My-Awesome-Header': 'forsure'}})
 
       const body = await promiseRequest(req).then((res) => res.body)
@@ -58,7 +53,7 @@ describe.runIf(isNode)(
     })
 
     it('should return the response headers', async () => {
-      const request = getIt([baseUrl], browserRequest)
+      const request = getIt([baseUrl], httpRequester)
       const req = request({url: '/headers'})
       const res = await promiseRequest(req)
       expect(res).toHaveProperty('headers')
@@ -70,7 +65,7 @@ describe.runIf(isNode)(
 
     it('should be able to abort requests', () =>
       new Promise((resolve, reject) => {
-        const request = getIt([baseUrl], browserRequest)
+        const request = getIt([baseUrl], httpRequester)
         const req = request({url: '/delay'})
 
         req.error.subscribe((err) =>
@@ -87,14 +82,14 @@ describe.runIf(isNode)(
       }))
 
     it('should be able to get arraybuffer back', async () => {
-      const request = getIt([baseUrl], browserRequest)
+      const request = getIt([baseUrl], httpRequester)
       const req = request({url: '/plain-text', rawBody: true})
       await expectRequestBody(req).resolves.toBeInstanceOf(ArrayBuffer)
     })
 
     it('should emit errors on error channel', () =>
       new Promise((resolve) => {
-        const request = getIt([baseUrl], browserRequest)
+        const request = getIt([baseUrl], httpRequester)
         const req = request({url: '/permafail'})
         req.response.subscribe(() => {
           throw new Error('Response channel called when error channel should have been triggered')

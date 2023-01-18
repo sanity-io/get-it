@@ -1,3 +1,5 @@
+import type {MiddlewareHooks} from '../types'
+
 class HttpError extends Error {
   response: any
   request: any
@@ -24,5 +26,5 @@ export function httpErrors() {
 
       throw new HttpError(res, ctx)
     },
-  }
+  } satisfies MiddlewareHooks
 }

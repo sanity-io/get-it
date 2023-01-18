@@ -1,15 +1,15 @@
+import type {ProcessedRequestOptions, RequestOptions} from '../types'
+
 const isReactNative = typeof navigator === 'undefined' ? false : navigator.product === 'ReactNative'
 
-const defaultOptions = {timeout: isReactNative ? 60000 : 120000}
+const defaultOptions = {timeout: isReactNative ? 60000 : 120000} as const
 
 /** @public */
-export function processOptions(opts: any): any {
+export function processOptions(opts: RequestOptions): ProcessedRequestOptions {
   const options =
-    typeof opts === 'string'
-      ? Object.assign({url: opts}, defaultOptions)
-      : Object.assign({}, defaultOptions, opts)
+    typeof opts === 'string' ? {url: opts, ...defaultOptions} : {...defaultOptions, ...opts}
 
-  // Allow parsing relativ URLs by setting the origin
+  // Allow parsing relative URLs by setting the origin
   const url = new URL(options.url, 'http://localhost')
 
   // Normalize timeouts
@@ -31,22 +31,28 @@ export function processOptions(opts: any): any {
   }
 
   // Implicit POST if we have not specified a method but have a body
-  options.method =
-    options.body && !options.method ? 'POST' : (options.method || 'GET').toUpperCase()
+  options.method = options.body && !options.method ? 'POST' : options.method?.toUpperCase() || 'GET'
 
   // Stringify URL
   options.url =
     url.origin === 'http://localhost' ? `${url.pathname}?${url.searchParams}` : url.toString()
 
-  return options
+  return options as ProcessedRequestOptions
 }
 
-function normalizeTimeout(time: any): any {
+function normalizeTimeout(time: false | 0): false
+function normalizeTimeout(time: {connect: number; socket: number} | number | boolean): {
+  connect: number
+  socket: number
+}
+function normalizeTimeout(
+  time: boolean | number | {connect: number; socket: number}
+): false | {connect: number; socket: number} {
   if (time === false || time === 0) {
     return false
   }
 
-  if (time.connect || time.socket) {
+  if (typeof time === 'object' && 'connect' in time && 'socket' in time) {
     return time
   }
 

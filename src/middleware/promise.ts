@@ -1,23 +1,25 @@
+import type {Context, ErrorType, MiddlewareHooks, RequestChannels} from '../types'
+
 /** @public */
-export const promise = (options: any = {}) => {
+export const promise = (options: {implementation?: PromiseConstructor} = {}) => {
   const PromiseImplementation = options.implementation || Promise
   if (!PromiseImplementation) {
     throw new Error('`Promise` is not available in global scope, and no implementation was passed')
   }
 
   return {
-    onReturn: (channels: any, context: any) =>
-      new PromiseImplementation((resolve: any, reject: any) => {
+    onReturn: (channels: RequestChannels, context: Context) =>
+      new PromiseImplementation((resolve, reject) => {
         const cancel = context.options.cancelToken
         if (cancel) {
-          cancel.promise.then((reason: any) => {
+          cancel.promise.then((reason: ErrorType) => {
             channels.abort.publish(reason)
             reject(reason)
           })
         }
 
         channels.error.subscribe(reject)
-        channels.response.subscribe((response: any) => {
+        channels.response.subscribe((response) => {
           resolve(options.onlyBody ? response.body : response)
         })
 
@@ -30,7 +32,7 @@ export const promise = (options: any = {}) => {
           }
         }, 0)
       }),
-  }
+  } satisfies MiddlewareHooks
 }
 
 /**

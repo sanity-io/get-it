@@ -1,5 +1,5 @@
 import {createRequester} from './createRequester'
-import httpRequester from './request/browser-request'
+import {httpRequester} from './request/browser-request'
 import type {HttpRequest, Middlewares, Requester} from './types'
 
 export * from './types'

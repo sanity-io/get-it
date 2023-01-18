@@ -1,4 +1,4 @@
-import type {RetryOptions} from '../../types'
+import type {Context, ErrorType, RetryOptions} from '../../types'
 
 const isStream = (stream: any) =>
   stream !== null && typeof stream === 'object' && typeof stream.pipe === 'function'
@@ -10,7 +10,7 @@ export default (opts: RetryOptions): any => {
   const allowRetry = opts.shouldRetry
 
   return {
-    onError: (err: any, context: any) => {
+    onError: (err: ErrorType, context: Context) => {
       const options = context.options
       const max = options.maxRetries || maxRetries
       const shouldRetry = options.shouldRetry || allowRetry
