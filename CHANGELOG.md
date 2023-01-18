@@ -5,6 +5,13 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.0.7](https://github.com/sanity-io/get-it/compare/v8.0.6...v8.0.7) (2023-01-18)
+
+### Bug Fixes
+
+- replace `create-error-class` with native `Error` ([3056ed1](https://github.com/sanity-io/get-it/commit/3056ed1e9cd73f1f209ed7e7cf6c0350c94c859e))
+- replace `form-urlencoded` with native APIs ([d56750c](https://github.com/sanity-io/get-it/commit/d56750c39dc26cee19fcd507c3416bf6c74aa3a2))
+
 ## [8.0.6](https://github.com/sanity-io/get-it/compare/v8.0.5...v8.0.6) (2023-01-14)
 
 ### Bug Fixes
