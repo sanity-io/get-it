@@ -3,9 +3,9 @@ import {describe, it} from 'vitest'
 
 import {getIt} from '../src/index'
 import {jsonResponse, urlEncoded} from '../src/middleware'
-import {baseUrl, debugRequest, expectRequestBody, isEdge, isNode} from './helpers'
+import {baseUrl, debugRequest, expectRequestBody, isNode} from './helpers'
 
-describe.skipIf(isEdge)('urlEncoded middleware', () => {
+describe('urlEncoded middleware', () => {
   it('should be able to send urlencoded data to an endpoint and get JSON back', () => {
     const request = getIt([baseUrl, urlEncoded(), jsonResponse(), debugRequest])
     const body = {randomValue: Date.now(), someThing: 'spaces & commas - all sorts!'}
@@ -32,6 +32,30 @@ describe.skipIf(isEdge)('urlEncoded middleware', () => {
       'foo[1]': 'bar',
       'foo[2]': 'baz',
     })
+  })
+
+  it('should serialize complex objects', () => {
+    const request = getIt([baseUrl, urlEncoded(), jsonResponse(), debugRequest])
+    const body = {
+      str: 'val',
+      num: 0,
+      arr: [3, {prop: false}, 1, null, 6],
+      obj: {prop1: null, prop2: ['elem']},
+    }
+    const req = request({url: '/urlencoded', method: 'PUT', body})
+    return expectRequestBody(req).resolves.toMatchInlineSnapshot(`
+      {
+        "arr[0]": "3",
+        "arr[1][prop]": "false",
+        "arr[2]": "1",
+        "arr[3]": "null",
+        "arr[4]": "6",
+        "num": "0",
+        "obj[prop1]": "null",
+        "obj[prop2][0]": "elem",
+        "str": "val",
+      }
+    `)
   })
 
   it.runIf(isNode)('should not serialize buffers', () => {
