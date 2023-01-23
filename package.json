@@ -77,7 +77,8 @@
   },
   "files": [
     "dist",
-    "src"
+    "src",
+    "middleware.js"
   ],
   "scripts": {
     "build": "npm run clean && pkg build --strict && pkg --strict",
