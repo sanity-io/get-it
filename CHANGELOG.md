@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.0.8](https://github.com/sanity-io/get-it/compare/v8.0.7...v8.0.8) (2023-01-23)
+
+### Bug Fixes
+
+- improve legacy ESM support ([d622f1c](https://github.com/sanity-io/get-it/commit/d622f1c10de588a08e62ab4326aca396f89323bb))
+
 ## [8.0.7](https://github.com/sanity-io/get-it/compare/v8.0.6...v8.0.7) (2023-01-18)
 
 ### Bug Fixes
