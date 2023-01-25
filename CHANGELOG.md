@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.0.9](https://github.com/sanity-io/get-it/compare/v8.0.8...v8.0.9) (2023-01-25)
+
+### Bug Fixes
+
+- use commonjs for legacy middleware export ([#78](https://github.com/sanity-io/get-it/issues/78)) ([1d7c50a](https://github.com/sanity-io/get-it/commit/1d7c50acb4df647cb621936a383d3d76d021372a))
+
 ## [8.0.8](https://github.com/sanity-io/get-it/compare/v8.0.7...v8.0.8) (2023-01-23)
 
 ### Bug Fixes
