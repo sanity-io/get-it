@@ -118,7 +118,7 @@
     "@types/progress-stream": "^2.0.2",
     "@typescript-eslint/eslint-plugin": "^5.52.0",
     "@typescript-eslint/parser": "^5.52.0",
-    "@vitest/coverage-c8": "^0.28.5",
+    "@vitest/coverage-c8": "^0.29.2",
     "eslint": "^8.34.0",
     "eslint-config-prettier": "^8.6.0",
     "eslint-plugin-prettier": "^4.2.1",
@@ -133,7 +133,7 @@
     "rimraf": "^4.1.2",
     "typescript": "^4.9.5",
     "vite": "^4.1.1",
-    "vitest": "^0.28.5",
+    "vitest": "^0.29.2",
     "vitest-github-actions-reporter": "^0.9.0",
     "zen-observable": "^0.10.0"
   },
