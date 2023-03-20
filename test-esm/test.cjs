@@ -16,10 +16,8 @@ test('top-level imports', async (t) => {
     const middleware = require('get-it/middleware')
     assert.equal(typeof middleware, 'object')
   })
-})
 
-test('commonly used imports', async (t) => {
-  await t.test('named middleware imports', (t) => {
+  await t.test('commonly used imports', async (t) => {
     const {jsonRequest, jsonResponse, httpErrors, headers, promise} = require('get-it/middleware')
     assert.equal(typeof jsonRequest, 'function')
     assert.equal(typeof jsonResponse, 'function')
