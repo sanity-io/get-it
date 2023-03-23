@@ -1,6 +1,6 @@
+import {getIt} from 'get-it'
 import {describe, expect, it} from 'vitest'
 
-import {getIt} from '../src/index'
 import {baseUrl, debugRequest} from './helpers'
 
 describe(
@@ -14,7 +14,7 @@ describe(
         const req = request({url: 'http://192.0.2.1/', timeout: 250})
 
         req.response.subscribe(() => reject(new Error('response channel should not be called')))
-        req.error.subscribe((err) => {
+        req.error.subscribe((err: any) => {
           expect(err.message).to.match(/timed out/i)
           resolve(undefined)
         })
@@ -28,23 +28,26 @@ describe(
 
         req.response.subscribe(() => reject(new Error('response channel should not be called')))
         req.error.subscribe(() => {
-          expect(Date.now() - startTime).to.be.above(250)
+          expect(Date.now() - startTime).toBeGreaterThanOrEqual(250)
           resolve(undefined)
         })
       }))
 
-    it.skip('should be able to set socket timeout', () =>
-      new Promise((resolve, reject) => {
-        const request = getIt([baseUrl, debugRequest])
-        const req = request({url: '/stall-after-initial', timeout: {socket: 500, connect: 250}})
+    it.todo(
+      'should be able to set socket timeout',
+      () =>
+        new Promise((resolve, reject) => {
+          const request = getIt([baseUrl, debugRequest])
+          const req = request({url: '/stall-after-initial', timeout: {socket: 500, connect: 250}})
 
-        req.response.subscribe(() => reject(new Error('response channel should not be called')))
-        req.error.subscribe((err) => {
-          expect(err.message).to.match(/socket timed out/i)
-          expect(err.code).to.equal('ESOCKETTIMEDOUT')
-          resolve(undefined)
+          req.response.subscribe(() => reject(new Error('response channel should not be called')))
+          req.error.subscribe((err: any) => {
+            expect(err.message).to.match(/socket timed out/i)
+            expect(err.code).to.equal('ESOCKETTIMEDOUT')
+            resolve(undefined)
+          })
         })
-      }))
+    )
   },
   {timeout: 10000}
 )

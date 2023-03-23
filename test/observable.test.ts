@@ -1,8 +1,8 @@
+import {getIt} from 'get-it'
+import {httpErrors, observable} from 'get-it/middleware'
 import {describe, expect, it} from 'vitest'
 import zenObservable from 'zen-observable'
 
-import {getIt} from '../src/index'
-import {httpErrors, observable} from '../src/middleware'
 import {baseUrl} from './helpers'
 
 describe('observable middleware', () => {
@@ -12,8 +12,8 @@ describe('observable middleware', () => {
     new Promise((resolve) => {
       const request = getIt([baseUrl, observable({implementation})])
       request({url: '/plain-text'})
-        .filter((ev) => ev.type === 'response')
-        .subscribe((res) => {
+        .filter((ev: any) => ev.type === 'response')
+        .subscribe((res: any) => {
           expect(res).to.containSubset({
             body: 'Just some plain text for you to consume',
             method: 'GET',
@@ -29,7 +29,7 @@ describe('observable middleware', () => {
       const request = getIt([baseUrl, httpErrors(), observable({implementation})])
       request({url: '/status?code=500'}).subscribe({
         next: () => reject(new Error('next() called when error() should have been')),
-        error: (err) => {
+        error: (err: any) => {
           expect(err.message).to.match(/HTTP 500/i)
           resolve(undefined)
         },
@@ -49,7 +49,7 @@ describe('observable middleware', () => {
       const request = getIt([baseUrl, observable({implementation})])
       const subscriber = request({url: '/delay'}).subscribe({
         next: () => reject(new Error('response channel should not be called when aborting')),
-        error: (err) =>
+        error: (err: any) =>
           reject(
             new Error(`error channel should not be called when aborting, got:\n\n${err.message}`)
           ),

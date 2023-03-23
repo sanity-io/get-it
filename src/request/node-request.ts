@@ -1,19 +1,22 @@
+import http from 'node:http'
+import https from 'node:https'
+import url from 'node:url'
+
 import decompressResponse from 'decompress-response'
 import follow from 'follow-redirects'
-import http from 'http'
-import https from 'https'
 import toStream from 'into-stream'
 import isStream from 'is-stream'
 import progressStream from 'progress-stream'
 import qs from 'querystring'
-import url from 'url'
 
+import {RequestAdapter} from '../types'
 import {getProxyOptions, rewriteUriForProxy} from './node/proxy'
 import {concat} from './node/simpleConcat'
 import {timedOut} from './node/timedOut'
 import * as tunneling from './node/tunnel'
 
-const adapter = 'node'
+/** @public */
+export const adapter: RequestAdapter = 'node'
 
 // Reduce a fully fledged node-style response object to
 // something that works in both browser and node environment
@@ -212,3 +215,11 @@ function lowerCaseHeaders(headers: any) {
     return acc
   }, {} as any)
 }
+
+// function isFile(val: any): val is File {
+//   return typeof val === 'object' && val?.[Symbol.toStringTag] === 'File'
+// }
+
+// function isBlob(val: any): val is Blob {
+//   return typeof val === 'object' && val?.[Symbol.toStringTag] === 'Blob'
+// }

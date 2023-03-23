@@ -1,4 +1,4 @@
-let actualGlobal: typeof globalThis
+let actualGlobal: any
 
 if (typeof globalThis !== 'undefined') {
   actualGlobal = globalThis

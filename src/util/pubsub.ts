@@ -8,7 +8,7 @@ export interface PubSub<Message> {
   subscribe: (subscriber: Subscriber<Message>) => () => void
 }
 
-export default function createPubSub<Message = void>(): PubSub<Message> {
+export function createPubSub<Message = void>(): PubSub<Message> {
   const subscribers: {[id: string]: Subscriber<Message>} = Object.create(null)
   let nextId = 0
   function subscribe(subscriber: Subscriber<Message>) {

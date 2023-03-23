@@ -2,7 +2,7 @@ import {processOptions} from './middleware/defaultOptionsProcessor'
 import {validateOptions} from './middleware/defaultOptionsValidator'
 import type {HttpRequest, Middleware, Middlewares, Requester} from './types'
 import middlewareReducer from './util/middlewareReducer'
-import pubsub from './util/pubsub'
+import {createPubSub} from './util/pubsub'
 
 const channelNames = ['request', 'response', 'progress', 'error', 'abort']
 const middlehooks = [
@@ -33,7 +33,7 @@ export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRe
 
   function request(opts: any) {
     const channels = channelNames.reduce((target: any, name: any): any => {
-      target[name] = pubsub()
+      target[name] = createPubSub()
       return target
     }, {})
 

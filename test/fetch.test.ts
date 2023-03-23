@@ -1,24 +1,13 @@
-import fetch from 'node-fetch'
-import {afterEach, beforeEach, describe, expect, it} from 'vitest'
+import {adapter, getIt} from 'get-it'
+import {jsonRequest, jsonResponse} from 'get-it/middleware'
+import {describe, expect, it} from 'vitest'
 
-import {getIt} from '../src/index'
-import {jsonRequest, jsonResponse} from '../src/middleware'
 import browserRequest from '../src/request/browser-request'
-import {baseUrl, expectRequest, expectRequestBody, isNode, promiseRequest} from './helpers'
+import {baseUrl, expectRequest, expectRequestBody, isHappyDomBug, promiseRequest} from './helpers'
 
-const originalFetch = global.fetch
-
-describe.runIf(isNode)(
+describe.skipIf(typeof fetch === 'undefined' && typeof XMLHttpRequest === 'undefined')(
   'fetch',
   () => {
-    beforeEach(() => {
-      global.fetch = fetch
-    })
-
-    afterEach(() => {
-      global.fetch = originalFetch
-    })
-
     it('can use browser request with fetch polyfill', () => {
       getIt([baseUrl], browserRequest)
     })
@@ -30,19 +19,19 @@ describe.runIf(isNode)(
       await expectRequest(req).resolves.toHaveProperty('body', body)
     })
 
-    it('should be able to post a Buffer as body', async () => {
+    it.skipIf(adapter === 'fetch')('should be able to post a Buffer as body', async () => {
       const request = getIt([baseUrl], browserRequest)
       const req = request({url: '/echo', body: Buffer.from('Foo bar')})
       await expectRequestBody(req).resolves.toEqual('Foo bar')
     })
 
-    it('should be able to post a string as body', async () => {
+    it.skipIf(adapter === 'fetch')('should be able to post a string as body', async () => {
       const request = getIt([baseUrl], browserRequest)
       const req = request({url: '/echo', body: 'Does this work?'})
       await expectRequestBody(req).resolves.toEqual('Does this work?')
     })
 
-    it('should be able to use JSON request middleware', async () => {
+    it.skipIf(adapter === 'fetch')('should be able to use JSON request middleware', async () => {
       const request = getIt([baseUrl, jsonRequest()], browserRequest)
       const req = request({url: '/echo', body: {foo: 'bar'}})
       await expectRequestBody(req).resolves.toEqual('{"foo":"bar"}')
@@ -73,9 +62,11 @@ describe.runIf(isNode)(
         const request = getIt([baseUrl], browserRequest)
         const req = request({url: '/delay'})
 
-        req.error.subscribe((err) =>
+        req.error.subscribe((err: any) =>
           reject(
-            new Error(`error channel should not be called when aborting, got:\n\n${err.message}`)
+            new Error(`error channel should not be called when aborting, got:\n\n${err.message}`, {
+              cause: err,
+            })
           )
         )
         req.response.subscribe(() =>
@@ -86,25 +77,35 @@ describe.runIf(isNode)(
         setTimeout(() => resolve(undefined), 250)
       }))
 
-    it('should be able to get arraybuffer back', async () => {
-      const request = getIt([baseUrl], browserRequest)
-      const req = request({url: '/plain-text', rawBody: true})
-      await expectRequestBody(req).resolves.toBeInstanceOf(ArrayBuffer)
-    })
+    it.skipIf(typeof ArrayBuffer === 'undefined' || isHappyDomBug)(
+      'should be able to get arraybuffer back',
+      async () => {
+        const request = getIt([baseUrl], browserRequest)
+        const req = request({url: '/plain-text', rawBody: true})
+        await expectRequestBody(req).resolves.toBeInstanceOf(ArrayBuffer)
+      }
+    )
 
-    it('should emit errors on error channel', () =>
-      new Promise((resolve) => {
+    it.skipIf(isHappyDomBug)('should emit errors on error channel', async () => {
+      expect.assertions(2)
+      await new Promise((resolve, reject) => {
         const request = getIt([baseUrl], browserRequest)
         const req = request({url: '/permafail'})
         req.response.subscribe(() => {
-          throw new Error('Response channel called when error channel should have been triggered')
+          reject(new Error('Response channel called when error channel should have been triggered'))
         })
-        req.error.subscribe((err) => {
-          expect(err).to.be.an.instanceOf(Error)
-          expect(err.message).to.have.length.lessThan(600)
-          resolve(undefined)
+        req.error.subscribe((err: any) => {
+          try {
+            expect(err).to.be.an.instanceOf(Error)
+            expect(err.message).to.have.length.lessThan(600)
+            resolve(undefined)
+            // eslint-disable-next-line no-shadow
+          } catch (err: any) {
+            reject(err)
+          }
         })
-      }))
+      })
+    })
   },
   {timeout: 15000}
 )

@@ -1,13 +1,17 @@
+import {environment, getIt} from 'get-it'
+import {jsonResponse, urlEncoded} from 'get-it/middleware'
 import intoStream from 'into-stream'
 import {describe, it} from 'vitest'
 
-import {baseUrl, debugRequest, expectRequestBody, getIt, isNode, middleware} from './helpers'
-const {jsonResponse, urlEncoded} = middleware
+import {baseUrl, debugRequest, expectRequestBody} from './helpers'
 
 describe.runIf(typeof ArrayBuffer !== 'undefined')('urlEncoded middleware', () => {
   it('should be able to send urlencoded data to an endpoint and get JSON back', () => {
     const request = getIt([baseUrl, urlEncoded(), jsonResponse(), debugRequest])
-    const body = {randomValue: Date.now(), someThing: 'spaces & commas - all sorts!'}
+    const body: Record<string, string | number> = {
+      randomValue: Date.now(),
+      someThing: 'spaces & commas - all sorts!',
+    }
     const strBody = Object.keys(body).reduce(
       (acc, key) => Object.assign(acc, {[key]: `${body[key]}`}),
       {}
@@ -60,14 +64,14 @@ describe.runIf(typeof ArrayBuffer !== 'undefined')('urlEncoded middleware', () =
     })
   })
 
-  it.runIf(isNode)('should not serialize buffers', () => {
+  it.skipIf(typeof Buffer === 'undefined')('should not serialize buffers', () => {
     const request = getIt([baseUrl, urlEncoded(), jsonResponse(), debugRequest])
     const body = Buffer.from('blåbærsyltetøy', 'utf8')
     const req = request({url: '/echo', method: 'PUT', body})
     return expectRequestBody(req).resolves.toEqual('blåbærsyltetøy')
   })
 
-  it.runIf(isNode)('should not serialize streams', () => {
+  it.runIf(environment === 'node')('should not serialize streams', () => {
     const request = getIt([baseUrl, urlEncoded(), jsonResponse(), debugRequest])
     const body = intoStream('unicorn')
     const req = request({url: '/echo', method: 'PUT', body})

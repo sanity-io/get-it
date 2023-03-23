@@ -1,8 +1,13 @@
 {
   "extends": "./tsconfig.settings",
-  "include": ["./src", "./modules.d.ts"],
+  "include": ["./src", "./modules.d.ts", "./test"],
   "exclude": ["./test-deno/test.ts"],
   "compilerOptions": {
-    "noEmit": true
+    "noEmit": true,
+    "module": "esnext",
+    "paths": {
+      "get-it": ["./src"],
+      "get-it/middleware": ["./src/middleware"]
+    }
   }
 }

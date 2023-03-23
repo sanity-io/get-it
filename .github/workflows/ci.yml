@@ -60,7 +60,6 @@ jobs:
           - os: ubuntu-latest
             # Test the oldest LTS release of Node that's still receiving bugfixes and security patches, versions older than that have reached End-of-Life
             node: lts/*
-
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -112,6 +111,19 @@ jobs:
       - run: npm run test:esm:deno
         name: Test that Deno can import `get-it`
 
+  test-browser:
+    name: Test Browser
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          cache: npm
+          node-version: lts/*
+      - run: npm ci
+      - run: npm run test:browser -- run --coverage
+
   test-edge:
     name: Test Edge Runtime
     needs: build
@@ -128,7 +140,7 @@ jobs:
   release:
     name: Semantic release
     runs-on: ubuntu-latest
-    needs: [test, test-esm, test-deno, test-edge]
+    needs: [test, test-esm, test-deno, test-edge, test-browser]
     if: inputs.release == true
     steps:
       - uses: actions/checkout@v3

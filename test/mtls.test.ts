@@ -1,16 +1,16 @@
 import fs from 'fs'
+import {environment, getIt} from 'get-it'
+import {base, mtls} from 'get-it/middleware'
 import path from 'path'
 import {describe, expect, it} from 'vitest'
 
-import {getIt} from '../src/index'
-import {base, mtls} from '../src/middleware'
 import {expectRequestBody} from './helpers'
 import getMtls from './helpers/mtls'
 
 const port = 4444
 const baseUrl = `https://localhost:${port}/req-test`
 
-describe('mtls middleware', () => {
+describe.runIf(environment === 'node')('mtls middleware', () => {
   it('should throw on missing options', () => {
     expect(() => getIt([base(baseUrl), mtls()])).to.throw(/Required mtls option "ca" is missing/)
   })

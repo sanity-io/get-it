@@ -1,4 +1,4 @@
-export default (err) => {
+export default (err: any) => {
   if (err) {
     throw err
   }

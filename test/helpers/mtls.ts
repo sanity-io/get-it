@@ -2,7 +2,7 @@ import fs from 'fs'
 import https from 'https'
 import path from 'path'
 
-export default (port, serverOpts = {}) =>
+export default (port: number, serverOpts = {}) =>
   new Promise((resolve, reject) => {
     const httpsServerOptions = {
       ca: fs.readFileSync(path.join(__dirname, '..', 'certs', 'mtls', 'ca.pem')),

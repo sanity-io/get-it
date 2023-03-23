@@ -16,7 +16,6 @@ module.exports = {
   },
   plugins: ['@typescript-eslint', 'simple-import-sort', 'prettier'],
   rules: {
-    '@typescript-eslint/interface-name-prefix': 'off',
     '@typescript-eslint/member-delimiter-style': 'off',
     '@typescript-eslint/no-empty-interface': 'off',
     'simple-import-sort/imports': 'warn',
@@ -31,6 +30,12 @@ module.exports = {
       files: ['**/*.js'],
       rules: {
         '@typescript-eslint/explicit-module-boundary-types': 'off',
+      },
+    },
+    {
+      files: ['test/**/*.ts'],
+      rules: {
+        '@typescript-eslint/no-explicit-any': 'off',
       },
     },
   ],

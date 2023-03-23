@@ -1,7 +1,7 @@
+import {environment, getIt} from 'get-it'
+import {httpErrors, promise} from 'get-it/middleware'
 import {describe, expect, it} from 'vitest'
 
-import {getIt} from '../src/index'
-import {httpErrors, promise} from '../src/middleware'
 import {baseUrl, debugRequest} from './helpers'
 
 describe(
@@ -23,7 +23,7 @@ describe(
       await expect(req).resolves.toEqual('Just some plain text for you to consume')
     })
 
-    it('should reject network errors', async () => {
+    it.runIf(environment === 'node')('should reject network errors', async () => {
       const request = getIt([baseUrl, promise()])
       const req = request({url: '/permafail'})
       await expect(req).rejects.toThrow(/(socket|network)/i)
@@ -42,7 +42,7 @@ describe(
         const request = getIt([baseUrl, promise()])
         request({url: '/delay', cancelToken: source.token})
           .then(() => reject(new Error('Should not be resolved when cancelled')))
-          .catch((err) => {
+          .catch((err: any) => {
             if (promise.isCancel(err)) {
               expect(err.toString()).to.equal('Cancel: Cancelled by user')
               resolve(undefined)
@@ -63,7 +63,7 @@ describe(
         const request = getIt([baseUrl, debugRequest, promise()])
         request({url: '/delay', cancelToken: source.token})
           .then(() => reject(new Error('Should not be resolved when cancelled')))
-          .catch((err) => {
+          .catch((err: any) => {
             if (promise.isCancel(err)) {
               expect(err.toString()).to.equal('Cancel')
               resolve(undefined)

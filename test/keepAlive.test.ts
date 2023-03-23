@@ -1,11 +1,11 @@
+import {environment, getIt} from 'get-it'
+import {keepAlive} from 'get-it/middleware'
 import {describe, it} from 'vitest'
 
-import {getIt} from '../src/index'
-import {keepAlive} from '../src/middleware'
-import {baseUrl, expectRequestBody, isNode} from './helpers'
+import {baseUrl, expectRequestBody} from './helpers'
 
-describe('keepAlive middleware', () => {
-  it.runIf(isNode)('should work with redirects (passing `agents`)', async () => {
+describe.runIf(environment === 'node')('keepAlive middleware', () => {
+  it('should work with redirects (passing `agents`)', async () => {
     const body = 'Just some plain text for you to consume'
     const request = getIt([baseUrl, keepAlive()])
     await Promise.all([
@@ -16,7 +16,7 @@ describe('keepAlive middleware', () => {
     ])
   })
 
-  it.runIf(isNode)('should work without redirects (passing `agent`)', async () => {
+  it('should work without redirects (passing `agent`)', async () => {
     const body = 'Just some plain text for you to consume'
     const request = getIt([baseUrl, keepAlive()])
     const options = {url: '/plain-text', maxRedirects: 0}

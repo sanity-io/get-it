@@ -1,7 +1,7 @@
+import {getIt} from 'get-it'
+import {jsonResponse} from 'get-it/middleware'
 import {describe, it} from 'vitest'
 
-import {getIt} from '../src/index'
-import {jsonResponse} from '../src/middleware'
 import {baseUrl, debugRequest, expectRequestBody} from './helpers'
 
 describe('query strings', () => {

@@ -17,7 +17,7 @@ export function createProxyServer(proto: 'http' | 'https' = 'http') {
     const isHttp = proto === 'http'
     const protoPort = isHttp ? httpPort : httpsPort
     const protoOpts = isHttp ? {} : httpsServerOptions
-    const requestHandler = (request, response) => {
+    const requestHandler = (request: any, response: any) => {
       const parsed = url.parse(request.url)
       const opts = {
         host: parsed.hostname,

@@ -1,4 +1,4 @@
-export default function debugRequest(req, body) {
+export default function debugRequest(req: any, body: any) {
   return {
     headers: req.headers,
     method: req.method,

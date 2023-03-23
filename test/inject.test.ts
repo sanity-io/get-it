@@ -1,7 +1,7 @@
+import {getIt} from 'get-it'
+import {injectResponse} from 'get-it/middleware'
 import {describe, expect, it} from 'vitest'
 
-import {getIt} from '../src/index'
-import {injectResponse} from '../src/middleware'
 import {baseUrl, expectRequestBody, promiseRequest} from './helpers'
 
 describe('inject response', () => {
@@ -30,7 +30,7 @@ describe('inject response', () => {
 
   it('should be able to use real request on a per-request basis', async () => {
     const mock = {body: 'Just some mocked text'}
-    const inject = (evt) => evt.context.options.url.includes('/mocked') && mock
+    const inject = (evt: any) => evt.context.options.url.includes('/mocked') && mock
     const request = getIt([baseUrl, injectResponse({inject})])
     const normalReq = request({url: '/plain-text'})
     const mockedReq = request({url: '/mocked'})
@@ -47,7 +47,7 @@ describe('inject response', () => {
       const request = getIt([injectResponse({inject})])
       const req = request({url: 'http://blah-blah'})
 
-      req.error.subscribe((err) =>
+      req.error.subscribe((err: any) =>
         reject(
           new Error(`error channel should not be called when aborting, got:\n\n${err.message}`)
         )

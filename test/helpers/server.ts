@@ -22,11 +22,11 @@ const createError = (code: any, msg?: string) => {
 
 const httpPort = 9980
 const httpsPort = 9443
-const state = {failures: {}}
+const state: any = {failures: {}}
 
 function getResponseHandler(proto = 'http'): any {
   const isSecure = proto === 'https'
-  return (req, res, next) => {
+  return (req: any, res: any, next: any) => {
     const parts = url.parse(req.url, true)
     const num = Number(parts.query.n)
     const atMax = num >= 10
@@ -87,7 +87,7 @@ function getResponseHandler(proto = 'http'): any {
         req.pipe(res)
         break
       case '/req-test/urlencoded':
-        concat(req, (unused, body) => {
+        concat(req, (unused: any, body: any) => {
           res.setHeader('Content-Type', 'application/json')
           res.end(JSON.stringify(qs.parse(body.toString())))
         })
@@ -97,7 +97,7 @@ function getResponseHandler(proto = 'http'): any {
         break
       case '/req-test/debug':
         res.setHeader('Content-Type', 'application/json')
-        concat(req, (unused, body) => {
+        concat(req, (unused: any, body: any) => {
           res.end(JSON.stringify(debugRequest(req, body)))
         })
         break

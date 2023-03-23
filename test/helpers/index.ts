@@ -1,17 +1,9 @@
-import {getIt as nodeGetIt} from '../../src/index'
-import {getIt as browserGetIt} from '../../src/index.browser'
-import * as nodeMiddleware from '../../src/middleware'
-import * as browserMiddleware from '../../src/middleware.browser'
+import {base, debug} from 'get-it/middleware'
 
 export {expectRequest, expectRequestBody, promiseRequest} from './expectRequest'
 
-export const isEdge = typeof globalThis.EdgeRuntime === 'string'
-export const isNode = !isEdge && typeof document === 'undefined'
-export const getIt = isNode ? nodeGetIt : browserGetIt
-export const middleware = isNode ? nodeMiddleware : browserMiddleware
-const {base, debug} = middleware
-
-export const hostname = isNode || isEdge ? 'localhost' : window.location.hostname
+export const hostname =
+  (typeof window !== 'undefined' && (window as any).location?.hostname) || 'localhost'
 export const debugRequest = debug({verbose: true})
 export const serverUrl = `http://${hostname}:9980`
 export const serverUrlHttps = `https://${hostname}:9443`
@@ -19,3 +11,6 @@ export const baseUrlPrefix = `${serverUrl}/req-test`
 export const baseUrlPrefixHttps = `${serverUrlHttps}/req-test`
 export const baseUrl = base(baseUrlPrefix)
 export const baseUrlHttps = base(baseUrlPrefixHttps.replace(/^http:/, 'https:'))
+// happy-dom isn't implementing xhr.response: https://github.com/capricorn86/happy-dom/blob/13bcfe77ae9a202a93ce8fddcf4a7c1b43ecde16/packages/happy-dom/src/xml-http-request/XMLHttpRequest.ts#L149-L234
+export const isHappyDomBug =
+  typeof XMLHttpRequest !== 'undefined' && !XMLHttpRequest.prototype.response
