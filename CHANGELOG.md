@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.1.0](https://github.com/sanity-io/get-it/compare/v8.0.11...v8.1.0) (2023-03-23)
+
+### Features
+
+- add `edge-light` export condition ([#106](https://github.com/sanity-io/get-it/issues/106)) ([30dddb7](https://github.com/sanity-io/get-it/commit/30dddb752e22d524f63530f67793b88b3b185485))
+
 ## [8.0.11](https://github.com/sanity-io/get-it/compare/v8.0.10...v8.0.11) (2023-03-14)
 
 ### Bug Fixes
