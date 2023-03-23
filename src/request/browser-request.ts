@@ -1,9 +1,10 @@
 import parseHeaders from 'parse-headers'
 
+import type {RequestAdapter} from '../types'
 import {FetchXhr} from './browser/fetchXhr'
 
 // Use fetch if it's available, non-browser environments such as Deno, Edge Runtime and more provide fetch as a global but doesn't provide xhr
-const adapter = typeof XMLHttpRequest === 'function' ? 'xhr' : 'fetch'
+export const adapter: RequestAdapter = typeof XMLHttpRequest === 'function' ? 'xhr' : 'fetch'
 
 // Fallback to fetch-based XHR polyfill for non-browser environments like Workers
 const XmlHttpRequest = adapter === 'xhr' ? XMLHttpRequest : FetchXhr
@@ -158,7 +159,9 @@ export default (context: any, callback: any) => {
 
   function reduceResponse() {
     return {
-      body: xhr.response || xhr.responseText,
+      body:
+        xhr.response ||
+        (xhr.responseType === '' || xhr.responseType === 'text' ? xhr.responseText : ''),
       url: options.url,
       method: options.method,
       headers: parseHeaders(xhr.getAllResponseHeaders()),

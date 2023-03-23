@@ -1,7 +1,7 @@
+import {getIt} from 'get-it'
+import {httpErrors} from 'get-it/middleware'
 import {describe, expect, it} from 'vitest'
 
-import {getIt} from '../src/index'
-import {httpErrors} from '../src/middleware'
 import {baseUrl, baseUrlPrefix, expectRequest} from './helpers'
 
 describe('errors', () => {
@@ -61,9 +61,9 @@ describe('errors', () => {
 
   it('should only call onError middlewares up to the first one that returns null', async () => {
     const errs: any[] = []
-    const first = {onError: (err) => errs.push(err) && err}
+    const first = {onError: (err: any) => errs.push(err) && err}
     const second = {
-      onError: (err, ctx) => {
+      onError: (err: any, ctx: any) => {
         errs.push(err)
         ctx.channels.response.publish({
           body: 'works',

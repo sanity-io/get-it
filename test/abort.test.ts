@@ -1,6 +1,6 @@
+import {getIt} from 'get-it'
 import {describe, it} from 'vitest'
 
-import {getIt} from '../src/index'
 import {baseUrl, debugRequest} from './helpers'
 
 describe('aborting requests', () => {
@@ -9,7 +9,7 @@ describe('aborting requests', () => {
       const request = getIt([baseUrl, debugRequest])
       const req = request({url: '/delay'})
 
-      req.error.subscribe((err) =>
+      req.error.subscribe((err: any) =>
         reject(
           new Error(`error channel should not be called when aborting, got:\n\n${err.message}`)
         )

@@ -1,13 +1,12 @@
-import Pinkie from 'pinkie-promise'
 import {expect} from 'vitest'
 
-export const promiseRequest = (channels) =>
-  new Pinkie((resolve, reject) => {
+export const promiseRequest = (channels: any) =>
+  new Promise<any>((resolve, reject) => {
     channels.error.subscribe(reject)
     channels.response.subscribe(resolve)
-  }) as Promise<any>
+  })
 
-export const expectRequest = (channels) => expect(promiseRequest(channels))
+export const expectRequest = (channels: any) => expect(promiseRequest(channels))
 
-export const expectRequestBody = (channels) =>
+export const expectRequestBody = (channels: any) =>
   expect(promiseRequest(channels).then((res) => res.body))

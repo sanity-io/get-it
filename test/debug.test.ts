@@ -1,12 +1,12 @@
+import {adapter, getIt} from 'get-it'
+import {debug, jsonRequest, jsonResponse} from 'get-it/middleware'
 import util from 'util'
 import {describe, expect, it} from 'vitest'
 
-import {getIt} from '../src/index'
-import {debug, jsonRequest, jsonResponse} from '../src/middleware'
-import {baseUrl, isEdge} from './helpers'
+import {baseUrl} from './helpers'
 
 describe('debug middleware', () => {
-  const log = (str) => expect(str).to.be.a('string')
+  const log = (str: any) => expect(str).to.be.a('string')
 
   it('should be able to use default options', () => {
     expect(() => debug()).to.not.throw()
@@ -26,7 +26,7 @@ describe('debug middleware', () => {
       request({url: '/plain-text'}).response.subscribe(() => resolve(undefined))
     }))
 
-  it.skipIf(isEdge)(
+  it.skipIf(adapter === 'fetch')(
     'should be able to pass custom logger (verbose mode + json request body)',
     () =>
       new Promise((resolve) => {
@@ -38,7 +38,7 @@ describe('debug middleware', () => {
       })
   )
 
-  it.skipIf(isEdge)(
+  it.skipIf(adapter === 'fetch')(
     'should be able to pass custom logger (verbose mode + text request body)',
     () =>
       new Promise((resolve) => {
@@ -55,12 +55,12 @@ describe('debug middleware', () => {
       request({url: '/invalid-json'}).response.subscribe(() => resolve(undefined))
     }))
 
-  it.skipIf(isEdge)(
+  it.skipIf(adapter === 'fetch')(
     'should redact sensitive headers in verbose mode',
     () =>
       new Promise((resolve) => {
         const lines: any[] = []
-        const logIt = (line, ...args: any[]) => lines.push(util.format(line, ...args))
+        const logIt = (line: any, ...args: any[]) => lines.push(util.format(line, ...args))
         const logger = debug({log: logIt, verbose: true})
         const request = getIt([baseUrl, logger])
         request({

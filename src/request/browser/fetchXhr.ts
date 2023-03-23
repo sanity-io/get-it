@@ -17,7 +17,7 @@ export class FetchXhr
   readyState: 0 | 1 | 2 | 3 | 4 = 0
   response: XMLHttpRequest['response']
   responseText: XMLHttpRequest['responseText']
-  responseType: XMLHttpRequest['responseType']
+  responseType: XMLHttpRequest['responseType'] = ''
   status: XMLHttpRequest['status']
   statusText: XMLHttpRequest['statusText']
   withCredentials: XMLHttpRequest['withCredentials']
@@ -55,12 +55,15 @@ export class FetchXhr
     const options: RequestInit = {
       method: this.#method,
       headers: this.#headers,
-      signal: null,
       body,
     }
     if (typeof AbortController === 'function') {
       this.#controller = new AbortController()
-      options.signal = this.#controller.signal
+      // The instanceof check ensures environments like Edge Runtime, Node 18 with buil-in fetch and more don't throw if `signal` doesn't implement `EventTarget`
+      // Native browser AbortSignal implements EventTarget, so we can use it
+      if (this.#controller.signal instanceof EventTarget) {
+        options.signal = this.#controller.signal
+      }
     }
 
     // Some environments (like CloudFlare workers) don't support credentials in

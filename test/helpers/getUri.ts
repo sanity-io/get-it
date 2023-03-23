@@ -1,6 +1,6 @@
 import getUri from 'get-uri'
 
-export default (uri) =>
+export default (uri: any) =>
   new Promise((resolve, reject) => {
     getUri(uri, (err, stream) => {
       if (err) {

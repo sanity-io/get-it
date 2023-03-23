@@ -1,4 +1,3 @@
-import Pinkie from 'pinkie-promise'
 import {expect} from 'vitest'
 
-export default (channel) => expect(new Pinkie((resolve) => channel.subscribe(resolve)))
+export default (channel: any) => expect(new Promise((resolve) => channel.subscribe(resolve)))

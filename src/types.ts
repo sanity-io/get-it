@@ -43,3 +43,18 @@ export interface RetryOptions {
   maxRetries?: number
   retryDelay?: () => number
 }
+
+/**
+ * Reports the environment as either "node" or "browser", depending on what entry point was used to aid bundler debugging.
+ * If 'browser' is used, then the globally available `fetch` class is used. While `node` will always use either `node:https` or `node:http` depending on the protocol.
+ * @public
+ */
+export type ExportEnv = 'node' | 'browser'
+
+/**
+ * Reports the request adapter in use. `node` is only available if `ExportEnv` is also `node`.
+ * When `ExportEnv` is `browser` then the adapter can be either `xhr` or `fetch`.
+ * In the future `fetch` will be available in `node` as well.
+ * @public
+ */
+export type RequestAdapter = 'node' | 'xhr' | 'fetch'

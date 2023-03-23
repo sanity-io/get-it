@@ -3,7 +3,7 @@
  * Apache License 2.0
  */
 
-import url from 'url'
+import url from 'node:url'
 
 function formatHostname(hostname: string) {
   // canonicalize the hostname, so that 'oogle.com' won't match 'google.com'

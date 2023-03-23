@@ -1,15 +1,13 @@
+import {adapter, environment, getIt} from 'get-it'
+import {jsonResponse} from 'get-it/middleware'
 import {describe, expect, it} from 'vitest'
 
-import {getIt} from '../src/index'
-import {jsonResponse} from '../src/middleware'
 import {
   baseUrl,
   baseUrlPrefix,
   debugRequest,
   expectRequest,
   expectRequestBody,
-  isEdge,
-  isNode,
   promiseRequest,
 } from './helpers'
 
@@ -42,41 +40,57 @@ describe(
       await expectRequest(req).resolves.toHaveProperty('body', body)
     })
 
-    it.runIf(isNode)('should be able to post a Buffer as body in node', async () => {
-      const request = getIt([baseUrl, debugRequest])
-      const req = request({url: '/echo', body: Buffer.from('Foo bar')})
-      await expectRequestBody(req).resolves.toEqual('Foo bar')
-    })
+    it.runIf(environment === 'node')(
+      'should be able to post a Buffer as body in node',
+      async () => {
+        const request = getIt([baseUrl, debugRequest])
+        const req = request({url: '/echo', body: Buffer.from('Foo bar')})
+        await expectRequestBody(req).resolves.toEqual('Foo bar')
+      }
+    )
 
-    it.runIf(isNode)('should throw when trying to post invalid stuff', () => {
+    it.runIf(adapter === 'xhr')('[browser] should throw when trying to post invalid stuff', () => {
+      const request = getIt([baseUrl, debugRequest])
+      expect(() => {
+        request({url: '/echo', method: 'post', body: {}})
+      }).toThrowErrorMatchingInlineSnapshot(
+        '"The \\"string\\" argument must be of type string or an instance of Buffer or ArrayBuffer. Received an instance of Object"'
+      )
+    })
+    it.runIf(adapter === 'fetch')(
+      '[browser] fetch is more permissive in what `body` can be',
+      () => {
+        const request = getIt([baseUrl, debugRequest])
+        expect(() => {
+          request({url: '/echo', method: 'post', body: {}})
+        }).not.toThrow()
+      }
+    )
+    it.runIf(adapter === 'node')('[node] should throw when trying to post invalid stuff', () => {
       const request = getIt([baseUrl, debugRequest])
       expect(() => {
         request({url: '/echo', method: 'post', body: {}})
       }).toThrow(/string, buffer or stream/)
     })
 
-    it.skipIf(isEdge)(
-      'should be able to get a raw, unparsed body back',
-      isNode
-        ? () => {
-            // Node.js (buffer)
-            const request = getIt([baseUrl, debugRequest])
-            const req = request({url: '/plain-text', rawBody: true})
-            return promiseRequest(req).then((res) => {
-              expect(
-                res.body.equals(Buffer.from('Just some plain text for you to consume'))
-              ).toEqual(true)
-            })
-          }
-        : async () => {
-            // Browser (ArrayBuffer)
-            const request = getIt([baseUrl, debugRequest])
-            const req = request({url: '/plain-text', rawBody: true})
-            await expectRequestBody(req).resolves.toBeInstanceOf(ArrayBuffer)
-          }
-    )
+    it('should be able to get a raw, unparsed body back', async () => {
+      const request = getIt([baseUrl, debugRequest])
+      const req = request({url: '/plain-text', rawBody: true})
+      switch (adapter) {
+        case 'node':
+          // Node.js (buffer)
+          return await expectRequestBody(req).resolves.toEqual(
+            Buffer.from('Just some plain text for you to consume')
+          )
+        case 'xhr':
+          return await expectRequestBody(req).resolves.toBeTypeOf('string')
+        case 'fetch':
+          // Browser (ArrayBuffer)
+          return await expectRequestBody(req).resolves.toMatchInlineSnapshot('ArrayBuffer []')
+      }
+    })
 
-    it('should request compressed responses by default', async () => {
+    it.runIf(environment === 'node')('should request compressed responses by default', async () => {
       const request = getIt([baseUrl, jsonResponse()])
       const req = request({url: '/debug'})
 
@@ -85,7 +99,7 @@ describe(
       expect(body.headers).toMatchObject({'accept-encoding': 'br, gzip, deflate'})
     })
 
-    it('should decompress compressed responses', async () => {
+    it.runIf(environment === 'node')('should decompress compressed responses', async () => {
       const request = getIt([baseUrl, jsonResponse(), debugRequest])
       const req = request({url: '/gzip'})
       const res = await promiseRequest(req)
@@ -102,7 +116,7 @@ describe(
       expect(res.headers).not.toHaveProperty('content-encoding')
     })
 
-    it('should decompress brotli-encoded responses', async () => {
+    it.runIf(environment === 'node')('should decompress brotli-encoded responses', async () => {
       const request = getIt([baseUrl, jsonResponse(), debugRequest])
       const req = request({url: '/maybeCompress'})
       const res = await promiseRequest(req)
@@ -127,14 +141,17 @@ describe(
       })
     })
 
-    it.skipIf(isEdge)('should be able to send PUT-requests with raw bodies', async () => {
-      const request = getIt([baseUrl, jsonResponse(), debugRequest])
-      const req = request({url: '/debug', method: 'PUT', body: 'just a plain body'})
-      await expectRequestBody(req).resolves.toMatchObject({
-        method: 'PUT',
-        body: 'just a plain body',
-      })
-    })
+    it.runIf(environment === 'node')(
+      'should be able to send PUT-requests with raw bodies',
+      async () => {
+        const request = getIt([baseUrl, jsonResponse(), debugRequest])
+        const req = request({url: '/debug', method: 'PUT', body: 'just a plain body'})
+        await expectRequestBody(req).resolves.toMatchObject({
+          method: 'PUT',
+          body: 'just a plain body',
+        })
+      }
+    )
 
     // IE9 fails on cross-origin requests from http to https
     it('should handle https without issues', async () => {

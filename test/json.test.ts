@@ -1,9 +1,9 @@
+import {environment, getIt} from 'get-it'
+import {jsonRequest, jsonResponse} from 'get-it/middleware'
 import intoStream from 'into-stream'
 import {describe, it} from 'vitest'
 
-import {getIt} from '../src/index'
-import {jsonRequest, jsonResponse} from '../src/middleware'
-import {baseUrl, debugRequest, expectRequest, expectRequestBody, isEdge, isNode} from './helpers'
+import {baseUrl, debugRequest, expectRequest, expectRequestBody} from './helpers'
 
 describe('json middleware', () => {
   it('should be able to request data from a JSON-responding endpoint as JSON', async () => {
@@ -18,7 +18,7 @@ describe('json middleware', () => {
     await expectRequestBody(req).resolves.toHaveProperty('foo', 'bar')
   })
 
-  it.skipIf(isEdge)(
+  it.runIf(environment === 'node')(
     'should be able to send JSON-data data to a JSON endpoint and get JSON back',
     async () => {
       const request = getIt([baseUrl, jsonResponse(), jsonRequest(), debugRequest])
@@ -34,7 +34,7 @@ describe('json middleware', () => {
     await expectRequestBody(req).resolves.toEqual('Just some plain text for you to consume')
   })
 
-  it.skipIf(isEdge)(
+  it.runIf(environment === 'node')(
     'should be able to use json response body parser on non-json responses (no content type)',
     async () => {
       const request = getIt([baseUrl, jsonResponse(), debugRequest])
@@ -53,11 +53,14 @@ describe('json middleware', () => {
     })
   })
 
-  it.skipIf(isEdge)('should be able to send PUT-requests with json bodies', async () => {
-    const request = getIt([baseUrl, jsonRequest(), jsonResponse(), debugRequest])
-    const req = request({url: '/json-echo', method: 'PUT', body: {foo: 'bar'}})
-    await expectRequestBody(req).resolves.toEqual({foo: 'bar'})
-  })
+  it.runIf(environment === 'node')(
+    'should be able to send PUT-requests with json bodies',
+    async () => {
+      const request = getIt([baseUrl, jsonRequest(), jsonResponse(), debugRequest])
+      const req = request({url: '/json-echo', method: 'PUT', body: {foo: 'bar'}})
+      await expectRequestBody(req).resolves.toEqual({foo: 'bar'})
+    }
+  )
 
   it('should throw if response body is not valid JSON', async () => {
     const request = getIt([baseUrl, jsonResponse()])
@@ -65,7 +68,7 @@ describe('json middleware', () => {
     await expectRequest(req).rejects.toThrow(/response body as json/i)
   })
 
-  it.skipIf(isEdge)('should serialize plain values (numbers, strings)', async () => {
+  it.runIf(environment === 'node')('should serialize plain values (numbers, strings)', async () => {
     const request = getIt([baseUrl, jsonRequest(), jsonResponse(), debugRequest])
     const url = '/json-echo'
     await Promise.all([
@@ -74,21 +77,21 @@ describe('json middleware', () => {
     ])
   })
 
-  it.skipIf(isEdge)('should serialize arrays', async () => {
+  it.runIf(environment === 'node')('should serialize arrays', async () => {
     const request = getIt([baseUrl, jsonRequest(), jsonResponse(), debugRequest])
     const body = ['foo', 'bar', 'baz']
     const req = request({url: '/json-echo', method: 'PUT', body})
     await expectRequestBody(req).resolves.toEqual(body)
   })
 
-  it.runIf(isNode)('should not serialize buffers', async () => {
+  it.runIf(environment === 'node')('should not serialize buffers', async () => {
     const request = getIt([baseUrl, jsonRequest(), jsonResponse(), debugRequest])
     const body = Buffer.from('blåbærsyltetøy', 'utf8')
     const req = request({url: '/echo', method: 'PUT', body})
     await expectRequestBody(req).resolves.toEqual('blåbærsyltetøy')
   })
 
-  it.runIf(isNode)('should not serialize streams', async () => {
+  it.runIf(environment === 'node')('should not serialize streams', async () => {
     const request = getIt([baseUrl, jsonRequest(), jsonResponse(), debugRequest])
     const body = intoStream('unicorn')
     const req = request({url: '/echo', method: 'PUT', body})

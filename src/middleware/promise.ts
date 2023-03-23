@@ -42,9 +42,9 @@ export const promise = (options: any = {}) => {
 export class Cancel {
   __CANCEL__ = true
 
-  message: string
+  message: string | undefined
 
-  constructor(message: any) {
+  constructor(message: string | undefined) {
     this.message = message
   }
 
@@ -58,7 +58,7 @@ export class CancelToken {
   promise: Promise<any>
   reason?: Cancel
 
-  constructor(executor: any) {
+  constructor(executor: (cb: (message?: string) => void) => void) {
     if (typeof executor !== 'function') {
       throw new TypeError('executor must be a function.')
     }
@@ -69,7 +69,7 @@ export class CancelToken {
       resolvePromise = resolve
     })
 
-    executor((message: any) => {
+    executor((message?: string) => {
       if (this.reason) {
         // Cancellation has already been requested
         return
@@ -81,19 +81,20 @@ export class CancelToken {
   }
 
   static source = () => {
-    let cancel
-    const token = new CancelToken((can: any) => {
+    let cancel: (message?: string) => void
+    const token = new CancelToken((can) => {
       cancel = can
     })
 
     return {
       token: token,
-      cancel: cancel,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- we know from the implementation that it's assigned during `constructor`
+      cancel: cancel!,
     }
   }
 }
 
-const isCancel = (value: any) => !!(value && value.__CANCEL__)
+const isCancel = (value: any): value is Cancel => !!(value && value?.__CANCEL__)
 
 promise.Cancel = Cancel
 promise.CancelToken = CancelToken
