@@ -59,9 +59,10 @@ export class FetchXhr
     }
     if (typeof AbortController === 'function') {
       this.#controller = new AbortController()
-      // The instanceof check ensures environments like Edge Runtime, Node 18 with buil-in fetch and more don't throw if `signal` doesn't implement `EventTarget`
+      // The instanceof check ensures environments like Edge Runtime, Node 18 with built-in fetch
+      // and more don't throw if `signal` doesn't implement`EventTarget`
       // Native browser AbortSignal implements EventTarget, so we can use it
-      if (this.#controller.signal instanceof EventTarget) {
+      if (typeof EventTarget !== 'undefined' && this.#controller.signal instanceof EventTarget) {
         options.signal = this.#controller.signal
       }
     }
