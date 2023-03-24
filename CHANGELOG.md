@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.1.1](https://github.com/sanity-io/get-it/compare/v8.1.0...v8.1.1) (2023-03-24)
+
+### Bug Fixes
+
+- **fetch:** check for existence of `EventTarget` before using ([b31db80](https://github.com/sanity-io/get-it/commit/b31db803cc0215db39092d22c2f032b866605d4f))
+
 ## [8.1.0](https://github.com/sanity-io/get-it/compare/v8.0.11...v8.1.0) (2023-03-23)
 
 ### Features
