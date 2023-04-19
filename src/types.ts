@@ -41,7 +41,7 @@ export type HttpRequest = any
 export interface RetryOptions {
   shouldRetry: (err: any, num: number, options: any) => boolean
   maxRetries?: number
-  retryDelay?: () => number
+  retryDelay?: (attemptNumber: number) => number
 }
 
 /**
