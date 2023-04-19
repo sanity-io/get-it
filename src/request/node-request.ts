@@ -5,7 +5,6 @@ import url from 'node:url'
 import decompressResponse from 'decompress-response'
 import follow from 'follow-redirects'
 import toStream from 'into-stream'
-import isStream from 'is-stream'
 import progressStream from 'progress-stream'
 import qs from 'querystring'
 
@@ -32,22 +31,28 @@ const reduceResponse = (res: any, reqUrl: any, method: any, body: any) => ({
 export default (context: any, cb: any) => {
   const options = context.options
   const uri = Object.assign({}, url.parse(options.url))
-  const bodyType = isStream(options.body) ? 'stream' : typeof options.body
+
+  const bodyType = isBlobLike(options.body)
+    ? 'blob'
+    : isStream(options.body)
+    ? 'stream'
+    : typeof options.body
 
   if (
     bodyType !== 'undefined' &&
     bodyType !== 'stream' &&
     bodyType !== 'string' &&
-    !Buffer.isBuffer(options.body)
+    bodyType !== 'blob' &&
+    !isBuffer(options.body)
   ) {
-    throw new Error(`Request body must be a string, buffer or stream, got ${bodyType}`)
+    throw new Error(`Request body must be a string, file, blob, buffer or stream, got ${bodyType}`)
   }
 
   const lengthHeader: any = {}
   if (options.bodySize) {
     lengthHeader['content-length'] = options.bodySize
   } else if (options.body && bodyType !== 'stream') {
-    lengthHeader['content-length'] = Buffer.byteLength(options.body)
+    lengthHeader['content-length'] = bodyLength(options.body)
   }
 
   // Make sure callback is not called in the event of a cancellation
@@ -178,7 +183,7 @@ function getProgressStream(options: any) {
   }
 
   const bodyIsStream = isStream(options.body)
-  const length = options.bodySize || (bodyIsStream ? null : Buffer.byteLength(options.body))
+  const length = options.bodySize || (bodyIsStream ? null : bodyLength(options.body))
   if (!length) {
     return bodyIsStream ? {bodyStream: options.body} : {}
   }
@@ -216,10 +221,63 @@ function lowerCaseHeaders(headers: any) {
   }, {} as any)
 }
 
-// function isFile(val: any): val is File {
-//   return typeof val === 'object' && val?.[Symbol.toStringTag] === 'File'
-// }
+// https://github.com/nodejs/undici/blob/dfaec78f7a29f07bb043f9006ed0ceb0d5220b55/lib/core/util.js#L275-L278
+function isBuffer(buffer: unknown): buffer is Buffer {
+  // See, https://github.com/mcollina/undici/pull/319
+  return buffer instanceof Uint8Array || Buffer.isBuffer(buffer)
+}
 
-// function isBlob(val: any): val is Blob {
-//   return typeof val === 'object' && val?.[Symbol.toStringTag] === 'Blob'
-// }
+// https://github.com/nodejs/undici/blob/dfaec78f7a29f07bb043f9006ed0ceb0d5220b55/lib/core/util.js#L17-L19
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function isStream(obj: any): obj is NodeJS.ReadableStream {
+  return (
+    !!obj &&
+    typeof obj === 'object' &&
+    typeof obj.pipe === 'function' &&
+    typeof obj.on === 'function'
+  )
+}
+
+// https://github.com/nodejs/undici/blob/dfaec78f7a29f07bb043f9006ed0ceb0d5220b55/lib/core/util.js#L21-L30
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function isBlobLike(object: any): object is Blob | File {
+  return (
+    (Blob && object instanceof Blob) ||
+    (object &&
+      typeof object === 'object' &&
+      (typeof object.stream === 'function' || typeof object.arrayBuffer === 'function') &&
+      /^(Blob|File)$/.test(object[Symbol.toStringTag]))
+  )
+}
+
+// https://github.com/nodejs/undici/blob/dfaec78f7a29f07bb043f9006ed0ceb0d5220b55/lib/core/util.js#L397-L409
+function isFormDataLike(object: any): object is FormData {
+  return (
+    object &&
+    typeof object === 'object' &&
+    typeof object.append === 'function' &&
+    typeof object.delete === 'function' &&
+    typeof object.get === 'function' &&
+    typeof object.getAll === 'function' &&
+    typeof object.has === 'function' &&
+    typeof object.set === 'function' &&
+    object[Symbol.toStringTag] === 'FormData'
+  )
+}
+
+// https://github.com/nodejs/undici/blob/dfaec78f7a29f07bb043f9006ed0ceb0d5220b55/lib/core/util.js#L166-L181
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function bodyLength(body: any) {
+  if (body == null) {
+    return 0
+  } else if (isStream(body)) {
+    const state = (body as any)._readableState
+    return state && state.ended === true && Number.isFinite(state.length) ? state.length : null
+  } else if (isBlobLike(body)) {
+    return body.size != null ? body.size : null
+  } else if (isBuffer(body)) {
+    return body.byteLength
+  }
+
+  return null
+}

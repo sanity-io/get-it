@@ -1,6 +1,7 @@
 import {adapter, environment, getIt} from 'get-it'
 import {jsonResponse} from 'get-it/middleware'
 import {describe, expect, it} from 'vitest'
+import {File, Blob} from '@edge-runtime/ponyfill'
 
 import {
   baseUrl,
@@ -49,6 +50,29 @@ describe(
       }
     )
 
+    // https://github.com/remix-run/web-std-io/blob/main/packages/blob/src/blob.js
+
+    it.runIf(typeof Filesss !== 'undefined')(
+      'should be able to post a File as body if polyfilled',
+      async () => {
+        const request = getIt([baseUrl, debugRequest])
+        const file = new File(['foo'], 'foo.txt', {type: 'text/plain'})
+        const req = request({url: '/echo', body: file})
+        await expectRequestBody(req).resolves.toEqual('Foo bar')
+      }
+    )
+
+    // https://github.com/feross/blob-to-buffer/blob/master/index.js
+    it.runIf(typeof Blob !== 'undefined')(
+      'should be able to post a Blob as body if polyfilled',
+      async () => {
+        const request = getIt([baseUrl, debugRequest])
+        const blob = new Blob([new Uint8Array([1, 2, 3])], {type: 'application/octet-binary'})
+        const req = request({url: '/echo', body: blob})
+        await expectRequestBody(req).resolves.toEqual('Foo bar')
+      }
+    )
+
     it.runIf(adapter === 'xhr')('[browser] should throw when trying to post invalid stuff', () => {
       const request = getIt([baseUrl, debugRequest])
       expect(() => {
@@ -70,7 +94,7 @@ describe(
       const request = getIt([baseUrl, debugRequest])
       expect(() => {
         request({url: '/echo', method: 'post', body: {}})
-      }).toThrow(/string, buffer or stream/)
+      }).toThrow(/string, file, blob, buffer or stream/)
     })
 
     it('should be able to get a raw, unparsed body back', async () => {

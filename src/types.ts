@@ -58,3 +58,9 @@ export type ExportEnv = 'node' | 'browser'
  * @public
  */
 export type RequestAdapter = 'node' | 'xhr' | 'fetch'
+
+declare global {
+  // Declare empty stub interfaces for environments where "dom" lib is not included
+  interface File {}
+  interface Blob {}
+}

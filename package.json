@@ -106,12 +106,12 @@
     "into-stream": "^6.0.0",
     "is-plain-object": "^5.0.0",
     "is-retry-allowed": "^2.2.0",
-    "is-stream": "^2.0.1",
     "parse-headers": "^2.0.5",
     "progress-stream": "^2.0.0",
     "tunnel-agent": "^0.6.0"
   },
   "devDependencies": {
+    "@edge-runtime/ponyfill": "^2.1.2",
     "@edge-runtime/vm": "^2.1.2",
     "@sanity/pkg-utils": "^2.2.13",
     "@sanity/semantic-release-preset": "^4.0.0",
