@@ -153,6 +153,10 @@ function getResponseHandler(proto = 'http'): any {
       case '/req-test/drip':
         drip(res)
         break
+      case '/req-test/remote-port':
+        res.setHeader('Content-Type', 'text/plain')
+        res.end(`${req.connection.remotePort}`)
+        break
       default:
         if (next) {
           next()
