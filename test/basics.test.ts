@@ -8,6 +8,7 @@ import {
   debugRequest,
   expectRequest,
   expectRequestBody,
+  isHappyDomBug,
   promiseRequest,
 } from './helpers'
 
@@ -73,22 +74,25 @@ describe(
       }).toThrow(/string, buffer or stream/)
     })
 
-    it('should be able to get a raw, unparsed body back', async () => {
-      const request = getIt([baseUrl, debugRequest])
-      const req = request({url: '/plain-text', rawBody: true})
-      switch (adapter) {
-        case 'node':
-          // Node.js (buffer)
-          return await expectRequestBody(req).resolves.toEqual(
-            Buffer.from('Just some plain text for you to consume')
-          )
-        case 'xhr':
-          return await expectRequestBody(req).resolves.toBeTypeOf('string')
-        case 'fetch':
-          // Browser (ArrayBuffer)
-          return await expectRequestBody(req).resolves.toMatchInlineSnapshot('ArrayBuffer []')
+    it.skipIf(adapter === 'xhr' && isHappyDomBug)(
+      'should be able to get a raw, unparsed body back',
+      async () => {
+        const request = getIt([baseUrl, debugRequest])
+        const req = request({url: '/plain-text', rawBody: true})
+        switch (adapter) {
+          case 'node':
+            // Node.js (buffer)
+            return await expectRequestBody(req).resolves.toEqual(
+              Buffer.from('Just some plain text for you to consume')
+            )
+          case 'xhr':
+            return await expectRequestBody(req).resolves.toBeTypeOf('string')
+          case 'fetch':
+            // Browser (ArrayBuffer)
+            return await expectRequestBody(req).resolves.toMatchInlineSnapshot('ArrayBuffer []')
+        }
       }
-    })
+    )
 
     it.runIf(environment === 'node')('should request compressed responses by default', async () => {
       const request = getIt([baseUrl, jsonResponse()])
