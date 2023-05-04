@@ -52,10 +52,9 @@ jobs:
           - os: ubuntu-latest
             # Test the oldest LTS release of Node that's still receiving bugfixes and security patches, versions older than that have reached End-of-Life
             node: lts/-2
-          # @TODO temporarily disabled until solving the `tunnel` issue on Node.js v19 and later
-          # - os: ubuntu-latest
-          #   # Test the actively developed version that will become the latest LTS release next October
-          #   node: current
+          - os: ubuntu-latest
+            # Test the actively developed version that will become the latest LTS release next October
+            node: current
         # The `build` job already runs the testing suite in ubuntu and lts/*
         exclude:
           - os: ubuntu-latest
