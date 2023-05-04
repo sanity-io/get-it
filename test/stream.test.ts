@@ -1,10 +1,10 @@
 import {environment, getIt} from 'get-it'
+import {getUri} from 'get-uri'
 import toStream from 'into-stream'
 import {describe, expect, it} from 'vitest'
 
 import {concat} from '../src/request/node/simpleConcat'
 import {baseUrl, baseUrlPrefix, debugRequest, expectRequest, expectRequestBody} from './helpers'
-import getUri from './helpers/getUri'
 
 describe.runIf(environment === 'node')(
   'streams',
