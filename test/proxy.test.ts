@@ -20,7 +20,7 @@ afterAll(() => {
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '1'
 })
 
-// @TODO remove the "startsWith(20)" check
+// @TODO remove the "startsWith(20)" check, tracked here: https://github.com/sanity-io/get-it/pull/125
 describe.runIf(environment === 'node' && !process.versions?.node?.startsWith('20'))(
   'proxy',
   () => {
