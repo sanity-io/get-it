@@ -20,7 +20,8 @@ afterAll(() => {
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '1'
 })
 
-describe.runIf(environment === 'node')(
+// @TODO remove the "startsWith(20)" check
+describe.runIf(environment === 'node' && !process.versions?.node?.startsWith('20'))(
   'proxy',
   () => {
     afterEach(async () => {

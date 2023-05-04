@@ -156,18 +156,18 @@ describe(
     // IE9 fails on cross-origin requests from http to https
     it('should handle https without issues', async () => {
       const request = getIt()
-      const req = request({url: 'https://httpbin.org/robots.txt'})
+      const req = request({url: 'https://www.sanity.io/robots.txt'})
       const res = await promiseRequest(req)
       expect(res).toHaveProperty('body')
-      expect(res.body).toContain('/deny')
+      expect(res.body).toContain('User-agent: *')
     })
 
     it('should handle cross-origin requests without issues', async () => {
       const request = getIt()
-      const req = request({url: `http://httpbin.org/robots.txt?cb=${Date.now()}`})
+      const req = request({url: `http://sanity.io/robots.txt?cb=${Date.now()}`})
       const res = await promiseRequest(req)
       expect(res).toHaveProperty('body')
-      expect(res.body).toMatch('/deny')
+      expect(res.body).toMatch('User-agent: *')
     })
 
     it('should not allow base middleware to add prefix on absolute urls', async () => {
