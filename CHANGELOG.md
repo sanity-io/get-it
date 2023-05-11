@@ -5,6 +5,13 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.1.2](https://github.com/sanity-io/get-it/compare/v8.1.1...v8.1.2) (2023-05-11)
+
+### Bug Fixes
+
+- add missing attemptNumber argument to retry option typings ([#113](https://github.com/sanity-io/get-it/issues/113)) ([5713f87](https://github.com/sanity-io/get-it/commit/5713f87518014ea86843eab3f74e1fb78435b157))
+- produce error instances from xhr error & timeout event callbacks ([#127](https://github.com/sanity-io/get-it/issues/127)) ([6169b6a](https://github.com/sanity-io/get-it/commit/6169b6a31d912803fad01f524828d92f6f8677a0))
+
 ## [8.1.1](https://github.com/sanity-io/get-it/compare/v8.1.0...v8.1.1) (2023-03-24)
 
 ### Bug Fixes
