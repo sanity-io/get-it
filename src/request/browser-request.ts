@@ -9,7 +9,7 @@ export const adapter: RequestAdapter = typeof XMLHttpRequest === 'function' ? 'x
 // Fallback to fetch-based XHR polyfill for non-browser environments like Workers
 const XmlHttpRequest = adapter === 'xhr' ? XMLHttpRequest : FetchXhr
 
-export default (context: any, callback: any) => {
+export default (context: any, callback: (err: Error | null, response?: any) => void) => {
   const opts = context.options
   const options = context.applyMiddleware('finalizeOptions', opts)
   const timers: any = {}
@@ -40,8 +40,24 @@ export default (context: any, callback: any) => {
   let timedOut = false
 
   // Apply event handlers
-  xhr.onerror = onError
-  xhr.ontimeout = onError
+  xhr.onerror = (event: ProgressEvent) => {
+    onError(
+      new Error(
+        `Request error while attempting to reach ${options.url}${
+          event.lengthComputable ? `(${event.loaded} of ${event.total} bytes transferred)` : ''
+        }`
+      )
+    )
+  }
+  xhr.ontimeout = (event: ProgressEvent) => {
+    onError(
+      new Error(
+        `Request timeout while attempting to reach ${options.url}${
+          event.lengthComputable ? `(${event.loaded} of ${event.total} bytes transferred)` : ''
+        }`
+      )
+    )
+  }
   xhr.onabort = () => {
     stopTimers(true)
     aborted = true
@@ -139,7 +155,7 @@ export default (context: any, callback: any) => {
     }
   }
 
-  function onError(error?: any) {
+  function onError(error: Error) {
     if (loaded) {
       return
     }
@@ -151,7 +167,11 @@ export default (context: any, callback: any) => {
 
     // Annoyingly, details are extremely scarce and hidden from us.
     // We only really know that it is a network error
-    const err = error || new Error(`Network error while attempting to reach ${options.url}`)
+    const err = (error ||
+      new Error(`Network error while attempting to reach ${options.url}`)) as Error & {
+      isNetworkError: boolean
+      request?: any
+    }
     err.isNetworkError = true
     err.request = options
     callback(err)
