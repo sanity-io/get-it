@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.1.3](https://github.com/sanity-io/get-it/compare/v8.1.2...v8.1.3) (2023-05-15)
+
+### Bug Fixes
+
+- remove debug code ([a9eca1f](https://github.com/sanity-io/get-it/commit/a9eca1fe7ab51d6b0dacc2aeb447f72936d2a8b4))
+
 ## [8.1.2](https://github.com/sanity-io/get-it/compare/v8.1.1...v8.1.2) (2023-05-11)
 
 ### Bug Fixes
