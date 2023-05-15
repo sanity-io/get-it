@@ -68,10 +68,6 @@ export default (context: any, cb: any) => {
   const proxy = getProxyOptions(options)
   const tunnel = proxy && tunneling.shouldEnable(options)
 
-  if (tunnel) {
-    throw new Error('Here')
-  }
-
   // Allow middleware to inject a response, for instance in the case of caching or mocking
   const injectedResponse = context.applyMiddleware('interceptRequest', undefined, {
     adapter,
