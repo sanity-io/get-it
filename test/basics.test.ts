@@ -111,17 +111,14 @@ describe(
       expect(res.body).toEqual(['harder', 'better', 'faster', 'stronger'])
     })
 
-    it.skipIf(environment === 'node' && process.versions.node.split('.')[0] === '20')(
-      'should not request compressed responses for HEAD requests',
-      async () => {
-        const request = getIt([baseUrl, jsonResponse()])
-        const req = request({url: '/maybeCompress', method: 'HEAD'})
+    it('should not request compressed responses for HEAD requests', async () => {
+      const request = getIt([baseUrl, jsonResponse()])
+      const req = request({url: '/maybeCompress', method: 'HEAD'})
 
-        const res = await promiseRequest(req)
-        expect(res).toHaveProperty('headers')
-        expect(res.headers).not.toHaveProperty('content-encoding')
-      }
-    )
+      const res = await promiseRequest(req)
+      expect(res).toHaveProperty('headers')
+      expect(res.headers).not.toHaveProperty('content-encoding')
+    })
 
     it.runIf(environment === 'node')('should decompress brotli-encoded responses', async () => {
       const request = getIt([baseUrl, jsonResponse(), debugRequest])
@@ -139,17 +136,14 @@ describe(
       expect(res.body).toEqual(['larger', 'worse', 'slower', 'weaker'])
     })
 
-    it.skipIf(environment === 'node' && process.versions.node.split('.')[0] === '20')(
-      'should not return a body on HEAD-requests',
-      async () => {
-        const request = getIt([baseUrl, jsonResponse()])
-        const req = request({url: '/gzip', method: 'HEAD'})
-        await expectRequest(req).resolves.toMatchObject({
-          statusCode: 200,
-          method: 'HEAD',
-        })
-      }
-    )
+    it('should not return a body on HEAD-requests', async () => {
+      const request = getIt([baseUrl, jsonResponse()])
+      const req = request({url: '/gzip', method: 'HEAD'})
+      await expectRequest(req).resolves.toMatchObject({
+        statusCode: 200,
+        method: 'HEAD',
+      })
+    })
 
     it.runIf(environment === 'node')(
       'should be able to send PUT-requests with raw bodies',
