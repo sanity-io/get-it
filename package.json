@@ -112,7 +112,7 @@
     "tunnel-agent": "^0.6.0"
   },
   "devDependencies": {
-    "@edge-runtime/vm": "^2.1.2",
+    "@edge-runtime/vm": "^3.0.0",
     "@sanity/pkg-utils": "^2.2.16",
     "@sanity/semantic-release-preset": "^4.1.1",
     "@types/debug": "^4.1.7",
