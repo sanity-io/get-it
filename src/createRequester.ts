@@ -95,7 +95,7 @@ export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRe
     // We need to hold a reference to the current, ongoing request,
     // in order to allow cancellation. In the case of the retry middleware,
     // a new request might be triggered
-    let ongoingRequest: HttpRequestOngoing
+    let ongoingRequest: HttpRequestOngoing | undefined
     const unsubscribe = channels.request.subscribe((ctx) => {
       // Let request adapters (node/browser) perform the actual request
       ongoingRequest = httpRequest(ctx, (err: any, res: any) => onResponse(err, res, ctx))

@@ -39,8 +39,8 @@ export interface MiddlewareChannels {
 
 /** @public */
 export interface MiddlewareHooks {
-  processOptions: any
   validateOptions: any
+  processOptions: (options: RequestOptions | string) => RequestOptions
   interceptRequest: any
   finalizeOptions: any
   onRequest: any
