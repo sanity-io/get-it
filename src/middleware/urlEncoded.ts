@@ -33,9 +33,9 @@ function encode(data: Record<string, string | Set<number | string>>): string {
 }
 
 /** @public */
-export function urlEncoded(): any {
+export function urlEncoded() {
   return {
-    processOptions: (options: any) => {
+    processOptions: (options) => {
       const body = options.body
       if (!body) {
         return options

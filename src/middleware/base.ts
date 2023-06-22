@@ -4,10 +4,10 @@ const leadingSlash = /^\//
 const trailingSlash = /\/$/
 
 /** @public */
-export function base(baseUrl: any): any {
+export function base(baseUrl: string) {
   const baseUri = baseUrl.replace(trailingSlash, '')
   return {
-    processOptions: (options: any) => {
+    processOptions: (options) => {
       if (/^https?:\/\//i.test(options.url)) {
         return options // Already prefixed
       }

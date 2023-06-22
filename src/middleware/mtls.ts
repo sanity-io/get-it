@@ -13,7 +13,7 @@ export function mtls(config: any = {}) {
   }
 
   return {
-    finalizeOptions: (options: any) => {
+    finalizeOptions: (options) => {
       const mtlsOpts = {
         cert: config.cert,
         key: config.key,

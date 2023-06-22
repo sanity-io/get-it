@@ -6,7 +6,7 @@ export function injectResponse(opts: any = {}) {
     throw new Error('`injectResponse` middleware requires a `inject` function')
   }
 
-  function inject(prevValue: any, event: any) {
+  const inject = function inject(prevValue, event) {
     const response = opts.inject(event, prevValue)
     if (!response) {
       return prevValue
@@ -26,7 +26,7 @@ export function injectResponse(opts: any = {}) {
       },
       response
     )
-  }
+  } satisfies Middleware['interceptRequest']
 
   return {interceptRequest: inject} satisfies Middleware
 }

@@ -8,7 +8,7 @@ const serializeTypes = ['boolean', 'string', 'number']
 /** @public */
 export function jsonRequest() {
   return {
-    processOptions: (options: any) => {
+    processOptions: (options) => {
       const body = options.body
       if (!body) {
         return options

@@ -10,7 +10,7 @@ export default (opts: RetryOptions) => {
   const allowRetry = opts.shouldRetry
 
   return {
-    onError: (err: any, context: any) => {
+    onError: (err, context) => {
       const options = context.options
       const max = options.maxRetries || maxRetries
       const shouldRetry = options.shouldRetry || allowRetry

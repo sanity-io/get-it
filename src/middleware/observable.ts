@@ -2,7 +2,11 @@ import type {Middleware, MiddlewareChannels} from '../types'
 import global from '../util/global'
 
 /** @public */
-export function observable(opts: any = {}) {
+export function observable(
+  opts: {
+    implementation?: any
+  } = {}
+) {
   const Observable =
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- @TODO consider dropping checking for a global Observable since it's not on a standards track
     opts.implementation || (global as any).Observable

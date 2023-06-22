@@ -18,7 +18,7 @@ class HttpError extends Error {
 /** @public */
 export function httpErrors() {
   return {
-    onResponse: (res: any, ctx: any) => {
+    onResponse: (res, ctx) => {
       const isHttpError = res.statusCode >= 400
       if (!isHttpError) {
         return res

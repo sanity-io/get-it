@@ -16,6 +16,8 @@ export interface RequestOptions {
   stream?: boolean
   timeout?: any
   tunnel?: boolean
+  debug?: any
+  requestId?: number
 }
 
 /** @public */
@@ -39,15 +41,23 @@ export interface MiddlewareChannels {
 
 /** @public */
 export interface MiddlewareHooks {
-  processOptions: (options: RequestOptions | string) => RequestOptions
+  processOptions: (options: RequestOptions) => RequestOptions
   validateOptions: (options: RequestOptions) => void | undefined
-  interceptRequest: any
-  finalizeOptions: any
-  onRequest: any
-  onResponse: any
-  onError: any
-  onReturn: any
-  onHeaders: any
+  interceptRequest: (
+    prevValue: any,
+    event: {adapter: RequestAdapter; context: {options: RequestOptions; [key: string]: any}}
+  ) => any
+  finalizeOptions: (options: RequestOptions) => RequestOptions
+  onRequest: (evt: {adapter: RequestAdapter; [key: string]: any}) => any
+  onResponse: (response: any, context: any) => any
+  onError: (err: any, context: any) => any
+  onReturn: (channels: MiddlewareChannels, context: any) => any
+  onHeaders: (response: any, evt: any) => any
+}
+
+/** @public */
+export type MiddlewareReducer = {
+  [P in keyof MiddlewareHooks]: MiddlewareHooks[P][]
 }
 
 /** @public */

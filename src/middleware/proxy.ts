@@ -7,6 +7,6 @@ export function proxy(_proxy: any) {
   }
 
   return {
-    processOptions: (options: any) => Object.assign({proxy: _proxy}, options),
+    processOptions: (options) => Object.assign({proxy: _proxy}, options),
   } satisfies Middleware
 }

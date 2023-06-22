@@ -1,6 +1,6 @@
-import type {MiddlewareHookName} from '../types'
+import type {MiddlewareHookName, MiddlewareReducer} from '../types'
 
-export const middlewareReducer = (middleware: any) =>
+export const middlewareReducer = (middleware: MiddlewareReducer) =>
   function applyMiddleware(hook: MiddlewareHookName, defaultValue: any, ...args: any[]) {
     const bailEarly = hook === 'onError'
 

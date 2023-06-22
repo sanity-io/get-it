@@ -6,6 +6,7 @@ import type {
   Middleware,
   MiddlewareChannels,
   MiddlewareHooks,
+  MiddlewareReducer,
   Middlewares,
   Requester,
   RequestOptions,
@@ -34,9 +35,9 @@ const middlehooks = [
 
 /** @public */
 export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRequest): Requester {
-  const loadedMiddleware: any[] = []
-  const middleware = middlehooks.reduce(
-    (ware: any, name: any) => {
+  const loadedMiddleware: Middlewares = []
+  const middleware: MiddlewareReducer = middlehooks.reduce(
+    (ware, name) => {
       ware[name] = ware[name] || []
       return ware
     },
@@ -99,7 +100,7 @@ export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRe
     let ongoingRequest: HttpRequestOngoing | undefined
     const unsubscribe = channels.request.subscribe((ctx) => {
       // Let request adapters (node/browser) perform the actual request
-      ongoingRequest = httpRequest(ctx, (err: any, res: any) => onResponse(err, res, ctx))
+      ongoingRequest = httpRequest(ctx, (err, res) => onResponse(err, res, ctx))
     })
 
     // If we abort the request, prevent further requests from happening,
@@ -144,7 +145,7 @@ export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRe
 
     middlehooks.forEach((key) => {
       if (newMiddleware[key]) {
-        middleware[key].push(newMiddleware[key])
+        middleware[key].push(newMiddleware[key] as any)
       }
     })
 

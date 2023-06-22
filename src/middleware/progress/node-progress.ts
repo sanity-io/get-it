@@ -2,7 +2,7 @@ import progressStream from 'progress-stream'
 
 import type {Middleware} from '../../types'
 
-function normalizer(stage: any) {
+function normalizer(stage: 'download' | 'upload') {
   return (prog: any) => ({
     stage,
     percent: prog.percentage,
@@ -15,7 +15,7 @@ function normalizer(stage: any) {
 /** @public */
 export function progress() {
   return {
-    onHeaders: (response: any, evt: any) => {
+    onHeaders: (response, evt) => {
       const _progress = progressStream({time: 16})
       const normalize = normalizer('download')
 
@@ -31,7 +31,7 @@ export function progress() {
       return response.pipe(_progress)
     },
 
-    onRequest: (evt: any) => {
+    onRequest: (evt) => {
       if (!evt.progress) {
         return
       }

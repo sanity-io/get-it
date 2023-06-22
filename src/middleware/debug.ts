@@ -25,13 +25,13 @@ export function debug(opts: any = {}): any {
   let requestId = 0
 
   return {
-    processOptions: (options: any) => {
+    processOptions: (options) => {
       options.debug = log
       options.requestId = options.requestId || ++requestId
       return options
     },
 
-    onRequest: (event: any) => {
+    onRequest: (event) => {
       // Short-circuit if not enabled, to save some CPU cycles with formatting stuff
       if (shortCircuit || !event) {
         return event
@@ -57,7 +57,7 @@ export function debug(opts: any = {}): any {
       return event
     },
 
-    onResponse: (res: any, context: any) => {
+    onResponse: (res, context) => {
       // Short-circuit if not enabled, to save some CPU cycles with formatting stuff
       if (shortCircuit || !res) {
         return res
@@ -74,7 +74,7 @@ export function debug(opts: any = {}): any {
       return res
     },
 
-    onError: (err: any, context: any) => {
+    onError: (err, context) => {
       const reqId = context.options.requestId
       if (!err) {
         log('[%s] Error encountered, but handled by an earlier middleware', reqId)
