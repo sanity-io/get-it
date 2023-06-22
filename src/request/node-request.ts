@@ -9,7 +9,7 @@ import isStream from 'is-stream'
 import progressStream from 'progress-stream'
 import qs from 'querystring'
 
-import {RequestAdapter} from '../types'
+import type {HttpRequest, RequestAdapter} from '../types'
 import {getProxyOptions, rewriteUriForProxy} from './node/proxy'
 import {concat} from './node/simpleConcat'
 import {timedOut} from './node/timedOut'
@@ -29,7 +29,7 @@ const reduceResponse = (res: any, reqUrl: any, method: any, body: any) => ({
   statusMessage: res.statusMessage,
 })
 
-export default (context: any, cb: any) => {
+export const httpRequester: HttpRequest = (context, cb) => {
   const options = context.options
   const uri = Object.assign({}, url.parse(options.url))
   const bodyType = isStream(options.body) ? 'stream' : typeof options.body

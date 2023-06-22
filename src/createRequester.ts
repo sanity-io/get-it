@@ -1,6 +1,13 @@
 import {processOptions} from './middleware/defaultOptionsProcessor'
 import {validateOptions} from './middleware/defaultOptionsValidator'
-import type {HttpRequest, Middleware, MiddlewareChannels, Middlewares, Requester} from './types'
+import type {
+  HttpRequest,
+  HttpRequestOngoing,
+  Middleware,
+  MiddlewareChannels,
+  Middlewares,
+  Requester,
+} from './types'
 import middlewareReducer from './util/middlewareReducer'
 import {createPubSub} from './util/pubsub'
 
@@ -59,7 +66,7 @@ export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRe
     // We need to hold a reference to the current, ongoing request,
     // in order to allow cancellation. In the case of the retry middleware,
     // a new request might be triggered
-    let ongoingRequest: any = null
+    let ongoingRequest: HttpRequestOngoing
     const unsubscribe = channels.request.subscribe((ctx) => {
       // Let request adapters (node/browser) perform the actual request
       ongoingRequest = httpRequest(ctx, (err: any, res: any) => onResponse(err, res, ctx))

@@ -50,11 +50,19 @@ export type Requester = {
   (options: RequestOptions | string): any
 }
 
+/** @public */
+export interface HttpRequestOngoing {
+  abort: () => void
+}
+
 /**
  * request-node in node, browser-request in browsers
  * @public
  */
-export type HttpRequest = any
+export type HttpRequest = (
+  context: any,
+  callback: (err: Error | null, response?: any) => void
+) => HttpRequestOngoing
 
 /** @public */
 export interface RetryOptions {

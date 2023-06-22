@@ -2,7 +2,7 @@ import {adapter, getIt} from 'get-it'
 import {jsonRequest, jsonResponse} from 'get-it/middleware'
 import {describe, expect, it} from 'vitest'
 
-import browserRequest from '../src/request/browser-request'
+import {httpRequester as browserRequest} from '../src/request/browser-request'
 import {baseUrl, expectRequest, expectRequestBody, isHappyDomBug, promiseRequest} from './helpers'
 
 describe.skipIf(typeof fetch === 'undefined' && typeof XMLHttpRequest === 'undefined')(
