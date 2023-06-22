@@ -1,4 +1,4 @@
-let actualGlobal: any
+let actualGlobal = {} as typeof globalThis
 
 if (typeof globalThis !== 'undefined') {
   actualGlobal = globalThis
@@ -8,8 +8,6 @@ if (typeof globalThis !== 'undefined') {
   actualGlobal = global
 } else if (typeof self !== 'undefined') {
   actualGlobal = self
-} else {
-  actualGlobal = {} as any
 }
 
 export default actualGlobal

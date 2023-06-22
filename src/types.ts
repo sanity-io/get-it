@@ -19,6 +19,25 @@ export interface RequestOptions {
 }
 
 /** @public */
+export interface Subscriber<Event> {
+  (event: Event): void
+}
+/** @public */
+export interface PubSub<Message> {
+  publish: (message: Message) => void
+  subscribe: (subscriber: Subscriber<Message>) => () => void
+}
+
+/** @public */
+export interface MiddlewareChannels {
+  request: PubSub<any>
+  response: PubSub<any>
+  progress: PubSub<any>
+  error: PubSub<any>
+  abort: PubSub<void>
+}
+
+/** @public */
 export type Middleware = any
 
 /** @public */

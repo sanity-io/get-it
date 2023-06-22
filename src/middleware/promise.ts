@@ -1,3 +1,5 @@
+import type {MiddlewareChannels} from '../types'
+
 /** @public */
 export const promise = (options: any = {}) => {
   const PromiseImplementation = options.implementation || Promise
@@ -6,7 +8,7 @@ export const promise = (options: any = {}) => {
   }
 
   return {
-    onReturn: (channels: any, context: any) =>
+    onReturn: (channels: MiddlewareChannels, context: any) =>
       new PromiseImplementation((resolve: any, reject: any) => {
         const cancel = context.options.cancelToken
         if (cancel) {
