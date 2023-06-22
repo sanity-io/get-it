@@ -1,10 +1,16 @@
 import {processOptions} from './middleware/defaultOptionsProcessor'
 import {validateOptions} from './middleware/defaultOptionsValidator'
-import type {HttpRequest, Middleware, Middlewares, Requester} from './types'
+import type {HttpRequest, Middleware, MiddlewareChannels, Middlewares, Requester} from './types'
 import middlewareReducer from './util/middlewareReducer'
 import {createPubSub} from './util/pubsub'
 
-const channelNames = ['request', 'response', 'progress', 'error', 'abort']
+const channelNames = [
+  'request',
+  'response',
+  'progress',
+  'error',
+  'abort',
+] satisfies (keyof MiddlewareChannels)[]
 const middlehooks = [
   'processOptions',
   'validateOptions',
@@ -32,10 +38,10 @@ export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRe
   )
 
   function request(opts: any) {
-    const channels = channelNames.reduce((target: any, name: any): any => {
+    const channels = channelNames.reduce((target, name) => {
       target[name] = createPubSub()
       return target
-    }, {})
+    }, {} as MiddlewareChannels)
 
     // Prepare a middleware reducer that can be reused throughout the lifecycle
     const applyMiddleware = middlewareReducer(middleware)
