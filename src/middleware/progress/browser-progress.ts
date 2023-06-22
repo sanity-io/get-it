@@ -2,7 +2,6 @@ import type {RequestAdapter} from '../../types'
 
 export function progress() {
   return {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onRequest: (evt: {adapter: RequestAdapter; [key: string]: any}) => {
       if (evt.adapter !== 'xhr') {
         return

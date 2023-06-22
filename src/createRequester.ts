@@ -60,7 +60,7 @@ export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRe
     // in order to allow cancellation. In the case of the retry middleware,
     // a new request might be triggered
     let ongoingRequest: any = null
-    const unsubscribe = channels.request.subscribe((ctx: any) => {
+    const unsubscribe = channels.request.subscribe((ctx) => {
       // Let request adapters (node/browser) perform the actual request
       ongoingRequest = httpRequest(ctx, (err: any, res: any) => onResponse(err, res, ctx))
     })
