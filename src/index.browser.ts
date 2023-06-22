@@ -2,7 +2,7 @@ import {createRequester} from './createRequester'
 import {httpRequester} from './request/browser-request'
 import type {ExportEnv, HttpRequest, Middlewares, Requester} from './types'
 
-export * from './types'
+export type * from './types'
 
 /** @public */
 export const getIt = (
