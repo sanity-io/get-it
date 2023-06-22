@@ -8,6 +8,7 @@ import type {
   MiddlewareHooks,
   Middlewares,
   Requester,
+  RequestOptions,
 } from './types'
 import {middlewareReducer} from './util/middlewareReducer'
 import {createPubSub} from './util/pubsub'
@@ -46,7 +47,7 @@ export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRe
     } as any
   )
 
-  function request(opts: any) {
+  function request(opts: RequestOptions | string) {
     const onResponse = (reqErr: any, res: any, ctx: any) => {
       let error = reqErr
       let response = res
