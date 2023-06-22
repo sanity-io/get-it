@@ -1,5 +1,7 @@
 import debugIt from 'debug'
 
+import type {Middleware} from '../types'
+
 const SENSITIVE_HEADERS = ['cookie', 'authorization']
 
 const hasOwn = Object.prototype.hasOwnProperty
@@ -82,7 +84,7 @@ export function debug(opts: any = {}): any {
       log('[%s] ERROR: %s', reqId, err.message)
       return err
     },
-  }
+  } satisfies Middleware
 }
 
 function stringifyBody(res: any) {

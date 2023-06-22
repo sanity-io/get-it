@@ -1,5 +1,7 @@
 import progressStream from 'progress-stream'
 
+import type {Middleware} from '../../types'
+
 function normalizer(stage: any) {
   return (prog: any) => ({
     stage,
@@ -39,5 +41,5 @@ export function progress() {
         evt.context.channels.progress.publish(normalize(prog))
       )
     },
-  }
+  } satisfies Middleware
 }

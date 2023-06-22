@@ -1,4 +1,4 @@
-import type {MiddlewareChannels} from '../types'
+import type {Middleware, MiddlewareChannels} from '../types'
 
 /** @public */
 export const promise = (options: any = {}) => {
@@ -32,7 +32,7 @@ export const promise = (options: any = {}) => {
           }
         }, 0)
       }),
-  }
+  } satisfies Middleware
 }
 
 /**

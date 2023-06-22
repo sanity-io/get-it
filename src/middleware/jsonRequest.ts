@@ -1,5 +1,6 @@
 import {isPlainObject} from 'is-plain-object'
 
+import type {Middleware} from '../types'
 import {isBuffer} from '../util/isBuffer'
 
 const serializeTypes = ['boolean', 'string', 'number']
@@ -30,5 +31,5 @@ export function jsonRequest() {
         }),
       })
     },
-  }
+  } satisfies Middleware
 }

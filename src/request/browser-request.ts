@@ -9,10 +9,7 @@ export const adapter: RequestAdapter = typeof XMLHttpRequest === 'function' ? 'x
 // Fallback to fetch-based XHR polyfill for non-browser environments like Workers
 const XmlHttpRequest = adapter === 'xhr' ? XMLHttpRequest : FetchXhr
 
-export const httpRequester: HttpRequest = (
-  context,
-  callback: (err: Error | null, response?: any) => void
-) => {
+export const httpRequester: HttpRequest = (context, callback) => {
   const opts = context.options
   const options = context.applyMiddleware('finalizeOptions', opts)
   const timers: any = {}
@@ -173,7 +170,7 @@ export const httpRequester: HttpRequest = (
     const err = (error ||
       new Error(`Network error while attempting to reach ${options.url}`)) as Error & {
       isNetworkError: boolean
-      request?: any
+      request?: typeof options
     }
     err.isNetworkError = true
     err.request = options

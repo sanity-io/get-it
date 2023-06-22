@@ -1,4 +1,4 @@
-import type {MiddlewareChannels} from '../types'
+import type {Middleware, MiddlewareChannels} from '../types'
 import global from '../util/global'
 
 /** @public */
@@ -27,5 +27,5 @@ export function observable(opts: any = {}) {
         channels.request.publish(context)
         return () => channels.abort.publish()
       }),
-  }
+  } satisfies Middleware
 }

@@ -5,10 +5,11 @@ import type {
   HttpRequestOngoing,
   Middleware,
   MiddlewareChannels,
+  MiddlewareHooks,
   Middlewares,
   Requester,
 } from './types'
-import middlewareReducer from './util/middlewareReducer'
+import {middlewareReducer} from './util/middlewareReducer'
 import {createPubSub} from './util/pubsub'
 
 const channelNames = [
@@ -28,7 +29,7 @@ const middlehooks = [
   'onError',
   'onReturn',
   'onHeaders',
-]
+] satisfies (keyof MiddlewareHooks)[]
 
 /** @public */
 export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRequest): Requester {
@@ -41,10 +42,38 @@ export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRe
     {
       processOptions: [processOptions],
       validateOptions: [validateOptions],
-    }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any
   )
 
   function request(opts: any) {
+    const onResponse = (reqErr: any, res: any, ctx: any) => {
+      let error = reqErr
+      let response = res
+
+      // We're processing non-errors first, in case a middleware converts the
+      // response into an error (for instance, status >= 400 == HttpError)
+      if (!error) {
+        try {
+          response = applyMiddleware('onResponse', res, ctx)
+        } catch (err) {
+          response = null
+          error = err
+        }
+      }
+
+      // Apply error middleware - if middleware return the same (or a different) error,
+      // publish as an error event. If we *don't* return an error, assume it has been handled
+      error = error && applyMiddleware('onError', error, ctx)
+
+      // Figure out if we should publish on error/response channels
+      if (error) {
+        channels.error.publish(error)
+      } else if (response) {
+        channels.response.publish(response)
+      }
+    }
+
     const channels: MiddlewareChannels = channelNames.reduce((target, name) => {
       target[name] = createPubSub() as MiddlewareChannels[typeof name]
       return target
@@ -93,33 +122,6 @@ export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRe
     }
 
     return returnValue
-
-    function onResponse(reqErr: any, res: any, ctx: any) {
-      let error = reqErr
-      let response = res
-
-      // We're processing non-errors first, in case a middleware converts the
-      // response into an error (for instance, status >= 400 == HttpError)
-      if (!error) {
-        try {
-          response = applyMiddleware('onResponse', res, ctx)
-        } catch (err) {
-          response = null
-          error = err
-        }
-      }
-
-      // Apply error middleware - if middleware return the same (or a different) error,
-      // publish as an error event. If we *don't* return an error, assume it has been handled
-      error = error && applyMiddleware('onError', error, ctx)
-
-      // Figure out if we should publish on error/response channels
-      if (error) {
-        channels.error.publish(error)
-      } else if (response) {
-        channels.response.publish(response)
-      }
-    }
   }
 
   request.use = function use(newMiddleware: Middleware) {
@@ -149,9 +151,7 @@ export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRe
     return request
   }
 
-  request.clone = function clone() {
-    return createRequester(loadedMiddleware, httpRequest)
-  }
+  request.clone = () => createRequester(loadedMiddleware, httpRequest)
 
   initMiddleware.forEach(request.use)
 

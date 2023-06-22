@@ -1,3 +1,5 @@
+import type {Middleware} from '../types'
+
 /** @public */
 export function proxy(_proxy: any) {
   if (_proxy !== false && (!_proxy || !_proxy.host)) {
@@ -6,5 +8,5 @@ export function proxy(_proxy: any) {
 
   return {
     processOptions: (options: any) => Object.assign({proxy: _proxy}, options),
-  }
+  } satisfies Middleware
 }

@@ -1,5 +1,6 @@
 import {isPlainObject} from 'is-plain-object'
 
+import type {Middleware} from '../types'
 import {isBuffer} from '../util/isBuffer'
 
 function encode(data: Record<string, string | Set<number | string>>): string {
@@ -56,5 +57,5 @@ export function urlEncoded(): any {
         },
       }
     },
-  }
+  } satisfies Middleware
 }

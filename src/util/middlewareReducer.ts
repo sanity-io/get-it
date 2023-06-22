@@ -1,5 +1,7 @@
-export default (middleware: any) => {
-  const applyMiddleware = (hook: any, defaultValue: any, ...args: any[]) => {
+import type {MiddlewareHookName} from '../types'
+
+export const middlewareReducer = (middleware: any) =>
+  function applyMiddleware(hook: MiddlewareHookName, defaultValue: any, ...args: any[]) {
     const bailEarly = hook === 'onError'
 
     let value = defaultValue
@@ -14,6 +16,3 @@ export default (middleware: any) => {
 
     return value
   }
-
-  return applyMiddleware
-}

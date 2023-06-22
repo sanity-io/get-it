@@ -38,17 +38,26 @@ export interface MiddlewareChannels {
 }
 
 /** @public */
-export type Middleware = any
+export interface MiddlewareHooks {
+  processOptions: any
+  validateOptions: any
+  interceptRequest: any
+  finalizeOptions: any
+  onRequest: any
+  onResponse: any
+  onError: any
+  onReturn: any
+  onHeaders: any
+}
+
+/** @public */
+export type MiddlewareHookName = keyof MiddlewareHooks
+
+/** @public */
+export type Middleware = Partial<MiddlewareHooks>
 
 /** @public */
 export type Middlewares = Middleware[]
-
-/** @public */
-export type Requester = {
-  use: (middleware: Middleware) => Requester
-  clone: () => Requester
-  (options: RequestOptions | string): any
-}
 
 /** @public */
 export interface HttpRequestOngoing {
@@ -85,3 +94,10 @@ export type ExportEnv = 'node' | 'browser'
  * @public
  */
 export type RequestAdapter = 'node' | 'xhr' | 'fetch'
+
+/** @public */
+export type Requester = {
+  use: (middleware: Middleware) => Requester
+  clone: () => Requester
+  (options: RequestOptions | string): any
+}

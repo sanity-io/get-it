@@ -1,4 +1,4 @@
-import type {RequestAdapter} from '../../types'
+import type {Middleware, RequestAdapter} from '../../types'
 
 export function progress() {
   return {
@@ -31,5 +31,5 @@ export function progress() {
         }
       }
     },
-  }
+  } satisfies Middleware
 }

@@ -1,3 +1,5 @@
+import type {Middleware} from '../types'
+
 const leadingSlash = /^\//
 const trailingSlash = /\/$/
 
@@ -13,5 +15,5 @@ export function base(baseUrl: any): any {
       const url = [baseUri, options.url.replace(leadingSlash, '')].join('/')
       return Object.assign({}, options, {url})
     },
-  }
+  } satisfies Middleware
 }

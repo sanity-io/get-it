@@ -1,3 +1,5 @@
+import type {Middleware} from '../types'
+
 /** @public */
 export function injectResponse(opts: any = {}) {
   if (typeof opts.inject !== 'function') {
@@ -26,5 +28,5 @@ export function injectResponse(opts: any = {}) {
     )
   }
 
-  return {interceptRequest: inject}
+  return {interceptRequest: inject} satisfies Middleware
 }

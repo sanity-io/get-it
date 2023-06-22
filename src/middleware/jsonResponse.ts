@@ -1,3 +1,5 @@
+import type {Middleware} from '../types'
+
 /** @public */
 export function jsonResponse(opts?: any) {
   return {
@@ -15,7 +17,7 @@ export function jsonResponse(opts?: any) {
       Object.assign({}, options, {
         headers: Object.assign({Accept: 'application/json'}, options.headers),
       }),
-  }
+  } satisfies Middleware
 
   function tryParse(body: any) {
     try {

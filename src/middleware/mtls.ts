@@ -1,3 +1,5 @@
+import type {Middleware} from '../types'
+
 /** @public */
 export function mtls(config: any = {}) {
   if (!config.ca) {
@@ -19,5 +21,5 @@ export function mtls(config: any = {}) {
       }
       return Object.assign({}, options, mtlsOpts)
     },
-  }
+  } satisfies Middleware
 }
