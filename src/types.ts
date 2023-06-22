@@ -33,7 +33,7 @@ export interface MiddlewareChannels {
   request: PubSub<any>
   response: PubSub<any>
   progress: PubSub<any>
-  error: PubSub<any>
+  error: PubSub<unknown>
   abort: PubSub<void>
 }
 

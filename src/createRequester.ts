@@ -38,10 +38,11 @@ export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRe
   )
 
   function request(opts: any) {
-    const channels = channelNames.reduce((target, name) => {
-      target[name] = createPubSub()
+    const channels: MiddlewareChannels = channelNames.reduce((target, name) => {
+      target[name] = createPubSub() as MiddlewareChannels[typeof name]
       return target
-    }, {} as MiddlewareChannels)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    }, {} as any)
 
     // Prepare a middleware reducer that can be reused throughout the lifecycle
     const applyMiddleware = middlewareReducer(middleware)
