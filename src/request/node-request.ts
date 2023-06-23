@@ -3,13 +3,13 @@ import https from 'node:https'
 import url from 'node:url'
 
 import decompressResponse from 'decompress-response'
-import follow from 'follow-redirects'
+import follow, {type FollowResponse, type RedirectableRequest} from 'follow-redirects'
 import toStream from 'into-stream'
 import isStream from 'is-stream'
 import progressStream from 'progress-stream'
 import qs from 'querystring'
 
-import type {HttpRequest, RequestAdapter} from '../types'
+import type {HttpRequest, MiddlewareResponse, RequestAdapter} from '../types'
 import {getProxyOptions, rewriteUriForProxy} from './node/proxy'
 import {concat} from './node/simpleConcat'
 import {timedOut} from './node/timedOut'
@@ -20,7 +20,12 @@ export const adapter: RequestAdapter = 'node'
 
 // Reduce a fully fledged node-style response object to
 // something that works in both browser and node environment
-const reduceResponse = (res: any, reqUrl: any, method: any, body: any) => ({
+const reduceResponse = (
+  res: any,
+  reqUrl: string,
+  method: string,
+  body: any
+): MiddlewareResponse => ({
   body,
   url: reqUrl,
   method: method,
@@ -30,7 +35,7 @@ const reduceResponse = (res: any, reqUrl: any, method: any, body: any) => ({
 })
 
 export const httpRequester: HttpRequest = (context, cb) => {
-  const options = context.options
+  const {options} = context
   const uri = Object.assign({}, url.parse(options.url))
   const bodyType = isStream(options.body) ? 'stream' : typeof options.body
 
@@ -52,7 +57,7 @@ export const httpRequester: HttpRequest = (context, cb) => {
 
   // Make sure callback is not called in the event of a cancellation
   let aborted = false
-  const callback = (err: any, res?: any) => !aborted && cb(err, res)
+  const callback = (err: Error | null, res?: MiddlewareResponse) => !aborted && cb(err, res)
   context.channels.abort.subscribe(() => {
     aborted = true
   })
@@ -121,7 +126,7 @@ export const httpRequester: HttpRequest = (context, cb) => {
   }
 
   const finalOptions = context.applyMiddleware('finalizeOptions', reqOpts)
-  const request = transport.request(finalOptions, (response: any) => {
+  const request = transport.request(finalOptions, (response) => {
     const res = tryCompressed ? decompressResponse(response) : response
     const resStream = context.applyMiddleware('onHeaders', res, {
       headers: response.headers,
@@ -130,7 +135,7 @@ export const httpRequester: HttpRequest = (context, cb) => {
     })
 
     // On redirects, `responseUrl` is set
-    const reqUrl = response.responseUrl || options.url
+    const reqUrl = 'responseUrl' in response ? response.responseUrl : options.url
 
     if (options.stream) {
       callback(null, reduceResponse(res, reqUrl, reqOpts.method, resStream))
@@ -188,7 +193,16 @@ function getProgressStream(options: any) {
   return {bodyStream: bodyStream.pipe(progress), progress}
 }
 
-function getRequestTransport(reqOpts: any, proxy: any, tunnel: any): any {
+function getRequestTransport(
+  reqOpts: any,
+  proxy: any,
+  tunnel: any
+): {
+  request: (
+    options: any,
+    callback: (response: http.IncomingMessage | (http.IncomingMessage & FollowResponse)) => void
+  ) => http.ClientRequest | RedirectableRequest<http.ClientRequest, http.IncomingMessage>
+} {
   const isHttpsRequest = reqOpts.protocol === 'https:'
   const transports =
     reqOpts.maxRedirects === 0

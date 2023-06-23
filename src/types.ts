@@ -104,7 +104,8 @@ export type MiddlewareReducer = {
 /** @public */
 export type ApplyMiddleware = <T extends keyof MiddlewareHooks>(
   hook: T,
-  ...args: Parameters<MiddlewareHooks[T]>
+  value: MiddlewareHooks[T] extends (defaultValue: infer V, ...rest: any[]) => any ? V : never,
+  ...args: MiddlewareHooks[T] extends (defaultValue: any, ...rest: infer P) => any ? P : never
 ) => ReturnType<MiddlewareHooks[T]>
 
 /** @public */
