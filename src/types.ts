@@ -1,4 +1,5 @@
 import type {IncomingHttpHeaders, IncomingMessage} from 'node:http'
+import type {UrlWithStringQuery} from 'node:url'
 
 import type {ProgressStream} from 'progress-stream'
 
@@ -24,6 +25,10 @@ export interface RequestOptions {
   requestId?: number
   attemptNumber?: number
   withCredentials?: boolean
+  /**
+   * Enables using the native `fetch` API instead of the default `http` module, and allows setting its options like `cache`
+   */
+  fetch?: boolean | Omit<RequestInit, 'method'>
 }
 
 /** @public */
@@ -46,6 +51,17 @@ export interface MiddlewareChannels {
 }
 
 /** @public */
+export interface FinalizeOptionsPayload extends UrlWithStringQuery {
+  method: RequestOptions['method']
+  headers: RequestOptions['headers']
+  maxRedirects: RequestOptions['maxRedirects']
+  agent?: any
+  cert?: any
+  key?: any
+  ca?: any
+}
+
+/** @public */
 export interface MiddlewareHooks {
   processOptions: (options: RequestOptions) => RequestOptions
   validateOptions: (options: RequestOptions) => void | undefined
@@ -53,7 +69,7 @@ export interface MiddlewareHooks {
     prevValue: MiddlewareResponse | undefined,
     event: {adapter: RequestAdapter; context: HttpContext}
   ) => MiddlewareResponse | undefined | void
-  finalizeOptions: (options: RequestOptions) => RequestOptions
+  finalizeOptions: (options: FinalizeOptionsPayload) => FinalizeOptionsPayload
   onRequest: (evt: HookOnRequestEvent) => void
   onResponse: (response: MiddlewareResponse, context: HttpContext) => MiddlewareResponse
   onError: (err: Error | null, context: HttpContext) => any

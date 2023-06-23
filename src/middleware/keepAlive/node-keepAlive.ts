@@ -15,12 +15,12 @@ export function keepAlive(config: any = {}) {
   const agents = {http: httpAgent, https: httpsAgent}
 
   return {
-    finalizeOptions: (options: any) => {
+    finalizeOptions: (options) => {
       if (options.agent) {
         return options
       }
 
-      const isHttps = isHttpsProto.test(options.href || options.protocol)
+      const isHttps = isHttpsProto.test(options.href! || options.protocol!)
       const keepOpts =
         options.maxRedirects === 0 ? {agent: isHttps ? httpsAgent : httpAgent} : {agents}
 
