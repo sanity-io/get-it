@@ -1,4 +1,4 @@
-import type {Middleware, MiddlewareChannels} from '../types'
+import type {Middleware} from '../types'
 import global from '../util/global'
 
 /** @public */
@@ -17,13 +17,13 @@ export function observable(
   }
 
   return {
-    onReturn: (channels: MiddlewareChannels, context: any) =>
+    onReturn: (channels, context) =>
       new Observable((observer: any) => {
-        channels.error.subscribe((err: any) => observer.error(err))
-        channels.progress.subscribe((event: any) =>
+        channels.error.subscribe((err) => observer.error(err))
+        channels.progress.subscribe((event) =>
           observer.next(Object.assign({type: 'progress'}, event))
         )
-        channels.response.subscribe((response: any) => {
+        channels.response.subscribe((response) => {
           observer.next(Object.assign({type: 'response'}, response))
           observer.complete()
         })

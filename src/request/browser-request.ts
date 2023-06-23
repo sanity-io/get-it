@@ -1,6 +1,6 @@
 import parseHeaders from 'parse-headers'
 
-import type {HttpRequest, RequestAdapter} from '../types'
+import type {HttpRequest, MiddlewareResponse, RequestAdapter} from '../types'
 import {FetchXhr} from './browser/fetchXhr'
 
 // Use fetch if it's available, non-browser environments such as Deno, Edge Runtime and more provide fetch as a global but doesn't provide xhr
@@ -81,7 +81,7 @@ export const httpRequester: HttpRequest = (context, callback) => {
 
   // @todo two last options to open() is username/password
   xhr.open(
-    options.method,
+    options.method!,
     options.url,
     true // Always async
   )
@@ -177,13 +177,13 @@ export const httpRequester: HttpRequest = (context, callback) => {
     callback(err)
   }
 
-  function reduceResponse() {
+  function reduceResponse(): MiddlewareResponse {
     return {
       body:
         xhr.response ||
         (xhr.responseType === '' || xhr.responseType === 'text' ? xhr.responseText : ''),
       url: options.url,
-      method: options.method,
+      method: options.method!,
       headers: parseHeaders(xhr.getAllResponseHeaders()),
       statusCode: xhr.status,
       statusMessage: xhr.statusText,

@@ -22,7 +22,7 @@ export const promise = (
 
         channels.error.subscribe(reject)
         channels.response.subscribe((response) => {
-          resolve(options.onlyBody ? response.body : response)
+          resolve(options.onlyBody ? (response as any).body : response)
         })
 
         // Wait until next tick in case cancel has been performed

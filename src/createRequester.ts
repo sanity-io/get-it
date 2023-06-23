@@ -1,12 +1,14 @@
 import {processOptions} from './middleware/defaultOptionsProcessor'
 import {validateOptions} from './middleware/defaultOptionsValidator'
 import type {
+  HttpContext,
   HttpRequest,
   HttpRequestOngoing,
   Middleware,
   MiddlewareChannels,
   MiddlewareHooks,
   MiddlewareReducer,
+  MiddlewareResponse,
   Middlewares,
   Requester,
   RequestOptions,
@@ -49,16 +51,16 @@ export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRe
   )
 
   function request(opts: RequestOptions | string) {
-    const onResponse = (reqErr: any, res: any, ctx: any) => {
+    const onResponse = (reqErr: Error | null, res: MiddlewareResponse, ctx: HttpContext) => {
       let error = reqErr
-      let response = res
+      let response: MiddlewareResponse | null = res
 
       // We're processing non-errors first, in case a middleware converts the
       // response into an error (for instance, status >= 400 == HttpError)
       if (!error) {
         try {
           response = applyMiddleware('onResponse', res, ctx)
-        } catch (err) {
+        } catch (err: any) {
           response = null
           error = err
         }
@@ -86,7 +88,7 @@ export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRe
     const applyMiddleware = middlewareReducer(middleware)
 
     // Parse the passed options
-    const options = applyMiddleware('processOptions', opts)
+    const options = applyMiddleware('processOptions', opts as RequestOptions)
 
     // Validate the options
     applyMiddleware('validateOptions', options)
@@ -100,7 +102,7 @@ export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRe
     let ongoingRequest: HttpRequestOngoing | undefined
     const unsubscribe = channels.request.subscribe((ctx) => {
       // Let request adapters (node/browser) perform the actual request
-      ongoingRequest = httpRequest(ctx, (err, res) => onResponse(err, res, ctx))
+      ongoingRequest = httpRequest(ctx, (err, res) => onResponse(err, res!, ctx))
     })
 
     // If we abort the request, prevent further requests from happening,

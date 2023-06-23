@@ -1,3 +1,7 @@
+import type {IncomingHttpHeaders, IncomingMessage} from 'node:http'
+
+import type {ProgressStream} from 'progress-stream'
+
 /** @public */
 export interface RequestOptions {
   url: string
@@ -18,6 +22,8 @@ export interface RequestOptions {
   tunnel?: boolean
   debug?: any
   requestId?: number
+  attemptNumber?: number
+  withCredentials?: boolean
 }
 
 /** @public */
@@ -32,9 +38,9 @@ export interface PubSub<Message> {
 
 /** @public */
 export interface MiddlewareChannels {
-  request: PubSub<any>
-  response: PubSub<any>
-  progress: PubSub<any>
+  request: PubSub<HttpContext>
+  response: PubSub<unknown>
+  progress: PubSub<unknown>
   error: PubSub<unknown>
   abort: PubSub<void>
 }
@@ -44,21 +50,65 @@ export interface MiddlewareHooks {
   processOptions: (options: RequestOptions) => RequestOptions
   validateOptions: (options: RequestOptions) => void | undefined
   interceptRequest: (
-    prevValue: any,
-    event: {adapter: RequestAdapter; context: {options: RequestOptions; [key: string]: any}}
-  ) => any
+    prevValue: MiddlewareResponse | undefined,
+    event: {adapter: RequestAdapter; context: HttpContext}
+  ) => MiddlewareResponse | undefined | void
   finalizeOptions: (options: RequestOptions) => RequestOptions
-  onRequest: (evt: {adapter: RequestAdapter; [key: string]: any}) => any
-  onResponse: (response: any, context: any) => any
-  onError: (err: any, context: any) => any
-  onReturn: (channels: MiddlewareChannels, context: any) => any
-  onHeaders: (response: any, evt: any) => any
+  onRequest: (evt: HookOnRequestEvent) => void
+  onResponse: (response: MiddlewareResponse, context: HttpContext) => MiddlewareResponse
+  onError: (err: Error | null, context: HttpContext) => any
+  onReturn: (channels: MiddlewareChannels, context: HttpContext) => any
+  onHeaders: (
+    response: IncomingMessage,
+    evt: {
+      headers: IncomingHttpHeaders
+      adapter: RequestAdapter
+      context: HttpContext
+    }
+  ) => ProgressStream
+}
+
+/** @public */
+export interface HookOnRequestEventBase {
+  options: RequestOptions
+  context: HttpContext
+  request: any
+}
+/** @public */
+export interface HookOnRequestEventNode extends HookOnRequestEventBase {
+  adapter: 'node'
+  progress: any
+}
+/** @public */
+export interface HookOnRequestEventBrowser extends HookOnRequestEventBase {
+  adapter: Omit<RequestAdapter, 'node'>
+  progress?: undefined
+}
+/** @public */
+export type HookOnRequestEvent = HookOnRequestEventNode | HookOnRequestEventBrowser
+
+/** @public */
+export interface HttpContext {
+  options: RequestOptions
+  channels: MiddlewareChannels
+  applyMiddleware: ApplyMiddleware
 }
 
 /** @public */
 export type MiddlewareReducer = {
-  [P in keyof MiddlewareHooks]: MiddlewareHooks[P][]
+  [T in keyof MiddlewareHooks]: ((
+    ...args: Parameters<MiddlewareHooks[T]>
+  ) => ReturnType<MiddlewareHooks[T]>)[]
 }
+
+/** @public */
+export type ApplyMiddleware = <T extends keyof MiddlewareHooks>(
+  hook: T,
+  ...args: Parameters<MiddlewareHooks[T]>
+) => ReturnType<MiddlewareHooks[T]>
+
+/** @public */
+export type DefineApplyMiddleware = (middleware: MiddlewareReducer) => ApplyMiddleware
 
 /** @public */
 export type MiddlewareHookName = keyof MiddlewareHooks
@@ -74,13 +124,26 @@ export interface HttpRequestOngoing {
   abort: () => void
 }
 
+/** @public */
+export interface MiddlewareRequest {}
+
+/** @public */
+export interface MiddlewareResponse {
+  body: any
+  url: string
+  method: string
+  headers: any
+  statusCode: number
+  statusMessage: string
+}
+
 /**
  * request-node in node, browser-request in browsers
  * @public
  */
 export type HttpRequest = (
-  context: any,
-  callback: (err: Error | null, response?: any) => void
+  context: HttpContext,
+  callback: (err: Error | null, response?: MiddlewareResponse) => void
 ) => HttpRequestOngoing
 
 /** @public */

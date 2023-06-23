@@ -16,7 +16,7 @@ const redactKeys = (source: any, redacted: any) => {
 }
 
 /** @public */
-export function debug(opts: any = {}): any {
+export function debug(opts: any = {}) {
   const verbose = opts.verbose
   const namespace = opts.namespace || 'get-it'
   const defaultLogger = debugIt(namespace)
