@@ -11,7 +11,8 @@ const XmlHttpRequest = adapter === 'xhr' ? XMLHttpRequest : FetchXhr
 
 export const httpRequester: HttpRequest = (context, callback) => {
   const opts = context.options
-  const options = context.applyMiddleware('finalizeOptions', opts)
+  // @ts-expect-error -- fix the payload for `finalizeOptions`
+  const options = context.applyMiddleware('finalizeOptions', opts) as any
   const timers: any = {}
 
   // Allow middleware to inject a response, for instance in the case of caching or mocking

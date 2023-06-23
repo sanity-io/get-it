@@ -10,6 +10,7 @@ import progressStream from 'progress-stream'
 import qs from 'querystring'
 
 import type {HttpRequest, MiddlewareResponse, RequestAdapter} from '../types'
+import {lowerCaseHeaders} from '../util/lowerCaseHeaders'
 import {getProxyOptions, rewriteUriForProxy} from './node/proxy'
 import {concat} from './node/simpleConcat'
 import {timedOut} from './node/timedOut'
@@ -37,8 +38,75 @@ const reduceResponse = (
 export const httpRequester: HttpRequest = (context, cb) => {
   const {options} = context
   const uri = Object.assign({}, url.parse(options.url))
-  const bodyType = isStream(options.body) ? 'stream' : typeof options.body
 
+  if (typeof fetch === 'function' && options.fetch) {
+    const controller = new AbortController()
+    const reqOpts = context.applyMiddleware('finalizeOptions', {
+      ...uri,
+      method: options.method,
+      headers: {
+        ...(typeof options.fetch === 'object' && options.fetch.headers
+          ? lowerCaseHeaders(options.fetch.headers)
+          : {}),
+        ...lowerCaseHeaders(options.headers),
+      },
+      maxRedirects: options.maxRedirects,
+    })
+    const fetchOpts = {
+      credentials: options.withCredentials ? 'include' : 'omit',
+      ...(typeof options.fetch === 'object' ? options.fetch : {}),
+      method: reqOpts.method,
+      headers: reqOpts.headers,
+      body: options.body,
+      signal: controller.signal,
+    } satisfies RequestInit
+
+    // Allow middleware to inject a response, for instance in the case of caching or mocking
+    const injectedResponse = context.applyMiddleware('interceptRequest', undefined, {
+      adapter,
+      context,
+    })
+
+    // If middleware injected a response, treat it as we normally would and return it
+    // Do note that the injected response has to be reduced to a cross-environment friendly response
+    if (injectedResponse) {
+      const cbTimer = setTimeout(cb, 0, null, injectedResponse)
+      const cancel = () => clearTimeout(cbTimer)
+      return {abort: cancel}
+    }
+
+    const request = fetch(options.url, fetchOpts)
+
+    // Let middleware know we're about to do a request
+    context.applyMiddleware('onRequest', {options, adapter, request, context})
+
+    request
+      .then(async (res) => {
+        const body = options.rawBody ? res.body : await res.text()
+
+        const headers = {} as Record<string, string>
+        res.headers.forEach((value, key) => {
+          headers[key] = value
+        })
+
+        cb(null, {
+          body,
+          url: res.url,
+          method: options.method!,
+          headers,
+          statusCode: res.status,
+          statusMessage: res.statusText,
+        })
+      })
+      .catch((err) => {
+        if (err.name == 'AbortError') return
+        cb(err)
+      })
+
+    return {abort: () => controller.abort()}
+  }
+
+  const bodyType = isStream(options.body) ? 'stream' : typeof options.body
   if (
     bodyType !== 'undefined' &&
     bodyType !== 'stream' &&
@@ -221,13 +289,6 @@ function getRequestTransport(
   }
 
   return isHttpsProxy ? transports.https : transports.http
-}
-
-function lowerCaseHeaders(headers: any) {
-  return Object.keys(headers || {}).reduce((acc, header) => {
-    acc[header.toLowerCase()] = headers[header]
-    return acc
-  }, {} as any)
 }
 
 // function isFile(val: any): val is File {
