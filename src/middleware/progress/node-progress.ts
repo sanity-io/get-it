@@ -22,7 +22,7 @@ export function progress() {
       // This is supposed to be handled automatically, but it has a bug,
       // see https://github.com/freeall/progress-stream/pull/22
       const contentLength = response.headers['content-length']
-      const length = contentLength && Number(contentLength)
+      const length = contentLength ? Number(contentLength) : 0
       if (!isNaN(length) && length > 0) {
         _progress.setLength(length)
       }
