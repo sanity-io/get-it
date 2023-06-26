@@ -1,3 +1,5 @@
+import type {Middleware} from '../types'
+
 /** @public */
 export function mtls(config: any = {}) {
   if (!config.ca) {
@@ -11,7 +13,7 @@ export function mtls(config: any = {}) {
   }
 
   return {
-    finalizeOptions: (options: any) => {
+    finalizeOptions: (options) => {
       const mtlsOpts = {
         cert: config.cert,
         key: config.key,
@@ -19,5 +21,5 @@ export function mtls(config: any = {}) {
       }
       return Object.assign({}, options, mtlsOpts)
     },
-  }
+  } satisfies Middleware
 }

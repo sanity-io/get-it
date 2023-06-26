@@ -1,5 +1,6 @@
 import {isPlainObject} from 'is-plain-object'
 
+import type {Middleware} from '../types'
 import {isBuffer} from '../util/isBuffer'
 
 const serializeTypes = ['boolean', 'string', 'number']
@@ -7,7 +8,7 @@ const serializeTypes = ['boolean', 'string', 'number']
 /** @public */
 export function jsonRequest() {
   return {
-    processOptions: (options: any) => {
+    processOptions: (options) => {
       const body = options.body
       if (!body) {
         return options
@@ -30,5 +31,5 @@ export function jsonRequest() {
         }),
       })
     },
-  }
+  } satisfies Middleware
 }

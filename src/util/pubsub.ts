@@ -1,12 +1,6 @@
 // Code borrowed from https://github.com/bjoerge/nano-pubsub
 
-export interface Subscriber<Event> {
-  (event: Event): void
-}
-export interface PubSub<Message> {
-  publish: (message: Message) => void
-  subscribe: (subscriber: Subscriber<Message>) => () => void
-}
+import type {PubSub, Subscriber} from '../types'
 
 export function createPubSub<Message = void>(): PubSub<Message> {
   const subscribers: {[id: string]: Subscriber<Message>} = Object.create(null)

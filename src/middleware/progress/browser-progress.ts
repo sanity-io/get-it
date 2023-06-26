@@ -1,9 +1,8 @@
-import type {RequestAdapter} from '../../types'
+import type {Middleware} from '../../types'
 
 export function progress() {
   return {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onRequest: (evt: {adapter: RequestAdapter; [key: string]: any}) => {
+    onRequest: (evt) => {
       if (evt.adapter !== 'xhr') {
         return
       }
@@ -19,7 +18,7 @@ export function progress() {
         xhr.onprogress = handleProgress('download')
       }
 
-      function handleProgress(stage: any) {
+      function handleProgress(stage: 'download' | 'upload') {
         return (event: any) => {
           const percent = event.lengthComputable ? (event.loaded / event.total) * 100 : -1
           context.channels.progress.publish({
@@ -32,5 +31,5 @@ export function progress() {
         }
       }
     },
-  }
+  } satisfies Middleware
 }

@@ -1,6 +1,8 @@
 import progressStream from 'progress-stream'
 
-function normalizer(stage: any) {
+import type {Middleware} from '../../types'
+
+function normalizer(stage: 'download' | 'upload') {
   return (prog: any) => ({
     stage,
     percent: prog.percentage,
@@ -13,14 +15,14 @@ function normalizer(stage: any) {
 /** @public */
 export function progress() {
   return {
-    onHeaders: (response: any, evt: any) => {
+    onHeaders: (response, evt) => {
       const _progress = progressStream({time: 16})
       const normalize = normalizer('download')
 
       // This is supposed to be handled automatically, but it has a bug,
       // see https://github.com/freeall/progress-stream/pull/22
       const contentLength = response.headers['content-length']
-      const length = contentLength && Number(contentLength)
+      const length = contentLength ? Number(contentLength) : 0
       if (!isNaN(length) && length > 0) {
         _progress.setLength(length)
       }
@@ -29,7 +31,7 @@ export function progress() {
       return response.pipe(_progress)
     },
 
-    onRequest: (evt: any) => {
+    onRequest: (evt) => {
       if (!evt.progress) {
         return
       }
@@ -39,5 +41,5 @@ export function progress() {
         evt.context.channels.progress.publish(normalize(prog))
       )
     },
-  }
+  } satisfies Middleware
 }

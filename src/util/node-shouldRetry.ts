@@ -1,6 +1,6 @@
 import allowed from 'is-retry-allowed'
 
-export default (err: any, num: number, options: any): any => {
+export default (err: any, num: number, options: any) => {
   if (options.method !== 'GET' && options.method !== 'HEAD') {
     return false
   }

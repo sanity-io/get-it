@@ -1,3 +1,5 @@
+import type {Middleware} from '../types'
+
 class HttpError extends Error {
   response: any
   request: any
@@ -16,7 +18,7 @@ class HttpError extends Error {
 /** @public */
 export function httpErrors() {
   return {
-    onResponse: (res: any, ctx: any) => {
+    onResponse: (res, ctx) => {
       const isHttpError = res.statusCode >= 400
       if (!isHttpError) {
         return res
@@ -24,5 +26,5 @@ export function httpErrors() {
 
       throw new HttpError(res, ctx)
     },
-  }
+  } satisfies Middleware
 }

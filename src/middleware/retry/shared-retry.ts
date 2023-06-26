@@ -1,16 +1,16 @@
-import type {RetryOptions} from '../../types'
+import type {Middleware, RetryOptions} from '../../types'
 
 const isStream = (stream: any) =>
   stream !== null && typeof stream === 'object' && typeof stream.pipe === 'function'
 
 /** @public */
-export default (opts: RetryOptions): any => {
+export default (opts: RetryOptions) => {
   const maxRetries = opts.maxRetries || 5
   const retryDelay = opts.retryDelay || getRetryDelay
   const allowRetry = opts.shouldRetry
 
   return {
-    onError: (err: any, context: any) => {
+    onError: (err, context) => {
       const options = context.options
       const max = options.maxRetries || maxRetries
       const shouldRetry = options.shouldRetry || allowRetry
@@ -37,7 +37,7 @@ export default (opts: RetryOptions): any => {
       // Signal that we've handled the error and that it should not propagate further
       return null
     },
-  }
+  } satisfies Middleware
 }
 
 function getRetryDelay(attemptNum: number) {

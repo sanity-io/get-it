@@ -1,10 +1,12 @@
 import http from 'http'
 import https from 'https'
 
+import type {Middleware} from '../../types'
+
 const isHttpsProto = /^https:/i
 
 /** @public */
-export function keepAlive(config: any = {}): any {
+export function keepAlive(config: any = {}) {
   const ms = config.ms || 1000
   const maxFree = config.maxFree || 256
   const agentOptions = {keepAlive: true, keepAliveMsecs: ms, maxFreeSockets: maxFree}
@@ -24,5 +26,5 @@ export function keepAlive(config: any = {}): any {
 
       return Object.assign({}, options, keepOpts)
     },
-  }
+  } satisfies Middleware
 }

@@ -1,10 +1,28 @@
 import {processOptions} from './middleware/defaultOptionsProcessor'
 import {validateOptions} from './middleware/defaultOptionsValidator'
-import type {HttpRequest, Middleware, Middlewares, Requester} from './types'
-import middlewareReducer from './util/middlewareReducer'
+import type {
+  HttpContext,
+  HttpRequest,
+  HttpRequestOngoing,
+  Middleware,
+  MiddlewareChannels,
+  MiddlewareHooks,
+  MiddlewareReducer,
+  MiddlewareResponse,
+  Middlewares,
+  Requester,
+  RequestOptions,
+} from './types'
+import {middlewareReducer} from './util/middlewareReducer'
 import {createPubSub} from './util/pubsub'
 
-const channelNames = ['request', 'response', 'progress', 'error', 'abort']
+const channelNames = [
+  'request',
+  'response',
+  'progress',
+  'error',
+  'abort',
+] satisfies (keyof MiddlewareChannels)[]
 const middlehooks = [
   'processOptions',
   'validateOptions',
@@ -15,33 +33,62 @@ const middlehooks = [
   'onError',
   'onReturn',
   'onHeaders',
-]
+] satisfies (keyof MiddlewareHooks)[]
 
 /** @public */
 export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRequest): Requester {
-  const loadedMiddleware: any[] = []
-  const middleware = middlehooks.reduce(
-    (ware: any, name: any) => {
+  const loadedMiddleware: Middlewares = []
+  const middleware: MiddlewareReducer = middlehooks.reduce(
+    (ware, name) => {
       ware[name] = ware[name] || []
       return ware
     },
     {
       processOptions: [processOptions],
       validateOptions: [validateOptions],
-    }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any
   )
 
-  function request(opts: any) {
-    const channels = channelNames.reduce((target: any, name: any): any => {
-      target[name] = createPubSub()
+  function request(opts: RequestOptions | string) {
+    const onResponse = (reqErr: Error | null, res: MiddlewareResponse, ctx: HttpContext) => {
+      let error = reqErr
+      let response: MiddlewareResponse | null = res
+
+      // We're processing non-errors first, in case a middleware converts the
+      // response into an error (for instance, status >= 400 == HttpError)
+      if (!error) {
+        try {
+          response = applyMiddleware('onResponse', res, ctx)
+        } catch (err: any) {
+          response = null
+          error = err
+        }
+      }
+
+      // Apply error middleware - if middleware return the same (or a different) error,
+      // publish as an error event. If we *don't* return an error, assume it has been handled
+      error = error && applyMiddleware('onError', error, ctx)
+
+      // Figure out if we should publish on error/response channels
+      if (error) {
+        channels.error.publish(error)
+      } else if (response) {
+        channels.response.publish(response)
+      }
+    }
+
+    const channels: MiddlewareChannels = channelNames.reduce((target, name) => {
+      target[name] = createPubSub() as MiddlewareChannels[typeof name]
       return target
-    }, {})
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    }, {} as any)
 
     // Prepare a middleware reducer that can be reused throughout the lifecycle
     const applyMiddleware = middlewareReducer(middleware)
 
     // Parse the passed options
-    const options = applyMiddleware('processOptions', opts)
+    const options = applyMiddleware('processOptions', opts as RequestOptions)
 
     // Validate the options
     applyMiddleware('validateOptions', options)
@@ -52,10 +99,10 @@ export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRe
     // We need to hold a reference to the current, ongoing request,
     // in order to allow cancellation. In the case of the retry middleware,
     // a new request might be triggered
-    let ongoingRequest: any = null
-    const unsubscribe = channels.request.subscribe((ctx: any) => {
+    let ongoingRequest: HttpRequestOngoing | undefined
+    const unsubscribe = channels.request.subscribe((ctx) => {
       // Let request adapters (node/browser) perform the actual request
-      ongoingRequest = httpRequest(ctx, (err: any, res: any) => onResponse(err, res, ctx))
+      ongoingRequest = httpRequest(ctx, (err, res) => onResponse(err, res!, ctx))
     })
 
     // If we abort the request, prevent further requests from happening,
@@ -79,33 +126,6 @@ export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRe
     }
 
     return returnValue
-
-    function onResponse(reqErr: any, res: any, ctx: any) {
-      let error = reqErr
-      let response = res
-
-      // We're processing non-errors first, in case a middleware converts the
-      // response into an error (for instance, status >= 400 == HttpError)
-      if (!error) {
-        try {
-          response = applyMiddleware('onResponse', res, ctx)
-        } catch (err) {
-          response = null
-          error = err
-        }
-      }
-
-      // Apply error middleware - if middleware return the same (or a different) error,
-      // publish as an error event. If we *don't* return an error, assume it has been handled
-      error = error && applyMiddleware('onError', error, ctx)
-
-      // Figure out if we should publish on error/response channels
-      if (error) {
-        channels.error.publish(error)
-      } else if (response) {
-        channels.response.publish(response)
-      }
-    }
   }
 
   request.use = function use(newMiddleware: Middleware) {
@@ -127,7 +147,7 @@ export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRe
 
     middlehooks.forEach((key) => {
       if (newMiddleware[key]) {
-        middleware[key].push(newMiddleware[key])
+        middleware[key].push(newMiddleware[key] as any)
       }
     })
 
@@ -135,9 +155,7 @@ export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRe
     return request
   }
 
-  request.clone = function clone() {
-    return createRequester(loadedMiddleware, httpRequest)
-  }
+  request.clone = () => createRequester(loadedMiddleware, httpRequest)
 
   initMiddleware.forEach(request.use)
 

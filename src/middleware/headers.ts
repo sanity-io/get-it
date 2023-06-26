@@ -1,7 +1,9 @@
+import type {Middleware} from '../types'
+
 /** @public */
-export function headers(_headers: any, opts: any = {}): any {
+export function headers(_headers: any, opts: any = {}) {
   return {
-    processOptions: (options: any) => {
+    processOptions: (options) => {
       const existing = options.headers || {}
       options.headers = opts.override
         ? Object.assign({}, existing, _headers)
@@ -9,5 +11,5 @@ export function headers(_headers: any, opts: any = {}): any {
 
       return options
     },
-  }
+  } satisfies Middleware
 }

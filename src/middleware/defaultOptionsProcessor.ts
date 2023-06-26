@@ -1,13 +1,15 @@
+import type {MiddlewareHooks, RequestOptions} from '../types'
+
 const isReactNative = typeof navigator === 'undefined' ? false : navigator.product === 'ReactNative'
 
-const defaultOptions = {timeout: isReactNative ? 60000 : 120000}
+const defaultOptions = {timeout: isReactNative ? 60000 : 120000} satisfies Partial<RequestOptions>
 
 /** @public */
-export function processOptions(opts: any): any {
-  const options =
-    typeof opts === 'string'
-      ? Object.assign({url: opts}, defaultOptions)
-      : Object.assign({}, defaultOptions, opts)
+export const processOptions = function processOptions(opts) {
+  const options = {
+    ...defaultOptions,
+    ...(typeof opts === 'string' ? {url: opts} : opts),
+  } satisfies RequestOptions
 
   // Allow parsing relativ URLs by setting the origin
   const url = new URL(options.url, 'http://localhost')
@@ -39,9 +41,9 @@ export function processOptions(opts: any): any {
     url.origin === 'http://localhost' ? `${url.pathname}?${url.searchParams}` : url.toString()
 
   return options
-}
+} satisfies MiddlewareHooks['processOptions']
 
-function normalizeTimeout(time: any): any {
+function normalizeTimeout(time: RequestOptions['timeout']) {
   if (time === false || time === 0) {
     return false
   }

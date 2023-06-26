@@ -1,8 +1,8 @@
 import {createRequester} from './createRequester'
-import httpRequester from './request/node-request'
+import {httpRequester} from './request/node-request'
 import type {ExportEnv, HttpRequest, Middlewares, Requester} from './types'
 
-export * from './types'
+export type * from './types'
 
 /** @public */
 export const getIt = (

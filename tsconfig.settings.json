@@ -20,6 +20,8 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "skipLibCheck": true,
+    "noUnusedParameters": false,
+    "useUnknownInCatchVariables": true,
 
     // Module resolution
     "moduleResolution": "node",

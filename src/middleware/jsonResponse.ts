@@ -1,7 +1,9 @@
+import type {Middleware} from '../types'
+
 /** @public */
 export function jsonResponse(opts?: any) {
   return {
-    onResponse: (response: any) => {
+    onResponse: (response) => {
       const contentType = response.headers['content-type'] || ''
       const shouldDecode = (opts && opts.force) || contentType.indexOf('application/json') !== -1
       if (!response.body || !contentType || !shouldDecode) {
@@ -11,11 +13,11 @@ export function jsonResponse(opts?: any) {
       return Object.assign({}, response, {body: tryParse(response.body)})
     },
 
-    processOptions: (options: any) =>
+    processOptions: (options) =>
       Object.assign({}, options, {
         headers: Object.assign({Accept: 'application/json'}, options.headers),
       }),
-  }
+  } satisfies Middleware
 
   function tryParse(body: any) {
     try {

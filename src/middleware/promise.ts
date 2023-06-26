@@ -1,13 +1,17 @@
+import type {Middleware} from '../types'
+
 /** @public */
-export const promise = (options: any = {}) => {
+export const promise = (
+  options: {onlyBody?: boolean; implementation?: PromiseConstructor} = {}
+) => {
   const PromiseImplementation = options.implementation || Promise
   if (!PromiseImplementation) {
     throw new Error('`Promise` is not available in global scope, and no implementation was passed')
   }
 
   return {
-    onReturn: (channels: any, context: any) =>
-      new PromiseImplementation((resolve: any, reject: any) => {
+    onReturn: (channels, context) =>
+      new PromiseImplementation((resolve, reject) => {
         const cancel = context.options.cancelToken
         if (cancel) {
           cancel.promise.then((reason: any) => {
@@ -17,8 +21,8 @@ export const promise = (options: any = {}) => {
         }
 
         channels.error.subscribe(reject)
-        channels.response.subscribe((response: any) => {
-          resolve(options.onlyBody ? response.body : response)
+        channels.response.subscribe((response) => {
+          resolve(options.onlyBody ? (response as any).body : response)
         })
 
         // Wait until next tick in case cancel has been performed
@@ -30,7 +34,7 @@ export const promise = (options: any = {}) => {
           }
         }, 0)
       }),
-  }
+  } satisfies Middleware
 }
 
 /**

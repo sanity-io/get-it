@@ -1,6 +1,6 @@
 import parseHeaders from 'parse-headers'
 
-import type {RequestAdapter} from '../types'
+import type {HttpRequest, MiddlewareResponse, RequestAdapter} from '../types'
 import {FetchXhr} from './browser/fetchXhr'
 
 // Use fetch if it's available, non-browser environments such as Deno, Edge Runtime and more provide fetch as a global but doesn't provide xhr
@@ -9,7 +9,7 @@ export const adapter: RequestAdapter = typeof XMLHttpRequest === 'function' ? 'x
 // Fallback to fetch-based XHR polyfill for non-browser environments like Workers
 const XmlHttpRequest = adapter === 'xhr' ? XMLHttpRequest : FetchXhr
 
-export default (context: any, callback: (err: Error | null, response?: any) => void) => {
+export const httpRequester: HttpRequest = (context, callback) => {
   const opts = context.options
   const options = context.applyMiddleware('finalizeOptions', opts)
   const timers: any = {}
@@ -81,7 +81,7 @@ export default (context: any, callback: (err: Error | null, response?: any) => v
 
   // @todo two last options to open() is username/password
   xhr.open(
-    options.method,
+    options.method!,
     options.url,
     true // Always async
   )
@@ -170,20 +170,20 @@ export default (context: any, callback: (err: Error | null, response?: any) => v
     const err = (error ||
       new Error(`Network error while attempting to reach ${options.url}`)) as Error & {
       isNetworkError: boolean
-      request?: any
+      request?: typeof options
     }
     err.isNetworkError = true
     err.request = options
     callback(err)
   }
 
-  function reduceResponse() {
+  function reduceResponse(): MiddlewareResponse {
     return {
       body:
         xhr.response ||
         (xhr.responseType === '' || xhr.responseType === 'text' ? xhr.responseText : ''),
       url: options.url,
-      method: options.method,
+      method: options.method!,
       headers: parseHeaders(xhr.getAllResponseHeaders()),
       statusCode: xhr.status,
       statusMessage: xhr.statusText,

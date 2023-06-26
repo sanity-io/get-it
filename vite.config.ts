@@ -1,9 +1,11 @@
-import {defineConfig, type UserConfig} from 'vitest/config'
+import {configDefaults, defineConfig, type UserConfig} from 'vitest/config'
 import GithubActionsReporter from 'vitest-github-actions-reporter'
 
 import pkg from './package.json'
 
 export const sharedConfig = {
+  // Ignore deno and esm tests
+  exclude: [...configDefaults.exclude, 'test-deno/*', 'test-esm/*'],
   globalSetup: [
     './test/helpers/globalSetup.http.ts',
     './test/helpers/globalSetup.https.ts',

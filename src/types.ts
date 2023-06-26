@@ -1,3 +1,7 @@
+import type {IncomingHttpHeaders, IncomingMessage} from 'node:http'
+
+import type {ProgressStream} from 'progress-stream'
+
 /** @public */
 export interface RequestOptions {
   url: string
@@ -16,26 +20,132 @@ export interface RequestOptions {
   stream?: boolean
   timeout?: any
   tunnel?: boolean
+  debug?: any
+  requestId?: number
+  attemptNumber?: number
+  withCredentials?: boolean
 }
 
 /** @public */
-export type Middleware = any
+export interface Subscriber<Event> {
+  (event: Event): void
+}
+/** @public */
+export interface PubSub<Message> {
+  publish: (message: Message) => void
+  subscribe: (subscriber: Subscriber<Message>) => () => void
+}
+
+/** @public */
+export interface MiddlewareChannels {
+  request: PubSub<HttpContext>
+  response: PubSub<unknown>
+  progress: PubSub<unknown>
+  error: PubSub<unknown>
+  abort: PubSub<void>
+}
+
+/** @public */
+export interface MiddlewareHooks {
+  processOptions: (options: RequestOptions) => RequestOptions
+  validateOptions: (options: RequestOptions) => void | undefined
+  interceptRequest: (
+    prevValue: MiddlewareResponse | undefined,
+    event: {adapter: RequestAdapter; context: HttpContext}
+  ) => MiddlewareResponse | undefined | void
+  finalizeOptions: (options: RequestOptions) => RequestOptions
+  onRequest: (evt: HookOnRequestEvent) => void
+  onResponse: (response: MiddlewareResponse, context: HttpContext) => MiddlewareResponse
+  onError: (err: Error | null, context: HttpContext) => any
+  onReturn: (channels: MiddlewareChannels, context: HttpContext) => any
+  onHeaders: (
+    response: IncomingMessage,
+    evt: {
+      headers: IncomingHttpHeaders
+      adapter: RequestAdapter
+      context: HttpContext
+    }
+  ) => ProgressStream
+}
+
+/** @public */
+export interface HookOnRequestEventBase {
+  options: RequestOptions
+  context: HttpContext
+  request: any
+}
+/** @public */
+export interface HookOnRequestEventNode extends HookOnRequestEventBase {
+  adapter: 'node'
+  progress: any
+}
+/** @public */
+export interface HookOnRequestEventBrowser extends HookOnRequestEventBase {
+  adapter: Omit<RequestAdapter, 'node'>
+  progress?: undefined
+}
+/** @public */
+export type HookOnRequestEvent = HookOnRequestEventNode | HookOnRequestEventBrowser
+
+/** @public */
+export interface HttpContext {
+  options: RequestOptions
+  channels: MiddlewareChannels
+  applyMiddleware: ApplyMiddleware
+}
+
+/** @public */
+export type MiddlewareReducer = {
+  [T in keyof MiddlewareHooks]: ((
+    ...args: Parameters<MiddlewareHooks[T]>
+  ) => ReturnType<MiddlewareHooks[T]>)[]
+}
+
+/** @public */
+export type ApplyMiddleware = <T extends keyof MiddlewareHooks>(
+  hook: T,
+  value: MiddlewareHooks[T] extends (defaultValue: infer V, ...rest: any[]) => any ? V : never,
+  ...args: MiddlewareHooks[T] extends (defaultValue: any, ...rest: infer P) => any ? P : never
+) => ReturnType<MiddlewareHooks[T]>
+
+/** @public */
+export type DefineApplyMiddleware = (middleware: MiddlewareReducer) => ApplyMiddleware
+
+/** @public */
+export type MiddlewareHookName = keyof MiddlewareHooks
+
+/** @public */
+export type Middleware = Partial<MiddlewareHooks>
 
 /** @public */
 export type Middlewares = Middleware[]
 
 /** @public */
-export type Requester = {
-  use: (middleware: Middleware) => Requester
-  clone: () => Requester
-  (options: RequestOptions | string): any
+export interface HttpRequestOngoing {
+  abort: () => void
+}
+
+/** @public */
+export interface MiddlewareRequest {}
+
+/** @public */
+export interface MiddlewareResponse {
+  body: any
+  url: string
+  method: string
+  headers: any
+  statusCode: number
+  statusMessage: string
 }
 
 /**
  * request-node in node, browser-request in browsers
  * @public
  */
-export type HttpRequest = any
+export type HttpRequest = (
+  context: HttpContext,
+  callback: (err: Error | null, response?: MiddlewareResponse) => void
+) => HttpRequestOngoing
 
 /** @public */
 export interface RetryOptions {
@@ -58,3 +168,10 @@ export type ExportEnv = 'node' | 'browser'
  * @public
  */
 export type RequestAdapter = 'node' | 'xhr' | 'fetch'
+
+/** @public */
+export type Requester = {
+  use: (middleware: Middleware) => Requester
+  clone: () => Requester
+  (options: RequestOptions | string): any
+}
