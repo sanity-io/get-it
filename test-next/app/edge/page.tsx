@@ -1,8 +1,8 @@
+import {getTimestamp} from '../utils'
+
 export const runtime = 'edge'
 
 export default async function EdgePage() {
-  const timestamp = (await fetch('https://apicdn.sanity.io', {next: {tags: ['edge']}})).headers.get(
-    'date'
-  )
+  const timestamp = await getTimestamp(runtime)
   return <p id="edge">{timestamp}</p>
 }
