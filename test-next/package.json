@@ -1,8 +1,8 @@
 {
   "scripts": {
-    "prepare": "(cd .. && npm i && npm run prepublishOnly)",
-    "dev": "next dev",
     "build": "next build",
+    "dev": "next dev",
+    "prepare": "(cd .. && npm i && npm run prepublishOnly)",
     "start": "next start"
   },
   "dependencies": {
