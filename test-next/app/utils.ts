@@ -1,3 +1,5 @@
+// Test that the Vercel Data Cache is fully supported: https://vercel.com/docs/infrastructure/data-cache
+
 export async function getTimestamp(runtime: string) {
   const [dynamicRes, staticRes] = await Promise.all([
     fetch(
