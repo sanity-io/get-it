@@ -6,8 +6,8 @@ export default async function EdgePage() {
   const [dynamic, timestamp] = await getTimestamp(runtime)
   return (
     <>
-      <p id="nodejs">{timestamp}</p>
-      <p id="dynamic">{dynamic}</p>
+      <p id="nodejs">static: {timestamp}</p>
+      <p id="dynamic">dynamic: {dynamic}</p>
     </>
   )
 }
