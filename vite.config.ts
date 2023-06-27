@@ -4,8 +4,8 @@ import GithubActionsReporter from 'vitest-github-actions-reporter'
 import pkg from './package.json'
 
 export const sharedConfig = {
-  // Ignore deno and esm tests
-  exclude: [...configDefaults.exclude, 'test-deno/*', 'test-esm/*'],
+  // Ignore deno, esm and next tests
+  exclude: [...configDefaults.exclude, 'test-deno/*', 'test-esm/*', 'test-next/*'],
   globalSetup: [
     './test/helpers/globalSetup.http.ts',
     './test/helpers/globalSetup.https.ts',

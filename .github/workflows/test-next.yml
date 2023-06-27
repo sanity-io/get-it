@@ -1,0 +1,21 @@
+---
+name: Next.js Tests
+
+on:
+  deployment_status:
+
+jobs:
+  test:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    if: github.event.deployment_status.state == 'success'
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          cache: npm
+          node-version: lts/*
+      - run: npm ci
+      - run: npm run test:next
+        env:
+          TARGET_URL: '${{ github.event.deployment_status.target_url }}'
