@@ -1,4 +1,7 @@
 export async function getTimestamp(runtime: string) {
-  const res = await fetch('https://apicdn.sanity.io', {next: {revalidate: 60, tags: [runtime]}})
-  return res.headers.get('date')
+  const [dynamicRes, staticRes] = await Promise.all([
+    fetch('https://apicdn.sanity.io', {cache: 'no-store'}),
+    fetch('https://apicdn.sanity.io', {next: {tags: [runtime]}}),
+  ])
+  return [dynamicRes.headers.get('date'), staticRes.headers.get('date')]
 }
