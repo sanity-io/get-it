@@ -51,7 +51,7 @@ export interface MiddlewareChannels {
 }
 
 /** @public */
-export interface FinalizeOptionsPayload extends UrlWithStringQuery {
+export interface FinalizeNodeOptionsPayload extends UrlWithStringQuery {
   method: RequestOptions['method']
   headers: RequestOptions['headers']
   maxRedirects: RequestOptions['maxRedirects']
@@ -69,7 +69,9 @@ export interface MiddlewareHooks {
     prevValue: MiddlewareResponse | undefined,
     event: {adapter: RequestAdapter; context: HttpContext}
   ) => MiddlewareResponse | undefined | void
-  finalizeOptions: (options: FinalizeOptionsPayload) => FinalizeOptionsPayload
+  finalizeOptions: (
+    options: FinalizeNodeOptionsPayload | RequestOptions
+  ) => FinalizeNodeOptionsPayload | RequestOptions
   onRequest: (evt: HookOnRequestEvent) => void
   onResponse: (response: MiddlewareResponse, context: HttpContext) => MiddlewareResponse
   onError: (err: Error | null, context: HttpContext) => any

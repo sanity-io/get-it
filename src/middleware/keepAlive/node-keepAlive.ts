@@ -2,6 +2,7 @@ import http from 'http'
 import https from 'https'
 
 import type {Middleware} from '../../types'
+import {isBrowserOptions} from '../../util/isBrowserOptions'
 
 const isHttpsProto = /^https:/i
 
@@ -16,6 +17,10 @@ export function keepAlive(config: any = {}) {
 
   return {
     finalizeOptions: (options) => {
+      if (isBrowserOptions(options)) {
+        return options
+      }
+
       if (options.agent) {
         return options
       }

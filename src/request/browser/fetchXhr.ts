@@ -30,6 +30,7 @@ export class FetchXhr
   #resHeaders: string
   #headers: Record<string, string> = {}
   #controller?: AbortController
+  #init: RequestInit = {}
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- _async is only declared for typings compatibility
   open(method: string, url: string, _async?: boolean) {
     this.#method = method
@@ -50,9 +51,14 @@ export class FetchXhr
   setRequestHeader(name: string, value: string) {
     this.#headers[name] = value
   }
+  // Allow setting extra fetch init options, needed for runtimes such as Vercel Edge to set `cache` and other options in React Server Components
+  setInit(init: RequestInit) {
+    this.#init = init
+  }
   send(body: BodyInit) {
     const textBody = this.responseType !== 'arraybuffer'
     const options: RequestInit = {
+      ...this.#init,
       method: this.#method,
       headers: this.#headers,
       body,
