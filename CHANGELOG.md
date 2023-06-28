@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.1.4](https://github.com/sanity-io/get-it/compare/v8.1.3...v8.1.4) (2023-06-28)
+
+### Bug Fixes
+
+- **deps:** update dependency typescript to v5.1.5 ([#142](https://github.com/sanity-io/get-it/issues/142)) ([63b72d8](https://github.com/sanity-io/get-it/commit/63b72d857a721eed206fb2ca9fe0c9aa56bdbf03))
+
 ## [8.1.3](https://github.com/sanity-io/get-it/compare/v8.1.2...v8.1.3) (2023-05-15)
 
 ### Bug Fixes
