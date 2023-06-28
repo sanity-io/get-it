@@ -5,6 +5,13 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.2.0](https://github.com/sanity-io/get-it/compare/v8.1.4...v8.2.0) (2023-06-28)
+
+### Features
+
+- add support for `fetch` in `node` ([1608207](https://github.com/sanity-io/get-it/commit/1608207f303f49a1eef02559d1635a81df08208d))
+- add support for `fetch` options in `edge` runtimes ([ca20c8e](https://github.com/sanity-io/get-it/commit/ca20c8ebace764f54089cf63cbf230b4cebe92e3))
+
 ## [8.1.4](https://github.com/sanity-io/get-it/compare/v8.1.3...v8.1.4) (2023-06-28)
 
 ### Bug Fixes
