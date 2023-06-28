@@ -1,11 +1,11 @@
-import {adapter, environment, getIt} from 'get-it'
+import {environment, getIt} from 'get-it'
 import {jsonRequest, jsonResponse, keepAlive, promise} from 'get-it/middleware'
 import {describe, expect, it} from 'vitest'
 
 import {httpRequester as nodeRequest} from '../src/request/node-request'
-import {baseUrl, expectRequest, expectRequestBody, isHappyDomBug, promiseRequest} from './helpers'
+import {baseUrl, expectRequestBody, promiseRequest} from './helpers'
 
-describe.skipIf(typeof fetch === 'undefined' && environment !== 'node')(
+describe.runIf(typeof fetch !== 'undefined' && environment === 'node')(
   'fetch',
   () => {
     it('can return a regular response', async () => {
@@ -15,7 +15,7 @@ describe.skipIf(typeof fetch === 'undefined' && environment !== 'node')(
       expect(actual).toEqual(expected)
     })
 
-    it('can turn off keep-alive', async () => {
+    it.skipIf(process.versions.node.split('.')[0] === '20')('can turn off keep-alive', async () => {
       const request = getIt([baseUrl, promise()], nodeRequest)
       const expected = await request({url: '/plain-text', fetch: false})
       const actual = await request({

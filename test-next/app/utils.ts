@@ -9,13 +9,13 @@ const request = getIt([jsonResponse(), promise()])
 export async function getTimestamp(runtime: string) {
   const [dynamicRes, staticRes] = await Promise.all([
     request({
-      url: 'https://ppsg7ml5.api.sanity.io/v1/data/query/test?query=%7B%22dynamic%22%3A%20now()%7D',
+      url: 'https://ppsg7ml5.apicdn.sanity.io/v1/data/query/test?query=now()',
       fetch: {cache: 'no-store'},
-    }).then((json: any) => json.body.result.dynamic),
+    }).then((json: any) => json.body.result),
     request({
-      url: 'https://ppsg7ml5.api.sanity.io/v1/data/query/test?query=%7B%22static%22%3A%20now()%7D',
+      url: 'https://ppsg7ml5.api.sanity.io/v1/data/query/test?query=now()',
       fetch: {cache: 'force-cache', next: {tags: [runtime]}},
-    }).then((json: any) => json.body.result.static),
+    }).then((json: any) => json.body.result),
   ])
   return [dynamicRes, staticRes]
 }

@@ -1,4 +1,5 @@
 import type {Middleware} from '../types'
+import {isBrowserOptions} from '../util/isBrowserOptions'
 
 /** @public */
 export function mtls(config: any = {}) {
@@ -14,6 +15,10 @@ export function mtls(config: any = {}) {
 
   return {
     finalizeOptions: (options) => {
+      if (isBrowserOptions(options)) {
+        return options
+      }
+
       const mtlsOpts = {
         cert: config.cert,
         key: config.key,

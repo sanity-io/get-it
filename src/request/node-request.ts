@@ -9,7 +9,12 @@ import isStream from 'is-stream'
 import progressStream from 'progress-stream'
 import qs from 'querystring'
 
-import type {HttpRequest, MiddlewareResponse, RequestAdapter} from '../types'
+import type {
+  FinalizeNodeOptionsPayload,
+  HttpRequest,
+  MiddlewareResponse,
+  RequestAdapter,
+} from '../types'
 import {lowerCaseHeaders} from '../util/lowerCaseHeaders'
 import {getProxyOptions, rewriteUriForProxy} from './node/proxy'
 import {concat} from './node/simpleConcat'
@@ -51,7 +56,7 @@ export const httpRequester: HttpRequest = (context, cb) => {
         ...lowerCaseHeaders(options.headers),
       },
       maxRedirects: options.maxRedirects,
-    })
+    }) as FinalizeNodeOptionsPayload
     const fetchOpts = {
       credentials: options.withCredentials ? 'include' : 'omit',
       ...(typeof options.fetch === 'object' ? options.fetch : {}),
@@ -193,7 +198,10 @@ export const httpRequester: HttpRequest = (context, cb) => {
     reqOpts.headers['accept-encoding'] = 'br, gzip, deflate'
   }
 
-  const finalOptions = context.applyMiddleware('finalizeOptions', reqOpts)
+  const finalOptions = context.applyMiddleware(
+    'finalizeOptions',
+    reqOpts
+  ) as FinalizeNodeOptionsPayload
   const request = transport.request(finalOptions, (response) => {
     const res = tryCompressed ? decompressResponse(response) : response
     const resStream = context.applyMiddleware('onHeaders', res, {
