@@ -5,19 +5,15 @@ import {describe, it} from 'vitest'
 import {baseUrl, debugRequest, expectRequestBody} from './helpers'
 
 describe.runIf(environment === 'node')('agent middleware', () => {
-  it('can be used to override keep-alive', async () => {
-    // First see that by default we're using keep-alive:
-    {
-      const request = getIt([baseUrl, jsonResponse(), debugRequest])
-      const req = request({url: '/debug'})
-      await expectRequestBody(req).resolves.toMatchObject({headers: {connection: 'keep-alive'}})
-    }
+  it('can set keepAlive=true', async () => {
+    const request = getIt([baseUrl, agent({keepAlive: true}), jsonResponse(), debugRequest])
+    const req = request({url: '/debug'})
+    await expectRequestBody(req).resolves.toMatchObject({headers: {connection: 'keep-alive'}})
+  })
 
-    // ... but with our custom agent we can change it to close:
-    {
-      const request = getIt([baseUrl, agent({keepAlive: false}), jsonResponse(), debugRequest])
-      const req = request({url: '/debug'})
-      await expectRequestBody(req).resolves.toMatchObject({headers: {connection: 'close'}})
-    }
+  it('can set keepAlive=false', async () => {
+    const request = getIt([baseUrl, agent({keepAlive: false}), jsonResponse(), debugRequest])
+    const req = request({url: '/debug'})
+    await expectRequestBody(req).resolves.toMatchObject({headers: {connection: 'close'}})
   })
 })
