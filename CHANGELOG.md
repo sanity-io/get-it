@@ -5,6 +5,16 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.3.0](https://github.com/sanity-io/get-it/compare/v8.2.0...v8.3.0) (2023-07-07)
+
+### Features
+
+- add nodeAgent middleware ([#118](https://github.com/sanity-io/get-it/issues/118)) ([b71a258](https://github.com/sanity-io/get-it/commit/b71a258b25bc1c73b1c700165b970644e5b0d0d2))
+
+### Bug Fixes
+
+- **deps:** update non-major ([#143](https://github.com/sanity-io/get-it/issues/143)) ([a283e2f](https://github.com/sanity-io/get-it/commit/a283e2f9a96356ab7b4366ed82ccdc5aa9311bf2))
+
 ## [8.2.0](https://github.com/sanity-io/get-it/compare/v8.1.4...v8.2.0) (2023-06-28)
 
 ### Features
