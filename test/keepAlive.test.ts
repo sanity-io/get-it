@@ -1,30 +1,39 @@
 import {environment, getIt} from 'get-it'
-import {keepAlive} from 'get-it/middleware'
-import {describe, it} from 'vitest'
+import {agent, keepAlive} from 'get-it/middleware'
+import {describe, expect, it} from 'vitest'
 
-import {baseUrl, expectRequestBody} from './helpers'
+import {baseUrl, promiseRequest} from './helpers'
 
 describe.runIf(environment === 'node')('keepAlive middleware', () => {
-  it('should work with redirects (passing `agents`)', async () => {
-    const body = 'Just some plain text for you to consume'
-    const request = getIt([baseUrl, keepAlive()])
-    await Promise.all([
-      expectRequestBody(request('/plain-text')).resolves.toEqual(body),
-      new Promise((resolve) => setTimeout(resolve, 50)).then(() =>
-        expectRequestBody(request('/plain-text')).resolves.toEqual(body)
-      ),
-    ])
+  // This is just verifying that our method of detecting if keepAlive is enabled works.
+  it('should be able to detect that keepAlive is disabled', async () => {
+    const request = getIt([baseUrl, agent({keepAlive: false})])
+
+    const remotePort1 = (await promiseRequest(request('/remote-port'))).body
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    const remotePort2 = (await promiseRequest(request('/remote-port'))).body
+
+    expect(remotePort1).not.toBe(remotePort2)
   })
 
-  it('should work without redirects (passing `agent`)', async () => {
-    const body = 'Just some plain text for you to consume'
+  it('should work with redirects', async () => {
     const request = getIt([baseUrl, keepAlive()])
-    const options = {url: '/plain-text', maxRedirects: 0}
-    await Promise.all([
-      expectRequestBody(request(options)).resolves.toEqual(body),
-      new Promise((resolve) => setTimeout(resolve, 50)).then(() =>
-        expectRequestBody(request(options)).resolves.toEqual(body)
-      ),
-    ])
+
+    const remotePort1 = (await promiseRequest(request('/remote-port'))).body
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    const remotePort2 = (await promiseRequest(request('/remote-port'))).body
+
+    expect(remotePort1).toBe(remotePort2)
+  })
+
+  it('should work without redirects', async () => {
+    const request = getIt([baseUrl, keepAlive()])
+    const options = {url: '/remote-port', maxRedirects: 0}
+
+    const remotePort1 = (await promiseRequest(request(options))).body
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    const remotePort2 = (await promiseRequest(request(options))).body
+
+    expect(remotePort1).toBe(remotePort2)
   })
 })

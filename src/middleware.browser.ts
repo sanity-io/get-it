@@ -1,3 +1,4 @@
+export * from './middleware/agent/browser-agent'
 export * from './middleware/base'
 export * from './middleware/debug'
 export * from './middleware/defaultOptionsProcessor'
@@ -7,7 +8,6 @@ export * from './middleware/httpErrors'
 export * from './middleware/injectResponse'
 export * from './middleware/jsonRequest'
 export * from './middleware/jsonResponse'
-export * from './middleware/keepAlive/browser-keepAlive'
 export * from './middleware/mtls'
 export * from './middleware/observable'
 export * from './middleware/progress/browser-progress'
@@ -16,3 +16,8 @@ export * from './middleware/proxy'
 export * from './middleware/retry/browser-retry'
 export * from './middleware/urlEncoded'
 export type * from './types'
+
+import {agent} from './middleware/agent/browser-agent'
+import {buildKeepAlive} from './middleware/keepAlive'
+/** @public */
+export const keepAlive = buildKeepAlive(agent)
