@@ -38,7 +38,7 @@ export function progress() {
 
       const normalize = normalizer('upload')
       evt.progress.on('progress', (prog: any) =>
-        evt.context.channels.progress.publish(normalize(prog))
+        evt.context.channels.progress.publish(normalize(prog)),
       )
     },
   } satisfies Middleware

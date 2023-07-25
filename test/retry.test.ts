@@ -35,7 +35,7 @@ describe(
         const req = request({url: '/status?code=500'})
         return expectRequest(req).rejects.toThrow(/HTTP 500/i)
       },
-      {timeout: 400}
+      {timeout: 400},
     )
 
     it.runIf(environment === 'node')(
@@ -49,7 +49,7 @@ describe(
         const req = request({url: '/status?code=500', body: fs.createReadStream(__filename)})
         return expectRequest(req).rejects.toThrow(/HTTP 500/i)
       },
-      {timeout: 400}
+      {timeout: 400},
     )
 
     it(
@@ -63,7 +63,7 @@ describe(
         const req = request({url: '/status?code=500', maxRetries: 1})
         return expectRequest(req).rejects.toThrow(/HTTP 500/i)
       },
-      {timeout: 400}
+      {timeout: 400},
     )
 
     it('should be able to set a custom function on whether or not we should retry', () => {
@@ -100,5 +100,5 @@ describe(
       }, 'respects the retry delay (roughly)')
     })
   },
-  {timeout: 15000}
+  {timeout: 15000},
 )

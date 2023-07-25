@@ -2,7 +2,7 @@ import type {Middleware} from '../types'
 
 /** @public */
 export const promise = (
-  options: {onlyBody?: boolean; implementation?: PromiseConstructor} = {}
+  options: {onlyBody?: boolean; implementation?: PromiseConstructor} = {},
 ) => {
   const PromiseImplementation = options.implementation || Promise
   if (!PromiseImplementation) {

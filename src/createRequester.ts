@@ -47,7 +47,7 @@ export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRe
       processOptions: [processOptions],
       validateOptions: [validateOptions],
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any
+    } as any,
   )
 
   function request(opts: RequestOptions | string) {
@@ -135,13 +135,13 @@ export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRe
 
     if (typeof newMiddleware === 'function') {
       throw new Error(
-        'Tried to add middleware that was a function. It probably expects you to pass options to it.'
+        'Tried to add middleware that was a function. It probably expects you to pass options to it.',
       )
     }
 
     if (newMiddleware.onReturn && middleware.onReturn.length > 0) {
       throw new Error(
-        'Tried to add new middleware with `onReturn` handler, but another handler has already been registered for this event'
+        'Tried to add new middleware with `onReturn` handler, but another handler has already been registered for this event',
       )
     }
 

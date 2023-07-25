@@ -30,7 +30,7 @@ const reduceResponse = (
   res: any,
   reqUrl: string,
   method: string,
-  body: any
+  body: any,
 ): MiddlewareResponse => ({
   body,
   url: reqUrl,
@@ -188,7 +188,7 @@ export const httpRequester: HttpRequest = (context, cb) => {
   if (typeof options.debug === 'function' && proxy) {
     options.debug(
       'Proxying using %s',
-      reqOpts.agent ? 'tunnel agent' : `${reqOpts.host}:${reqOpts.port}`
+      reqOpts.agent ? 'tunnel agent' : `${reqOpts.host}:${reqOpts.port}`,
     )
   }
 
@@ -200,7 +200,7 @@ export const httpRequester: HttpRequest = (context, cb) => {
 
   const finalOptions = context.applyMiddleware(
     'finalizeOptions',
-    reqOpts
+    reqOpts,
   ) as FinalizeNodeOptionsPayload
   const request = transport.request(finalOptions, (response) => {
     const res = tryCompressed ? decompressResponse(response) : response
@@ -272,11 +272,11 @@ function getProgressStream(options: any) {
 function getRequestTransport(
   reqOpts: any,
   proxy: any,
-  tunnel: any
+  tunnel: any,
 ): {
   request: (
     options: any,
-    callback: (response: http.IncomingMessage | (http.IncomingMessage & FollowResponse)) => void
+    callback: (response: http.IncomingMessage | (http.IncomingMessage & FollowResponse)) => void,
   ) => http.ClientRequest | RedirectableRequest<http.ClientRequest, http.IncomingMessage>
 } {
   const isHttpsRequest = reqOpts.protocol === 'https:'

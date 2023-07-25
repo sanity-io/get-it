@@ -49,11 +49,11 @@ describe('inject response', () => {
 
       req.error.subscribe((err: any) =>
         reject(
-          new Error(`error channel should not be called when aborting, got:\n\n${err.message}`)
-        )
+          new Error(`error channel should not be called when aborting, got:\n\n${err.message}`),
+        ),
       )
       req.response.subscribe(() =>
-        reject(new Error('response channel should not be called when aborting'))
+        reject(new Error('response channel should not be called when aborting')),
       )
 
       req.abort.publish()

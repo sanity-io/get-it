@@ -33,9 +33,9 @@ describe('debug middleware', () => {
         const logger = debug({log, verbose: true})
         const request = getIt([baseUrl, jsonRequest(), jsonResponse(), logger])
         request({url: '/json-echo', method: 'PUT', body: {foo: 'bar'}}).response.subscribe(() =>
-          resolve(undefined)
+          resolve(undefined),
         )
-      })
+      }),
   )
 
   it.skipIf(adapter === 'fetch')(
@@ -45,7 +45,7 @@ describe('debug middleware', () => {
         const logger = debug({log, verbose: true})
         const request = getIt([baseUrl, logger])
         request({url: '/echo', body: 'Just some text'}).response.subscribe(() => resolve(undefined))
-      })
+      }),
   )
 
   it('should be able to pass custom logger (invalid JSON in response)', () =>
@@ -72,6 +72,6 @@ describe('debug middleware', () => {
           expect(lines.join('\n')).to.contain('<redacted>')
           resolve(undefined)
         })
-      })
+      }),
   )
 })

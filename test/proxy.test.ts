@@ -317,5 +317,5 @@ describe.runIf(environment === 'node')(
       return expectRequest(req).resolves.toHaveProperty('body', body)
     })
   },
-  {timeout: 15000}
+  {timeout: 15000},
 )

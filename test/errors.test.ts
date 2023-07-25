@@ -20,7 +20,7 @@ describe('errors', () => {
     const err: any = await new Promise((resolve) => req.error.subscribe(resolve))
     expect(err).to.be.an.instanceOf(Error)
     expect(err.message).to.eq(
-      'GET-request to http://localhost:9980/req-test/status?code=400 resulted in HTTP 400 Bad Request'
+      'GET-request to http://localhost:9980/req-test/status?code=400 resulted in HTTP 400 Bad Request',
     )
     expect(err.message).to.include('HTTP 400').and.include('Bad Request')
     expect(err)

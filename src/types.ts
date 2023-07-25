@@ -67,10 +67,10 @@ export interface MiddlewareHooks {
   validateOptions: (options: RequestOptions) => void | undefined
   interceptRequest: (
     prevValue: MiddlewareResponse | undefined,
-    event: {adapter: RequestAdapter; context: HttpContext}
+    event: {adapter: RequestAdapter; context: HttpContext},
   ) => MiddlewareResponse | undefined | void
   finalizeOptions: (
-    options: FinalizeNodeOptionsPayload | RequestOptions
+    options: FinalizeNodeOptionsPayload | RequestOptions,
   ) => FinalizeNodeOptionsPayload | RequestOptions
   onRequest: (evt: HookOnRequestEvent) => void
   onResponse: (response: MiddlewareResponse, context: HttpContext) => MiddlewareResponse
@@ -82,7 +82,7 @@ export interface MiddlewareHooks {
       headers: IncomingHttpHeaders
       adapter: RequestAdapter
       context: HttpContext
-    }
+    },
   ) => ProgressStream
 }
 
@@ -162,7 +162,7 @@ export interface MiddlewareResponse {
  */
 export type HttpRequest = (
   context: HttpContext,
-  callback: (err: Error | null, response?: MiddlewareResponse) => void
+  callback: (err: Error | null, response?: MiddlewareResponse) => void,
 ) => HttpRequestOngoing
 
 /** @public */

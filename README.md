@@ -150,7 +150,7 @@ const request = getIt()
 request.use(
   observable({
     implementation: zenObservable,
-  })
+  }),
 )
 
 const observer = request({url: 'http://foo.bar/baz'})

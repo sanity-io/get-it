@@ -14,7 +14,7 @@ describe.runIf(typeof ArrayBuffer !== 'undefined')('urlEncoded middleware', () =
     }
     const strBody = Object.keys(body).reduce(
       (acc, key) => Object.assign(acc, {[key]: `${body[key]}`}),
-      {}
+      {},
     )
     const req = request({url: '/urlencoded', body})
     return expectRequestBody(req).resolves.toEqual(strBody)

@@ -48,7 +48,7 @@ describe.runIf(typeof fetch !== 'undefined' && environment === 'node')(
         formData.set('cody', file)
         const req = request({url: '/echo', fetch: true, body: formData})
         await expectRequestBody(req).resolves.toContain('Foo bar')
-      }
+      },
     )
 
     it('should be able to post a string as body', async () => {
@@ -92,11 +92,11 @@ describe.runIf(typeof fetch !== 'undefined' && environment === 'node')(
           reject(
             new Error(`error channel should not be called when aborting, got:\n\n${err.message}`, {
               cause: err,
-            })
-          )
+            }),
+          ),
         )
         req.response.subscribe(() =>
-          reject(new Error('response channel should not be called when aborting'))
+          reject(new Error('response channel should not be called when aborting')),
         )
 
         setTimeout(() => req.abort.publish(), 15)
@@ -109,7 +109,7 @@ describe.runIf(typeof fetch !== 'undefined' && environment === 'node')(
         const request = getIt([baseUrl, promise()], nodeRequest)
         const res = await request({url: '/plain-text', rawBody: true, fetch: true})
         expect(res.body).toBeInstanceOf(ReadableStream)
-      }
+      },
     )
 
     it('should emit errors on error channel', async () => {
@@ -133,5 +133,5 @@ describe.runIf(typeof fetch !== 'undefined' && environment === 'node')(
       })
     })
   },
-  {timeout: 15000}
+  {timeout: 15000},
 )

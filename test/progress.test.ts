@@ -15,7 +15,7 @@ describe.skipIf(adapter === 'fetch')('progress', () => {
       const req = request({url: '/plain-text'})
 
       req.error.subscribe((err: any) =>
-        reject(new Error(`error channel should not be called, got:\n\n${err.message}`))
+        reject(new Error(`error channel should not be called, got:\n\n${err.message}`)),
       )
       req.response.subscribe(() => resolve(undefined))
     }))
@@ -37,14 +37,14 @@ describe.skipIf(adapter === 'fetch')('progress', () => {
         })
 
         req.error.subscribe((err: any) =>
-          reject(new Error(`error channel should not be called, got:\n\n${err.message}`))
+          reject(new Error(`error channel should not be called, got:\n\n${err.message}`)),
         )
         req.response.subscribe(() => {
           expect(events).to.be.above(0)
           resolve(undefined)
         })
       }),
-    {timeout: 10000}
+    {timeout: 10000},
   )
 
   it.runIf(environment === 'node')('should emit upload progress events on strings', async () => {
@@ -67,7 +67,7 @@ describe.skipIf(adapter === 'fetch')('progress', () => {
       })
 
       req.error.subscribe((err: any) =>
-        reject(new Error(`error channel should not be called, got:\n\n${err.message}`))
+        reject(new Error(`error channel should not be called, got:\n\n${err.message}`)),
       )
       req.response.subscribe(() => {
         if (events > 0) {
@@ -101,14 +101,14 @@ describe.skipIf(adapter === 'fetch')('progress', () => {
         })
 
         req.error.subscribe((err: any) =>
-          reject(new Error(`error channel should not be called, got:\n\n${err.message}`))
+          reject(new Error(`error channel should not be called, got:\n\n${err.message}`)),
         )
         req.response.subscribe(() => {
           expect(events).to.be.above(0, 'should have received progress events')
           resolve(undefined)
         })
       }),
-    {timeout: 10000}
+    {timeout: 10000},
   )
 
   it(
@@ -128,6 +128,6 @@ describe.skipIf(adapter === 'fetch')('progress', () => {
             resolve(undefined)
           })
       }),
-    {timeout: 10000}
+    {timeout: 10000},
   )
 })

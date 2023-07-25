@@ -49,8 +49,8 @@ export const httpRequester: HttpRequest = (context, callback) => {
       new Error(
         `Request error while attempting to reach ${options.url}${
           event.lengthComputable ? `(${event.loaded} of ${event.total} bytes transferred)` : ''
-        }`
-      )
+        }`,
+      ),
     )
   }
   xhr.ontimeout = (event: ProgressEvent) => {
@@ -58,8 +58,8 @@ export const httpRequester: HttpRequest = (context, callback) => {
       new Error(
         `Request timeout while attempting to reach ${options.url}${
           event.lengthComputable ? `(${event.loaded} of ${event.total} bytes transferred)` : ''
-        }`
-      )
+        }`,
+      ),
     )
   }
   xhr.onabort = () => {
@@ -87,7 +87,7 @@ export const httpRequester: HttpRequest = (context, callback) => {
   xhr.open(
     options.method!,
     options.url,
-    true // Always async
+    true, // Always async
   )
 
   // Some options need to be applied after open
@@ -133,7 +133,7 @@ export const httpRequester: HttpRequest = (context, callback) => {
     const error: any = new Error(
       code === 'ESOCKETTIMEDOUT'
         ? `Socket timed out on request to ${options.url}`
-        : `Connection timed out on request to ${options.url}`
+        : `Connection timed out on request to ${options.url}`,
     )
     error.code = code
     context.channels.error.publish(error)

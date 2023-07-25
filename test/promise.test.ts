@@ -77,5 +77,5 @@ describe(
     // @todo test timeout errors
     // @todo cancelation
   },
-  {timeout: 5000}
+  {timeout: 5000},
 )

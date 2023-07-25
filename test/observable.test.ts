@@ -51,7 +51,7 @@ describe('observable middleware', () => {
         next: () => reject(new Error('response channel should not be called when aborting')),
         error: (err: any) =>
           reject(
-            new Error(`error channel should not be called when aborting, got:\n\n${err.message}`)
+            new Error(`error channel should not be called when aborting, got:\n\n${err.message}`),
           ),
       })
 

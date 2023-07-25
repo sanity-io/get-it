@@ -46,8 +46,8 @@ describe(
             expect(err.code).to.equal('ESOCKETTIMEDOUT')
             resolve(undefined)
           })
-        })
+        }),
     )
   },
-  {timeout: 10000}
+  {timeout: 10000},
 )

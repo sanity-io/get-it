@@ -71,7 +71,7 @@ function getResponseHandler(proto = 'http'): any {
         res.end(
           isSecure
             ? 'Just some secure, plain text for you to consume'
-            : 'Just some plain text for you to consume'
+            : 'Just some plain text for you to consume',
         )
         break
       case '/req-test/custom-json':
@@ -107,7 +107,7 @@ function getResponseHandler(proto = 'http'): any {
           res.setHeader('Content-Encoding', 'br')
           zlib.brotliCompress(
             JSON.stringify(['smaller', 'better', 'faster', 'stronger']),
-            (_err, result) => res.end(result)
+            (_err, result) => res.end(result),
           )
         } else {
           res.end(JSON.stringify(['larger', 'worse', 'slower', 'weaker']))
@@ -117,7 +117,7 @@ function getResponseHandler(proto = 'http'): any {
         res.setHeader('Content-Type', 'application/json')
         res.setHeader('Content-Encoding', 'gzip')
         zlib.gzip(JSON.stringify(['harder', 'better', 'faster', 'stronger']), (unused, result) =>
-          res.end(result)
+          res.end(result),
         )
         break
       case '/req-test/invalid-json':
@@ -133,7 +133,7 @@ function getResponseHandler(proto = 'http'): any {
         res.statusCode = atMax ? 200 : 302
         res.setHeader(
           atMax ? 'Content-Type' : 'Location',
-          atMax ? 'text/plain' : `/req-test/redirect?n=${num + 1}`
+          atMax ? 'text/plain' : `/req-test/redirect?n=${num + 1}`,
         )
         res.end(atMax ? 'Done redirecting' : '')
         break

@@ -5,10 +5,10 @@ export function injectResponse(
   opts: {
     inject: (
       event: Parameters<MiddlewareHooks['interceptRequest']>[1],
-      prevValue: Parameters<MiddlewareHooks['interceptRequest']>[0]
+      prevValue: Parameters<MiddlewareHooks['interceptRequest']>[0],
     ) => Partial<MiddlewareResponse | undefined | void>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } = {} as any
+  } = {} as any,
 ) {
   if (typeof opts.inject !== 'function') {
     throw new Error('`injectResponse` middleware requires a `inject` function')

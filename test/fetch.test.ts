@@ -66,11 +66,11 @@ describe.skipIf(typeof fetch === 'undefined' && typeof XMLHttpRequest === 'undef
           reject(
             new Error(`error channel should not be called when aborting, got:\n\n${err.message}`, {
               cause: err,
-            })
-          )
+            }),
+          ),
         )
         req.response.subscribe(() =>
-          reject(new Error('response channel should not be called when aborting'))
+          reject(new Error('response channel should not be called when aborting')),
         )
 
         setTimeout(() => req.abort.publish(), 15)
@@ -83,7 +83,7 @@ describe.skipIf(typeof fetch === 'undefined' && typeof XMLHttpRequest === 'undef
         const request = getIt([baseUrl], browserRequest)
         const req = request({url: '/plain-text', rawBody: true})
         await expectRequestBody(req).resolves.toBeInstanceOf(ArrayBuffer)
-      }
+      },
     )
 
     it.skipIf(isHappyDomBug)('should emit errors on error channel', async () => {
@@ -107,5 +107,5 @@ describe.skipIf(typeof fetch === 'undefined' && typeof XMLHttpRequest === 'undef
       })
     })
   },
-  {timeout: 15000}
+  {timeout: 15000},
 )

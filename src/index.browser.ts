@@ -7,7 +7,7 @@ export type * from './types'
 /** @public */
 export const getIt = (
   initMiddleware: Middlewares = [],
-  httpRequest: HttpRequest = httpRequester
+  httpRequest: HttpRequest = httpRequester,
 ): Requester => createRequester(initMiddleware, httpRequest)
 
 /** @public */

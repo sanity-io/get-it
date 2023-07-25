@@ -25,7 +25,7 @@ describe('json middleware', () => {
       const body = {randomValue: Date.now()}
       const req = request({url: '/json-echo', body})
       await expectRequestBody(req).resolves.toEqual(body)
-    }
+    },
   )
 
   it('should be able to use json response body parser on non-json responses', async () => {
@@ -40,7 +40,7 @@ describe('json middleware', () => {
       const request = getIt([baseUrl, jsonResponse(), debugRequest])
       const req = request({url: '/echo', body: 'Foobar'})
       await expectRequestBody(req).resolves.toEqual('Foobar')
-    }
+    },
   )
 
   it('should be able to use json request body parser without response body', async () => {
@@ -59,7 +59,7 @@ describe('json middleware', () => {
       const request = getIt([baseUrl, jsonRequest(), jsonResponse(), debugRequest])
       const req = request({url: '/json-echo', method: 'PUT', body: {foo: 'bar'}})
       await expectRequestBody(req).resolves.toEqual({foo: 'bar'})
-    }
+    },
   )
 
   it('should throw if response body is not valid JSON', async () => {

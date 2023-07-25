@@ -47,7 +47,7 @@ describe(
         const request = getIt([baseUrl, debugRequest])
         const req = request({url: '/echo', body: Buffer.from('Foo bar')})
         await expectRequestBody(req).resolves.toEqual('Foo bar')
-      }
+      },
     )
 
     it.runIf(adapter === 'xhr')('[browser] should throw when trying to post invalid stuff', () => {
@@ -55,7 +55,7 @@ describe(
       expect(() => {
         request({url: '/echo', method: 'post', body: {}})
       }).toThrowErrorMatchingInlineSnapshot(
-        '"The \\"string\\" argument must be of type string or an instance of Buffer or ArrayBuffer. Received an instance of Object"'
+        '"The \\"string\\" argument must be of type string or an instance of Buffer or ArrayBuffer. Received an instance of Object"',
       )
     })
     it.runIf(adapter === 'fetch')(
@@ -65,7 +65,7 @@ describe(
         expect(() => {
           request({url: '/echo', method: 'post', body: {}})
         }).not.toThrow()
-      }
+      },
     )
     it.runIf(adapter === 'node')('[node] should throw when trying to post invalid stuff', () => {
       const request = getIt([baseUrl, debugRequest])
@@ -83,7 +83,7 @@ describe(
           case 'node':
             // Node.js (buffer)
             return await expectRequestBody(req).resolves.toEqual(
-              Buffer.from('Just some plain text for you to consume')
+              Buffer.from('Just some plain text for you to consume'),
             )
           case 'xhr':
             return await expectRequestBody(req).resolves.toBeTypeOf('string')
@@ -91,7 +91,7 @@ describe(
             // Browser (ArrayBuffer)
             return await expectRequestBody(req).resolves.toMatchInlineSnapshot('ArrayBuffer []')
         }
-      }
+      },
     )
 
     it.runIf(environment === 'node')('should request compressed responses by default', async () => {
@@ -154,7 +154,7 @@ describe(
           method: 'PUT',
           body: 'just a plain body',
         })
-      }
+      },
     )
 
     // IE9 fails on cross-origin requests from http to https
@@ -196,5 +196,5 @@ describe(
         }, 15)
       }))
   },
-  {timeout: 15000}
+  {timeout: 15000},
 )

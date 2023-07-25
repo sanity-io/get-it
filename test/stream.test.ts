@@ -46,5 +46,5 @@ describe.runIf(environment === 'node')(
         })
       }))
   },
-  {timeout: 15000}
+  {timeout: 15000},
 )
