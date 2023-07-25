@@ -47,7 +47,6 @@ export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRe
     {
       processOptions: [processOptions],
       validateOptions: [validateOptions],
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any,
   )
 
@@ -82,7 +81,6 @@ export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRe
     const channels: MiddlewareChannels = channelNames.reduce((target, name) => {
       target[name] = createPubSub() as MiddlewareChannels[typeof name]
       return target
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     }, {} as any)
 
     // Prepare a middleware reducer that can be reused throughout the lifecycle

@@ -92,7 +92,6 @@ export class CancelToken {
 
     return {
       token: token,
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- we know from the implementation that it's assigned during `constructor`
       cancel: cancel!,
     }
   }
