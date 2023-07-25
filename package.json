@@ -127,7 +127,7 @@
     "@vitest/coverage-v8": "^0.33.0",
     "eslint": "^8.36.0",
     "eslint-config-prettier": "^8.7.0",
-    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-prettier": "^5.0.0",
     "eslint-plugin-simple-import-sort": "^10.0.0",
     "faucet": "^0.0.4",
     "get-uri": "^6.0.0",
