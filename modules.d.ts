@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 declare module 'tunnel-agent' {
   export function httpOverHttp(options: any): any
   export function httpsOverHttp(options: any): any

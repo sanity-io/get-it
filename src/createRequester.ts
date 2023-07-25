@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {processOptions} from './middleware/defaultOptionsProcessor'
 import {validateOptions} from './middleware/defaultOptionsValidator'
 import type {
