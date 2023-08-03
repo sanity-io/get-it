@@ -20,9 +20,7 @@ test('top-level imports', async (t) => {
     }
     assert.deepEqual(
       Object.keys(middlewares).sort(),
-      Object.keys(await import('get-it/middleware'))
-        .filter((name) => name !== 'default')
-        .sort(),
+      Object.keys(await import('get-it/middleware')).sort(),
       'ESM and CJS exports are not the same',
     )
   })

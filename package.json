@@ -1,6 +1,6 @@
 {
   "name": "get-it",
-  "version": "8.3.1",
+  "version": "8.3.2-canary.0",
   "description": "Generic HTTP request library for node, browsers and workers",
   "keywords": [
     "request",
@@ -32,10 +32,6 @@
       "worker": "./dist/index.browser.js",
       "source": "./src/index.ts",
       "require": "./dist/index.cjs",
-      "node": {
-        "import": "./dist/index.cjs.js",
-        "require": "./dist/index.cjs"
-      },
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
@@ -51,10 +47,6 @@
       "worker": "./dist/middleware.browser.js",
       "source": "./src/middleware.ts",
       "require": "./dist/middleware.cjs",
-      "node": {
-        "import": "./dist/middleware.cjs.js",
-        "require": "./dist/middleware.cjs"
-      },
       "import": "./dist/middleware.js",
       "default": "./dist/middleware.js"
     },

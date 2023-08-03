@@ -20,12 +20,11 @@ test('top-level imports', async (t) => {
   })
 
   await t.test('get-it/middleware', async () => {
-    const {default: skipDefault, ...namespace} = middlewares
-    for (const [name, middleware] of Object.entries(namespace)) {
+    for (const [name, middleware] of Object.entries(middlewares)) {
       assert.equal(typeof middleware, 'function', `${name} is not a function`)
     }
     assert.deepEqual(
-      Object.keys(namespace).sort(),
+      Object.keys(middlewares).sort(),
       Object.keys(require('get-it/middleware')).sort(),
       'ESM and CJS exports are not the same',
     )
