@@ -22,32 +22,34 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "source": "./src/index.ts",
       "browser": {
         "source": "./src/index.browser.ts",
-        "require": "./dist/index.browser.cjs",
-        "import": "./dist/index.browser.js"
+        "import": "./dist/index.browser.js",
+        "require": "./dist/index.browser.cjs"
       },
+      "react-server": "./dist/index.react-server.js",
       "deno": "./dist/index.browser.js",
       "edge-light": "./dist/index.browser.js",
       "worker": "./dist/index.browser.js",
-      "source": "./src/index.ts",
-      "require": "./dist/index.cjs",
       "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
       "default": "./dist/index.js"
     },
     "./middleware": {
       "types": "./dist/middleware.d.ts",
+      "source": "./src/middleware.ts",
       "browser": {
         "source": "./src/middleware.browser.ts",
         "require": "./dist/middleware.browser.cjs",
         "import": "./dist/middleware.browser.js"
       },
+      "react-server": "./dist/middleware.browser.js",
       "deno": "./dist/middleware.browser.js",
       "edge-light": "./dist/middleware.browser.js",
       "worker": "./dist/middleware.browser.js",
-      "source": "./src/middleware.ts",
-      "require": "./dist/middleware.cjs",
       "import": "./dist/middleware.js",
+      "require": "./dist/middleware.cjs",
       "default": "./dist/middleware.js"
     },
     "./package.json": "./package.json"
@@ -83,6 +85,7 @@
     "test": "vitest",
     "test:browser": "npm test -- --config ./vitest.browser.config.ts --dom",
     "test:edge-runtime": "npm test -- --config ./vitest.edge.config.ts",
+    "test:react-server": "npm test -- --config ./vitest.react-server.config.ts",
     "test:esm": "node --test test-esm/ | faucet",
     "test:esm:browser": "node -C browser --test test-esm/test.mjs | faucet",
     "test:esm:deno": "deno test --allow-read --allow-net --allow-env --import-map=test-deno/import_map.json test-deno",
@@ -107,7 +110,7 @@
   },
   "devDependencies": {
     "@edge-runtime/vm": "^3.0.4",
-    "@sanity/pkg-utils": "^2.3.10",
+    "@sanity/pkg-utils": "^2.4.0",
     "@sanity/semantic-release-preset": "^4.1.2",
     "@types/debug": "^4.1.8",
     "@types/follow-redirects": "^1.14.1",
@@ -123,7 +126,7 @@
     "eslint-plugin-simple-import-sort": "^10.0.0",
     "faucet": "^0.0.4",
     "get-uri": "^6.0.1",
-    "happy-dom": "^9.20.3",
+    "happy-dom": "^10.7.0",
     "ls-engines": "^0.9.0",
     "node-fetch": "^2.6.7",
     "prettier": "^3.0.1",

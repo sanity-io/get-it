@@ -177,7 +177,7 @@ export interface RetryOptions {
  * If 'browser' is used, then the globally available `fetch` class is used. While `node` will always use either `node:https` or `node:http` depending on the protocol.
  * @public
  */
-export type ExportEnv = 'node' | 'browser'
+export type ExportEnv = 'node' | 'react-server' | 'browser'
 
 /**
  * Reports the request adapter in use. `node` is only available if `ExportEnv` is also `node`.

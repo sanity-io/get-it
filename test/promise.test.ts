@@ -1,4 +1,4 @@
-import {environment, getIt} from 'get-it'
+import {getIt} from 'get-it'
 import {httpErrors, promise} from 'get-it/middleware'
 import {describe, expect, it} from 'vitest'
 
@@ -23,10 +23,10 @@ describe(
       await expect(req).resolves.toEqual('Just some plain text for you to consume')
     })
 
-    it.runIf(environment === 'node')('should reject network errors', async () => {
+    it('should reject network errors', async () => {
       const request = getIt([baseUrl, promise()])
       const req = request({url: '/permafail'})
-      await expect(req).rejects.toThrow(/(socket|network)/i)
+      await expect(req).rejects.toThrow(/(socket|network|Request error)/i)
     })
 
     it('should reject http errors (if middleware is loaded)', async () => {

@@ -1,4 +1,4 @@
-import {adapter, getIt} from 'get-it'
+import {getIt} from 'get-it'
 import {headers, jsonResponse} from 'get-it/middleware'
 import {describe, expect, it} from 'vitest'
 
@@ -50,7 +50,7 @@ describe('headers', () => {
     })
   })
 
-  it.skipIf(adapter === 'fetch')('should set Content-Length based on body (Buffer)', async () => {
+  it('should set Content-Length based on body (Buffer)', async () => {
     const request = getIt([baseUrl, jsonResponse()])
     const req = request({method: 'POST', url: '/debug', body: Buffer.from('hello')})
 
@@ -59,7 +59,7 @@ describe('headers', () => {
     expect(body.headers).toHaveProperty('content-length', '5')
   })
 
-  it.skipIf(adapter === 'fetch')('should set Content-Length based on body (string)', async () => {
+  it('should set Content-Length based on body (string)', async () => {
     const request = getIt([baseUrl, jsonResponse()])
     const req = request({method: 'POST', url: '/debug', body: 'hello'})
 
@@ -68,7 +68,7 @@ describe('headers', () => {
     expect(body.headers).toHaveProperty('content-length', '5')
   })
 
-  it.skipIf(adapter === 'fetch')('should set Content-Length based on body (string)', async () => {
+  it('should set Content-Length based on body (string)', async () => {
     const request = getIt([baseUrl, jsonResponse()])
     const req = request({method: 'POST', url: '/debug', body: 'hello 🚀'})
 

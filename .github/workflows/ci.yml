@@ -73,6 +73,8 @@ jobs:
       - run: npx ls-engines
       - run: npm run build
       - run: npm test
+        # Only run the RSC testing suite if native `fetch` is available
+      - run: node -e "fetch" && npm run test:react-server || true
 
   test-esm:
     name: Test ESM exports

@@ -1,7 +1,8 @@
-import fs from 'fs'
+import fs from 'node:fs'
+import path from 'node:path'
+
 import {environment, getIt} from 'get-it'
 import {base, mtls} from 'get-it/middleware'
-import path from 'path'
 import {describe, expect, it} from 'vitest'
 
 import {expectRequestBody} from './helpers'

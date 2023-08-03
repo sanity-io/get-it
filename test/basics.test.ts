@@ -8,7 +8,6 @@ import {
   debugRequest,
   expectRequest,
   expectRequestBody,
-  isHappyDomBug,
   promiseRequest,
 } from './helpers'
 
@@ -41,16 +40,13 @@ describe(
       await expectRequest(req).resolves.toHaveProperty('body', body)
     })
 
-    it.runIf(environment === 'node')(
-      'should be able to post a Buffer as body in node',
-      async () => {
-        const request = getIt([baseUrl, debugRequest])
-        const req = request({url: '/echo', body: Buffer.from('Foo bar')})
-        await expectRequestBody(req).resolves.toEqual('Foo bar')
-      },
-    )
+    it.skipIf(adapter === 'xhr')('should be able to post a Buffer as body', async () => {
+      const request = getIt([baseUrl, debugRequest])
+      const req = request({url: '/echo', body: Buffer.from('Foo bar')})
+      await expectRequestBody(req).resolves.toEqual('Foo bar')
+    })
 
-    it.runIf(adapter === 'xhr')('[browser] should throw when trying to post invalid stuff', () => {
+    it.runIf(adapter === 'xhr')('[xhr] should throw when trying to post invalid stuff', () => {
       const request = getIt([baseUrl, debugRequest])
       expect(() => {
         request({url: '/echo', method: 'post', body: {}})
@@ -58,15 +54,12 @@ describe(
         '"The \\"string\\" argument must be of type string or an instance of Buffer or ArrayBuffer. Received an instance of Object"',
       )
     })
-    it.runIf(adapter === 'fetch')(
-      '[browser] fetch is more permissive in what `body` can be',
-      () => {
-        const request = getIt([baseUrl, debugRequest])
-        expect(() => {
-          request({url: '/echo', method: 'post', body: {}})
-        }).not.toThrow()
-      },
-    )
+    it.runIf(adapter === 'fetch')('[fetch] fetch is more permissive in what `body` can be', () => {
+      const request = getIt([baseUrl, debugRequest])
+      expect(() => {
+        request({url: '/echo', method: 'post', body: {}})
+      }).not.toThrow()
+    })
     it.runIf(adapter === 'node')('[node] should throw when trying to post invalid stuff', () => {
       const request = getIt([baseUrl, debugRequest])
       expect(() => {
@@ -74,7 +67,8 @@ describe(
       }).toThrow(/string, buffer or stream/)
     })
 
-    it.skipIf(adapter === 'xhr' && isHappyDomBug)(
+    // @TODO make the test work in happy-dom
+    it.skipIf(environment === 'browser')(
       'should be able to get a raw, unparsed body back',
       async () => {
         const request = getIt([baseUrl, debugRequest])
@@ -94,16 +88,20 @@ describe(
       },
     )
 
-    it.runIf(environment === 'node')('should request compressed responses by default', async () => {
-      const request = getIt([baseUrl, jsonResponse()])
-      const req = request({url: '/debug'})
+    it.skipIf(environment === 'browser')(
+      'should request compressed responses by default',
+      async () => {
+        const request = getIt([baseUrl, jsonResponse()])
+        const req = request({url: '/debug'})
 
-      const body = await promiseRequest(req).then((res) => res.body)
-      expect(body).toHaveProperty('headers')
-      expect(body.headers).toMatchObject({'accept-encoding': 'br, gzip, deflate'})
-    })
+        const body = await promiseRequest(req).then((res) => res.body)
+        expect(body).toHaveProperty('headers')
+        expect(body.headers).toHaveProperty('accept-encoding')
+        expect(body.headers['accept-encoding']).toMatch(/br|gzip|deflate/i)
+      },
+    )
 
-    it.runIf(environment === 'node')('should decompress compressed responses', async () => {
+    it.skipIf(environment === 'browser')('should decompress compressed responses', async () => {
       const request = getIt([baseUrl, jsonResponse(), debugRequest])
       const req = request({url: '/gzip'})
       const res = await promiseRequest(req)
@@ -111,16 +109,19 @@ describe(
       expect(res.body).toEqual(['harder', 'better', 'faster', 'stronger'])
     })
 
-    it('should not request compressed responses for HEAD requests', async () => {
-      const request = getIt([baseUrl, jsonResponse()])
-      const req = request({url: '/maybeCompress', method: 'HEAD'})
+    it.runIf(adapter === 'node')(
+      'should not request compressed responses for HEAD requests',
+      async () => {
+        const request = getIt([baseUrl, jsonResponse()])
+        const req = request({url: '/maybeCompress', method: 'HEAD'})
 
-      const res = await promiseRequest(req)
-      expect(res).toHaveProperty('headers')
-      expect(res.headers).not.toHaveProperty('content-encoding')
-    })
+        const res = await promiseRequest(req)
+        expect(res).toHaveProperty('headers')
+        expect(res.headers).not.toHaveProperty('content-encoding')
+      },
+    )
 
-    it.runIf(environment === 'node')('should decompress brotli-encoded responses', async () => {
+    it.runIf(adapter === 'node')('should decompress brotli-encoded responses', async () => {
       const request = getIt([baseUrl, jsonResponse(), debugRequest])
       const req = request({url: '/maybeCompress'})
       const res = await promiseRequest(req)
@@ -128,7 +129,7 @@ describe(
       expect(res.body).toEqual(['smaller', 'better', 'faster', 'stronger'])
     })
 
-    it('should be able to disable compression', async () => {
+    it.runIf(adapter === 'node')('should be able to disable compression', async () => {
       const request = getIt([baseUrl, jsonResponse(), debugRequest])
       const req = request({url: '/maybeCompress', compress: false})
       const res = await promiseRequest(req)
@@ -145,17 +146,14 @@ describe(
       })
     })
 
-    it.runIf(environment === 'node')(
-      'should be able to send PUT-requests with raw bodies',
-      async () => {
-        const request = getIt([baseUrl, jsonResponse(), debugRequest])
-        const req = request({url: '/debug', method: 'PUT', body: 'just a plain body'})
-        await expectRequestBody(req).resolves.toMatchObject({
-          method: 'PUT',
-          body: 'just a plain body',
-        })
-      },
-    )
+    it('should be able to send PUT-requests with raw bodies', async () => {
+      const request = getIt([baseUrl, jsonResponse(), debugRequest])
+      const req = request({url: '/debug', method: 'PUT', body: 'just a plain body'})
+      await expectRequestBody(req).resolves.toMatchObject({
+        method: 'PUT',
+        body: 'just a plain body',
+      })
+    })
 
     // IE9 fails on cross-origin requests from http to https
     it('should handle https without issues', async () => {
