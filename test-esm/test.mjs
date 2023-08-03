@@ -1,9 +1,14 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import {createRequire} from 'node:module'
+
+import {getIt} from 'get-it'
+import * as middlewares from 'get-it/middleware'
+
+const require = createRequire(import.meta.url)
 
 test('top-level imports', async (t) => {
   await t.test('get-it', async () => {
-    const {getIt} = await import('get-it')
     assert.equal(typeof getIt, 'function')
   })
 
@@ -15,18 +20,14 @@ test('top-level imports', async (t) => {
   })
 
   await t.test('get-it/middleware', async () => {
-    const {base} = await import('get-it/middleware')
-    assert.equal(typeof base, 'function')
-  })
-
-  await t.test('named middleware imports', async (t) => {
-    const {jsonRequest, jsonResponse, httpErrors, headers, promise} = await import(
-      'get-it/middleware'
+    const {default: skipDefault, ...namespace} = middlewares
+    for (const [name, middleware] of Object.entries(namespace)) {
+      assert.equal(typeof middleware, 'function', `${name} is not a function`)
+    }
+    assert.deepEqual(
+      Object.keys(namespace).sort(),
+      Object.keys(require('get-it/middleware')).sort(),
+      'ESM and CJS exports are not the same',
     )
-    assert.equal(typeof jsonRequest, 'function')
-    assert.equal(typeof jsonResponse, 'function')
-    assert.equal(typeof httpErrors, 'function')
-    assert.equal(typeof headers, 'function')
-    assert.equal(typeof promise, 'function')
   })
 })

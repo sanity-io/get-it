@@ -12,17 +12,18 @@ test('top-level imports', async (t) => {
     assert.equal(typeof version, 'string')
   })
 
-  await t.test('get-it/middleware', (t) => {
-    const middleware = require('get-it/middleware')
-    assert.equal(typeof middleware, 'object')
-  })
-
-  await t.test('commonly used imports', async (t) => {
-    const {jsonRequest, jsonResponse, httpErrors, headers, promise} = require('get-it/middleware')
-    assert.equal(typeof jsonRequest, 'function')
-    assert.equal(typeof jsonResponse, 'function')
-    assert.equal(typeof httpErrors, 'function')
-    assert.equal(typeof headers, 'function')
-    assert.equal(typeof promise, 'function')
+  await t.test('get-it/middleware', async () => {
+    const middlewares = require('get-it/middleware')
+    const entries = Object.entries(middlewares)
+    for (const [name, middleware] of entries) {
+      assert.equal(typeof middleware, 'function', `${name} is not a function`)
+    }
+    assert.deepEqual(
+      Object.keys(middlewares).sort(),
+      Object.keys(await import('get-it/middleware'))
+        .filter((name) => name !== 'default')
+        .sort(),
+      'ESM and CJS exports are not the same',
+    )
   })
 })
