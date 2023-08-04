@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.3.2](https://github.com/sanity-io/get-it/compare/v8.3.1...v8.3.2) (2023-08-04)
+
+### Bug Fixes
+
+- remove node ESM wrapper ([#152](https://github.com/sanity-io/get-it/issues/152)) ([6cbac6d](https://github.com/sanity-io/get-it/commit/6cbac6da265fce2401fe4114141f7adf000a2f42))
+
 ## [8.3.1](https://github.com/sanity-io/get-it/compare/v8.3.0...v8.3.1) (2023-07-25)
 
 ### Bug Fixes
