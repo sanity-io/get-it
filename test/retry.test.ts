@@ -1,4 +1,5 @@
-import fs from 'fs'
+import fs from 'node:fs'
+
 import {environment, getIt} from 'get-it'
 import {httpErrors, retry} from 'get-it/middleware'
 import {describe, expect, it} from 'vitest'
@@ -80,7 +81,7 @@ describe(
       return expectRequest(req).rejects.toThrow(/HTTP 503/)
     })
 
-    it.runIf(environment === 'node')('should not retry non-GET-requests by default', () => {
+    it.skipIf(environment === 'browser')('should not retry non-GET-requests by default', () => {
       // Browsers have a weird thing where they might auto-retry on network errors
       const request = getIt([baseUrl, debugRequest, retry()])
       const req = request({url: `/fail?uuid=${Math.random()}&n=2`, method: 'POST', body: 'Heisann'})
@@ -88,7 +89,7 @@ describe(
     })
 
     // @todo Browsers are really flaky with retries, revisit later
-    it.runIf(environment === 'node')('should handle retries with a delay function ', () => {
+    it.skipIf(environment === 'browser')('should handle retries with a delay function ', () => {
       const retryDelay = () => 375
       const request = getIt([baseUrl, retry({retryDelay})])
 
