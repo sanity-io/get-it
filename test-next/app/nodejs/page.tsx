@@ -4,7 +4,7 @@ import {getTimestamp} from '../utils'
 
 export const runtime = 'nodejs'
 
-export default async function EdgePage() {
+export default async function NodePage() {
   const [dynamic, timestamp] = await getTimestamp(runtime)
   return (
     <>
