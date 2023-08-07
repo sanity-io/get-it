@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.4.1](https://github.com/sanity-io/get-it/compare/v8.4.0...v8.4.1) (2023-08-07)
+
+### Bug Fixes
+
+- support Gatsby v5 ([3274198](https://github.com/sanity-io/get-it/commit/327419808ee60fe03846ac38c15120728c313e0a))
+
 ## [8.4.0](https://github.com/sanity-io/get-it/compare/v8.3.2...v8.4.0) (2023-08-07)
 
 ### Features
