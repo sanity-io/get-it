@@ -1,13 +1,12 @@
-import http from 'node:http'
-import https from 'node:https'
-import url from 'node:url'
-
 import decompressResponse from 'decompress-response'
 import follow, {type FollowResponse, type RedirectableRequest} from 'follow-redirects'
+import http from 'http'
+import https from 'https'
 import toStream from 'into-stream'
 import isStream from 'is-stream'
 import progressStream from 'progress-stream'
 import qs from 'querystring'
+import url from 'url'
 
 import type {
   FinalizeNodeOptionsPayload,

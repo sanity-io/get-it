@@ -1,5 +1,5 @@
-import {Agent as HttpAgent, AgentOptions} from 'node:http'
-import {Agent as HttpsAgent} from 'node:https'
+import {Agent as HttpAgent, AgentOptions} from 'http'
+import {Agent as HttpsAgent} from 'https'
 
 const isHttpsProto = /^https:/i
 

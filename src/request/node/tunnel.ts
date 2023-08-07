@@ -3,9 +3,8 @@
  * Modified to be less request-specific, more functional
  * Apache License 2.0
  */
-import url from 'node:url'
-
 import * as tunnel from 'tunnel-agent'
+import url from 'url'
 
 const uriParts = [
   'protocol',
