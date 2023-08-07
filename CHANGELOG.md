@@ -5,6 +5,16 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.4.0](https://github.com/sanity-io/get-it/compare/v8.3.2...v8.4.0) (2023-08-07)
+
+### Features
+
+- add `react-server` export condition ([#151](https://github.com/sanity-io/get-it/issues/151)) ([359949c](https://github.com/sanity-io/get-it/commit/359949cb492eeb1e8543e1239b49190425dc4595))
+
+### Bug Fixes
+
+- **deps:** Update dependency next to v13.4.13 ([#160](https://github.com/sanity-io/get-it/issues/160)) ([6cab644](https://github.com/sanity-io/get-it/commit/6cab6443c1cc86153f59bdd8c2a03c2214b26a5f))
+
 ## [8.3.2](https://github.com/sanity-io/get-it/compare/v8.3.1...v8.3.2) (2023-08-04)
 
 ### Bug Fixes
