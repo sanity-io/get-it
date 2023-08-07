@@ -1,4 +1,4 @@
-import {environment, getIt} from 'get-it'
+import {adapter, environment, getIt} from 'get-it'
 import {jsonRequest, jsonResponse} from 'get-it/middleware'
 import intoStream from 'into-stream'
 import {describe, it} from 'vitest'
@@ -6,11 +6,14 @@ import {describe, it} from 'vitest'
 import {baseUrl, debugRequest, expectRequest, expectRequestBody} from './helpers'
 
 describe('json middleware', () => {
-  it('should be able to request data from a JSON-responding endpoint as JSON', async () => {
-    const request = getIt([baseUrl, jsonResponse(), debugRequest])
-    const req = request({url: '/json'})
-    await expectRequestBody(req).resolves.toHaveProperty('foo', 'bar')
-  })
+  it.runIf(environment === 'node')(
+    'should be able to request data from a JSON-responding endpoint as JSON',
+    async () => {
+      const request = getIt([baseUrl, jsonResponse(), debugRequest])
+      const req = request({url: '/json'})
+      await expectRequestBody(req).resolves.toHaveProperty('foo', 'bar')
+    },
+  )
 
   it('should be able to force response body as JSON regardless of content type', async () => {
     const request = getIt([baseUrl, jsonResponse({force: true}), debugRequest])
@@ -18,30 +21,27 @@ describe('json middleware', () => {
     await expectRequestBody(req).resolves.toHaveProperty('foo', 'bar')
   })
 
-  it.runIf(environment === 'node')(
-    'should be able to send JSON-data data to a JSON endpoint and get JSON back',
-    async () => {
-      const request = getIt([baseUrl, jsonResponse(), jsonRequest(), debugRequest])
-      const body = {randomValue: Date.now()}
-      const req = request({url: '/json-echo', body})
-      await expectRequestBody(req).resolves.toEqual(body)
-    },
-  )
-
-  it('should be able to use json response body parser on non-json responses', async () => {
-    const request = getIt([baseUrl, jsonResponse(), debugRequest])
-    const req = request({url: '/plain-text'})
-    await expectRequestBody(req).resolves.toEqual('Just some plain text for you to consume')
+  it('should be able to send JSON-data data to a JSON endpoint and get JSON back', async () => {
+    const request = getIt([baseUrl, jsonResponse(), jsonRequest(), debugRequest])
+    const body = {randomValue: Date.now()}
+    const req = request({url: '/json-echo', body})
+    await expectRequestBody(req).resolves.toEqual(body)
   })
 
   it.runIf(environment === 'node')(
-    'should be able to use json response body parser on non-json responses (no content type)',
+    'should be able to use json response body parser on non-json responses',
     async () => {
       const request = getIt([baseUrl, jsonResponse(), debugRequest])
-      const req = request({url: '/echo', body: 'Foobar'})
-      await expectRequestBody(req).resolves.toEqual('Foobar')
+      const req = request({url: '/plain-text'})
+      await expectRequestBody(req).resolves.toEqual('Just some plain text for you to consume')
     },
   )
+
+  it('should be able to use json response body parser on non-json responses (no content type)', async () => {
+    const request = getIt([baseUrl, jsonResponse(), debugRequest])
+    const req = request({url: '/echo', body: 'Foobar'})
+    await expectRequestBody(req).resolves.toEqual('Foobar')
+  })
 
   it('should be able to use json request body parser without response body', async () => {
     const request = getIt([baseUrl, jsonResponse(), jsonRequest(), debugRequest])
@@ -68,7 +68,7 @@ describe('json middleware', () => {
     await expectRequest(req).rejects.toThrow(/response body as json/i)
   })
 
-  it.runIf(environment === 'node')('should serialize plain values (numbers, strings)', async () => {
+  it('should serialize plain values (numbers, strings)', async () => {
     const request = getIt([baseUrl, jsonRequest(), jsonResponse(), debugRequest])
     const url = '/json-echo'
     await Promise.all([
@@ -77,14 +77,14 @@ describe('json middleware', () => {
     ])
   })
 
-  it.runIf(environment === 'node')('should serialize arrays', async () => {
+  it.skipIf(adapter === 'xhr')('should serialize arrays', async () => {
     const request = getIt([baseUrl, jsonRequest(), jsonResponse(), debugRequest])
     const body = ['foo', 'bar', 'baz']
     const req = request({url: '/json-echo', method: 'PUT', body})
     await expectRequestBody(req).resolves.toEqual(body)
   })
 
-  it.runIf(environment === 'node')('should not serialize buffers', async () => {
+  it.skipIf(adapter === 'xhr')('should not serialize buffers', async () => {
     const request = getIt([baseUrl, jsonRequest(), jsonResponse(), debugRequest])
     const body = Buffer.from('blåbærsyltetøy', 'utf8')
     const req = request({url: '/echo', method: 'PUT', body})

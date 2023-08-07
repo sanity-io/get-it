@@ -1,4 +1,4 @@
-import {adapter, getIt} from 'get-it'
+import {getIt} from 'get-it'
 import {debug, jsonRequest, jsonResponse} from 'get-it/middleware'
 import util from 'util'
 import {describe, expect, it} from 'vitest'
@@ -26,27 +26,21 @@ describe('debug middleware', () => {
       request({url: '/plain-text'}).response.subscribe(() => resolve(undefined))
     }))
 
-  it.skipIf(adapter === 'fetch')(
-    'should be able to pass custom logger (verbose mode + json request body)',
-    () =>
-      new Promise((resolve) => {
-        const logger = debug({log, verbose: true})
-        const request = getIt([baseUrl, jsonRequest(), jsonResponse(), logger])
-        request({url: '/json-echo', method: 'PUT', body: {foo: 'bar'}}).response.subscribe(() =>
-          resolve(undefined),
-        )
-      }),
-  )
+  it('should be able to pass custom logger (verbose mode + json request body)', () =>
+    new Promise((resolve) => {
+      const logger = debug({log, verbose: true})
+      const request = getIt([baseUrl, jsonRequest(), jsonResponse(), logger])
+      request({url: '/json-echo', method: 'PUT', body: {foo: 'bar'}}).response.subscribe(() =>
+        resolve(undefined),
+      )
+    }))
 
-  it.skipIf(adapter === 'fetch')(
-    'should be able to pass custom logger (verbose mode + text request body)',
-    () =>
-      new Promise((resolve) => {
-        const logger = debug({log, verbose: true})
-        const request = getIt([baseUrl, logger])
-        request({url: '/echo', body: 'Just some text'}).response.subscribe(() => resolve(undefined))
-      }),
-  )
+  it('should be able to pass custom logger (verbose mode + text request body)', () =>
+    new Promise((resolve) => {
+      const logger = debug({log, verbose: true})
+      const request = getIt([baseUrl, logger])
+      request({url: '/echo', body: 'Just some text'}).response.subscribe(() => resolve(undefined))
+    }))
 
   it('should be able to pass custom logger (invalid JSON in response)', () =>
     new Promise((resolve) => {
@@ -55,23 +49,20 @@ describe('debug middleware', () => {
       request({url: '/invalid-json'}).response.subscribe(() => resolve(undefined))
     }))
 
-  it.skipIf(adapter === 'fetch')(
-    'should redact sensitive headers in verbose mode',
-    () =>
-      new Promise((resolve) => {
-        const lines: any[] = []
-        const logIt = (line: any, ...args: any[]) => lines.push(util.format(line, ...args))
-        const logger = debug({log: logIt, verbose: true})
-        const request = getIt([baseUrl, logger])
-        request({
-          url: '/echo',
-          headers: {CoOkIe: 'yes cookie', authorization: 'bearer auth'},
-          body: 'Just some text',
-        }).response.subscribe(() => {
-          expect(lines.join('\n')).not.to.contain('yes cookie')
-          expect(lines.join('\n')).to.contain('<redacted>')
-          resolve(undefined)
-        })
-      }),
-  )
+  it('should redact sensitive headers in verbose mode', () =>
+    new Promise((resolve) => {
+      const lines: any[] = []
+      const logIt = (line: any, ...args: any[]) => lines.push(util.format(line, ...args))
+      const logger = debug({log: logIt, verbose: true})
+      const request = getIt([baseUrl, logger])
+      request({
+        url: '/echo',
+        headers: {CoOkIe: 'yes cookie', authorization: 'bearer auth'},
+        body: 'Just some text',
+      }).response.subscribe(() => {
+        expect(lines.join('\n')).not.to.contain('yes cookie')
+        expect(lines.join('\n')).to.contain('<redacted>')
+        resolve(undefined)
+      })
+    }))
 })

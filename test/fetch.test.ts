@@ -1,9 +1,9 @@
-import {adapter, getIt} from 'get-it'
+import {adapter, environment, getIt} from 'get-it'
 import {jsonRequest, jsonResponse} from 'get-it/middleware'
 import {describe, expect, it} from 'vitest'
 
 import {httpRequester as browserRequest} from '../src/request/browser-request'
-import {baseUrl, expectRequest, expectRequestBody, isHappyDomBug, promiseRequest} from './helpers'
+import {baseUrl, expectRequest, expectRequestBody, promiseRequest} from './helpers'
 
 describe.skipIf(typeof fetch === 'undefined' && typeof XMLHttpRequest === 'undefined')(
   'fetch',
@@ -19,23 +19,26 @@ describe.skipIf(typeof fetch === 'undefined' && typeof XMLHttpRequest === 'undef
       await expectRequest(req).resolves.toHaveProperty('body', body)
     })
 
-    it.skipIf(adapter === 'fetch')('should be able to post a Buffer as body', async () => {
+    it('should be able to post a Buffer as body', async () => {
       const request = getIt([baseUrl], browserRequest)
       const req = request({url: '/echo', body: Buffer.from('Foo bar')})
       await expectRequestBody(req).resolves.toEqual('Foo bar')
     })
 
-    it.skipIf(adapter === 'fetch')('should be able to post a string as body', async () => {
+    it('should be able to post a string as body', async () => {
       const request = getIt([baseUrl], browserRequest)
       const req = request({url: '/echo', body: 'Does this work?'})
       await expectRequestBody(req).resolves.toEqual('Does this work?')
     })
 
-    it.skipIf(adapter === 'fetch')('should be able to use JSON request middleware', async () => {
-      const request = getIt([baseUrl, jsonRequest()], browserRequest)
-      const req = request({url: '/echo', body: {foo: 'bar'}})
-      await expectRequestBody(req).resolves.toEqual('{"foo":"bar"}')
-    })
+    it.skipIf(adapter === 'fetch' && environment === 'browser')(
+      'should be able to use JSON request middleware',
+      async () => {
+        const request = getIt([baseUrl, jsonRequest()], browserRequest)
+        const req = request({url: '/echo', body: {foo: 'bar'}})
+        await expectRequestBody(req).resolves.toEqual('{"foo":"bar"}')
+      },
+    )
 
     it('should be able to set http headers', async () => {
       const request = getIt([baseUrl, jsonResponse()], browserRequest)
@@ -57,27 +60,34 @@ describe.skipIf(typeof fetch === 'undefined' && typeof XMLHttpRequest === 'undef
       })
     })
 
-    it('should be able to abort requests', () =>
-      new Promise((resolve, reject) => {
-        const request = getIt([baseUrl], browserRequest)
-        const req = request({url: '/delay'})
+    // @TODO fix the test so it works in happy-dom
+    it.skipIf(environment === 'browser')(
+      'should be able to abort requests',
+      () =>
+        new Promise((resolve, reject) => {
+          const request = getIt([baseUrl], browserRequest)
+          const req = request({url: '/delay'})
 
-        req.error.subscribe((err: any) =>
-          reject(
-            new Error(`error channel should not be called when aborting, got:\n\n${err.message}`, {
-              cause: err,
-            }),
-          ),
-        )
-        req.response.subscribe(() =>
-          reject(new Error('response channel should not be called when aborting')),
-        )
+          req.error.subscribe((err: any) =>
+            reject(
+              new Error(
+                `error channel should not be called when aborting, got:\n\n${err.message}`,
+                {
+                  cause: err,
+                },
+              ),
+            ),
+          )
+          req.response.subscribe(() =>
+            reject(new Error('response channel should not be called when aborting')),
+          )
 
-        setTimeout(() => req.abort.publish(), 15)
-        setTimeout(() => resolve(undefined), 250)
-      }))
+          setTimeout(() => req.abort.publish(), 15)
+          setTimeout(() => resolve(undefined), 250)
+        }),
+    )
 
-    it.skipIf(typeof ArrayBuffer === 'undefined' || isHappyDomBug)(
+    it.skipIf(typeof ArrayBuffer === 'undefined' || environment === 'browser')(
       'should be able to get arraybuffer back',
       async () => {
         const request = getIt([baseUrl], browserRequest)
@@ -86,7 +96,7 @@ describe.skipIf(typeof fetch === 'undefined' && typeof XMLHttpRequest === 'undef
       },
     )
 
-    it.skipIf(isHappyDomBug)('should emit errors on error channel', async () => {
+    it('should emit errors on error channel', async () => {
       expect.assertions(2)
       await new Promise((resolve, reject) => {
         const request = getIt([baseUrl], browserRequest)

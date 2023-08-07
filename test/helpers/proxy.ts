@@ -1,8 +1,8 @@
-import fs from 'fs'
-import http from 'http'
-import https from 'https'
-import path from 'path'
-import url from 'url'
+import fs from 'node:fs'
+import http from 'node:http'
+import https from 'node:https'
+import path from 'node:path'
+import url from 'node:url'
 
 const httpsServerOptions = {
   key: fs.readFileSync(path.join(__dirname, '..', 'certs', 'server', 'key.pem')),
