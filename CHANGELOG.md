@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.4.2](https://github.com/sanity-io/get-it/compare/v8.4.1...v8.4.2) (2023-08-09)
+
+### Bug Fixes
+
+- improve React Native compatiblity ([ead5ceb](https://github.com/sanity-io/get-it/commit/ead5ceb1e07eaff9e1f4c2f966aa589f1e22a4c8))
+
 ## [8.4.1](https://github.com/sanity-io/get-it/compare/v8.4.0...v8.4.1) (2023-08-07)
 
 ### Bug Fixes
