@@ -32,7 +32,7 @@ export const httpRequester: HttpRequest = (context, callback) => {
   let xhr = new XmlHttpRequest()
 
   if (xhr instanceof FetchXhr && typeof options.fetch === 'object') {
-    xhr.setInit(options.fetch)
+    xhr.setInit(options.fetch, options.useAbortSignal ?? true)
   }
 
   const headers = options.headers

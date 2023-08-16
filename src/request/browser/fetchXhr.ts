@@ -31,6 +31,7 @@ export class FetchXhr
   #headers: Record<string, string> = {}
   #controller?: AbortController
   #init: RequestInit = {}
+  #useAbortSignal: boolean
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- _async is only declared for typings compatibility
   open(method: string, url: string, _async?: boolean) {
     this.#method = method
@@ -52,8 +53,9 @@ export class FetchXhr
     this.#headers[name] = value
   }
   // Allow setting extra fetch init options, needed for runtimes such as Vercel Edge to set `cache` and other options in React Server Components
-  setInit(init: RequestInit) {
+  setInit(init: RequestInit, useAbortSignal = true) {
     this.#init = init
+    this.#useAbortSignal = useAbortSignal
   }
   send(body: BodyInit) {
     const textBody = this.responseType !== 'arraybuffer'
@@ -63,7 +65,7 @@ export class FetchXhr
       headers: this.#headers,
       body,
     }
-    if (typeof AbortController === 'function') {
+    if (typeof AbortController === 'function' && this.#useAbortSignal) {
       this.#controller = new AbortController()
       // The instanceof check ensures environments like Edge Runtime, Node 18 with built-in fetch
       // and more don't throw if `signal` doesn't implement`EventTarget`
