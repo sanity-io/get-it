@@ -28,6 +28,10 @@ export interface RequestOptions {
    * Enables using the native `fetch` API instead of the default `http` module, and allows setting its options like `cache`
    */
   fetch?: boolean | Omit<RequestInit, 'method'>
+  /**
+   * Some frameworks have special behavior for `fetch` when an `AbortSignal` is used, and may want to disable it unless userland specifically opts-in.
+   */
+  useAbortSignal?: boolean
 }
 
 /** @public */
