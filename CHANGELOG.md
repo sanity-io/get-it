@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.4.3](https://github.com/sanity-io/get-it/compare/v8.4.2...v8.4.3) (2023-08-17)
+
+### Bug Fixes
+
+- add ability to opt-out of setting `signal` on `fetch` ([#180](https://github.com/sanity-io/get-it/issues/180)) ([dc269bc](https://github.com/sanity-io/get-it/commit/dc269bca987b5e1fcc57f7aaec04a3d31f3aa982))
+
 ## [8.4.2](https://github.com/sanity-io/get-it/compare/v8.4.1...v8.4.2) (2023-08-09)
 
 ### Bug Fixes
