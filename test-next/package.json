@@ -10,7 +10,7 @@
     "@types/react": "^18.2.14",
     "@types/react-dom": "^18.2.6",
     "get-it": "file:..",
-    "next": "13.4.17-canary.2",
+    "next": "13.4.20-canary.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "typescript": "^5.1.3"
