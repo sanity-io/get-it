@@ -116,7 +116,7 @@
     "@types/follow-redirects": "^1.14.1",
     "@types/node": "^18.17.6",
     "@types/progress-stream": "^2.0.2",
-    "@types/zen-observable": "^0.8.3",
+    "@types/zen-observable": "^0.8.4",
     "@typescript-eslint/eslint-plugin": "^6.4.1",
     "@typescript-eslint/parser": "^6.4.1",
     "@vitest/coverage-v8": "^0.34.2",
