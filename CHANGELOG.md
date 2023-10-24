@@ -5,6 +5,13 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.4.4](https://github.com/sanity-io/get-it/compare/v8.4.3...v8.4.4) (2023-10-24)
+
+### Bug Fixes
+
+- **deps:** lock file maintenance ([#251](https://github.com/sanity-io/get-it/issues/251)) ([eeed9ef](https://github.com/sanity-io/get-it/commit/eeed9efbd7963a94594f11acbb9fd9eeea7e6cfe))
+- **deps:** Update dependency @types/node to v20 ([#250](https://github.com/sanity-io/get-it/issues/250)) ([a73b40d](https://github.com/sanity-io/get-it/commit/a73b40dc166d70b2785070e231ddc8f72e79a4c1))
+
 ## [8.4.3](https://github.com/sanity-io/get-it/compare/v8.4.2...v8.4.3) (2023-08-17)
 
 ### Bug Fixes
