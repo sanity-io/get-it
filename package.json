@@ -113,7 +113,7 @@
     "@sanity/pkg-utils": "^3.2.0",
     "@sanity/semantic-release-preset": "^4.1.4",
     "@types/debug": "^4.1.9",
-    "@types/follow-redirects": "^1.14.2",
+    "@types/follow-redirects": "^1.14.3",
     "@types/node": "^18.17.17",
     "@types/progress-stream": "^2.0.2",
     "@types/zen-observable": "^0.8.4",
