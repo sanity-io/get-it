@@ -130,7 +130,7 @@
     "ls-engines": "^0.9.0",
     "node-fetch": "^2.6.7",
     "prettier": "^3.0.3",
-    "prettier-plugin-packagejson": "^2.4.5",
+    "prettier-plugin-packagejson": "^2.4.6",
     "rimraf": "^5.0.1",
     "typescript": "^5.2.2",
     "vite": "4.4.9",
