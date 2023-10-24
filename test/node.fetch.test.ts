@@ -15,7 +15,7 @@ describe.runIf(typeof fetch !== 'undefined' && environment === 'node')(
       expect(actual).toEqual(expected)
     })
 
-    it.skipIf(process.versions.node.split('.')[0] === '20')('can turn off keep-alive', async () => {
+    it.skipIf(process.versions.node.split('.')[0] >= '20')('can turn off keep-alive', async () => {
       const request = getIt([baseUrl, promise()], nodeRequest)
       const expected = await request({url: '/plain-text', fetch: false})
       const actual = await request({
