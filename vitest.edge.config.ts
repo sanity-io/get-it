@@ -8,8 +8,9 @@ export default defineConfig({
     ...sharedConfig,
     environment: 'edge-runtime',
     alias: {
-      'get-it/middleware': pkg.exports['./middleware'].browser.source,
-      'get-it': pkg.exports['.'].browser.source,
+      'get-it/middleware': new URL(pkg.exports['./middleware'].browser.source, import.meta.url)
+        .pathname,
+      'get-it': new URL(pkg.exports['.'].browser.source, import.meta.url).pathname,
     },
   },
   resolve: {

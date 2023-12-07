@@ -7,8 +7,9 @@ export default defineConfig({
   test: {
     ...sharedConfig,
     alias: {
-      'get-it/middleware': pkg.exports['./middleware']['react-server'],
-      'get-it': './src/index.react-server.ts',
+      'get-it/middleware': new URL(pkg.exports['./middleware']['react-server'], import.meta.url)
+        .pathname,
+      'get-it': new URL('./src/index.react-server.ts', import.meta.url).pathname,
     },
   },
   resolve: {
