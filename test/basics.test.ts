@@ -51,7 +51,7 @@ describe(
       expect(() => {
         request({url: '/echo', method: 'post', body: {}})
       }).toThrowErrorMatchingInlineSnapshot(
-        '"The \\"string\\" argument must be of type string or an instance of Buffer or ArrayBuffer. Received an instance of Object"',
+        `[TypeError: The "string" argument must be of type string or an instance of Buffer or ArrayBuffer. Received an instance of Object]`,
       )
     })
     it.runIf(adapter === 'fetch')('[fetch] fetch is more permissive in what `body` can be', () => {
