@@ -1,8 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    // This outputs handy information about `fetch` cache during `next dev`
-    logging: 'verbose',
+  logging: {
+    fetches: {
+      fullUrl: true,
+    },
   },
 }
 
