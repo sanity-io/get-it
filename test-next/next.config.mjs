@@ -5,6 +5,9 @@ const nextConfig = {
       fullUrl: true,
     },
   },
+  experimental: {
+    staticWorkerRequestDeduping: true,
+  },
 }
 
 export default nextConfig
