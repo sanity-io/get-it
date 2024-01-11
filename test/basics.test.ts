@@ -161,7 +161,7 @@ describe(
       const req = request({url: 'https://www.sanity.io/robots.txt'})
       const res = await promiseRequest(req)
       expect(res).toHaveProperty('body')
-      expect(res.body).toContain('User-agent: *')
+      expect(res.body).toContain('User-Agent: *')
     })
 
     it('should handle cross-origin requests without issues', async () => {
@@ -169,7 +169,7 @@ describe(
       const req = request({url: `http://sanity.io/robots.txt?cb=${Date.now()}`})
       const res = await promiseRequest(req)
       expect(res).toHaveProperty('body')
-      expect(res.body).toMatch('User-agent: *')
+      expect(res.body).toMatch('User-Agent: *')
     })
 
     it('should not allow base middleware to add prefix on absolute urls', async () => {

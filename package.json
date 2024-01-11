@@ -1,6 +1,7 @@
 {
   "name": "get-it",
   "version": "8.4.4",
+  "workspaces": ["test-next"],
   "description": "Generic HTTP request library for node, browsers and workers",
   "keywords": [
     "request",
