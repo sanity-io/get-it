@@ -129,7 +129,7 @@
     "eslint-plugin-simple-import-sort": "^10.0.0",
     "faucet": "^0.0.4",
     "get-uri": "^6.0.2",
-    "happy-dom": "^12.10.3",
+    "happy-dom": "^13.0.0",
     "ls-engines": "^0.9.1",
     "node-fetch": "^2.6.7",
     "prettier": "^3.1.1",
