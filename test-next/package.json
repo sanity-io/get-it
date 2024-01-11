@@ -7,11 +7,11 @@
     "prepare": "(cd .. && npm run prepublishOnly)",
     "start": "next start"
   },
-  "dependencies": {
+  "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/react": "^18.2.14",
     "@types/react-dom": "^18.2.6",
-    "next": "14.0.5-canary.43",
+    "next": "14.0.5-canary.50",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "typescript": "^5.1.3"
