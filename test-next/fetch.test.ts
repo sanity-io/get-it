@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {describe, expect, test} from 'vitest'
 
 /**
@@ -68,6 +69,14 @@ describe(
         await revalidate('edge')
         await sleep(1000)
         expect(initial).not.toBe(await snapshot('edge'))
+      })
+    })
+    describe('request deduping', () => {
+      test('requests should only dedupe if no abort signal is given', async () => {
+        const response = await get(new URL('/memo', target))
+        expect(queryResponse(response, 'test1' as any)).toBe('success')
+        expect(queryResponse(response, 'test2' as any)).toBe('success')
+        expect(queryResponse(response, 'test3' as any)).toBe('success')
       })
     })
   },

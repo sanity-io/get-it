@@ -56,5 +56,6 @@ async function test(id: string, signal?: boolean | AbortSignal) {
     url,
     useAbortSignal: signal === true,
     fetch: signal === false ? {next} : {next, signal: signal === true ? controller.signal : signal},
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }).then((res: any) => res.body)
 }
