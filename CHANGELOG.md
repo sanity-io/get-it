@@ -5,6 +5,13 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.4.5](https://github.com/sanity-io/get-it/compare/v8.4.4...v8.4.5) (2024-01-11)
+
+### Bug Fixes
+
+- **deps:** update dependency @sanity/pkg-utils to ^3.3.7 ([#297](https://github.com/sanity-io/get-it/issues/297)) ([9660580](https://github.com/sanity-io/get-it/commit/96605800ec5fe6897e3736289ace3c82f0529b2e))
+- **deps:** Update react monorepo ([#265](https://github.com/sanity-io/get-it/issues/265)) ([080b96c](https://github.com/sanity-io/get-it/commit/080b96cb56a94b3b74f99dffe2a18387cfa72c12))
+
 ## [8.4.4](https://github.com/sanity-io/get-it/compare/v8.4.3...v8.4.4) (2023-10-24)
 
 ### Bug Fixes
