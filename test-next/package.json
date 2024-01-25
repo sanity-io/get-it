@@ -4,7 +4,7 @@
   "scripts": {
     "build": "next build",
     "dev": "next dev",
-    "prepare": "(cd .. && npm run prepublishOnly)",
+    "prebuild": "(cd .. && npm i && npm run prepublishOnly)",
     "start": "next start"
   },
   "devDependencies": {
