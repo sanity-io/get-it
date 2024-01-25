@@ -1,6 +1,6 @@
 {
   "name": "get-it",
-  "version": "8.4.5",
+  "version": "8.4.6",
   "workspaces": [
     "test-next"
   ],
