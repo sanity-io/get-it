@@ -9,7 +9,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "@types/react": "^18.2.47",
+    "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
     "next": "14.0.5-canary.52",
     "react": "^18.2.0",
