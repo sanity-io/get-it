@@ -1,9 +1,6 @@
 {
   "name": "get-it",
   "version": "8.4.6",
-  "workspaces": [
-    "test-next"
-  ],
   "description": "Generic HTTP request library for node, browsers and workers",
   "keywords": [
     "request",
@@ -79,6 +76,9 @@
     "src",
     "middleware.js"
   ],
+  "workspaces": [
+    "test-next"
+  ],
   "scripts": {
     "build": "npm run clean && pkg build --strict && pkg --strict",
     "clean": "npx rimraf dist coverage",
@@ -88,11 +88,11 @@
     "test": "vitest",
     "test:browser": "npm test -- --config ./vitest.browser.config.ts --dom",
     "test:edge-runtime": "npm test -- --config ./vitest.edge.config.ts",
-    "test:react-server": "npm test -- --config ./vitest.react-server.config.ts",
     "test:esm": "node --test test-esm/ | faucet",
     "test:esm:browser": "node -C browser --test test-esm/test.mjs | faucet",
     "test:esm:deno": "deno test --allow-read --allow-net --allow-env --import-map=test-deno/import_map.json test-deno",
     "test:next": "npm test -- --config ./vitest.next.config.ts",
+    "test:react-server": "npm test -- --config ./vitest.react-server.config.ts",
     "type-check": "tsc --noEmit"
   },
   "browserslist": "extends @sanity/browserslist-config",

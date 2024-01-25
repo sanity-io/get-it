@@ -2,9 +2,9 @@
   "name": "test-next",
   "private": true,
   "scripts": {
+    "prebuild": "(cd .. && npm run prepublishOnly)",
     "build": "next build",
     "dev": "next dev",
-    "prebuild": "(cd .. && npm run prepublishOnly)",
     "start": "next start"
   },
   "devDependencies": {
