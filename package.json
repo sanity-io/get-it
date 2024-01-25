@@ -95,10 +95,7 @@
     "test:next": "npm test -- --config ./vitest.next.config.ts",
     "type-check": "tsc --noEmit"
   },
-  "browserslist": [
-    "> 0.2% and supports es6-module and supports es6-module-dynamic-import and not dead and not IE 11",
-    "maintained node versions"
-  ],
+  "browserslist": "extends @sanity/browserslist-config",
   "dependencies": {
     "debug": "^4.3.4",
     "decompress-response": "^7.0.0",
@@ -113,7 +110,7 @@
   },
   "devDependencies": {
     "@edge-runtime/vm": "^3.1.8",
-    "@sanity/pkg-utils": "^4.0.0",
+    "@sanity/pkg-utils": "^4.1.0",
     "@sanity/semantic-release-preset": "^4.1.6",
     "@types/debug": "^4.1.10",
     "@types/follow-redirects": "^1.14.4",
