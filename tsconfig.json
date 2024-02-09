@@ -7,7 +7,7 @@
     "module": "esnext",
     "paths": {
       "get-it": ["./src"],
-      "get-it/middleware": ["./src/middleware"],
-    },
-  },
+      "get-it/middleware": ["./src/middleware"]
+    }
+  }
 }
