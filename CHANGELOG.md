@@ -5,6 +5,13 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.4.7](https://github.com/sanity-io/get-it/compare/v8.4.6...v8.4.7) (2024-02-20)
+
+### Bug Fixes
+
+- **deps:** update dependency @sanity/pkg-utils to ^4.2.0 ([#314](https://github.com/sanity-io/get-it/issues/314)) ([55440e4](https://github.com/sanity-io/get-it/commit/55440e4245b75a78818899daa47c8f5094a3fd83))
+- **deps:** update dependency @sanity/pkg-utils to ^4.2.4 ([#329](https://github.com/sanity-io/get-it/issues/329)) ([151e7e4](https://github.com/sanity-io/get-it/commit/151e7e49e09a984836028b58b43778f6fb01f59d))
+
 ## [8.4.6](https://github.com/sanity-io/get-it/compare/v8.4.5...v8.4.6) (2024-01-25)
 
 ### Bug Fixes
