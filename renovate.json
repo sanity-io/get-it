@@ -5,8 +5,7 @@
   "packageRules": [
     {
       "matchPackageNames": ["next"],
-      "semanticCommitType": "chore",
-      "followTag": "canary"
+      "semanticCommitType": "chore"
     }
   ]
 }
