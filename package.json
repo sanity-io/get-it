@@ -1,6 +1,6 @@
 {
   "name": "get-it",
-  "version": "8.4.10",
+  "version": "8.4.11",
   "description": "Generic HTTP request library for node, browsers and workers",
   "keywords": [
     "request",
