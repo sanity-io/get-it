@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.4.12](https://github.com/sanity-io/get-it/compare/v8.4.11...v8.4.12) (2024-03-15)
+
+### Bug Fixes
+
+- **deps:** Update dependency follow-redirects to ^1.15.6 ([#364](https://github.com/sanity-io/get-it/issues/364)) ([23eef83](https://github.com/sanity-io/get-it/commit/23eef8311b5c533e37dcf85684951532d3b3ed35))
+
 ## [8.4.11](https://github.com/sanity-io/get-it/compare/v8.4.10...v8.4.11) (2024-03-11)
 
 ### Bug Fixes
