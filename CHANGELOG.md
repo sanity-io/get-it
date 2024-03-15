@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.4.13](https://github.com/sanity-io/get-it/compare/v8.4.12...v8.4.13) (2024-03-15)
+
+### Bug Fixes
+
+- Revert "fix: query string merging in legacy react native versions" ([#365](https://github.com/sanity-io/get-it/issues/365)) ([1e685d0](https://github.com/sanity-io/get-it/commit/1e685d0eda04dfa1a633a979dcb79e50b9cc9d94)), closes [#351](https://github.com/sanity-io/get-it/issues/351)
+
 ## [8.4.12](https://github.com/sanity-io/get-it/compare/v8.4.11...v8.4.12) (2024-03-15)
 
 ### Bug Fixes
