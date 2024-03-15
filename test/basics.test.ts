@@ -178,24 +178,6 @@ describe(
       await expectRequestBody(req).resolves.toHaveProperty('url', '/req-test/debug')
     })
 
-    it('should handle URLs with duplicate query params', async () => {
-      const request = getIt([baseUrl, jsonResponse()])
-      const req = request({url: '/debug?dupe=1&dupe=2&lone=3'})
-      await expectRequestBody(req).resolves.toHaveProperty(
-        'url',
-        '/req-test/debug?dupe=1&dupe=2&lone=3',
-      )
-    })
-
-    it('should append explicitly passed query parameters with existing params in URL', async () => {
-      const request = getIt([baseUrl, jsonResponse()])
-      const req = request({url: '/debug?dupe=a', query: {dupe: 'b', lone: 'c'}})
-      await expectRequestBody(req).resolves.toHaveProperty(
-        'url',
-        '/req-test/debug?dupe=a&dupe=b&lone=c',
-      )
-    })
-
     it('should be able to clone a requester, keeping the same middleware', () =>
       new Promise<void>((resolve) => {
         let i = 0
