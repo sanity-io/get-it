@@ -6,6 +6,10 @@
     {
       "matchPackageNames": ["next"],
       "semanticCommitType": "chore"
+    },
+    {
+      "matchDepTypes": ["dependencies"],
+      "rangeStrategy": "bump"
     }
   ]
 }
