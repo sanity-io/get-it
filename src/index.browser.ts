@@ -11,7 +11,7 @@ export const getIt = (
 ): Requester => createRequester(initMiddleware, httpRequest)
 
 /** @public */
-export const environment: ExportEnv = 'browser'
+export const environment = 'browser' satisfies ExportEnv
 
 /** @public */
 export {adapter} from './request/browser-request'
