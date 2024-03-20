@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.4.16](https://github.com/sanity-io/get-it/compare/v8.4.15...v8.4.16) (2024-03-20)
+
+### Bug Fixes
+
+- **deps:** update dependency @sanity/pkg-utils to ^5.1.4 ([#379](https://github.com/sanity-io/get-it/issues/379)) ([eaebb08](https://github.com/sanity-io/get-it/commit/eaebb081ef06979dce8581a51a076bdb7c461ba5))
+
 ## [8.4.15](https://github.com/sanity-io/get-it/compare/v8.4.14...v8.4.15) (2024-03-20)
 
 ### Bug Fixes
