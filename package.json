@@ -21,7 +21,6 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
       "source": "./src/index.ts",
       "browser": {
         "source": "./src/index.browser.ts",
@@ -37,7 +36,6 @@
       "default": "./dist/index.js"
     },
     "./middleware": {
-      "types": "./dist/middleware.d.ts",
       "source": "./src/middleware.ts",
       "browser": {
         "source": "./src/middleware.browser.ts",
