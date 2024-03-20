@@ -5,6 +5,13 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.4.15](https://github.com/sanity-io/get-it/compare/v8.4.14...v8.4.15) (2024-03-20)
+
+### Bug Fixes
+
+- add missing tsdoc release tags ([5270c21](https://github.com/sanity-io/get-it/commit/5270c215403143a2250fbe851b376506b9b29565))
+- ship TS Node16 compatible typings ([07ee33e](https://github.com/sanity-io/get-it/commit/07ee33ee74bdb8ca8826b630e8831d8a9141db5c))
+
 ## [8.4.14](https://github.com/sanity-io/get-it/compare/v8.4.13...v8.4.14) (2024-03-18)
 
 ### Bug Fixes
