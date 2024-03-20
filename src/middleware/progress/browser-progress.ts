@@ -1,5 +1,6 @@
 import type {Middleware} from '../../types'
 
+/** @public */
 export function progress() {
   return {
     onRequest: (evt) => {

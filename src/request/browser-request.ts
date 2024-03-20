@@ -3,8 +3,11 @@ import parseHeaders from 'parse-headers'
 import type {HttpRequest, MiddlewareResponse, RequestAdapter, RequestOptions} from '../types'
 import {FetchXhr} from './browser/fetchXhr'
 
-// Use fetch if it's available, non-browser environments such as Deno, Edge Runtime and more provide fetch as a global but doesn't provide xhr
 export const adapter: RequestAdapter = typeof XMLHttpRequest === 'function' ? 'xhr' : 'fetch'
+/**
+ * Use fetch if it's available, non-browser environments such as Deno, Edge Runtime and more provide fetch as a global but doesn't provide xhr
+ * @public
+ */
 
 // Fallback to fetch-based XHR polyfill for non-browser environments like Workers
 const XmlHttpRequest = adapter === 'xhr' ? XMLHttpRequest : FetchXhr
