@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.4.19](https://github.com/sanity-io/get-it/compare/v8.4.18...v8.4.19) (2024-04-10)
+
+### Bug Fixes
+
+- remove unnecessary `source` condition ([5c60ce0](https://github.com/sanity-io/get-it/commit/5c60ce008faaed18720e317c12b744ec24ec04fb))
+
 ## [8.4.18](https://github.com/sanity-io/get-it/compare/v8.4.17...v8.4.18) (2024-04-05)
 
 ### Bug Fixes
