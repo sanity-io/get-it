@@ -107,7 +107,7 @@
   },
   "devDependencies": {
     "@edge-runtime/vm": "^3.2.0",
-    "@sanity/pkg-utils": "^6.1.0",
+    "@sanity/pkg-utils": "^6.4.1",
     "@sanity/semantic-release-preset": "^4.1.7",
     "@types/debug": "^4.1.10",
     "@types/follow-redirects": "^1.14.4",
