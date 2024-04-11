@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.4.20](https://github.com/sanity-io/get-it/compare/v8.4.19...v8.4.20) (2024-04-11)
+
+### Bug Fixes
+
+- add bun export condition ([f616b13](https://github.com/sanity-io/get-it/commit/f616b130b499b746a19cc29deb88a8107562446a))
+
 ## [8.4.19](https://github.com/sanity-io/get-it/compare/v8.4.18...v8.4.19) (2024-04-10)
 
 ### Bug Fixes
