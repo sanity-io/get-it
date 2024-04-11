@@ -22,6 +22,7 @@
   "exports": {
     ".": {
       "source": "./src/index.ts",
+      "bun": "./dist/index.js",
       "browser": {
         "source": "./src/index.browser.ts",
         "import": "./dist/index.browser.js",
@@ -37,6 +38,7 @@
     },
     "./middleware": {
       "source": "./src/middleware.ts",
+      "bun": "./dist/middleware.js",
       "browser": {
         "source": "./src/middleware.browser.ts",
         "require": "./dist/middleware.browser.cjs",
