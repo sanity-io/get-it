@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.4.21](https://github.com/sanity-io/get-it/compare/v8.4.20...v8.4.21) (2024-04-11)
+
+### Bug Fixes
+
+- improve bun support ([ea370bd](https://github.com/sanity-io/get-it/commit/ea370bdd4190e3eca9d637522e4789425486dbf1))
+
 ## [8.4.20](https://github.com/sanity-io/get-it/compare/v8.4.19...v8.4.20) (2024-04-11)
 
 ### Bug Fixes
