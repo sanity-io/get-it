@@ -194,7 +194,9 @@ export const httpRequester: HttpRequest = (context, cb) => {
   // See if we should try to request a compressed response (and decompress on return)
   const tryCompressed = reqOpts.method !== 'HEAD'
   if (tryCompressed && !reqOpts.headers['accept-encoding'] && options.compress !== false) {
-    reqOpts.headers['accept-encoding'] = 'br, gzip, deflate'
+    reqOpts.headers['accept-encoding'] =
+      // Workaround Bun not supporting brotli: https://github.com/oven-sh/bun/issues/267
+      typeof Bun !== 'undefined' ? 'gzip, deflate' : 'br, gzip, deflate'
   }
 
   const finalOptions = context.applyMiddleware(

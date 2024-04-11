@@ -1,6 +1,6 @@
 {
   "name": "get-it",
-  "version": "8.4.20",
+  "version": "8.4.21-canary.1",
   "description": "Generic HTTP request library for node, browsers and workers",
   "keywords": [
     "request",
@@ -22,13 +22,13 @@
   "exports": {
     ".": {
       "source": "./src/index.ts",
-      "bun": "./dist/index.js",
       "browser": {
         "source": "./src/index.browser.ts",
         "import": "./dist/index.browser.js",
         "require": "./dist/index.browser.cjs"
       },
       "react-server": "./dist/index.react-server.js",
+      "bun": "./dist/index.browser.js",
       "deno": "./dist/index.browser.js",
       "edge-light": "./dist/index.browser.js",
       "worker": "./dist/index.browser.js",
@@ -38,13 +38,13 @@
     },
     "./middleware": {
       "source": "./src/middleware.ts",
-      "bun": "./dist/middleware.js",
       "browser": {
         "source": "./src/middleware.browser.ts",
         "require": "./dist/middleware.browser.cjs",
         "import": "./dist/middleware.browser.js"
       },
       "react-server": "./dist/middleware.browser.js",
+      "bun": "./dist/middleware.browser.js",
       "deno": "./dist/middleware.browser.js",
       "edge-light": "./dist/middleware.browser.js",
       "worker": "./dist/middleware.browser.js",
@@ -111,6 +111,7 @@
     "@edge-runtime/vm": "^3.2.0",
     "@sanity/pkg-utils": "^6.4.1",
     "@sanity/semantic-release-preset": "^4.1.7",
+    "@types/bun": "^1.0.12",
     "@types/debug": "^4.1.10",
     "@types/follow-redirects": "^1.14.4",
     "@types/node": "^20.8.8",
