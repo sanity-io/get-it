@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.4.22](https://github.com/sanity-io/get-it/compare/v8.4.21...v8.4.22) (2024-04-13)
+
+### Bug Fixes
+
+- inline is-plain-object ([d902fdb](https://github.com/sanity-io/get-it/commit/d902fdb25064df866ec1328a468464a6cd9177ca))
+
 ## [8.4.21](https://github.com/sanity-io/get-it/compare/v8.4.20...v8.4.21) (2024-04-11)
 
 ### Bug Fixes
