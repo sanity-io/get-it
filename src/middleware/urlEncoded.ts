@@ -1,7 +1,6 @@
-import {isPlainObject} from 'is-plain-object'
-
 import type {Middleware} from '../types'
 import {isBuffer} from '../util/isBuffer'
+import {isPlainObject} from '../util/isPlainObject'
 
 function encode(data: Record<string, string | Set<number | string>>): string {
   const query = new URLSearchParams()

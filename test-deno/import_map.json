@@ -4,7 +4,6 @@
     "decompress-response": "https://esm.sh/decompress-response@^7.0.0",
     "follow-redirects": "https://esm.sh/follow-redirects@^1.15.2",
     "into-stream": "https://esm.sh/into-stream@^6.0.0",
-    "is-plain-object": "https://esm.sh/is-plain-object@^5.0.0",
     "is-retry-allowed": "https://esm.sh/is-retry-allowed@^2.2.0",
     "is-stream": "https://esm.sh/is-stream@^2.0.1",
     "parse-headers": "https://esm.sh/parse-headers@^2.0.5",
