@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.4.23](https://github.com/sanity-io/get-it/compare/v8.4.22...v8.4.23) (2024-04-13)
+
+### Bug Fixes
+
+- use `module: Preserve` ([#406](https://github.com/sanity-io/get-it/issues/406)) ([8ffe339](https://github.com/sanity-io/get-it/commit/8ffe339aa40a41b2474deabd2efb55b9f16441ef))
+
 ## [8.4.22](https://github.com/sanity-io/get-it/compare/v8.4.21...v8.4.22) (2024-04-13)
 
 ### Bug Fixes
