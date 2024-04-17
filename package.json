@@ -27,6 +27,10 @@
         "import": "./dist/index.browser.js",
         "require": "./dist/index.browser.cjs"
       },
+      "react-native": {
+        "import": "./dist/index.browser.js",
+        "require": "./dist/index.browser.cjs"
+      },
       "react-server": "./dist/index.react-server.js",
       "bun": "./dist/index.browser.js",
       "deno": "./dist/index.browser.js",
@@ -40,6 +44,10 @@
       "source": "./src/middleware.ts",
       "browser": {
         "source": "./src/middleware.browser.ts",
+        "require": "./dist/middleware.browser.cjs",
+        "import": "./dist/middleware.browser.js"
+      },
+      "react-native": {
         "require": "./dist/middleware.browser.cjs",
         "import": "./dist/middleware.browser.js"
       },
