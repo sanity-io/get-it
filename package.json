@@ -21,6 +21,11 @@
   "type": "module",
   "exports": {
     ".": {
+      "react-native": {
+        "source": "./src/index.browser.ts",
+        "import": "./dist/index.browser.js",
+        "require": "./dist/index.browser.cjs"
+      },
       "source": "./src/index.ts",
       "browser": {
         "source": "./src/index.browser.ts",
@@ -37,6 +42,11 @@
       "default": "./dist/index.js"
     },
     "./middleware": {
+      "react-native": {
+        "source": "./src/middleware.browser.ts",
+        "require": "./dist/middleware.browser.cjs",
+        "import": "./dist/middleware.browser.js"
+      },
       "source": "./src/middleware.ts",
       "browser": {
         "source": "./src/middleware.browser.ts",
