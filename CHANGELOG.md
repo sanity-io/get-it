@@ -5,6 +5,14 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.4.24](https://github.com/sanity-io/get-it/compare/v8.4.23...v8.4.24) (2024-04-17)
+
+### Bug Fixes
+
+- inline `debug` for better ESM interop ([18798b6](https://github.com/sanity-io/get-it/commit/18798b607c2a10d07efcb6fee48719b881e891ae))
+- inline `parse-headers` for better ESM interop ([1f36dfe](https://github.com/sanity-io/get-it/commit/1f36dfe85e60fb67cc099215695bcde4412135fa))
+- package exports for react-native ([#413](https://github.com/sanity-io/get-it/issues/413)) ([a93400e](https://github.com/sanity-io/get-it/commit/a93400ec8d89ded5e2f25258e8298008cd262f13))
+
 ## [8.4.23](https://github.com/sanity-io/get-it/compare/v8.4.22...v8.4.23) (2024-04-13)
 
 ### Bug Fixes
