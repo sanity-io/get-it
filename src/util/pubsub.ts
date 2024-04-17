@@ -1,6 +1,6 @@
 // Code borrowed from https://github.com/bjoerge/nano-pubsub
 
-import type {PubSub, Subscriber} from '../types'
+import type {PubSub, Subscriber} from 'get-it'
 
 export function createPubSub<Message = void>(): PubSub<Message> {
   const subscribers: {[id: string]: Subscriber<Message>} = Object.create(null)

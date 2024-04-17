@@ -1,4 +1,4 @@
-import type {MiddlewareHooks} from '../types'
+import type {MiddlewareHooks} from 'get-it'
 
 const validUrl = /^https?:\/\//i
 

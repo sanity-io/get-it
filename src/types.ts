@@ -12,6 +12,7 @@ export interface RequestOptions {
   headers?: any
   maxRedirects?: number
   maxRetries?: number
+  retryDelay?: (attemptNumber: number) => number
   method?: string
   proxy?: any
   query?: any

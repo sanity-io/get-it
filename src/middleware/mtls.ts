@@ -1,4 +1,5 @@
-import type {Middleware} from '../types'
+import type {Middleware} from 'get-it'
+
 import {isBrowserOptions} from '../util/isBrowserOptions'
 
 /** @public */

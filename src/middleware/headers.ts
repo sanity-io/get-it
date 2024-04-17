@@ -1,4 +1,4 @@
-import type {Middleware} from '../types'
+import type {Middleware} from 'get-it'
 
 /** @public */
 export function headers(_headers: any, opts: any = {}) {

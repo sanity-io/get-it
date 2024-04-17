@@ -1,4 +1,4 @@
-import type {ApplyMiddleware, MiddlewareReducer} from '../types'
+import type {ApplyMiddleware, MiddlewareReducer} from 'get-it'
 
 export const middlewareReducer = (middleware: MiddlewareReducer) =>
   function applyMiddleware(hook, defaultValue, ...args) {

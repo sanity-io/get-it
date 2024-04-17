@@ -1,6 +1,5 @@
 import debugIt from 'debug'
-
-import type {Middleware} from '../types'
+import type {Middleware} from 'get-it'
 
 const SENSITIVE_HEADERS = ['cookie', 'authorization']
 

@@ -1,4 +1,5 @@
-import type {RetryOptions} from '../../types'
+import type {RetryOptions} from 'get-it'
+
 import defaultShouldRetry from '../../util/node-shouldRetry'
 import sharedRetry from './shared-retry'
 

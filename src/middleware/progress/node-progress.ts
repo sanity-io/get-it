@@ -1,6 +1,5 @@
+import type {Middleware} from 'get-it'
 import progressStream from 'progress-stream'
-
-import type {Middleware} from '../../types'
 
 function normalizer(stage: 'download' | 'upload') {
   return (prog: any) => ({

@@ -1,4 +1,4 @@
-import type {Middleware, MiddlewareHooks, MiddlewareResponse} from '../types'
+import type {Middleware, MiddlewareHooks, MiddlewareResponse} from 'get-it'
 
 /** @public */
 export function injectResponse(

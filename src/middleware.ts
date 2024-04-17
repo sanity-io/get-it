@@ -15,7 +15,6 @@ export * from './middleware/promise'
 export * from './middleware/proxy'
 export * from './middleware/retry/node-retry'
 export * from './middleware/urlEncoded'
-export type * from './types'
 
 import {agent} from './middleware/agent/node-agent'
 import {buildKeepAlive} from './middleware/keepAlive'

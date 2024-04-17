@@ -1,4 +1,4 @@
-import type {MiddlewareHooks, RequestOptions} from '../types'
+import type {MiddlewareHooks, RequestOptions} from 'get-it'
 
 const isReactNative = typeof navigator === 'undefined' ? false : navigator.product === 'ReactNative'
 

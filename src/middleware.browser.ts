@@ -15,7 +15,6 @@ export * from './middleware/promise'
 export * from './middleware/proxy'
 export * from './middleware/retry/browser-retry'
 export * from './middleware/urlEncoded'
-export type * from './types'
 
 import {agent} from './middleware/agent/browser-agent'
 import {buildKeepAlive} from './middleware/keepAlive'

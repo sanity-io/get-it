@@ -1,4 +1,4 @@
-import type {Middleware, RetryOptions} from '../../types'
+import type {Middleware, RetryOptions} from 'get-it'
 
 const isStream = (stream: any) =>
   stream !== null && typeof stream === 'object' && typeof stream.pipe === 'function'
@@ -13,6 +13,7 @@ export default (opts: RetryOptions) => {
     onError: (err, context) => {
       const options = context.options
       const max = options.maxRetries || maxRetries
+      const delay = options.retryDelay || retryDelay
       const shouldRetry = options.shouldRetry || allowRetry
       const attemptNumber = options.attemptNumber || 0
 
@@ -32,7 +33,7 @@ export default (opts: RetryOptions) => {
       })
 
       // Wait a given amount of time before doing the request again
-      setTimeout(() => context.channels.request.publish(newContext), retryDelay(attemptNumber))
+      setTimeout(() => context.channels.request.publish(newContext), delay(attemptNumber))
 
       // Signal that we've handled the error and that it should not propagate further
       return null

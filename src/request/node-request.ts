@@ -1,5 +1,11 @@
 import decompressResponse from 'decompress-response'
 import follow, {type FollowResponse, type RedirectableRequest} from 'follow-redirects'
+import type {
+  FinalizeNodeOptionsPayload,
+  HttpRequest,
+  MiddlewareResponse,
+  RequestAdapter,
+} from 'get-it'
 import http from 'http'
 import https from 'https'
 import toStream from 'into-stream'
@@ -8,12 +14,6 @@ import progressStream from 'progress-stream'
 import qs from 'querystring'
 import url from 'url'
 
-import type {
-  FinalizeNodeOptionsPayload,
-  HttpRequest,
-  MiddlewareResponse,
-  RequestAdapter,
-} from '../types'
 import {lowerCaseHeaders} from '../util/lowerCaseHeaders'
 import {getProxyOptions, rewriteUriForProxy} from './node/proxy'
 import {concat} from './node/simpleConcat'
