@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.4.25](https://github.com/sanity-io/get-it/compare/v8.4.24...v8.4.25) (2024-04-17)
+
+### Bug Fixes
+
+- allow setting `retryDelay` as a request option ([08e5f24](https://github.com/sanity-io/get-it/commit/08e5f2470fd93722996bad4e37cb351370b061ae))
+
 ## [8.4.24](https://github.com/sanity-io/get-it/compare/v8.4.23...v8.4.24) (2024-04-17)
 
 ### Bug Fixes
