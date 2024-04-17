@@ -10,6 +10,11 @@
     {
       "matchDepTypes": ["dependencies"],
       "rangeStrategy": "bump"
+    },
+    {
+      "matchPackageNames": ["debug", "parse-headers"],
+      "rangeStrategy": "bump",
+      "semanticCommitType": "fix"
     }
   ]
 }
