@@ -44,12 +44,12 @@
       "source": "./src/middleware.ts",
       "browser": {
         "source": "./src/middleware.browser.ts",
-        "require": "./dist/middleware.browser.cjs",
-        "import": "./dist/middleware.browser.js"
+        "import": "./dist/middleware.browser.js",
+        "require": "./dist/middleware.browser.cjs"
       },
       "react-native": {
-        "require": "./dist/middleware.browser.cjs",
-        "import": "./dist/middleware.browser.js"
+        "import": "./dist/middleware.browser.js",
+        "require": "./dist/middleware.browser.cjs"
       },
       "react-server": "./dist/middleware.browser.js",
       "bun": "./dist/middleware.browser.js",
