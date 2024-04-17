@@ -1,11 +1,6 @@
 import decompressResponse from 'decompress-response'
 import follow, {type FollowResponse, type RedirectableRequest} from 'follow-redirects'
-import type {
-  FinalizeNodeOptionsPayload,
-  HttpRequest,
-  MiddlewareResponse,
-  RequestAdapter,
-} from 'get-it'
+import type {FinalizeNodeOptionsPayload, HttpRequest, MiddlewareResponse} from 'get-it'
 import http from 'http'
 import https from 'https'
 import toStream from 'into-stream'
@@ -21,7 +16,7 @@ import {timedOut} from './node/timedOut'
 import * as tunneling from './node/tunnel'
 
 /** @public */
-export const adapter: RequestAdapter = 'node'
+export const adapter = 'node' satisfies import('../types').RequestAdapter
 
 // Reduce a fully fledged node-style response object to
 // something that works in both browser and node environment

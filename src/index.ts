@@ -11,7 +11,7 @@ export const getIt = (
 ): Requester => createRequester(initMiddleware, httpRequest)
 
 /** @public */
-export const environment: ExportEnv = 'node'
+export const environment = 'node' satisfies ExportEnv
 
 /** @public */
 export {adapter} from './request/node-request'
