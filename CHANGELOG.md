@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.4.26](https://github.com/sanity-io/get-it/compare/v8.4.25...v8.4.26) (2024-04-17)
+
+### Bug Fixes
+
+- **typings:** improve `.d.ts` output ([3fd490e](https://github.com/sanity-io/get-it/commit/3fd490e6c8efda0d90556bb3730f30118bafeede))
+
 ## [8.4.25](https://github.com/sanity-io/get-it/compare/v8.4.24...v8.4.25) (2024-04-17)
 
 ### Bug Fixes
