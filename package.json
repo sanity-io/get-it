@@ -1,6 +1,6 @@
 {
   "name": "get-it",
-  "version": "8.4.24-canary.0",
+  "version": "8.4.24-canary.1",
   "description": "Generic HTTP request library for node, browsers and workers",
   "keywords": [
     "request",
@@ -95,7 +95,6 @@
   },
   "browserslist": "extends @sanity/browserslist-config",
   "dependencies": {
-    "debug": "^4.3.4",
     "decompress-response": "^7.0.0",
     "follow-redirects": "^1.15.6",
     "into-stream": "^6.0.0",
@@ -117,6 +116,7 @@
     "@typescript-eslint/eslint-plugin": "^7.7.0",
     "@typescript-eslint/parser": "^7.7.0",
     "@vitest/coverage-v8": "^1.5.0",
+    "debug": "4.3.4",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.1.3",
