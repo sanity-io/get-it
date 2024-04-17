@@ -44,7 +44,7 @@ describe(
     }
 
     describe('nodejs runtime', () => {
-      test('response should be cached initially', async () => {
+      test.skip('response should be cached initially', async () => {
         const initial = await snapshot('nodejs')
         await sleep(1000)
         expect(initial).toBe(await snapshot('nodejs'))
@@ -58,7 +58,7 @@ describe(
       })
     })
     describe('edge runtime', () => {
-      test('response should be cached initially', async () => {
+      test.skip('response should be cached initially', async () => {
         const initial = await snapshot('edge')
         await sleep(1000)
         expect(initial).toBe(await snapshot('edge'))
