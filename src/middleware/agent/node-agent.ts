@@ -1,4 +1,4 @@
-import {Agent as HttpAgent, AgentOptions} from 'http'
+import {Agent as HttpAgent, type AgentOptions} from 'http'
 import {Agent as HttpsAgent} from 'https'
 
 const isHttpsProto = /^https:/i

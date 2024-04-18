@@ -7,38 +7,38 @@ export class FetchXhr
   /**
    * Public interface, interop with real XMLHttpRequest
    */
-  onabort: () => void
-  onerror: (error?: any) => void
-  onreadystatechange: () => void
-  ontimeout: XMLHttpRequest['ontimeout']
+  onabort: (() => void) | undefined
+  onerror: ((error?: any) => void) | undefined
+  onreadystatechange: (() => void) | undefined
+  ontimeout: XMLHttpRequest['ontimeout'] | undefined
   /**
    * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/readyState
    */
   readyState: 0 | 1 | 2 | 3 | 4 = 0
   response: XMLHttpRequest['response']
-  responseText: XMLHttpRequest['responseText']
+  responseText: XMLHttpRequest['responseText'] = ''
   responseType: XMLHttpRequest['responseType'] = ''
-  status: XMLHttpRequest['status']
-  statusText: XMLHttpRequest['statusText']
-  withCredentials: XMLHttpRequest['withCredentials']
+  status: XMLHttpRequest['status'] | undefined
+  statusText: XMLHttpRequest['statusText'] | undefined
+  withCredentials: XMLHttpRequest['withCredentials'] | undefined
 
   /**
    * Private implementation details
    */
-  #method: string
-  #url: string
-  #resHeaders: string
+  #method!: string
+  #url!: string
+  #resHeaders!: string
   #headers: Record<string, string> = {}
   #controller?: AbortController
   #init: RequestInit = {}
-  #useAbortSignal: boolean
+  #useAbortSignal?: boolean
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- _async is only declared for typings compatibility
   open(method: string, url: string, _async?: boolean) {
     this.#method = method
     this.#url = url
     this.#resHeaders = ''
     this.readyState = 1 // Open
-    this.onreadystatechange()
+    this.onreadystatechange?.()
     this.#controller = undefined
   }
   abort() {
@@ -99,11 +99,11 @@ export class FetchXhr
           this.response = resBody
         }
         this.readyState = 4 // Done
-        this.onreadystatechange()
+        this.onreadystatechange?.()
       })
       .catch((err: Error) => {
         if (err.name === 'AbortError') {
-          this.onabort()
+          this.onabort?.()
           return
         }
 
