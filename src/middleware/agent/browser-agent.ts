@@ -4,7 +4,7 @@
  */
 export function agent(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  opts?: any,
+  _opts?: any,
 ): any {
   return {}
 }

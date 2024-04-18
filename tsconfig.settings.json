@@ -1,4 +1,5 @@
 {
+  "extends": "@sanity/pkg-utils/tsconfig/strictest.json",
   "compilerOptions": {
     "paths": {
       "get-it": ["./src"],
@@ -7,32 +8,7 @@
 
     "outDir": "./dist",
     "rootDir": ".",
-    "noEmit": true,
 
-    "target": "ES2020",
-    "lib": ["dom", "es2022"],
-
-    // Strict type-checking
-    "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "strictPropertyInitialization": false,
-    "noImplicitThis": true,
-    "alwaysStrict": true,
-
-    // Additional checks
-    "noUnusedLocals": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "skipLibCheck": true,
-    "noUnusedParameters": false,
-    "useUnknownInCatchVariables": true,
-
-    // Module resolution
-    "module": "Preserve",
-    "moduleDetection": "force",
-    "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true
+    "useUnknownInCatchVariables": true
   }
 }

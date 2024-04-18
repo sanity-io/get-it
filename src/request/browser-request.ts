@@ -194,8 +194,8 @@ export const httpRequester: HttpRequest = (context, callback) => {
       url: options.url,
       method: options.method!,
       headers: parseHeaders(xhr.getAllResponseHeaders()),
-      statusCode: xhr.status,
-      statusMessage: xhr.statusText,
+      statusCode: xhr.status!,
+      statusMessage: xhr.statusText!,
     }
   }
 
