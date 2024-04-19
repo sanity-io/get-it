@@ -26,7 +26,7 @@ describe(
     it('should reject network errors', async () => {
       const request = getIt([baseUrl, promise()])
       const req = request({url: '/permafail'})
-      await expect(req).rejects.toThrow(/(socket|network|Request error)/i)
+      await expect(req).rejects.toThrow(/(socket|network|Request error|fetch failed)/i)
     })
 
     it('should reject http errors (if middleware is loaded)', async () => {
