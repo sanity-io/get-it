@@ -12,6 +12,7 @@
     "@types/react": "^18.2.79",
     "@types/react-dom": "^18.2.25",
     "next": "14.2.2",
+    "get-it": "file:..",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "typescript": "^5.4.5"

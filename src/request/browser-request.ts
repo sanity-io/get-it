@@ -50,13 +50,22 @@ export const httpRequester: HttpRequest = (context, callback) => {
 
   // Apply event handlers
   xhr.onerror = (event: ProgressEvent) => {
-    onError(
-      new Error(
-        `Request error while attempting to reach ${options.url}${
-          event.lengthComputable ? `(${event.loaded} of ${event.total} bytes transferred)` : ''
-        }`,
-      ),
-    )
+    // If fetch is used then rethrow the original error
+    if (xhr instanceof FetchXhr) {
+      onError(
+        event instanceof Error
+          ? event
+          : new Error(`Request error while attempting to reach is ${options.url}`, {cause: event}),
+      )
+    } else {
+      onError(
+        new Error(
+          `Request error while attempting to reach is ${options.url}${
+            event.lengthComputable ? `(${event.loaded} of ${event.total} bytes transferred)` : ''
+          }`,
+        ),
+      )
+    }
   }
   xhr.ontimeout = (event: ProgressEvent) => {
     onError(
