@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.4.27](https://github.com/sanity-io/get-it/compare/v8.4.26...v8.4.27) (2024-04-19)
+
+### Bug Fixes
+
+- handle bug affecting next 14.2.2 during static pregeneration ([1a794fe](https://github.com/sanity-io/get-it/commit/1a794fecc0ac16b6945f3fb1c696d27b2757e386))
+
 ## [8.4.26](https://github.com/sanity-io/get-it/compare/v8.4.25...v8.4.26) (2024-04-17)
 
 ### Bug Fixes
