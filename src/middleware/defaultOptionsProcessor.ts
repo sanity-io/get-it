@@ -59,12 +59,11 @@ function splitUrl(url: string): {url: string; searchParams: URLSearchParams} {
 
   const base = url.slice(0, qIndex)
   const qs = url.slice(qIndex + 1)
-  const searchParams = new URLSearchParams(qs)
 
-  // Buggy React Native versions do not implement `.set()`, so if we have one,
-  // we should be able to use a functioning `URLSearchParams` implementation
-  if (typeof searchParams.set === 'function') {
-    return {url: base, searchParams}
+  // React Native's URL and URLSearchParams are broken, so passing a string to URLSearchParams
+  // does not work, leading to an empty query string. For other environments, this should be enough
+  if (!isReactNative) {
+    return {url: base, searchParams: new URLSearchParams(qs)}
   }
 
   // Sanity-check; we do not know of any environment where this is the case,
@@ -75,8 +74,6 @@ function splitUrl(url: string): {url: string; searchParams: URLSearchParams} {
     )
   }
 
-  // Another brokenness in React Native: `URLSearchParams` does not accept a string argument,
-  // so we'll have do attempt to destructure the query string ourselves :(
   const params = new URLSearchParams()
   for (const pair of qs.split('&')) {
     const [key, value] = pair.split('=')
