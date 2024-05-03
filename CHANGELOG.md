@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.4.28](https://github.com/sanity-io/get-it/compare/v8.4.27...v8.4.28) (2024-05-03)
+
+### Bug Fixes
+
+- react native query string parsing ([#431](https://github.com/sanity-io/get-it/issues/431)) ([d0f6c47](https://github.com/sanity-io/get-it/commit/d0f6c47d22cb2e09dfe946c3fdb75ca0efcde8e5))
+
 ## [8.4.27](https://github.com/sanity-io/get-it/compare/v8.4.26...v8.4.27) (2024-04-19)
 
 ### Bug Fixes
