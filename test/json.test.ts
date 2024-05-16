@@ -1,6 +1,6 @@
 import {adapter, environment, getIt} from 'get-it'
 import {jsonRequest, jsonResponse} from 'get-it/middleware'
-import intoStream from 'into-stream'
+import {Readable} from 'stream'
 import {describe, it} from 'vitest'
 
 import {baseUrl, debugRequest, expectRequest, expectRequestBody} from './helpers'
@@ -93,7 +93,7 @@ describe('json middleware', () => {
 
   it.runIf(environment === 'node')('should not serialize streams', async () => {
     const request = getIt([baseUrl, jsonRequest(), jsonResponse(), debugRequest])
-    const body = intoStream('unicorn')
+    const body = Readable.from('unicorn')
     const req = request({url: '/echo', method: 'PUT', body})
     await expectRequestBody(req).resolves.toEqual('unicorn')
   })

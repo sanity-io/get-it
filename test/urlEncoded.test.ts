@@ -1,6 +1,6 @@
 import {environment, getIt} from 'get-it'
 import {jsonResponse, urlEncoded} from 'get-it/middleware'
-import intoStream from 'into-stream'
+import {Readable} from 'stream'
 import {describe, it} from 'vitest'
 
 import {baseUrl, debugRequest, expectRequestBody} from './helpers'
@@ -73,7 +73,7 @@ describe.runIf(typeof ArrayBuffer !== 'undefined')('urlEncoded middleware', () =
 
   it.runIf(environment === 'node')('should not serialize streams', () => {
     const request = getIt([baseUrl, urlEncoded(), jsonResponse(), debugRequest])
-    const body = intoStream('unicorn')
+    const body = Readable.from('unicorn')
     const req = request({url: '/echo', method: 'PUT', body})
     return expectRequestBody(req).resolves.toEqual('unicorn')
   })

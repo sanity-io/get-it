@@ -105,9 +105,7 @@
   "dependencies": {
     "decompress-response": "^7.0.0",
     "follow-redirects": "^1.15.6",
-    "into-stream": "^6.0.0",
     "is-retry-allowed": "^2.2.0",
-    "is-stream": "^2.0.1",
     "progress-stream": "^2.0.0",
     "tunnel-agent": "^0.6.0"
   },
