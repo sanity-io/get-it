@@ -65,7 +65,7 @@ In most larger projects, you'd probably make a `httpClient.js` or similar, where
 - `headers` - Object of HTTP headers to send. Note that cross-origin requests in IE9 will not be able to set these headers.
 - `body` - The request body. If the `jsonRequest` middleware is used, it will serialize to a JSON string before sending. Otherwise, it tries to send whatever is passed to it using the underlying adapter. Supported types:
   - _Browser_: `string`, `ArrayBufferView`, `Blob`, `Document`, `FormData` (deprecated: `ArrayBuffer`)
-  - _Node_: `string`, `buffer`, `ReadStream`
+  - _Node_: `string`, `Buffer`, `Iterable`, `AsyncIterable`, `stream.Readable`
 - `bodySize` - Size of body, in bytes. Only used in Node when passing a `ReadStream` as body, in order for progress events to emit status on upload progress.
 - `timeout` - Timeout in millisecond for the request. Takes an object with `connect` and `socket` properties.
 - `maxRedirects` - Maximum number of redirects to follow before giving up. Note that this is only used in Node, as browsers have built-in redirect handling which cannot be adjusted. Default: `5`
@@ -83,8 +83,9 @@ By default, `get-it` will return an object of single-channel event emitters. Thi
 
 ```js
 {
-  // string (ArrayBuffer or Buffer if `rawBody` is set to `true`)
+  // body is `string` by default. When `rawBody` is set to true, will return `ArrayBuffer` in browsers and `Buffer` in Node.js.
   body: 'Response body'
+  // The final URL, after following redirects (configure `maxRedirects` to change the number of redirects to follow)
   url: 'http://foo.bar/baz',
   method: 'GET',
   statusCode: 200,
