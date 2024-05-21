@@ -42,7 +42,10 @@ import {getIt} from 'get-it'
 import {base, jsonResponse, promise} from 'get-it/middleware'
 
 // Now compose the middleware you want to use
-const request = getIt([base('https://api.your.service/v1'), jsonResponse()])
+const request = getIt([
+  base('https://api.your.service/v1'),
+  jsonResponse()
+])
 
 // You can also register middleware using `.use(middleware)`
 request.use(promise())
@@ -100,6 +103,7 @@ For the most part, you simply have to register the middleware and you should be 
 ```js
 import {getIt} from 'get-it'
 import {promise} from 'get-it/middleware'
+
 const request = getIt([promise({onlyBody: true})])
 
 request({url: 'http://foo.bar/api/projects'})
@@ -115,6 +119,7 @@ You can create a cancel token using the `CancelToken.source` factory as shown be
 
 ```js
 import {promise} from 'get-it/middleware'
+
 const request = getIt([promise()])
 
 const source = promise.CancelToken.source()
