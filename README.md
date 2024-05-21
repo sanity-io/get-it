@@ -149,13 +149,13 @@ The observable API requires you to pass an Observable-implementation that you wa
 ```js
 import {getIt} from 'get-it'
 import {observable} from 'get-it/middleware'
-import zenObservable from 'zen-observable'
+import {Observable as RxjsObservable} from 'rxjs'
 
 const request = getIt()
 
 request.use(
   observable({
-    implementation: zenObservable,
+    implementation: RxjsObservable,
   }),
 )
 
