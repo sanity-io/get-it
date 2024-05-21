@@ -171,12 +171,6 @@ observer.unsubscribe()
 
 It's important to note that the observable middleware does not only emit `response` objects, but also `progress` events. You should always filter to specify what you're interested in receiving. Every emitted value has a `type` property.
 
-## Upcoming features
-
-- Developer-friendly assertions that are stripped in production to reduce bundle size and performance
-- Authentication (basic)
-- Stream response middleware?
-
 ## Prior art
 
 This module was inspired by the great work of others:
