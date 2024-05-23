@@ -3,10 +3,9 @@ import follow, {type FollowResponse, type RedirectableRequest} from 'follow-redi
 import type {FinalizeNodeOptionsPayload, HttpRequest, MiddlewareResponse} from 'get-it'
 import http from 'http'
 import https from 'https'
-import toStream from 'into-stream'
-import isStream from 'is-stream'
 import progressStream from 'progress-stream'
 import qs from 'querystring'
+import {Readable, type Stream} from 'stream'
 import url from 'url'
 
 import {lowerCaseHeaders} from '../util/lowerCaseHeaders'
@@ -14,6 +13,13 @@ import {getProxyOptions, rewriteUriForProxy} from './node/proxy'
 import {concat} from './node/simpleConcat'
 import {timedOut} from './node/timedOut'
 import * as tunneling from './node/tunnel'
+
+/**
+ * Taken from:
+ * https://github.com/sindresorhus/is-stream/blob/fb8caed475b4107cee3c22be3252a904020eb2d4/index.js#L3-L6
+ */
+const isStream = (stream: any): stream is Stream =>
+  stream !== null && typeof stream === 'object' && typeof stream.pipe === 'function'
 
 /** @public */
 export const adapter = 'node' satisfies import('../types').RequestAdapter
@@ -261,7 +267,7 @@ function getProgressStream(options: any) {
   }
 
   const progress = progressStream({time: 16, length})
-  const bodyStream = bodyIsStream ? options.body : toStream(options.body)
+  const bodyStream = bodyIsStream ? options.body : Readable.from(options.body)
   return {bodyStream: bodyStream.pipe(progress), progress}
 }
 
@@ -294,11 +300,3 @@ function getRequestTransport(
 
   return isHttpsProxy ? transports.https : transports.http
 }
-
-// function isFile(val: any): val is File {
-//   return typeof val === 'object' && val?.[Symbol.toStringTag] === 'File'
-// }
-
-// function isBlob(val: any): val is Blob {
-//   return typeof val === 'object' && val?.[Symbol.toStringTag] === 'Blob'
-// }

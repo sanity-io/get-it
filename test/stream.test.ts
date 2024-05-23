@@ -1,6 +1,6 @@
 import {environment, getIt} from 'get-it'
 import {getUri} from 'get-uri'
-import toStream from 'into-stream'
+import {Readable} from 'stream'
 import {describe, expect, it} from 'vitest'
 
 import {concat} from '../src/request/node/simpleConcat'
@@ -12,7 +12,7 @@ describe.runIf(environment === 'node')(
     it('should be able to send a stream to a remote endpoint', async () => {
       const body = 'Just some plain text for you to consume'
       const request = getIt([baseUrl, debugRequest])
-      const req = request({url: '/echo', body: toStream(body)})
+      const req = request({url: '/echo', body: Readable.from(body)})
       await expectRequestBody(req).resolves.toEqual(body)
     })
 
@@ -27,7 +27,7 @@ describe.runIf(environment === 'node')(
     it('does not retry failed requests when using streams', async () => {
       const body = 'Just some plain text for you to consume'
       const request = getIt([baseUrl, debugRequest])
-      const req = request({url: '/fail?n=3', body: toStream(body)})
+      const req = request({url: '/fail?n=3', body: Readable.from(body)})
       await expectRequest(req).rejects.toThrow(Error)
     })
 
