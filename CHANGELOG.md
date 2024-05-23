@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.5.0](https://github.com/sanity-io/get-it/compare/v8.4.30...v8.5.0) (2024-05-23)
+
+### Features
+
+- improved request body stream conversion ([#446](https://github.com/sanity-io/get-it/issues/446)) ([9f8393f](https://github.com/sanity-io/get-it/commit/9f8393f9405e323cf616cf473d76ad749d0d5a2d))
+
 ## [8.4.30](https://github.com/sanity-io/get-it/compare/v8.4.29...v8.4.30) (2024-05-14)
 
 ### Bug Fixes
