@@ -42,10 +42,7 @@ import {getIt} from 'get-it'
 import {base, jsonResponse, promise} from 'get-it/middleware'
 
 // Now compose the middleware you want to use
-const request = getIt([
-  base('https://api.your.service/v1'),
-  jsonResponse()
-])
+const request = getIt([base('https://api.your.service/v1'), jsonResponse()])
 
 // You can also register middleware using `.use(middleware)`
 request.use(promise())
