@@ -1,5 +1,6 @@
 import {Agent as HttpAgent, type AgentOptions} from 'http'
 import {Agent as HttpsAgent} from 'https'
+import {type Middleware} from 'get-it'
 
 const isHttpsProto = /^https:/i
 
@@ -8,7 +9,7 @@ const isHttpsProto = /^https:/i
  * This can be used to override settings such as `maxSockets`, `maxTotalSockets` (to limit concurrency) or change the `timeout`.
  * @public
  */
-export function agent(opts?: AgentOptions): any {
+export function agent(opts?: AgentOptions) {
   const httpAgent = new HttpAgent(opts)
   const httpsAgent = new HttpsAgent(opts)
   const agents = {http: httpAgent, https: httpsAgent}
@@ -28,5 +29,5 @@ export function agent(opts?: AgentOptions): any {
       const isHttps = isHttpsProto.test(options.href || options.protocol)
       return {...options, agent: isHttps ? httpsAgent : httpAgent}
     },
-  }
+  } satisfies Middleware
 }
