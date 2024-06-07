@@ -24,6 +24,17 @@ const isStream = (stream: any): stream is Stream =>
 /** @public */
 export const adapter = 'node' satisfies import('../types').RequestAdapter
 
+export class NodeRequestError extends Error {
+  request: http.ClientRequest
+  code?: string | undefined
+
+  constructor(err: NodeJS.ErrnoException, req: any) {
+    super(err.message)
+    this.request = req
+    this.code = err.code
+  }
+}
+
 // Reduce a fully fledged node-style response object to
 // something that works in both browser and node environment
 const reduceResponse = (
@@ -232,11 +243,11 @@ export const httpRequester: HttpRequest = (context, cb) => {
     })
   })
 
+  request.once('error', (err: Error) => callback(new NodeRequestError(err, request)))
+
   if (options.timeout) {
     timedOut(request, options.timeout)
   }
-
-  request.once('error', callback)
 
   // Cheating a bit here; since we're not concerned about the "bundle size" in node,
   // and modifying the body stream would be sorta tricky, we're just always going
