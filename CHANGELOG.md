@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.6.0](https://github.com/sanity-io/get-it/compare/v8.5.0...v8.6.0) (2024-06-10)
+
+### Features
+
+- retry keep alive econnreset when reusedSockets ([8a2a05b](https://github.com/sanity-io/get-it/commit/8a2a05b6b79c6967b6723fc4d2cdf3a8b438f301))
+
 ## [8.5.0](https://github.com/sanity-io/get-it/compare/v8.4.30...v8.5.0) (2024-05-23)
 
 ### Features
