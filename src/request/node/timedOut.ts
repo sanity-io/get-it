@@ -11,10 +11,9 @@ export function timedOut(req: any, time: any) {
 
   if (delays.connect !== undefined) {
     req.timeoutTimer = setTimeout(function timeoutHandler() {
-      req.abort()
       const e: any = new Error('Connection timed out on request' + host)
       e.code = 'ETIMEDOUT'
-      req.emit('error', e)
+      req.destroy(e)
     }, delays.connect)
   }
 
@@ -23,11 +22,11 @@ export function timedOut(req: any, time: any) {
   req.on('socket', function assign(socket: any) {
     // Socket may come from Agent pool and may be already connected.
     if (!(socket.connecting || socket._connecting)) {
-      connect()
+      connect(socket)
       return
     }
 
-    socket.once('connect', connect)
+    socket.once('connect', () => connect(socket))
   })
 
   function clear() {
@@ -37,17 +36,21 @@ export function timedOut(req: any, time: any) {
     }
   }
 
-  function connect() {
+  function connect(socket: any) {
     clear()
 
     if (delays.socket !== undefined) {
-      // Abort the request if there is no activity on the socket for more
-      // than `delays.socket` milliseconds.
-      req.setTimeout(delays.socket, function socketTimeoutHandler() {
-        req.abort()
+      socket.setTimeout(delays.socket, function socketTimeoutHandler() {
         const e: any = new Error('Socket timed out on request' + host)
         e.code = 'ESOCKETTIMEDOUT'
-        req.emit('error', e)
+        // HACK: The official documentation (https://nodejs.org/api/http.html#httprequesturl-options-callback)
+        // claims that calling `req.destroy(err)` will emit the error on the response object as well.
+        // However, I've never been able to reproduce this behavior. It always ends up being called with
+        // "Error: aborted" instead. We really want the original error to surface. We workaround this
+        // by destroying the response object _first_.
+        const res = req._getItResponse
+        if (res) res.destroy(e)
+        req.destroy(e)
       })
     }
   }
