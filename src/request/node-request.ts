@@ -217,6 +217,7 @@ export const httpRequester: HttpRequest = (context, cb) => {
   ) as FinalizeNodeOptionsPayload
   const request = transport.request(finalOptions, (response) => {
     const res = tryCompressed ? decompressResponse(response) : response
+    ;(request as any)._getItResponse = res
     const resStream = context.applyMiddleware('onHeaders', res, {
       headers: response.headers,
       adapter,
@@ -243,7 +244,13 @@ export const httpRequester: HttpRequest = (context, cb) => {
     })
   })
 
-  request.once('error', (err: Error) => callback(new NodeRequestError(err, request)))
+  request.once('error', (err: Error) => {
+    if ((request as any)._getItResponse) {
+      // At this point we've returned a response on the callback. All errors should go there.
+      return
+    }
+    callback(new NodeRequestError(err, request))
+  })
 
   if (options.timeout) {
     timedOut(request, options.timeout)

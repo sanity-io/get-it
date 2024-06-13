@@ -90,6 +90,7 @@ export class FetchXhr
         this.status = res.status
         this.statusText = res.statusText
         this.readyState = 3 // Loading
+        this.onreadystatechange?.()
         return textBody ? res.text() : res.arrayBuffer()
       })
       .then((resBody) => {

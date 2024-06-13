@@ -147,6 +147,14 @@ function getResponseHandler(proto = 'http'): any {
         res.write(new Array(2048).join('.'))
         setTimeout(() => res.end(new Array(1024).join('.')), 6000)
         break
+      case '/req-test/stall-after-initial-gzip':
+        res.setHeader('Content-Encoding', 'gzip')
+        res.writeHead(200, {'Content-Type': 'text/plain'})
+        zlib.gzip(JSON.stringify(['harder', 'better', 'faster', 'stronger']), (unused, result) => {
+          res.write(result)
+          setTimeout(() => res.end(), 6000)
+        })
+        break
       case '/req-test/delay':
         setTimeout(() => res.end('Hello future'), Number(parts.query.delay || 1000))
         break
