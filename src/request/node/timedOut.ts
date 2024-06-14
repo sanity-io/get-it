@@ -1,5 +1,7 @@
 // Copied from `@sanity/timed-out`
 
+import type {Socket} from 'node:net'
+
 export function timedOut(req: any, time: any) {
   if (req.timeoutTimer) {
     return req
@@ -11,7 +13,7 @@ export function timedOut(req: any, time: any) {
 
   if (delays.connect !== undefined) {
     req.timeoutTimer = setTimeout(function timeoutHandler() {
-      const e: any = new Error('Connection timed out on request' + host)
+      const e: NodeJS.ErrnoException = new Error('Connection timed out on request' + host)
       e.code = 'ETIMEDOUT'
       req.destroy(e)
     }, delays.connect)
@@ -19,9 +21,9 @@ export function timedOut(req: any, time: any) {
 
   // Clear the connection timeout timer once a socket is assigned to the
   // request and is connected.
-  req.on('socket', function assign(socket: any) {
+  req.on('socket', function assign(socket: Socket) {
     // Socket may come from Agent pool and may be already connected.
-    if (!(socket.connecting || socket._connecting)) {
+    if (!socket.connecting) {
       connect(socket)
       return
     }
@@ -36,21 +38,14 @@ export function timedOut(req: any, time: any) {
     }
   }
 
-  function connect(socket: any) {
+  function connect(socket: Socket) {
     clear()
 
     if (delays.socket !== undefined) {
       socket.setTimeout(delays.socket, function socketTimeoutHandler() {
-        const e: any = new Error('Socket timed out on request' + host)
+        const e: NodeJS.ErrnoException = new Error('Socket timed out on request' + host)
         e.code = 'ESOCKETTIMEDOUT'
-        // HACK: The official documentation (https://nodejs.org/api/http.html#httprequesturl-options-callback)
-        // claims that calling `req.destroy(err)` will emit the error on the response object as well.
-        // However, I've never been able to reproduce this behavior. It always ends up being called with
-        // "Error: aborted" instead. We really want the original error to surface. We workaround this
-        // by destroying the response object _first_.
-        const res = req._getItResponse
-        if (res) res.destroy(e)
-        req.destroy(e)
+        socket.destroy(e)
       })
     }
   }
