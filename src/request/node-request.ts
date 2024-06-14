@@ -258,9 +258,11 @@ export const httpRequester: HttpRequest = (context, cb) => {
     })
   })
 
-  request.once('error', (err: NodeJS.ErrnoException) =>
-    callback(new NodeRequestError(err, request)),
-  )
+  request.once('error', (err: NodeJS.ErrnoException) => {
+    if (_res) return
+    // The callback has already been invoked. Any error should be sent to the response.
+    callback(new NodeRequestError(err, request))
+  })
 
   if (options.timeout) {
     timedOut(request, options.timeout)
