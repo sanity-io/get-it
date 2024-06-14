@@ -211,13 +211,14 @@ export const httpRequester: HttpRequest = (context, cb) => {
       typeof Bun !== 'undefined' ? 'gzip, deflate' : 'br, gzip, deflate'
   }
 
+  let _res: http.IncomingMessage | undefined
   const finalOptions = context.applyMiddleware(
     'finalizeOptions',
     reqOpts,
   ) as FinalizeNodeOptionsPayload
   const request = transport.request(finalOptions, (response) => {
     const res = tryCompressed ? decompressResponse(response) : response
-    ;(request as any)._getItResponse = res
+    _res = res
     const resStream = context.applyMiddleware('onHeaders', res, {
       headers: response.headers,
       adapter,
@@ -244,13 +245,22 @@ export const httpRequester: HttpRequest = (context, cb) => {
     })
   })
 
-  request.once('error', (err: Error) => {
-    if ((request as any)._getItResponse) {
-      // At this point we've returned a response on the callback. All errors should go there.
-      return
-    }
-    callback(new NodeRequestError(err, request))
+  request.once('socket', (socket) => {
+    socket.once('error', (err: NodeJS.ErrnoException) => {
+      // HACK: If we have a socket error, and response has already been assigned this means
+      // that a response has already been sent. According to node.js docs, this is
+      // will result in the response erroring with an error code of 'ECONNRESET'.
+      // We first destroy the response, then the request, with the same error. This way the
+      // error is forwarded to both the response and the request.
+      // See the event order outlined here https://nodejs.org/api/http.html#httprequesturl-options-callback for how node.js handles the different scenarios.
+      if (_res) _res.destroy(err)
+      request.destroy(err)
+    })
   })
+
+  request.once('error', (err: NodeJS.ErrnoException) =>
+    callback(new NodeRequestError(err, request)),
+  )
 
   if (options.timeout) {
     timedOut(request, options.timeout)
