@@ -130,7 +130,7 @@
     "faucet": "^0.0.4",
     "get-uri": "^6.0.2",
     "happy-dom": "12.10.3",
-    "ls-engines": "^0.9.1",
+    "ls-engines": "^0.9.2",
     "node-fetch": "^2.6.7",
     "parse-headers": "2.0.5",
     "prettier": "^3.3.1",
