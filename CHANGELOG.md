@@ -5,6 +5,13 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.6.1](https://github.com/sanity-io/get-it/compare/v8.6.0...v8.6.1) (2024-06-18)
+
+### Bug Fixes
+
+- **timeouts:** only send a single error ([5b817f2](https://github.com/sanity-io/get-it/commit/5b817f2d9e3d771ed5ea5bfb1cbec475ebed3dd4))
+- **timeouts:** return the right socket timeout error ([392e782](https://github.com/sanity-io/get-it/commit/392e7827f4ceae67a36c886e7147792680197984))
+
 ## [8.6.0](https://github.com/sanity-io/get-it/compare/v8.5.0...v8.6.0) (2024-06-10)
 
 ### Features
