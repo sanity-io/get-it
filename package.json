@@ -83,9 +83,6 @@
     "src",
     "middleware.js"
   ],
-  "workspaces": [
-    "test-next"
-  ],
   "scripts": {
     "build": "pkg build --strict --check --clean",
     "coverage": "vitest run --coverage",
@@ -97,7 +94,6 @@
     "test:esm": "node --test test-esm/ | faucet",
     "test:esm:browser": "node -C browser --test test-esm/test.mjs | faucet",
     "test:esm:deno": "deno test --allow-read --allow-net --allow-env --import-map=test-deno/import_map.json test-deno",
-    "test:next": "npm test -- --config ./vitest.next.config.ts",
     "test:react-server": "npm test -- --config ./vitest.react-server.config.ts",
     "type-check": "tsc --noEmit"
   },

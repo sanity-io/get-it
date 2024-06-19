@@ -4,10 +4,6 @@
   "ignorePresets": [":ignoreModulesAndTests", "github>sanity-io/renovate-config:group-non-major"],
   "packageRules": [
     {
-      "matchPackageNames": ["next"],
-      "semanticCommitType": "chore"
-    },
-    {
       "matchDepTypes": ["dependencies"],
       "rangeStrategy": "bump"
     },
