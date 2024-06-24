@@ -15,8 +15,7 @@ type KeepAliveOptions = {
 
 export function buildKeepAlive(agent: (opts: AgentOptions) => Pick<Middleware, 'finalizeOptions'>) {
   return function keepAlive(config: KeepAliveOptions = {}): any {
-    const ms = config.ms || 1000
-    const maxFree = config.maxFree || 256
+    const {maxRetries = 3, ms = 1000, maxFree = 256} = config
 
     const {finalizeOptions} = agent({
       keepAlive: true,
@@ -37,7 +36,6 @@ export function buildKeepAlive(agent: (opts: AgentOptions) => Pick<Middleware, '
           err.request.reusedSocket
         ) {
           const attemptNumber = context.options.attemptNumber || 0
-          const maxRetries = config.maxRetries || 3
           if (attemptNumber < maxRetries) {
             // Create a new context with an increased attempt number, so we can exit if we reach a limit
             const newContext = Object.assign({}, context, {
@@ -50,7 +48,7 @@ export function buildKeepAlive(agent: (opts: AgentOptions) => Pick<Middleware, '
           }
         }
 
-        throw err
+        return err
       },
     } satisfies Middleware
   }

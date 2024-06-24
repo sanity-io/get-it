@@ -63,4 +63,30 @@ describe.runIf(environment === 'node')('keepAlive middleware', () => {
     expect(remotePort2).not.toBe(remotePort3)
     expect(remotePort1).not.toBe(remotePort3)
   })
+
+  it('should respect maxRetries', async () => {
+    let count = 0
+    const request = getIt([
+      baseUrl,
+      keepAlive({maxRetries: 0}),
+      {
+        onRequest: (req) => {
+          count += 1
+          if (count === 3) {
+            const err: NodeJS.ErrnoException = new Error('ECONNRESET')
+            err.code = 'ECONNRESET'
+            req.request.destroy(err)
+          }
+        },
+      },
+    ])
+    const options = {url: '/remote-port', maxRedirects: 0}
+
+    const remotePort1 = (await promiseRequest(request(options))).body
+    const remotePort2 = (await promiseRequest(request(options))).body
+    expect(remotePort1).toBe(remotePort2)
+
+    // Now the connection is broken and usage should throw:
+    expect(promiseRequest(request(options))).rejects.toThrow()
+  })
 })
