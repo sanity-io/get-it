@@ -5,6 +5,13 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.6.2](https://github.com/sanity-io/get-it/compare/v8.6.1...v8.6.2) (2024-06-24)
+
+### Bug Fixes
+
+- **keep-alive:** correctly handle error ([ad87b6c](https://github.com/sanity-io/get-it/commit/ad87b6cd5e5d65f10aefb61ac3914f26432b374c))
+- remove test-next integration tests ([#475](https://github.com/sanity-io/get-it/issues/475)) ([040851b](https://github.com/sanity-io/get-it/commit/040851bc8e99aeb3df3a99d6aecb47564dcd9b86))
+
 ## [8.6.1](https://github.com/sanity-io/get-it/compare/v8.6.0...v8.6.1) (2024-06-18)
 
 ### Bug Fixes
