@@ -245,16 +245,23 @@ export const httpRequester: HttpRequest = (context, cb) => {
     })
   })
 
-  request.once('socket', (socket) => {
-    socket.once('error', (err: NodeJS.ErrnoException) => {
-      // HACK: If we have a socket error, and response has already been assigned this means
-      // that a response has already been sent. According to node.js docs, this is
-      // will result in the response erroring with an error code of 'ECONNRESET'.
-      // We first destroy the response, then the request, with the same error. This way the
-      // error is forwarded to both the response and the request.
-      // See the event order outlined here https://nodejs.org/api/http.html#httprequesturl-options-callback for how node.js handles the different scenarios.
-      if (_res) _res.destroy(err)
-      request.destroy(err)
+  function onError(err: NodeJS.ErrnoException) {
+    // HACK: If we have a socket error, and response has already been assigned this means
+    // that a response has already been sent. According to node.js docs, this is
+    // will result in the response erroring with an error code of 'ECONNRESET'.
+    // We first destroy the response, then the request, with the same error. This way the
+    // error is forwarded to both the response and the request.
+    // See the event order outlined here https://nodejs.org/api/http.html#httprequesturl-options-callback for how node.js handles the different scenarios.
+    if (_res) _res.destroy(err)
+    request.destroy(err)
+  }
+
+  request.once('socket', (socket: NodeJS.Socket) => {
+    socket.once('error', onError)
+    request.once('response', (response) => {
+      response.once('end', () => {
+        socket.removeListener('error', onError)
+      })
     })
   })
 
