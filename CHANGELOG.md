@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.6.3](https://github.com/sanity-io/get-it/compare/v8.6.2...v8.6.3) (2024-07-09)
+
+### Bug Fixes
+
+- **node:** fix eventemitter leak when checking for broken socket ([#489](https://github.com/sanity-io/get-it/issues/489)) ([532321e](https://github.com/sanity-io/get-it/commit/532321e290cbb9a7abc6581b0dfc1bf776edec69))
+
 ## [8.6.2](https://github.com/sanity-io/get-it/compare/v8.6.1...v8.6.2) (2024-06-24)
 
 ### Bug Fixes
