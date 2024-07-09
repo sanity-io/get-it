@@ -1,5 +1,6 @@
 // Copied from `@sanity/timed-out`
 
+import type {IncomingMessage} from 'node:http'
 import type {Socket} from 'node:net'
 
 export function timedOut(req: any, time: any) {
@@ -42,10 +43,17 @@ export function timedOut(req: any, time: any) {
     clear()
 
     if (delays.socket !== undefined) {
-      socket.setTimeout(delays.socket, function socketTimeoutHandler() {
+      const socketTimeoutHandler = () => {
         const e: NodeJS.ErrnoException = new Error('Socket timed out on request' + host)
         e.code = 'ESOCKETTIMEDOUT'
         socket.destroy(e)
+      }
+
+      socket.setTimeout(delays.socket, socketTimeoutHandler)
+      req.once('response', (response: IncomingMessage) => {
+        response.once('end', () => {
+          socket.removeListener('timeout', socketTimeoutHandler)
+        })
       })
     }
   }
