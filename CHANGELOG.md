@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.6.4](https://github.com/sanity-io/get-it/compare/v8.6.3...v8.6.4) (2024-08-09)
+
+### Bug Fixes
+
+- regression where inlining `debug` breaks next.js envs on custom babel ([#499](https://github.com/sanity-io/get-it/issues/499)) ([dab8e0b](https://github.com/sanity-io/get-it/commit/dab8e0bd60f709b836f69847ade60b95ab288d9e))
+
 ## [8.6.3](https://github.com/sanity-io/get-it/compare/v8.6.2...v8.6.3) (2024-07-09)
 
 ### Bug Fixes
