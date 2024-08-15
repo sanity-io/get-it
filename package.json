@@ -99,6 +99,8 @@
   },
   "browserslist": "extends @sanity/browserslist-config",
   "dependencies": {
+    "@types/follow-redirects": "^1.14.4",
+    "@types/progress-stream": "^2.0.5",
     "decompress-response": "^7.0.0",
     "follow-redirects": "^1.15.6",
     "is-retry-allowed": "^2.2.0",
@@ -111,9 +113,7 @@
     "@sanity/semantic-release-preset": "^5.0.0",
     "@types/bun": "^1.1.6",
     "@types/debug": "^4.1.10",
-    "@types/follow-redirects": "^1.14.4",
     "@types/node": "^20.8.8",
-    "@types/progress-stream": "^2.0.5",
     "@types/zen-observable": "^0.8.7",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
