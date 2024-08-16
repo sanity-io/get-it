@@ -17,6 +17,12 @@ describe(
       })
     })
 
+    it('should propagate any request error on the returned promise', async () => {
+      const request = getIt([promise()])
+      const req = request({url: 'invalid://url'})
+      await expect(req).rejects.toThrowError(Error)
+    })
+
     it('should be able to resolve only the response body', async () => {
       const request = getIt([baseUrl, promise({onlyBody: true})])
       const req = request({url: '/plain-text'})
