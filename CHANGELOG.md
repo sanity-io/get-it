@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.6.5](https://github.com/sanity-io/get-it/compare/v8.6.4...v8.6.5) (2024-08-16)
+
+### Bug Fixes
+
+- move @types/{follow-redirects,progress-stream} to dependencies ([#501](https://github.com/sanity-io/get-it/issues/501)) ([fcf242e](https://github.com/sanity-io/get-it/commit/fcf242edadde20238d3fa378669bc1cd67bd1718))
+
 ## [8.6.4](https://github.com/sanity-io/get-it/compare/v8.6.3...v8.6.4) (2024-08-09)
 
 ### Bug Fixes
