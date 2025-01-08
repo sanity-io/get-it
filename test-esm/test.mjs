@@ -15,7 +15,7 @@ test('top-level imports', async (t) => {
   await t.test('get-it/package.json', async () => {
     const {
       default: {version},
-    } = await import('get-it/package.json', {assert: {type: 'json'}})
+    } = await import('get-it/package.json', {with: {type: 'json'}})
     assert.equal(typeof version, 'string')
   })
 

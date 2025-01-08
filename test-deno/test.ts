@@ -9,7 +9,7 @@ Deno.test('top-level import', async () => {
 Deno.test('importing package json', async () => {
   const {
     default: {version},
-  } = await import('../package.json', {assert: {type: 'json'}})
+  } = await import('../package.json', {with: {type: 'json'}})
   assertExists(version)
 })
 
