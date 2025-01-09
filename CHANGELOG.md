@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.6.6](https://github.com/sanity-io/get-it/compare/v8.6.5...v8.6.6) (2025-01-09)
+
+### Bug Fixes
+
+- **deps:** bump non-major ([#520](https://github.com/sanity-io/get-it/issues/520)) ([3f273b5](https://github.com/sanity-io/get-it/commit/3f273b58bf7cea48544a094abd309a1d6216ed21))
+
 ## [8.6.5](https://github.com/sanity-io/get-it/compare/v8.6.4...v8.6.5) (2024-08-16)
 
 ### Bug Fixes
