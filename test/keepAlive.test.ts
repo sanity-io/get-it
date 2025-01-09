@@ -87,6 +87,6 @@ describe.runIf(environment === 'node')('keepAlive middleware', () => {
     expect(remotePort1).toBe(remotePort2)
 
     // Now the connection is broken and usage should throw:
-    expect(promiseRequest(request(options))).rejects.toThrow()
+    await expect(promiseRequest(request(options))).rejects.toThrow()
   })
 })

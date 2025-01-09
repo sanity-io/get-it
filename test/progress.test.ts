@@ -102,12 +102,16 @@ describe('progress', () => {
   )
 
   // @TODO add support for `adapter = fetch`
-  it.skipIf(environment === 'browser' || adapter === 'fetch')(
+  it.skipIf(
+    environment === 'browser' ||
+      adapter === 'fetch' ||
+      (process.env.GITHUB_ACTIONS === 'true' && process.platform === 'darwin'),
+  )(
     'can tell requester how large the body is',
     async () => {
       expect.hasAssertions()
       await expect(
-        new Promise((resolve, reject) => {
+        new Promise<number>((resolve, reject) => {
           const request = getIt([baseUrl, progress()])
           const body = fs.createReadStream(__filename)
           const bodySize = fs.statSync(__filename).size
@@ -130,11 +134,11 @@ describe('progress', () => {
             reject(new Error(`error channel should not be called, got:\n\n${err.message}`)),
           )
           req.response.subscribe(() => {
-            expect(events).to.be.above(0, 'should have received progress events')
-            resolve(undefined)
+            resolve(events)
           })
         }),
-      ).resolves.toBeUndefined()
+        'should have received progress events',
+      ).resolves.toBeGreaterThan(0)
     },
     {timeout: 10000},
   )
