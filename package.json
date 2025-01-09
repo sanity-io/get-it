@@ -113,7 +113,7 @@
     "@sanity/pkg-utils": "^7.0.0",
     "@sanity/prettier-config": "^1.0.3",
     "@sanity/semantic-release-preset": "^5.0.0",
-    "@types/bun": "^1.1.15",
+    "@types/bun": "^1.1.16",
     "@types/debug": "^4.1.12",
     "@types/node": "^20.8.8",
     "@types/zen-observable": "^0.8.7",
