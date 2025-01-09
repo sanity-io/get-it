@@ -1,5 +1,4 @@
 import {configDefaults, defineConfig, type UserConfig} from 'vitest/config'
-import GithubActionsReporter from 'vitest-github-actions-reporter'
 
 import pkg from './package.json'
 
@@ -12,7 +11,7 @@ export const sharedConfig = {
     './test/helpers/globalSetup.proxy.http.ts',
     './test/helpers/globalSetup.proxy.https.ts',
   ],
-  reporters: process.env.GITHUB_ACTIONS ? ['default', new GithubActionsReporter()] : 'default',
+  reporters: process.env.GITHUB_ACTIONS ? ['default', 'github-actions'] : 'default',
   alias: {
     'get-it/middleware': new URL(pkg.exports['./middleware'].source, import.meta.url).pathname,
     'get-it': new URL(pkg.exports['.'].source, import.meta.url).pathname,

@@ -148,7 +148,7 @@ export interface HttpRequestOngoing {
 }
 
 /** @public */
-export interface MiddlewareRequest {}
+export interface MiddlewareRequest {} // eslint-disable-line @typescript-eslint/no-empty-object-type
 
 /** @public */
 export interface MiddlewareResponse {

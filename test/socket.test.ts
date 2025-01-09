@@ -15,6 +15,7 @@ describe.runIf(environment === 'node')('socket', () => {
     const request = getIt([baseUrl])
 
     for (let i = 0; i < 100; i++) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       ;(await promiseRequest(request('/remote-port'))).body
     }
   })
@@ -23,6 +24,7 @@ describe.runIf(environment === 'node')('socket', () => {
     const request = getIt([baseUrl, keepAlive()])
 
     for (let i = 0; i < 100; i++) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       ;(await promiseRequest(request('/remote-port'))).body
     }
   })
