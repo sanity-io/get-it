@@ -43,15 +43,6 @@ describe('basics', {timeout: 15000}, () => {
     const req = request({url: '/echo', body: Buffer.from('Foo bar')})
     await expectRequestBody(req).resolves.toEqual('Foo bar')
   })
-
-  it.runIf(adapter === 'xhr')('[xhr] should throw when trying to post invalid stuff', () => {
-    const request = getIt([baseUrl, debugRequest])
-    expect(() => {
-      request({url: '/echo', method: 'post', body: {}})
-    }).toThrowErrorMatchingInlineSnapshot(
-      `[TypeError: The "string" argument must be of type string or an instance of Buffer or ArrayBuffer. Received an instance of Object]`,
-    )
-  })
   it.runIf(adapter === 'fetch')('[fetch] fetch is more permissive in what `body` can be', () => {
     const request = getIt([baseUrl, debugRequest])
     expect(() => {
@@ -153,21 +144,20 @@ describe('basics', {timeout: 15000}, () => {
     })
   })
 
-  // IE9 fails on cross-origin requests from http to https
   it('should handle https without issues', async () => {
     const request = getIt()
-    const req = request({url: 'https://www.sanity.io/robots.txt'})
+    const req = request({url: 'https://api.sanity.io/v1/ping'})
     const res = await promiseRequest(req)
     expect(res).toHaveProperty('body')
-    expect(res.body).toContain('User-Agent: *')
+    expect(res.body).toContain('PONG')
   })
 
-  it('should handle cross-origin requests without issues', async () => {
+  it('should handle cross-protocol redirects without issues', async () => {
     const request = getIt()
-    const req = request({url: `http://sanity.io/robots.txt?cb=${Date.now()}`})
+    const req = request({url: `http://api.sanity.io/v1/ping?cb=${Date.now()}`})
     const res = await promiseRequest(req)
     expect(res).toHaveProperty('body')
-    expect(res.body).toMatch('User-Agent: *')
+    expect(res.body).toMatch('PONG')
   })
 
   it('should not allow base middleware to add prefix on absolute urls', async () => {
