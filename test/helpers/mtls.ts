@@ -12,7 +12,7 @@ export default (port: number, serverOpts = {}) =>
 
     const options = Object.assign({}, httpsServerOptions, serverOpts)
     const server = https
-      .createServer(options, (request, response) => {
+      .createServer(options, (_request, response) => {
         response.end('hello from mtls')
       })
       .on('error', reject)

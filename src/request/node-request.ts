@@ -22,7 +22,7 @@ const isStream = (stream: any): stream is Stream =>
   stream !== null && typeof stream === 'object' && typeof stream.pipe === 'function'
 
 /** @public */
-export const adapter = 'node' satisfies import('../types').RequestAdapter
+export const adapter: import('../types').RequestAdapter = 'node'
 
 export class NodeRequestError extends Error {
   request: http.ClientRequest

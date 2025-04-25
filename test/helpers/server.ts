@@ -28,9 +28,9 @@ function getResponseHandler(proto = 'http'): any {
   const isSecure = proto === 'https'
   return (req: any, res: any, next: any) => {
     const parts = url.parse(req.url, true)
-    const num = Number(parts.query.n)
+    const num = Number(parts.query['n'])
     const atMax = num >= 10
-    const uuid: any = parts.query.uuid
+    const uuid: any = parts.query['uuid']
     const acceptedEncodings = (req.headers['accept-encoding'] || '').split(/\s*,\s*/)
     const noCache = () => res.setHeader('Cache-Control', 'private,max-age=0,no-cache,no-store')
     const incrementFailureCount = () => {
@@ -54,7 +54,7 @@ function getResponseHandler(proto = 'http'): any {
         return
       }
 
-      res.destroy(createError(parts.query.error || 'ECONNREFUSED'))
+      res.destroy(createError(parts.query['error'] || 'ECONNREFUSED'))
       return
     }
 
@@ -87,7 +87,7 @@ function getResponseHandler(proto = 'http'): any {
         req.pipe(res)
         break
       case '/req-test/urlencoded':
-        concat(req, (unused: any, body: any) => {
+        concat(req, (_unused: any, body: any) => {
           res.setHeader('Content-Type', 'application/json')
           res.end(JSON.stringify(qs.parse(body.toString())))
         })
@@ -97,7 +97,7 @@ function getResponseHandler(proto = 'http'): any {
         break
       case '/req-test/debug':
         res.setHeader('Content-Type', 'application/json')
-        concat(req, (unused: any, body: any) => {
+        concat(req, (_unused: any, body: any) => {
           res.end(JSON.stringify(debugRequest(req, body)))
         })
         break
@@ -116,7 +116,7 @@ function getResponseHandler(proto = 'http'): any {
       case '/req-test/gzip':
         res.setHeader('Content-Type', 'application/json')
         res.setHeader('Content-Encoding', 'gzip')
-        zlib.gzip(JSON.stringify(['harder', 'better', 'faster', 'stronger']), (unused, result) =>
+        zlib.gzip(JSON.stringify(['harder', 'better', 'faster', 'stronger']), (_unused, result) =>
           res.end(result),
         )
         break
@@ -138,7 +138,7 @@ function getResponseHandler(proto = 'http'): any {
         res.end(atMax ? 'Done redirecting' : '')
         break
       case '/req-test/status':
-        res.statusCode = Number(parts.query.code || 200)
+        res.statusCode = Number(parts.query['code'] || 200)
         res.end('---')
         break
       case '/req-test/stall-after-initial':
@@ -150,13 +150,13 @@ function getResponseHandler(proto = 'http'): any {
       case '/req-test/stall-after-initial-gzip':
         res.setHeader('Content-Encoding', 'gzip')
         res.writeHead(200, {'Content-Type': 'text/plain'})
-        zlib.gzip(JSON.stringify(['harder', 'better', 'faster', 'stronger']), (unused, result) => {
+        zlib.gzip(JSON.stringify(['harder', 'better', 'faster', 'stronger']), (_unused, result) => {
           res.write(result)
           setTimeout(() => res.end(), 6000)
         })
         break
       case '/req-test/delay':
-        setTimeout(() => res.end('Hello future'), Number(parts.query.delay || 1000))
+        setTimeout(() => res.end('Hello future'), Number(parts.query['delay'] || 1000))
         break
       case '/req-test/drip':
         drip(res)
