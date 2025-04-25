@@ -81,11 +81,11 @@ export const httpRequester: HttpRequest = (context, callback) => {
     aborted = true
   }
 
-  xhr.onreadystatechange = () => {
+  xhr.onreadystatechange = function () {
     // Prevent request from timing out
     resetTimers()
 
-    if (aborted || xhr.readyState !== 4) {
+    if (aborted || !xhr || xhr.readyState !== 4) {
       return
     }
 
@@ -164,7 +164,7 @@ export const httpRequester: HttpRequest = (context, callback) => {
 
   function stopTimers(force?: boolean) {
     // Only clear the connect timeout if we've got a connection
-    if (force || aborted || (xhr.readyState >= 2 && timers.connect)) {
+    if (force || aborted || (xhr && xhr.readyState >= 2 && timers.connect)) {
       clearTimeout(timers.connect)
     }
 
