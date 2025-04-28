@@ -6,6 +6,9 @@ import {describe, expect, it} from 'vitest'
 
 import {baseUrl, debugRequest, promiseRequest} from './helpers'
 
+const testTimeout = 250
+const testTimeoutThreshold = testTimeout * 0.95
+
 describe('timeouts', {timeout: 10000}, () => {
   // @TODO make the this test work in happy-dom
   it.skipIf(adapter === 'xhr' && environment === 'browser')(
@@ -15,7 +18,7 @@ describe('timeouts', {timeout: 10000}, () => {
         // To prevent the connection from being established use a non-routable IP
         // address. See https://tools.ietf.org/html/rfc5737#section-3
         const request = getIt([debugRequest])
-        const req = request({url: 'http://192.0.2.1/', timeout: 250})
+        const req = request({url: 'http://192.0.2.1/', timeout: testTimeout})
 
         req.response.subscribe(() => reject(new Error('response channel should not be called')))
         req.error.subscribe((err: any) => {
@@ -29,11 +32,11 @@ describe('timeouts', {timeout: 10000}, () => {
     new Promise((resolve, reject) => {
       const request = getIt([debugRequest])
       const startTime = Date.now()
-      const req = request({url: 'http://192.0.2.1/', timeout: {socket: 250, connect: 450}})
+      const req = request({url: 'http://192.0.2.1/', timeout: {socket: testTimeout, connect: 450}})
 
       req.response.subscribe(() => reject(new Error('response channel should not be called')))
       req.error.subscribe(() => {
-        expect(Date.now() - startTime).toBeGreaterThanOrEqual(250)
+        expect(Date.now() - startTime).toBeGreaterThanOrEqual(testTimeoutThreshold)
         resolve(undefined)
       })
     }))
@@ -55,7 +58,7 @@ describe('timeouts', {timeout: 10000}, () => {
       const request = getIt([baseUrl, debugRequest])
       const req = request({
         url: gzip ? '/stall-after-initial-gzip' : '/stall-after-initial',
-        timeout: {socket: 500, connect: 250},
+        timeout: {socket: 500, connect: testTimeout},
         maxRedirects: followRedirects ? 3 : 0,
         stream,
       })
@@ -79,7 +82,9 @@ describe('timeouts', {timeout: 10000}, () => {
 
       // We do one request:
       const remotePort1 = (
-        await promiseRequest(request({url: '/remote-port', timeout: {socket: 500, connect: 250}}))
+        await promiseRequest(
+          request({url: '/remote-port', timeout: {socket: 500, connect: testTimeout}}),
+        )
       ).body
 
       // And now the other one should also succeed (after 6 seconds).
