@@ -3,12 +3,12 @@ import follow, {type FollowResponse, type RedirectableRequest} from 'follow-redi
 import type {FinalizeNodeOptionsPayload, HttpRequest, MiddlewareResponse} from 'get-it'
 import http from 'http'
 import https from 'https'
-import progressStream from 'progress-stream'
 import qs from 'querystring'
 import {Readable, type Stream} from 'stream'
 import url from 'url'
 
 import {lowerCaseHeaders} from '../util/lowerCaseHeaders'
+import {progressStream} from '../util/progress-stream'
 import {getProxyOptions, rewriteUriForProxy} from './node/proxy'
 import {concat} from './node/simpleConcat'
 import {timedOut} from './node/timedOut'
@@ -277,7 +277,7 @@ export const httpRequester: HttpRequest = (context, cb) => {
 
   // Cheating a bit here; since we're not concerned about the "bundle size" in node,
   // and modifying the body stream would be sorta tricky, we're just always going
-  // to put a progress stream in the middle here. Note that
+  // to put a progress stream in the middle here.
   const {bodyStream, progress} = getProgressStream(options)
 
   // Let middleware know we're about to do a request
@@ -303,7 +303,7 @@ function getProgressStream(options: any) {
     return bodyIsStream ? {bodyStream: options.body} : {}
   }
 
-  const progress = progressStream({time: 16, length})
+  const progress = progressStream({time: 32, length})
   const bodyStream = bodyIsStream ? options.body : Readable.from(options.body)
   return {bodyStream: bodyStream.pipe(progress), progress}
 }

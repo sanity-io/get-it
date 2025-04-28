@@ -1,8 +1,9 @@
 import type {Middleware} from 'get-it'
-import progressStream from 'progress-stream'
+
+import {type Progress, progressStream} from '../../util/progress-stream'
 
 function normalizer(stage: 'download' | 'upload') {
-  return (prog: any) => ({
+  return (prog: Pick<Progress, 'percentage' | 'length' | 'transferred'>) => ({
     stage,
     percent: prog.percentage,
     total: prog.length,
@@ -13,21 +14,15 @@ function normalizer(stage: 'download' | 'upload') {
 
 /** @public */
 export function progress() {
+  let didEmitUpload = false
+  const onDownload = normalizer('download')
+  const onUpload = normalizer('upload')
   return {
     onHeaders: (response, evt) => {
-      const _progress = progressStream({time: 16})
-      const normalize = normalizer('download')
+      const stream = progressStream({time: 32})
 
-      // This is supposed to be handled automatically, but it has a bug,
-      // see https://github.com/freeall/progress-stream/pull/22
-      const contentLength = response.headers['content-length']
-      const length = contentLength ? Number(contentLength) : 0
-      if (!isNaN(length) && length > 0) {
-        _progress.setLength(length)
-      }
-
-      _progress.on('progress', (prog) => evt.context.channels.progress.publish(normalize(prog)))
-      return response.pipe(_progress)
+      stream.on('progress', (prog) => evt.context.channels.progress.publish(onDownload(prog)))
+      return response.pipe(stream)
     },
 
     onRequest: (evt) => {
@@ -35,10 +30,18 @@ export function progress() {
         return
       }
 
-      const normalize = normalizer('upload')
-      evt.progress.on('progress', (prog: any) =>
-        evt.context.channels.progress.publish(normalize(prog)),
-      )
+      evt.progress.on('progress', (prog: Progress) => {
+        didEmitUpload = true
+        evt.context.channels.progress.publish(onUpload(prog))
+      })
+    },
+
+    onResponse: (res, evt) => {
+      if (!didEmitUpload && typeof evt.options.body !== 'undefined') {
+        evt.channels.progress.publish(onUpload({length: 0, transferred: 0, percentage: 100}))
+      }
+
+      return res
     },
   } satisfies Middleware
 }
