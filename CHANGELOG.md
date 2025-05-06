@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.6.8](https://github.com/sanity-io/get-it/compare/v8.6.7...v8.6.8) (2025-05-06)
+
+### Bug Fixes
+
+- **deps:** upgrade to typescript 5.8, vitest 3, add import condition ([#525](https://github.com/sanity-io/get-it/issues/525)) ([4f5f360](https://github.com/sanity-io/get-it/commit/4f5f360768af24ca94ba90e4144a4ba7c7e125c7))
+
 ## [8.6.7](https://github.com/sanity-io/get-it/compare/v8.6.6...v8.6.7) (2025-01-27)
 
 ### Bug Fixes
