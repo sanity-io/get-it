@@ -7,6 +7,7 @@ import {baseUrl, expectRequest, expectRequestBody, promiseRequest} from './helpe
 
 describe.skipIf(typeof fetch === 'undefined' && typeof XMLHttpRequest === 'undefined')(
   'fetch',
+  {timeout: 15000},
   () => {
     it('can use browser request with fetch polyfill', () => {
       getIt([baseUrl], browserRequest)
@@ -117,5 +118,4 @@ describe.skipIf(typeof fetch === 'undefined' && typeof XMLHttpRequest === 'undef
       })
     })
   },
-  {timeout: 15000},
 )

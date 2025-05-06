@@ -1,6 +1,7 @@
 import type {IncomingHttpHeaders, IncomingMessage} from 'http'
-import type {ProgressStream} from 'progress-stream'
 import type {UrlWithStringQuery} from 'url'
+
+import type {ProgressStream} from './util/progress-stream'
 
 /** @public */
 export interface RequestOptions {

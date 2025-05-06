@@ -5,7 +5,6 @@
     "follow-redirects": "https://esm.sh/follow-redirects@^1.15.2",
     "is-retry-allowed": "https://esm.sh/is-retry-allowed@^2.2.0",
     "parse-headers": "https://esm.sh/parse-headers@^2.0.5",
-    "progress-stream": "https://esm.sh/progress-stream@^2.0.0",
     "tunnel-agent": "https://esm.sh/tunnel-agent@^0.6.0"
   }
 }

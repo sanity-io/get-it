@@ -36,6 +36,7 @@ describe('progress', () => {
   // @TODO add support for `adapter = fetch` when `ReadableStream` is available on `Response`
   it.skipIf(adapter === 'fetch')(
     'should emit download progress events',
+    {timeout: 10000},
     async () => {
       expect.hasAssertions()
       await expect(
@@ -62,7 +63,6 @@ describe('progress', () => {
         }),
       ).resolves.toBeUndefined()
     },
-    {timeout: 10000},
   )
 
   // @TODO support upload events in fetch if Request.body supports ReadableStream
@@ -105,66 +105,58 @@ describe('progress', () => {
   it.skipIf(
     environment === 'browser' ||
       adapter === 'fetch' ||
-      (process.env.GITHUB_ACTIONS === 'true' && process.platform === 'darwin'),
-  )(
-    'can tell requester how large the body is',
-    async () => {
-      expect.hasAssertions()
-      await expect(
-        new Promise<number>((resolve, reject) => {
-          const request = getIt([baseUrl, progress()])
-          const body = fs.createReadStream(__filename)
-          const bodySize = fs.statSync(__filename).size
-          const req = request({url: '/plain-text', body, bodySize})
-          let events = 0
+      (process.env['GITHUB_ACTIONS'] === 'true' && process.platform === 'darwin'),
+  )('can tell requester how large the body is', {timeout: 10000}, async () => {
+    expect.hasAssertions()
+    await expect(
+      new Promise<number>((resolve, reject) => {
+        const request = getIt([baseUrl, progress()])
+        const body = fs.createReadStream(__filename)
+        const bodySize = fs.statSync(__filename).size
+        const req = request({url: '/plain-text', body, bodySize})
+        let events = 0
 
-          req.progress.subscribe((evt: any) => {
-            if (evt.stage !== 'upload') {
-              return
-            }
+        req.progress.subscribe((evt: any) => {
+          if (evt.stage !== 'upload') {
+            return
+          }
 
-            events++
-            expect(evt).to.containSubset({
-              stage: 'upload',
-              lengthComputable: true,
-            })
+          events++
+          expect(evt).to.containSubset({
+            stage: 'upload',
+            lengthComputable: true,
           })
+        })
 
-          req.error.subscribe((err: any) =>
-            reject(new Error(`error channel should not be called, got:\n\n${err.message}`)),
-          )
-          req.response.subscribe(() => {
-            resolve(events)
-          })
-        }),
-        'should have received progress events',
-      ).resolves.toBeGreaterThan(0)
-    },
-    {timeout: 10000},
-  )
+        req.error.subscribe((err: any) =>
+          reject(new Error(`error channel should not be called, got:\n\n${err.message}`)),
+        )
+        req.response.subscribe(() => {
+          resolve(events)
+        })
+      }),
+      'should have received progress events',
+    ).resolves.toBeGreaterThan(0)
+  })
 
   // @TODO add support for `adapter = fetch` when `ReadableStream` is available on `Response`
-  it.skipIf(adapter === 'fetch')(
-    'progress events should be emitted on observable',
-    async () => {
-      expect.hasAssertions()
-      await expect(
-        new Promise((resolve) => {
-          const request = getIt([baseUrl, progress(), observable({implementation})])
-          const obs = request({url: '/drip'})
-            .filter((ev: any) => ev.type === 'progress')
-            .subscribe((evt: any) => {
-              expect(evt).to.containSubset({
-                stage: 'download',
-                lengthComputable: true,
-              })
-
-              obs.unsubscribe()
-              resolve(undefined)
+  it.skipIf(adapter === 'fetch')('progress events should be emitted on observable', async () => {
+    expect.hasAssertions()
+    await expect(
+      new Promise((resolve) => {
+        const request = getIt([baseUrl, progress(), observable({implementation})])
+        const obs = request({url: '/drip'})
+          .filter((ev: any) => ev.type === 'progress')
+          .subscribe((evt: any) => {
+            expect(evt).to.containSubset({
+              stage: 'download',
+              lengthComputable: true,
             })
-        }),
-      ).resolves.toBeUndefined()
-    },
-    {timeout: 10000},
-  )
+
+            obs.unsubscribe()
+            resolve(undefined)
+          })
+      }),
+    ).resolves.toBeUndefined()
+  })
 })
