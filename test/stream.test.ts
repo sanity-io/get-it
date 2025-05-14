@@ -25,7 +25,8 @@ describe.runIf(environment === 'node')('streams', {timeout: 15000}, () => {
   it('does not retry failed requests when using streams', async () => {
     const body = 'Just some plain text for you to consume'
     const request = getIt([baseUrl, debugRequest])
-    const req = request({url: '/fail?n=3', body: Readable.from(body)})
+    const uuid = Math.random().toString(36).substring(2, 15)
+    const req = request({url: `/fail?n=3&uuid=${uuid}`, body: Readable.from(body)})
     await expectRequest(req).rejects.toThrow(Error)
   })
 
