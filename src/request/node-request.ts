@@ -185,9 +185,10 @@ export const httpRequester: HttpRequest = (context, cb) => {
 
   // Handle proxy authorization if present
   if (!tunnel && proxy && proxy.auth && !reqOpts.headers['proxy-authorization']) {
-    const [username, password] = proxy.auth.username
-      ? [proxy.auth.username, proxy.auth.password]
-      : proxy.auth.split(':').map((item: any) => qs.unescape(item))
+    const [username, password] =
+      typeof proxy.auth === 'string'
+        ? proxy.auth.split(':').map((item) => qs.unescape(item))
+        : [proxy.auth.username, proxy.auth.password]
 
     const auth = Buffer.from(`${username}:${password}`, 'utf8')
     const authBase64 = auth.toString('base64')

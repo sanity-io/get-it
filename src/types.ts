@@ -15,7 +15,7 @@ export interface RequestOptions {
   maxRetries?: number
   retryDelay?: (attemptNumber: number) => number
   method?: string
-  proxy?: any
+  proxy?: string | false | null | ProxyOptions
   query?: any
   rawBody?: boolean
   shouldRetry?: any
@@ -34,6 +34,16 @@ export interface RequestOptions {
    * Some frameworks have special behavior for `fetch` when an `AbortSignal` is used, and may want to disable it unless userland specifically opts-in.
    */
   useAbortSignal?: boolean
+}
+
+/**
+ * @public
+ */
+export interface ProxyOptions {
+  host: string
+  port: number
+  protocol?: 'http:' | 'https:'
+  auth?: {username?: string; password?: string}
 }
 
 /** @public */

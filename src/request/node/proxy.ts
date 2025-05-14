@@ -3,7 +3,9 @@
  * Apache License 2.0
  */
 
-import url from 'url'
+import url, {type UrlWithStringQuery} from 'url'
+
+import type {ProxyOptions, RequestOptions} from '../../types'
 
 function formatHostname(hostname: string) {
   // canonicalize the hostname, so that 'oogle.com' won't match 'google.com'
@@ -21,13 +23,13 @@ function parseNoProxyZone(zoneStr: string) {
   return {hostname: zoneHost, port: zonePort, hasPort: hasPort}
 }
 
-function uriInNoProxy(uri: any, noProxy: any) {
+function uriInNoProxy(uri: UrlWithStringQuery, noProxy: string) {
   const port = uri.port || (uri.protocol === 'https:' ? '443' : '80')
-  const hostname = formatHostname(uri.hostname)
+  const hostname = formatHostname(uri.hostname || '')
   const noProxyList = noProxy.split(',')
 
   // iterate through the noProxyList until it finds a match.
-  return noProxyList.map(parseNoProxyZone).some((noProxyZone: any) => {
+  return noProxyList.map(parseNoProxyZone).some((noProxyZone) => {
     const isMatchedAt = hostname.indexOf(noProxyZone.hostname)
     const hostnameMatched =
       isMatchedAt > -1 && isMatchedAt === hostname.length - noProxyZone.hostname.length
@@ -40,7 +42,7 @@ function uriInNoProxy(uri: any, noProxy: any) {
   })
 }
 
-function getProxyFromUri(uri: any) {
+function getProxyFromUri(uri: UrlWithStringQuery): string | null {
   // Decide the proper request proxy to use based on the request URI object and the
   // environmental variables (NO_PROXY, HTTP_PROXY, etc.)
   // respect NO_PROXY environment variables (see: http://lynx.isc.org/current/breakout/lynx_help/keystrokes/environments.html)
@@ -76,7 +78,7 @@ function getProxyFromUri(uri: any) {
   return null
 }
 
-function getHostFromUri(uri: any) {
+function getHostFromUri(uri: UrlWithStringQuery) {
   let host = uri.host
 
   // Drop :port suffix from Host header if known protocol.
@@ -92,33 +94,36 @@ function getHostFromUri(uri: any) {
   return host
 }
 
-function getHostHeaderWithPort(uri: any) {
+function getHostHeaderWithPort(uri: UrlWithStringQuery) {
   const port = uri.port || (uri.protocol === 'https:' ? '443' : '80')
   return `${uri.hostname}:${port}`
 }
 
-export function rewriteUriForProxy(reqOpts: any, uri: any, proxy: any) {
+export function rewriteUriForProxy(
+  reqOpts: RequestOptions & UrlWithStringQuery,
+  uri: UrlWithStringQuery,
+  proxy: UrlWithStringQuery | ProxyOptions,
+) {
   const headers = reqOpts.headers || {}
   const options = Object.assign({}, reqOpts, {headers})
   headers.host = headers.host || getHostHeaderWithPort(uri)
   options.protocol = proxy.protocol || options.protocol
-  options.hostname = proxy.host.replace(/:\d+/, '')
-  options.port = proxy.port
+  options.hostname = (
+    proxy.host ||
+    ('hostname' in proxy && proxy.hostname) ||
+    options.hostname ||
+    ''
+  ).replace(/:\d+/, '')
+  options.port = proxy.port ? `${proxy.port}` : options.port
   options.host = getHostFromUri(Object.assign({}, uri, proxy))
   options.href = `${options.protocol}//${options.host}${options.path}`
   options.path = url.format(uri)
   return options
 }
 
-export function getProxyOptions(options: any) {
-  let proxy
-  // eslint-disable-next-line no-prototype-builtins
-  if (options.hasOwnProperty('proxy')) {
-    proxy = options.proxy
-  } else {
-    const uri = url.parse(options.url)
-    proxy = getProxyFromUri(uri)
-  }
+export function getProxyOptions(options: RequestOptions): UrlWithStringQuery | ProxyOptions | null {
+  const proxy =
+    typeof options.proxy === 'undefined' ? getProxyFromUri(url.parse(options.url)) : options.proxy
 
-  return typeof proxy === 'string' ? url.parse(proxy) : proxy
+  return typeof proxy === 'string' ? url.parse(proxy) : proxy || null
 }
