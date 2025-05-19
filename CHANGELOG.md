@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.6.9](https://github.com/sanity-io/get-it/compare/v8.6.8...v8.6.9) (2025-05-19)
+
+### Bug Fixes
+
+- auto-infer proxy if `proxy` option is `undefined` ([#527](https://github.com/sanity-io/get-it/issues/527)) ([5efa7ee](https://github.com/sanity-io/get-it/commit/5efa7eecd697c584d7585c083491de68ac586ded))
+
 ## [8.6.8](https://github.com/sanity-io/get-it/compare/v8.6.7...v8.6.8) (2025-05-06)
 
 ### Bug Fixes
