@@ -52,6 +52,16 @@ describe.runIf(environment === 'node')('proxy', {timeout: 15000}, () => {
     return expectRequest(req).resolves.toHaveProperty('body', body)
   })
 
+  it('http: should proxy if `proxy` option is `undefined`', async () => {
+    process.env['http_proxy'] = 'http://localhost:4000/'
+
+    const body = 'Just some plain text for you to consume + proxy'
+    const request = getIt([baseUrl, debugRequest])
+
+    const req = request({url: '/plain-text', proxy: undefined})
+    return expectRequest(req).resolves.toHaveProperty('body', body)
+  })
+
   it('http: should support proxy set via env var', async () => {
     const body = 'Just some plain text for you to consume + proxy'
     const request = getIt([baseUrl, debugRequest])
