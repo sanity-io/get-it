@@ -5,6 +5,14 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.6.10](https://github.com/sanity-io/get-it/compare/v8.6.9...v8.6.10) (2025-06-30)
+
+### Bug Fixes
+
+- **deps:** update dependency debug to v4.4.1 ([#536](https://github.com/sanity-io/get-it/issues/536)) ([ac22c73](https://github.com/sanity-io/get-it/commit/ac22c73cb308dc541f184b3d448ffa509c751fa0))
+- **deps:** update dependency parse-headers to v2.0.6 ([#538](https://github.com/sanity-io/get-it/issues/538)) ([e19c992](https://github.com/sanity-io/get-it/commit/e19c99206bf2627358e6321735c3e4385eba045f))
+- **typings:** use `Exclude` instead of `Omit` ([#537](https://github.com/sanity-io/get-it/issues/537)) ([bbd0cc8](https://github.com/sanity-io/get-it/commit/bbd0cc8b877c11995f5e9c753c92ca66664ea5ec))
+
 ## [8.6.9](https://github.com/sanity-io/get-it/compare/v8.6.8...v8.6.9) (2025-05-19)
 
 ### Bug Fixes
