@@ -121,7 +121,7 @@
     "@types/zen-observable": "^0.8.7",
     "@typescript-eslint/eslint-plugin": "^8.35.0",
     "@typescript-eslint/parser": "^8.35.0",
-    "@vitest/coverage-v8": "^3.1.2",
+    "@vitest/coverage-v8": "^3.2.4",
     "debug": "4.4.1",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^9.1.0",
@@ -137,7 +137,7 @@
     "semantic-release": "^24.2.6",
     "typescript": "5.8.3",
     "vite": "^6.3.5",
-    "vitest": "^3.1.2",
+    "vitest": "^3.2.4",
     "zen-observable": "^0.10.0"
   },
   "packageManager": "npm@11.4.2",
