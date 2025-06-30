@@ -93,11 +93,7 @@ export interface MiddlewareHooks {
   onReturn: (channels: MiddlewareChannels, context: HttpContext) => any
   onHeaders: (
     response: IncomingMessage,
-    evt: {
-      headers: IncomingHttpHeaders
-      adapter: RequestAdapter
-      context: HttpContext
-    },
+    evt: {headers: IncomingHttpHeaders; adapter: RequestAdapter; context: HttpContext},
   ) => ProgressStream
 }
 
@@ -110,11 +106,11 @@ export interface HookOnRequestEventBase {
 /** @public */
 export interface HookOnRequestEventNode extends HookOnRequestEventBase {
   adapter: 'node'
-  progress: any
+  progress?: any
 }
 /** @public */
 export interface HookOnRequestEventBrowser extends HookOnRequestEventBase {
-  adapter: Omit<RequestAdapter, 'node'>
+  adapter: Exclude<RequestAdapter, 'node'>
   progress?: undefined
 }
 /** @public */

@@ -13,6 +13,7 @@ import {getProxyOptions, rewriteUriForProxy} from './node/proxy'
 import {concat} from './node/simpleConcat'
 import {timedOut} from './node/timedOut'
 import * as tunneling from './node/tunnel'
+import type {RequestAdapter} from '../types'
 
 /**
  * Taken from:
@@ -22,7 +23,7 @@ const isStream = (stream: any): stream is Stream =>
   stream !== null && typeof stream === 'object' && typeof stream.pipe === 'function'
 
 /** @public */
-export const adapter: import('../types').RequestAdapter = 'node'
+export const adapter: RequestAdapter = 'node'
 
 export class NodeRequestError extends Error {
   request: http.ClientRequest
