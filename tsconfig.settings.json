@@ -9,6 +9,8 @@
     "outDir": "./dist",
     "rootDir": ".",
 
+    "noUncheckedIndexedAccess": false,
+    "exactOptionalPropertyTypes": false,
     "useUnknownInCatchVariables": true,
     "erasableSyntaxOnly": true
   }
