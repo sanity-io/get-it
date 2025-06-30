@@ -1,5 +1,6 @@
 import type {HttpRequest, MiddlewareResponse, RequestOptions} from 'get-it'
 import parseHeaders from 'parse-headers'
+import type {RequestAdapter} from '../types'
 
 import {FetchXhr} from './browser/fetchXhr'
 
@@ -9,7 +10,7 @@ import {FetchXhr} from './browser/fetchXhr'
  */
 export const adapter = (
   typeof XMLHttpRequest === 'function' ? ('xhr' as const) : ('fetch' as const)
-) satisfies import('../types').RequestAdapter
+) satisfies RequestAdapter
 
 // Fallback to fetch-based XHR polyfill for non-browser environments like Workers
 const XmlHttpRequest = adapter === 'xhr' ? XMLHttpRequest : FetchXhr

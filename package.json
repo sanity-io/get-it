@@ -1,6 +1,6 @@
 {
   "name": "get-it",
-  "version": "8.6.9",
+  "version": "8.6.10-canary.1",
   "description": "Generic HTTP request library for node, browsers and workers",
   "keywords": [
     "request",
@@ -97,7 +97,7 @@
     "test:esm:browser": "node -C browser --test test-esm/test.mjs | faucet",
     "test:esm:deno": "deno test --allow-read --allow-net --allow-env --import-map=test-deno/import_map.json test-deno",
     "test:react-server": "npm test -- --config ./vitest.react-server.config.ts",
-    "type-check": "tsc --noEmit"
+    "typecheck": "tsc --noEmit"
   },
   "browserslist": "extends @sanity/browserslist-config",
   "prettier": "@sanity/prettier-config",

@@ -36,6 +36,7 @@ jobs:
           node-version: lts/*
       - run: npm ci
       - run: npx ls-engines
+      - run: npm run typecheck
       - run: npm run build
       - run: npm run lint -- --quiet
       - run: npm run coverage
