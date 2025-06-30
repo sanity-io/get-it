@@ -136,7 +136,7 @@
     "prettier": "^3.6.2",
     "semantic-release": "^24.2.6",
     "typescript": "5.8.3",
-    "vite": "^6.3.5",
+    "vite": "^7.0.0",
     "vitest": "^3.2.4",
     "zen-observable": "^0.10.0"
   },
