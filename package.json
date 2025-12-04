@@ -93,8 +93,8 @@
     "test": "vitest",
     "test:browser": "npm test -- --config ./vitest.browser.config.ts --dom",
     "test:edge-runtime": "npm test -- --config ./vitest.edge.config.ts",
-    "test:esm": "(cd test-esm && node --test) | faucet",
-    "test:esm:browser": "node -C browser --test test-esm/test.mjs | faucet",
+    "test:esm": "node --test ./test-esm/*",
+    "test:esm:browser": "node -C browser --test test-esm/test.mjs",
     "test:esm:deno": "deno test --allow-read --allow-net --allow-env --import-map=test-deno/import_map.json test-deno",
     "test:react-server": "npm test -- --config ./vitest.react-server.config.ts",
     "typecheck": "tsc --noEmit"
@@ -127,7 +127,6 @@
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-prettier": "^5.5.1",
     "eslint-plugin-simple-import-sort": "^12.1.1",
-    "faucet": "^0.0.4",
     "get-uri": "^6.0.4",
     "happy-dom": "^18.0.1",
     "ls-engines": "^0.9.3",
