@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.7.0](https://github.com/sanity-io/get-it/compare/v8.6.10...v8.7.0) (2025-12-04)
+
+### Features
+
+- **node:** include remote address, if available, in response ([db81a8e](https://github.com/sanity-io/get-it/commit/db81a8ecc58fb0358bf14552f97bdf343bf0550d))
+
 ## [8.6.10](https://github.com/sanity-io/get-it/compare/v8.6.9...v8.6.10) (2025-06-30)
 
 ### Bug Fixes
