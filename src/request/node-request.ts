@@ -7,13 +7,13 @@ import qs from 'querystring'
 import {Readable, type Stream} from 'stream'
 import url from 'url'
 
+import type {RequestAdapter} from '../types'
 import {lowerCaseHeaders} from '../util/lowerCaseHeaders'
 import {progressStream} from '../util/progress-stream'
 import {getProxyOptions, rewriteUriForProxy} from './node/proxy'
 import {concat} from './node/simpleConcat'
 import {timedOut} from './node/timedOut'
 import * as tunneling from './node/tunnel'
-import type {RequestAdapter} from '../types'
 
 /**
  * Taken from:
@@ -39,7 +39,8 @@ export class NodeRequestError extends Error {
 // Reduce a fully fledged node-style response object to
 // something that works in both browser and node environment
 const reduceResponse = (
-  res: any,
+  res: http.IncomingMessage,
+  remoteAddress: string | undefined,
   reqUrl: string,
   method: string,
   body: any,
@@ -48,8 +49,9 @@ const reduceResponse = (
   url: reqUrl,
   method: method,
   headers: res.headers,
-  statusCode: res.statusCode,
-  statusMessage: res.statusMessage,
+  statusCode: res.statusCode || 0,
+  statusMessage: res.statusMessage || '',
+  remoteAddress,
 })
 
 export const httpRequester: HttpRequest = (context, cb) => {
@@ -229,9 +231,11 @@ export const httpRequester: HttpRequest = (context, cb) => {
 
     // On redirects, `responseUrl` is set
     const reqUrl = 'responseUrl' in response ? response.responseUrl : options.url
+    // Get the remote address from the socket, if available. After the stream is consumed, the socket might be closed, so we grab it here.
+    const remoteAddress = res.socket?.remoteAddress
 
     if (options.stream) {
-      callback(null, reduceResponse(res, reqUrl, reqOpts.method, resStream))
+      callback(null, reduceResponse(res, remoteAddress, reqUrl, reqOpts.method, resStream))
       return
     }
 
@@ -242,7 +246,7 @@ export const httpRequester: HttpRequest = (context, cb) => {
       }
 
       const body = options.rawBody ? data : data.toString()
-      const reduced = reduceResponse(res, reqUrl, reqOpts.method, body)
+      const reduced = reduceResponse(res, remoteAddress, reqUrl, reqOpts.method, body)
       return callback(null, reduced)
     })
   })

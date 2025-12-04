@@ -27,6 +27,7 @@ describe.runIf(typeof fetch !== 'undefined' && environment === 'node')(
       const request = getIt([baseUrl, keepAlive(), promise(), withoutDateHeader()], nodeRequest)
       const expected = await request({url: '/plain-text', fetch: false})
       const actual = await request({url: '/plain-text', fetch: true})
+      delete expected.remoteAddress // the fetch() spec doesn't have the remote address, so we remove it for comparison
       expect(actual).toEqual(expected)
     })
 
@@ -37,6 +38,7 @@ describe.runIf(typeof fetch !== 'undefined' && environment === 'node')(
         url: '/plain-text',
         fetch: {headers: {connection: 'close'}},
       })
+      delete expected.remoteAddress // the fetch() spec doesn't have the remote address, so we remove it for comparison
       expect(actual).toEqual(expected)
       expect(actual.headers).toHaveProperty('connection', 'close')
     })
@@ -45,6 +47,7 @@ describe.runIf(typeof fetch !== 'undefined' && environment === 'node')(
       const request = getIt([baseUrl, keepAlive(), promise(), withoutDateHeader()], nodeRequest)
       const expected = await request({url: '/plain-text', fetch: false})
       const actual = await request({url: '/plain-text', fetch: {cache: 'no-store'}})
+      delete expected.remoteAddress // the fetch() spec doesn't have the remote address, so we remove it for comparison
       expect(actual).toEqual(expected)
     })
 

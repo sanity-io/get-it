@@ -1,4 +1,4 @@
-import {getIt} from 'get-it'
+import {adapter, getIt} from 'get-it'
 import {httpErrors} from 'get-it/middleware'
 import {describe, expect, it} from 'vitest'
 
@@ -32,6 +32,10 @@ describe('errors', () => {
         statusMessage: 'Bad Request',
         body: '---',
       })
+
+    if (adapter === 'node') {
+      expect(err).to.have.property('response').and.to.have.property('remoteAddress')
+    }
 
     expect(err.request.headers).toMatchObject({
       foo: 'bar',
@@ -84,5 +88,18 @@ describe('errors', () => {
         expect(errs).to.have.length(2)
       }),
     ])
+  })
+
+  it.runIf(adapter === 'node')('error object contains remote address when serialized', async () => {
+    const request = getIt([baseUrl, httpErrors()])
+    const req = request({url: '/status?code=400'})
+    req.response.subscribe(() => {
+      throw new Error('Response channel called when error channel should have been triggered')
+    })
+    const err: any = await new Promise((resolve) => req.error.subscribe(resolve))
+    expect(err).to.be.an.instanceOf(Error)
+    const {inspect} = await import('util')
+    const serialized = inspect(err)
+    expect(serialized).to.include(`remoteAddress: '`)
   })
 })
