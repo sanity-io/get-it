@@ -165,6 +165,7 @@ export interface MiddlewareResponse {
   headers: any
   statusCode: number
   statusMessage: string
+  remoteAddress?: string
 }
 
 /**

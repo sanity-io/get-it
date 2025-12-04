@@ -126,6 +126,16 @@ describe('basics', {timeout: 15000}, () => {
     expect(res.body).toEqual(['larger', 'worse', 'slower', 'weaker'])
   })
 
+  it.runIf(adapter === 'node')('Without fetch: should return the remote address', async () => {
+    const request = getIt([baseUrl])
+    const req = request({url: '/headers'})
+    const res = await promiseRequest(req)
+    expect(res).toHaveProperty('remoteAddress')
+    expect(res.remoteAddress).toBeDefined()
+    expect(typeof res.remoteAddress).toBe('string')
+    expect(res.remoteAddress.length).toBeGreaterThan(0) // we don't know if it's ipv4 or v6 so we just check length
+  })
+
   it('should not return a body on HEAD-requests', async () => {
     const request = getIt([baseUrl, jsonResponse()])
     const req = request({url: '/gzip', method: 'HEAD'})
