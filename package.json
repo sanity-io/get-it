@@ -102,7 +102,6 @@
   "browserslist": "extends @sanity/browserslist-config",
   "prettier": "@sanity/prettier-config",
   "dependencies": {
-    "@types/follow-redirects": "^1.14.4",
     "decompress-response": "^7.0.0",
     "follow-redirects": "^1.15.9",
     "is-retry-allowed": "^2.2.0",
@@ -116,6 +115,7 @@
     "@sanity/semantic-release-preset": "^5.0.0",
     "@types/bun": "^1.2.17",
     "@types/debug": "^4.1.12",
+    "@types/follow-redirects": "^1.14.4",
     "@types/node": "^20.8.8",
     "@types/through2": "^2.0.41",
     "@types/zen-observable": "^0.8.7",
@@ -130,12 +130,10 @@
     "get-uri": "^6.0.4",
     "happy-dom": "^18.0.1",
     "ls-engines": "^0.9.3",
-    "node-fetch": "^2.6.7",
     "parse-headers": "2.0.6",
     "prettier": "^3.6.2",
     "semantic-release": "^24.2.6",
     "typescript": "5.8.3",
-    "vite": "^7.0.0",
     "vitest": "^3.2.4",
     "zen-observable": "^0.10.0"
   },
