@@ -43,4 +43,21 @@ describe.runIf(environment === 'node')('streams', {timeout: 15000}, () => {
         })
       })
     }))
+
+  it('should drain empty response streams to release the socket', async () =>
+    new Promise((resolve, reject) => {
+      const request = getIt([baseUrl, debugRequest])
+      const req = request({url: '/empty', stream: true})
+      req.response.subscribe((res: any) => {
+        expect(res.body).to.have.property('pipe')
+        // Do NOT explicitly consume the stream via concat or 'data' listener.
+        // For empty responses, the library should automatically drain the stream
+        // so the socket is released. The 'end' event should fire without the
+        // consumer needing to read data.
+        res.body.once('end', () => {
+          resolve(undefined)
+        })
+      })
+      req.error.subscribe(reject)
+    }))
 })

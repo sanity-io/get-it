@@ -236,6 +236,18 @@ export const httpRequester: HttpRequest = (context, cb) => {
 
     if (options.stream) {
       callback(null, reduceResponse(res, remoteAddress, reqUrl, reqOpts.method, resStream))
+
+      // When the response body is empty, the stream must still be drained to
+      // release the underlying socket. We check on the next tick whether the
+      // response has already completed with no data and the stream hasn't been
+      // consumed by the caller — if so, we resume it so 'end' fires and the
+      // socket is freed.
+      process.nextTick(() => {
+        if (response.complete && resStream.readableLength === 0 && !resStream.readableFlowing) {
+          resStream.resume()
+        }
+      })
+
       return
     }
 

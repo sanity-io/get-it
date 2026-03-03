@@ -158,6 +158,10 @@ function getResponseHandler(proto = 'http'): any {
       case '/req-test/delay':
         setTimeout(() => res.end('Hello future'), Number(parts.query['delay'] || 1000))
         break
+      case '/req-test/empty':
+        res.writeHead(200, {'Content-Type': 'text/plain'})
+        res.end()
+        break
       case '/req-test/drip':
         drip(res)
         break
