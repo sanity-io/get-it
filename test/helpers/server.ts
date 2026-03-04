@@ -162,6 +162,14 @@ function getResponseHandler(proto = 'http'): any {
         res.writeHead(200, {'Content-Type': 'text/plain'})
         res.end()
         break
+      case '/req-test/no-content':
+        res.writeHead(204)
+        res.end()
+        break
+      case '/req-test/gzip-empty':
+        res.writeHead(200, {'Content-Type': 'application/json', 'Content-Encoding': 'gzip'})
+        res.end()
+        break
       case '/req-test/drip':
         drip(res)
         break

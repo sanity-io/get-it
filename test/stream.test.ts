@@ -60,4 +60,61 @@ describe.runIf(environment === 'node')('streams', {timeout: 15000}, () => {
       })
       req.error.subscribe(reject)
     }))
+
+  it('should drain 204 No Content response streams to release the socket', async () =>
+    new Promise((resolve, reject) => {
+      const request = getIt([baseUrl, debugRequest])
+      const req = request({url: '/no-content', stream: true})
+      req.response.subscribe((res: any) => {
+        expect(res.statusCode).to.equal(204)
+        res.body.once('end', () => {
+          resolve(undefined)
+        })
+      })
+      req.error.subscribe(reject)
+    }))
+
+  it('should drain HEAD response streams to release the socket', async () =>
+    new Promise((resolve, reject) => {
+      const request = getIt([baseUrl, debugRequest])
+      const req = request({url: '/plain-text', method: 'HEAD', stream: true})
+      req.response.subscribe((res: any) => {
+        res.body.once('end', () => {
+          resolve(undefined)
+        })
+      })
+      req.error.subscribe(reject)
+    }))
+
+  it('should not lose data on non-empty compressed response streams', async () =>
+    new Promise((resolve, reject) => {
+      const request = getIt([baseUrl, debugRequest])
+      const req = request({url: '/gzip', stream: true})
+      req.response.subscribe((res: any) => {
+        // The drain guard must NOT resume this stream — it has real data.
+        // Consuming it via concat proves the body is intact.
+        concat(res.body, (err: any, body: any) => {
+          if (err) return reject(err)
+          const parsed = JSON.parse(body.toString())
+          expect(parsed).to.deep.equal(['harder', 'better', 'faster', 'stronger'])
+          resolve(undefined)
+        })
+      })
+      req.error.subscribe(reject)
+    }))
+
+  it('should drain empty compressed response streams', async () =>
+    new Promise((resolve, reject) => {
+      const request = getIt([baseUrl, debugRequest])
+      const req = request({url: '/gzip-empty', stream: true})
+      req.response.subscribe((res: any) => {
+        // Empty body with Content-Encoding: gzip goes through the
+        // decompress-response transform pipeline. The stream should still
+        // end without explicit consumption.
+        res.body.once('end', () => {
+          resolve(undefined)
+        })
+      })
+      req.error.subscribe(reject)
+    }))
 })
