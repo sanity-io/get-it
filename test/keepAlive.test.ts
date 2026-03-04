@@ -53,15 +53,21 @@ describe.runIf(environment === 'node')('keepAlive middleware', () => {
         },
       },
     ])
-    const options = {url: '/remote-port', maxRedirects: 0}
+    const key = `econnreset-retry-${Date.now()}`
+    const options = {url: `/request-count?key=${key}`, maxRedirects: 0}
 
-    const remotePort1 = (await promiseRequest(request(options))).body
-    const remotePort2 = (await promiseRequest(request(options))).body
-    expect(remotePort1).toBe(remotePort2)
+    // Requests 1 and 2 succeed normally
+    const serverCount1 = (await promiseRequest(request(options))).body
+    const serverCount2 = (await promiseRequest(request(options))).body
+    expect(serverCount1).toBe('1')
+    expect(serverCount2).toBe('2')
 
-    const remotePort3 = (await promiseRequest(request(options))).body
-    expect(remotePort2).not.toBe(remotePort3)
-    expect(remotePort1).not.toBe(remotePort3)
+    // Request 3 (count=3) is destroyed with ECONNRESET. keepAlive should
+    // automatically retry (count=4). The server-side counter proves the
+    // retry completed a real round-trip and got a fresh response.
+    const serverCount3 = (await promiseRequest(request(options))).body
+    expect(count).toBe(4)
+    expect(Number(serverCount3)).toBeGreaterThan(Number(serverCount2))
   })
 
   it('should respect maxRetries', async () => {

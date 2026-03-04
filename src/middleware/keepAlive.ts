@@ -1,5 +1,5 @@
-import type {AgentOptions} from 'http'
 import type {Middleware} from 'get-it'
+import type {AgentOptions} from 'http'
 
 import {NodeRequestError} from '../request/node-request'
 
@@ -26,7 +26,8 @@ export function buildKeepAlive(agent: (opts: AgentOptions) => Pick<Middleware, '
     return {
       finalizeOptions,
       onError: (err, context) => {
-        // When sending request through a keep-alive enabled agent, the underlying socket might be reused. But if server closes connection at unfortunate time, client may run into a 'ECONNRESET' error.
+        // When sending request through a keep-alive enabled agent, the underlying socket might be reused.
+        // But if server closes connection at unfortunate time, client may run into a 'ECONNRESET' error.
         // We retry three times in case of ECONNRESET error.
         // https://nodejs.org/docs/latest-v20.x/api/http.html#requestreusedsocket
         if (
