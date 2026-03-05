@@ -221,6 +221,11 @@ export const httpRequester: HttpRequest = (context, cb) => {
     reqOpts,
   ) as FinalizeNodeOptionsPayload
   const request = transport.request(finalOptions, (response) => {
+    // Snapshot emptiness before decompressResponse/middleware pipe the
+    // IncomingMessage. At this point readableLength reflects exactly what the
+    // HTTP parser has buffered, with no async-transform ambiguity.
+    const bodyIsKnownEmpty = response.complete && response.readableLength === 0
+
     const res = tryCompressed ? decompressResponse(response) : response
     _res = res
     const resStream = context.applyMiddleware('onHeaders', res, {
@@ -236,6 +241,61 @@ export const httpRequester: HttpRequest = (context, cb) => {
 
     if (options.stream) {
       callback(null, reduceResponse(res, remoteAddress, reqUrl, reqOpts.method, resStream))
+
+      // When the response body is empty, the stream must still be drained so
+      // the 'end' event fires. For unpiped responses this also releases the
+      // socket; for piped responses (decompress-response / onHeaders) the pipe
+      // chain already consumes the IncomingMessage, but resStream still needs
+      // to be drained for 'end' to emit.
+      //
+      // We prefer the `bodyIsKnownEmpty` snapshot (captured before any piping)
+      // because it checks the raw IncomingMessage and is immune to async
+      // Transform ambiguity (e.g. zlib where readableLength on the output can
+      // be 0 while decompression is still pending).
+      //
+      // For chunked responses the HTTP parser may not have set `complete` by
+      // the time the response callback fires. In that case we fall back to
+      // checking the original IncomingMessage in nextTick, but only when it
+      // has NOT been piped (readableFlowing !== true) — piping drains
+      // readableLength to 0 even for non-empty bodies.
+      //
+      // When the response was piped through a transform (decompress-response
+      // or onHeaders middleware), neither check above works. We instead wait
+      // for 'readable' on resStream and peek one byte: null means the stream
+      // ended empty, so we resume; non-null means real data, so we unshift it
+      // back for the caller to consume.
+      process.nextTick(() => {
+        if (resStream.readableFlowing) {
+          return
+        }
+
+        const isEmpty =
+          bodyIsKnownEmpty ||
+          (response.complete && response.readableLength === 0 && !response.readableFlowing)
+
+        if (isEmpty) {
+          resStream.resume()
+          return
+        }
+
+        // Piped case: response was consumed by decompress-response or
+        // onHeaders middleware, so we cannot inspect readableLength on the
+        // original IncomingMessage. Peek via 'readable' instead.
+        if (response.complete && response.readableFlowing) {
+          resStream.once('readable', () => {
+            if (resStream.readableFlowing) {
+              return
+            }
+            const chunk = resStream.read(1)
+            if (chunk === null) {
+              resStream.resume()
+            } else {
+              resStream.unshift(chunk)
+            }
+          })
+        }
+      })
+
       return
     }
 
