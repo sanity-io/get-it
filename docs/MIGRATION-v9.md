@@ -44,6 +44,10 @@ v9 is ESM-only. If your project uses CommonJS, you'll need to either:
 
 ## Behavioral changes
 
+### `remoteAddress` removed from responses
+
+v8.7.0 added `response.remoteAddress` containing the server's IP address, obtained from Node's `http` socket. v9 uses `fetch()` which does not expose socket-level information. There is no equivalent and no workaround — this field is no longer available.
+
 ### Query parameters no longer accept arrays
 
 v8 expanded arrays into repeated keys: `{tags: ['a', 'b']}` → `tags=a&tags=b`. v9's `query` option only accepts scalar values (`string | number | boolean | undefined`). Passing an array will silently produce a single comma-joined value via `String()`:
