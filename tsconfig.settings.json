@@ -7,6 +7,12 @@
     "rootDir": ".",
 
     "noUncheckedIndexedAccess": false,
-    "exactOptionalPropertyTypes": false
+    "exactOptionalPropertyTypes": false,
+
+    "paths": {
+      "get-it": ["./src/_exports/index.ts"],
+      "get-it/middleware": ["./src/_exports/middleware.ts"],
+      "get-it/node": ["./src/_exports/node.ts"]
+    }
   }
 }
