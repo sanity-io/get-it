@@ -1,13 +1,9 @@
 {
   "extends": "./tsconfig.settings",
   "include": ["./src"],
-  "exclude": ["./src/node"],
+  "exclude": ["./src/nodeFetch.ts", "./src/_exports/index.node.ts", "./src/_exports/node.ts"],
   "compilerOptions": {
     "lib": ["ES2023"],
-    "types": ["node"],
-    "paths": {
-      "get-it": ["./src"],
-      "get-it/middleware": ["./src/middleware"]
-    }
+    "types": ["node"]
   }
 }

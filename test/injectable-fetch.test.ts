@@ -1,6 +1,5 @@
+import {createRequest} from 'get-it'
 import {describe, expect, it} from 'vitest'
-
-import {createRequest} from '../src/index'
 
 describe('injectable fetch', () => {
   it('uses injected fetch at instance level', async () => {

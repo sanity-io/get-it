@@ -1,6 +1,8 @@
-import type {CreateRequestOptions} from 'get-it'
-import {createRequest as coreCreateRequest} from 'get-it'
-import {nodeFetch} from 'get-it/node'
+import {createRequest as coreCreateRequest} from '../createRequest'
+import {nodeFetch} from '../nodeFetch'
+import {createBufferedResponse} from '../response'
+import type {CreateRequestOptions} from '../types'
+import {HttpError} from '../types'
 
 const defaultFetch = nodeFetch()
 
@@ -23,5 +25,5 @@ export type {
   TextResponse,
   TransformMiddleware,
   WrappingMiddleware,
-} from 'get-it'
-export {createBufferedResponse, HttpError} from 'get-it'
+} from '../types'
+export {createBufferedResponse, HttpError}

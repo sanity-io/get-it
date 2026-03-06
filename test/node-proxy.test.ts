@@ -1,7 +1,6 @@
+import {createRequest} from 'get-it'
+import {nodeFetch} from 'get-it/node'
 import {afterEach, describe, expect, it} from 'vitest'
-
-import {createRequest} from '../src/index'
-import {nodeFetch} from '../src/node/nodeFetch'
 
 const baseUrl = 'http://localhost:9980/req-test'
 const proxyUrl = 'http://localhost:4000'
@@ -89,14 +88,14 @@ describe('nodeFetch', () => {
 
 describe('node entry point', () => {
   it('re-exports core types and utilities', async () => {
-    const nodeModule = await import('../src/index.node')
+    const nodeModule = await import('../src/_exports/index.node')
     expect(typeof nodeModule.createRequest).toBe('function')
     expect(typeof nodeModule.createBufferedResponse).toBe('function')
     expect(typeof nodeModule.HttpError).toBe('function')
   })
 
   it('createRequest from node entry works without custom fetch', async () => {
-    const {createRequest: nodeCreateRequest} = await import('../src/index.node')
+    const {createRequest: nodeCreateRequest} = await import('../src/_exports/index.node')
     const request = nodeCreateRequest()
     const res = await request(`${baseUrl}/plain-text`)
     expect(res.status).toBe(200)

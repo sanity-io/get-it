@@ -1,6 +1,5 @@
+import {createRequest} from 'get-it'
 import {describe, expect, it} from 'vitest'
-
-import {createRequest} from '../src/index'
 
 describe('as option', () => {
   const request = createRequest({base: 'http://localhost:9980/req-test'})

@@ -1,12 +1,6 @@
 {
   "extends": "@sanity/tsconfig/strictest",
   "compilerOptions": {
-    "paths": {
-      "get-it": ["./src"],
-      "get-it/middleware": ["./src/middleware"],
-      "get-it/node": ["./src/node"]
-    },
-
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
 
     "outDir": "./dist",
