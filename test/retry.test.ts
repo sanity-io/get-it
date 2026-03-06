@@ -83,6 +83,31 @@ describe('retry middleware', {timeout: 15000}, () => {
     expect(elapsed).toBeGreaterThanOrEqual(250)
   })
 
+  it('aborts during retry sleep when signal is aborted', async () => {
+    const controller = new AbortController()
+    let attempts = 0
+    const request = createRequest({
+      base: baseUrl,
+      httpErrors: false,
+      middleware: [
+        async (opts, next) => {
+          attempts++
+          return next(opts)
+        },
+        retry({retryDelay: () => 5000}),
+      ],
+    })
+
+    const promise = request({url: '/permafail', signal: controller.signal})
+    // Wait long enough for first attempt to fail and retry sleep to start
+    await new Promise((r) => setTimeout(r, 200))
+    controller.abort()
+
+    await expect(promise).rejects.toThrow()
+    // Should have made only 1 attempt — abort during sleep prevents second attempt
+    expect(attempts).toBe(1)
+  })
+
   it('does not retry POST by default', async () => {
     const request = createRequest({
       base: baseUrl,
