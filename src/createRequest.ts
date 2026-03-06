@@ -33,7 +33,9 @@ function isBinaryBody(value: unknown): value is FetchBody {
     value instanceof Blob ||
     value instanceof ArrayBuffer ||
     value instanceof ReadableStream ||
-    ArrayBuffer.isView(value)
+    ArrayBuffer.isView(value) ||
+    value instanceof FormData ||
+    value instanceof URLSearchParams
   )
 }
 
@@ -96,19 +98,10 @@ function buildFetchArgs(
       }
     } else if (isBinaryBody(opts.body)) {
       init.body = opts.body
-    } else if (typeof FormData !== 'undefined' && opts.body instanceof FormData) {
-      init.body = opts.body
-    } else if (typeof URLSearchParams !== 'undefined' && opts.body instanceof URLSearchParams) {
-      init.body = opts.body
     }
   }
 
-  // Only set headers on init if there are any
-  let hasHeaders = false
-  headers.forEach(() => {
-    hasHeaders = true
-  })
-  if (hasHeaders) init.headers = headers
+  init.headers = headers
 
   // Timeout — resolve timeout value (per-request wins over instance)
   const timeoutValue = opts.timeout !== undefined ? opts.timeout : instanceTimeout
@@ -209,6 +202,13 @@ function runAfterResponse(
   return result
 }
 
+function responseOf<T>(
+  source: {status: number; statusText: string; headers: Headers},
+  body: T,
+): {status: number; statusText: string; headers: Headers; body: T} {
+  return {status: source.status, statusText: source.statusText, headers: source.headers, body}
+}
+
 /** @public */
 export function createRequest(options?: CreateRequestOptions): RequestFunction {
   const instanceFetch = options?.fetch
@@ -254,29 +254,14 @@ export function createRequest(options?: CreateRequestOptions): RequestFunction {
     return runAfterResponse(buffered, transforms)
   }
 
-  async function requestBuffered(opts: RequestOptions): Promise<BufferedResponse> {
-    return executeBuffered(opts)
-  }
-
   async function requestJson(opts: RequestOptions): Promise<JsonResponse> {
     const buffered = await executeBuffered(opts)
-    const parsed: unknown = JSON.parse(buffered.text())
-    return {
-      status: buffered.status,
-      statusText: buffered.statusText,
-      headers: buffered.headers,
-      body: parsed,
-    }
+    return responseOf(buffered, JSON.parse(buffered.text()) as unknown)
   }
 
   async function requestText(opts: RequestOptions): Promise<TextResponse> {
     const buffered = await executeBuffered(opts)
-    return {
-      status: buffered.status,
-      statusText: buffered.statusText,
-      headers: buffered.headers,
-      body: buffered.text(),
-    }
+    return responseOf(buffered, buffered.text())
   }
 
   async function requestStream(opts: RequestOptions): Promise<StreamResponse> {
@@ -302,12 +287,7 @@ export function createRequest(options?: CreateRequestOptions): RequestFunction {
         },
       })
 
-    return {
-      status: response.status,
-      statusText: response.statusText,
-      headers: response.headers,
-      body: streamBody,
-    }
+    return responseOf(response, streamBody)
   }
 
   // Overloaded request function — each overload dispatches to the
@@ -341,7 +321,7 @@ export function createRequest(options?: CreateRequestOptions): RequestFunction {
       case 'stream':
         return requestStream(opts)
       default:
-        return requestBuffered(opts)
+        return executeBuffered(opts)
     }
   }
 
