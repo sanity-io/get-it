@@ -1,6 +1,6 @@
 import type {BufferedResponse} from './types'
 
-let decoder: TextDecoder
+let decoder: InstanceType<typeof TextDecoder>
 
 /** @public */
 export function createBufferedResponse(
