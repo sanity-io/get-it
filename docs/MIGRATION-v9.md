@@ -350,6 +350,37 @@ Note: v8's `requester.use(middleware)` chaining is removed. Pass all middleware 
 | `retry()`      | `retry()`      | `get-it/middleware` |
 | `debug()`      | `debug()`      | `get-it/middleware` |
 
+### Debug middleware changes
+
+v8's `debug()` middleware used the [`debug`](https://www.npmjs.com/package/debug) npm package, enabled with the `DEBUG=get-it:*` environment variable — zero config, no code changes needed.
+
+v9's `debug()` requires an explicit `log` function. Without one, it's a no-op:
+
+```ts
+import {debug} from 'get-it/middleware'
+
+// v8 — just add the middleware, control via DEBUG env var
+const request = getIt([debug()])
+// $ DEBUG=get-it:* node app.js
+
+// v9 — must pass a log function explicitly
+const request = createRequest({
+  middleware: [debug({log: console.log, verbose: true})],
+})
+```
+
+To restore `DEBUG` env var behavior, install the `debug` package and pass it as the log function:
+
+```ts
+import createDebug from 'debug'
+import {debug} from 'get-it/middleware'
+
+const request = createRequest({
+  middleware: [debug({log: createDebug('get-it'), verbose: true})],
+})
+// $ DEBUG=get-it node app.js
+```
+
 ### Proxy / agent configuration
 
 v8 had `agent()` and `proxy()` middleware that configured Node's `http.Agent`.
