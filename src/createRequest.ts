@@ -1,3 +1,4 @@
+import {HttpError} from './errors'
 import {createBufferedResponse} from './response'
 import type {
   BufferedResponse,
@@ -15,7 +16,6 @@ import type {
   TransformMiddleware,
   WrappingMiddleware,
 } from './types'
-import {HttpError} from './types'
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   if (typeof value !== 'object' || value === null) return false
@@ -318,7 +318,12 @@ export function createRequest(options?: CreateRequestOptions): RequestFunction {
       }
 
       capturedResponse = response
-      return createBufferedResponse(response.status, response.statusText, response.headers, new Uint8Array(0))
+      return createBufferedResponse(
+        response.status,
+        response.statusText,
+        response.headers,
+        new Uint8Array(0),
+      )
     }
 
     const streamChain = composeFetchChain(coreStreamFetch, wrappers)

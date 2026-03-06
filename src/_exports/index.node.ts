@@ -1,7 +1,6 @@
 import {createRequest as coreCreateRequest} from '../createRequest'
 import {nodeFetch} from '../nodeFetch'
 import type {CreateRequestOptions} from '../types'
-import {HttpError} from '../types'
 
 const defaultFetch = nodeFetch()
 
@@ -14,6 +13,7 @@ export function createRequest(options?: CreateRequestOptions) {
 }
 
 // Re-export everything from core
+export {HttpError} from '../errors'
 export type {
   BufferedResponse,
   FetchFunction,
@@ -25,4 +25,3 @@ export type {
   TransformMiddleware,
   WrappingMiddleware,
 } from '../types'
-export {HttpError}

@@ -1,5 +1,4 @@
 import type {BufferedResponse, RequestOptions, WrappingMiddleware} from '../types'
-import {HttpError} from '../types'
 
 interface RetryOptions {
   maxRetries?: number
@@ -21,7 +20,7 @@ function defaultShouldRetry(
   if (method !== 'GET' && method !== 'HEAD') {
     return false
   }
-  if (error instanceof HttpError) {
+  if (error instanceof Error && 'name' in error && error.name === 'HttpError') {
     return false
   }
   return true
