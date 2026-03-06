@@ -143,6 +143,9 @@ export const httpRequester: HttpRequest = (context, callback) => {
   }
 
   function timeoutRequest(code: any) {
+    if (timedOut || aborted || loaded) {
+      return
+    }
     timedOut = true
     xhr.abort()
     const error: any = new Error(
@@ -155,7 +158,7 @@ export const httpRequester: HttpRequest = (context, callback) => {
   }
 
   function resetTimers() {
-    if (!delays) {
+    if (!delays || aborted || timedOut || loaded) {
       return
     }
 
