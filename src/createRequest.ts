@@ -87,6 +87,11 @@ function buildFetchArgs(
   const init: FetchInit = {}
   if (opts.method) init.method = opts.method
 
+  // Implicit POST — default to POST when a body is present and no method is set
+  if (!opts.method && opts.body !== undefined && opts.body !== null) {
+    init.method = 'POST'
+  }
+
   // JSON request body — auto-serialize plain objects and arrays
   if (opts.body !== undefined && opts.body !== null) {
     if (typeof opts.body === 'string') {
