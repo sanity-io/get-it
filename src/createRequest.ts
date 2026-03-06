@@ -145,6 +145,8 @@ function buildFetchArgs(
   const credentials = opts.credentials ?? instanceCredentials
   if (credentials && 'window' in globalThis) init.credentials = credentials
 
+  if (opts.redirect) init.redirect = opts.redirect
+
   return {url, init}
 }
 
