@@ -93,6 +93,21 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm run test:browser -- run --coverage
 
+  test-bun:
+    name: Test Bun
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          cache: pnpm
+          node-version: lts/*
+      - run: pnpm install --frozen-lockfile
+      - uses: oven-sh/setup-bun@v2
+      - run: pnpm run test:bun
+
   test-edge:
     name: Test Edge Runtime
     needs: build
@@ -112,7 +127,7 @@ jobs:
       id-token: write # to enable use of OIDC for npm provenance
     name: Semantic release
     runs-on: ubuntu-latest
-    needs: [test, test-edge, test-browser]
+    needs: [test, test-bun, test-edge, test-browser]
     if: inputs.release == true
     steps:
       - uses: actions/create-github-app-token@v2
