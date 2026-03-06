@@ -27,7 +27,7 @@ This guide covers every breaking change and shows how to update your code.
 | `keepAlive()` middleware | built into fetch |
 | `agent(opts)` middleware | `nodeFetch(opts)` or injectable `fetch` |
 | `proxy(opts)` middleware | automatic via conditional exports |
-| `mtls(opts)` middleware | `nodeFetch({ ... })` with TLS options (planned) |
+| `mtls(opts)` middleware | `nodeFetch({ tls: { cert, key, ca } })` |
 | `require('get-it')` | `import { createRequest } from 'get-it'` |
 | `require('get-it/middleware')` | `import { retry, debug } from 'get-it/middleware'` |
 
