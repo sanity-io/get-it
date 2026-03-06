@@ -151,14 +151,14 @@ function getResponseHandler(proto = 'http'): any {
         // Need a bit of data before browsers will usually accept it as "open"
         res.writeHead(200, {'Content-Type': 'text/plain'})
         res.write(new Array(2048).join('.'))
-        setTimeout(() => res.end(new Array(1024).join('.')), 6000)
+        setTimeout(() => res.end(new Array(1024).join('.')), 1000)
         break
       case '/req-test/stall-after-initial-gzip':
         res.setHeader('Content-Encoding', 'gzip')
         res.writeHead(200, {'Content-Type': 'text/plain'})
         zlib.gzip(JSON.stringify(['harder', 'better', 'faster', 'stronger']), (_unused, result) => {
           res.write(result)
-          setTimeout(() => res.end(), 6000)
+          setTimeout(() => res.end(), 1000)
         })
         break
       case '/req-test/delay':
