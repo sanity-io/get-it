@@ -128,6 +128,8 @@ export type WrappingMiddleware = (
 
 /** @public */
 export class HttpError extends Error {
+  url: string
+  method: string
   status: number
   statusText: string
   headers: Headers
@@ -135,14 +137,18 @@ export class HttpError extends Error {
   response: BufferedResponse | JsonResponse | TextResponse
 
   constructor(opts: {
+    url: string
+    method: string
     status: number
     statusText: string
     headers: Headers
     body: unknown
     response: BufferedResponse | JsonResponse | TextResponse
   }) {
-    super(`HTTP ${opts.status} ${opts.statusText}`)
+    super(`${opts.method}-request to ${opts.url} resulted in HTTP ${opts.status} ${opts.statusText}`)
     this.name = 'HttpError'
+    this.url = opts.url
+    this.method = opts.method
     this.status = opts.status
     this.statusText = opts.statusText
     this.headers = opts.headers
