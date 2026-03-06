@@ -1,6 +1,5 @@
 export function lowerCaseHeaders(headers: any) {
-  return Object.keys(headers || {}).reduce((acc, header) => {
-    acc[header.toLowerCase()] = headers[header]
-    return acc
-  }, {} as any)
+  return Object.fromEntries(
+    Object.entries(headers || {}).map(([key, value]) => [key.toLowerCase(), value]),
+  )
 }

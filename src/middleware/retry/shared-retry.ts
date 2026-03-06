@@ -28,9 +28,10 @@ export default (opts: RetryOptions) => {
       }
 
       // Create a new context with an increased attempt number, so we can exit if we reach a limit
-      const newContext = Object.assign({}, context, {
-        options: Object.assign({}, options, {attemptNumber: attemptNumber + 1}),
-      })
+      const newContext = {
+        ...context,
+        options: {...options, attemptNumber: attemptNumber + 1},
+      }
 
       // Wait a given amount of time before doing the request again
       setTimeout(() => context.channels.request.publish(newContext), delay(attemptNumber))
