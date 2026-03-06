@@ -65,6 +65,7 @@
     "prepublishOnly": "pnpm run build",
     "test": "vitest",
     "test:browser": "pnpm test -- --config ./vitest.browser.config.ts --dom",
+    "test:bun": "bun run vitest run",
     "test:edge-runtime": "pnpm test -- --config ./vitest.edge.config.ts",
     "test:react-server": "pnpm test -- --config ./vitest.react-server.config.ts",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.check-node.json"
