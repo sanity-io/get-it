@@ -48,6 +48,12 @@ v9 is ESM-only. If your project uses CommonJS, you'll need to either:
 
 v8.7.0 added `response.remoteAddress` containing the server's IP address, obtained from Node's `http` socket. v9 uses `fetch()` which does not expose socket-level information. There is no equivalent and no workaround — this field is no longer available.
 
+### No redirect limit control
+
+v8 used `follow-redirects` which supported a `maxRedirects` option (defaulting to 5). v9 uses `fetch()` which follows redirects automatically with no way to limit the count. The `redirect` option on fetch only supports `'follow'` (default), `'error'` (reject on any redirect), or `'manual'` (don't follow, return the 3xx response).
+
+If you need to block redirects entirely, pass `redirect: 'error'` or `redirect: 'manual'` in the fetch init. There is no way to allow _some_ redirects but cap the count — fetch does not expose this.
+
 ### Query parameters no longer accept arrays
 
 v8 expanded arrays into repeated keys: `{tags: ['a', 'b']}` → `tags=a&tags=b`. v9's `query` option only accepts scalar values (`string | number | boolean | undefined`). Passing an array will silently produce a single comma-joined value via `String()`:
