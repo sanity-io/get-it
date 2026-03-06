@@ -6,9 +6,5 @@
     "vitest.edge.config.ts",
     "vitest.react-server.config.ts"
   ],
-  "ignoreDependencies": [
-    "@sanity/semantic-release-preset",
-    "@vitest/coverage-v8",
-    "vite"
-  ]
+  "ignoreDependencies": ["@sanity/semantic-release-preset", "@vitest/coverage-v8", "vite"]
 }
