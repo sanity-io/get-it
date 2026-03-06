@@ -3,7 +3,7 @@
  * that fixes a bug with `content-length` header. BSD 2-Clause Simplified License,
  * Copyright (c) Tobias Baunbæk <freeall@gmail.com>.
  */
-import {Transform} from 'stream'
+import {Transform} from 'node:stream'
 
 import {speedometer} from './speedometer'
 
