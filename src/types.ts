@@ -106,14 +106,14 @@ export class HttpError extends Error {
   statusText: string
   headers: Headers
   body: unknown
-  response: BufferedResponse
+  response: BufferedResponse | JsonResponse | TextResponse
 
   constructor(opts: {
     status: number
     statusText: string
     headers: Headers
     body: unknown
-    response: BufferedResponse
+    response: BufferedResponse | JsonResponse | TextResponse
   }) {
     super(`HTTP ${opts.status} ${opts.statusText}`)
     this.name = 'HttpError'
@@ -129,12 +129,10 @@ export class HttpError extends Error {
 // Request function overloads
 // ---------------------------------------------------------------------------
 
-interface RequestFunctionBase {
-  <T = unknown>(options: RequestOptions & { as: 'json' }): Promise<JsonResponse<T>>
-  (options: RequestOptions & { as: 'text' }): Promise<TextResponse>
-  (options: RequestOptions & { as: 'stream' }): Promise<StreamResponse>
+export interface RequestFunction {
+  <T = unknown>(options: RequestOptions & {as: 'json'}): Promise<JsonResponse<T>>
+  (options: RequestOptions & {as: 'text'}): Promise<TextResponse>
+  (options: RequestOptions & {as: 'stream'}): Promise<StreamResponse>
   (options: RequestOptions): Promise<BufferedResponse>
   (url: string): Promise<BufferedResponse>
 }
-
-export type RequestFunction = RequestFunctionBase
