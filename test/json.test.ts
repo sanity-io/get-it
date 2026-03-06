@@ -1,6 +1,6 @@
 import {adapter, environment, getIt} from 'get-it'
 import {jsonRequest, jsonResponse} from 'get-it/middleware'
-import {Readable} from 'stream'
+import {Readable} from 'node:stream'
 import {describe, it} from 'vitest'
 
 import {baseUrl, debugRequest, expectRequest, expectRequestBody} from './helpers'

@@ -1,6 +1,6 @@
 import {type Middleware} from 'get-it'
-import {Agent as HttpAgent, type AgentOptions} from 'http'
-import {Agent as HttpsAgent} from 'https'
+import {Agent as HttpAgent, type AgentOptions} from 'node:http'
+import {Agent as HttpsAgent} from 'node:https'
 
 const isHttpsProto = /^https:/i
 

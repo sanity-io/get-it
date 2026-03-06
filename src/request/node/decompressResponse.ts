@@ -1,6 +1,6 @@
-import type http from 'http'
-import {PassThrough, Transform} from 'stream'
-import zlib from 'zlib'
+import type http from 'node:http'
+import {PassThrough, Transform} from 'node:stream'
+import zlib from 'node:zlib'
 
 // Properties from http.IncomingMessage that should be accessible on the decompressed stream
 const knownProperties = [

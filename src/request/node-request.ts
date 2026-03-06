@@ -1,8 +1,8 @@
 import follow, {type FollowResponse, type RedirectableRequest} from 'follow-redirects'
 import type {FinalizeNodeOptionsPayload, HttpRequest, MiddlewareResponse} from 'get-it'
-import http from 'http'
-import https from 'https'
-import {Readable, type Stream} from 'stream'
+import http from 'node:http'
+import https from 'node:https'
+import {Readable, type Stream} from 'node:stream'
 
 import type {RequestAdapter} from '../types'
 import {lowerCaseHeaders} from '../util/lowerCaseHeaders'
