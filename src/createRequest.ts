@@ -47,13 +47,27 @@ function isTransformMiddleware(
 }
 
 /**
+ * Sanitize a FetchHeaders value by stripping entries with undefined values.
+ * Plain Records may contain undefined if callers bypass TypeScript checks;
+ * `new Headers()` would stringify them to the literal string "undefined".
+ */
+function sanitizeHeaders(input: FetchHeaders): FetchHeaders {
+  if (input instanceof Headers || Array.isArray(input)) return input
+  const clean: Record<string, string> = {}
+  for (const [key, value] of Object.entries(input)) {
+    if (value !== undefined) clean[key] = value
+  }
+  return clean
+}
+
+/**
  * Merge two FetchHeaders values into a single Headers instance.
  * The second argument wins on conflicts.
  */
 function mergeHeaders(base: FetchHeaders | undefined, override: FetchHeaders | undefined): Headers {
-  const headers = new Headers(base)
+  const headers = new Headers(base ? sanitizeHeaders(base) : undefined)
   if (override) {
-    new Headers(override).forEach((value, key) => {
+    new Headers(sanitizeHeaders(override)).forEach((value, key) => {
       headers.set(key, value)
     })
   }
