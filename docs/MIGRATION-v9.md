@@ -353,7 +353,7 @@ This replaces v8's `injectResponse()` for testing and `agent()` for custom trans
 
 ## Headers
 
-v9 uses standard `HeadersInit` for input and `Headers` instances internally:
+v9 uses `FetchHeaders` for input and `Headers` instances internally:
 
 ```ts
 // All of these work as header input:
@@ -392,6 +392,9 @@ import type {
   TransformMiddleware,
   WrappingMiddleware,
   FetchFunction,
+  FetchHeaders,
+  FetchBody,
+  FetchInit,
   CreateRequestOptions,
   RequestFunction,
 } from 'get-it'

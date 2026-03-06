@@ -87,7 +87,7 @@ res.body // ReadableStream<Uint8Array>
 | Option       | Type              | Default            | Description                                |
 | ------------ | ----------------- | ------------------ | ------------------------------------------ |
 | `base`       | `string`          | —                  | Base URL prepended to relative paths       |
-| `headers`    | `HeadersInit`     | —                  | Default headers for all requests           |
+| `headers`    | `FetchHeaders`    | —                  | Default headers for all requests           |
 | `httpErrors` | `boolean`         | `true`             | Throw `HttpError` on status >= 400         |
 | `timeout`    | `number \| false` | —                  | Timeout in ms (uses `AbortSignal.timeout`) |
 | `fetch`      | `FetchFunction`   | `globalThis.fetch` | Custom fetch implementation                |
@@ -100,7 +100,7 @@ res.body // ReadableStream<Uint8Array>
 | `url`        | `string`                                                   | Request URL (required)                         |
 | `method`     | `string`                                                   | HTTP method                                    |
 | `body`       | `unknown`                                                  | Request body (objects auto-serialized as JSON) |
-| `headers`    | `HeadersInit`                                              | Merged with instance headers                   |
+| `headers`    | `FetchHeaders`                                             | Merged with instance headers                   |
 | `query`      | `Record<string, string \| number \| boolean \| undefined>` | URL query parameters                           |
 | `as`         | `'json' \| 'text' \| 'stream'`                             | Response body type                             |
 | `signal`     | `AbortSignal`                                              | Cancellation signal                            |
