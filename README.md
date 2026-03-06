@@ -204,9 +204,9 @@ const request = createRequest({
 | `get-it/middleware` | `retry`, `debug`, `urlEncoded`                           |
 | `get-it/node`       | `nodeFetch()` for custom undici dispatcher config        |
 
-## Migrating from v1
+## Migrating from v8
 
-See [docs/MIGRATION-v2.md](docs/MIGRATION-v2.md) for a comprehensive migration guide.
+See [docs/MIGRATION-v9.md](docs/MIGRATION-v9.md) for a comprehensive migration guide.
 
 ## License
 

@@ -1,8 +1,8 @@
-# Migrate get-it v1 to v2
+# Migrate get-it v8 to v9
 
-Systematic migration of a codebase from get-it v1 to v2. Work through each step in order, searching the codebase for patterns and transforming them.
+Systematic migration of a codebase from get-it v8 to v9. Work through each step in order, searching the codebase for patterns and transforming them.
 
-Reference: `docs/MIGRATION-v2.md` in the get-it repo for full details.
+Reference: `docs/MIGRATION-v9.md` in the get-it repo for full details.
 
 ## Step 1: Update the package
 
@@ -24,12 +24,12 @@ grep -r "require('get-it')" --include='*.ts' --include='*.tsx' --include='*.js' 
 ### Main import
 
 ```ts
-// v1
+// v8
 import getIt from 'get-it'
 // or
 const getIt = require('get-it')
 
-// v2
+// v9
 import {createRequest} from 'get-it'
 ```
 
@@ -38,7 +38,7 @@ Note: `getIt` was a default export. `createRequest` is a named export.
 ### Middleware imports
 
 ```ts
-// v1
+// v8
 import {
   promise,
   base,
@@ -54,7 +54,7 @@ import {
   agent,
 } from 'get-it/middleware'
 
-// v2 — only these middleware still exist:
+// v9 — only these middleware still exist:
 import {retry, debug, urlEncoded} from 'get-it/middleware'
 // Everything else is built into createRequest() or removed
 ```
@@ -62,8 +62,8 @@ import {retry, debug, urlEncoded} from 'get-it/middleware'
 ### Node helpers
 
 ```ts
-// v1 — no equivalent
-// v2
+// v8 — no equivalent
+// v9
 import {nodeFetch} from 'get-it/node'
 ```
 
@@ -72,7 +72,7 @@ import {nodeFetch} from 'get-it/node'
 Search for `getIt(` calls and transform them:
 
 ```ts
-// v1
+// v8
 const request = getIt([
   base('https://api.example.com'),
   headers({Authorization: 'Bearer ...'}),
@@ -83,7 +83,7 @@ const request = getIt([
   promise(),
 ])
 
-// v2
+// v9
 const request = createRequest({
   base: 'https://api.example.com',
   headers: {Authorization: 'Bearer ...'},
@@ -91,7 +91,7 @@ const request = createRequest({
 })
 ```
 
-Mapping of v1 middleware to v2 createRequest options:
+Mapping of v8 middleware to v9 createRequest options:
 
 - `base(url)` → `{ base: url }`
 - `headers(obj)` → `{ headers: obj }`
@@ -112,13 +112,13 @@ Mapping of v1 middleware to v2 createRequest options:
 Search for `CancelToken` and `cancelToken`:
 
 ```ts
-// v1
+// v8
 import {promise} from 'get-it/middleware'
 const source = promise.CancelToken.source()
 request({url: '/api', cancelToken: source.token})
 source.cancel('reason')
 
-// v2
+// v9
 const controller = new AbortController()
 request({url: '/api', signal: controller.signal})
 controller.abort()
@@ -127,11 +127,11 @@ controller.abort()
 Also search for `Cancel` and `isCancel`:
 
 ```ts
-// v1
+// v8
 import { promise } from 'get-it/middleware'
 if (promise.isCancel(err)) { ... }
 
-// v2
+// v9
 if (err instanceof DOMException && err.name === 'AbortError') { ... }
 ```
 
@@ -142,37 +142,37 @@ Search for response property access patterns:
 ### Status code
 
 ```ts
-// v1
+// v8
 response.statusCode
-// v2
+// v9
 response.status
 ```
 
 ### Status message
 
 ```ts
-// v1
+// v8
 response.statusMessage
-// v2
+// v9
 response.statusText
 ```
 
 ### Headers
 
 ```ts
-// v1
+// v8
 response.headers['content-type']
-// v2
+// v9
 response.headers.get('content-type')
 ```
 
 ### Body
 
 ```ts
-// v1 (with jsonResponse middleware)
+// v8 (with jsonResponse middleware)
 response.body // already parsed
 
-// v2 — choose one:
+// v9 — choose one:
 response.json() // parse as JSON (synchronous)
 response.text() // decode as string (synchronous)
 response.body // raw Uint8Array
@@ -185,31 +185,31 @@ res.body // parsed JSON
 ## Step 6: Transform stream and rawBody options
 
 ```ts
-// v1
+// v8
 request({url, stream: true})
-// v2
+// v9
 request({url, as: 'stream'})
 
-// v1
+// v8
 request({url, rawBody: true})
-// v2 — this is now the default behavior
+// v9 — this is now the default behavior
 request({url}) // body is Uint8Array
 ```
 
 ## Step 7: Transform custom middleware
 
-If the codebase has custom v1 middleware using the hook system (`processOptions`, `onReturn`, `onResponse`, `onRequest`, etc.), these need rewriting.
+If the codebase has custom v8 middleware using the hook system (`processOptions`, `onReturn`, `onResponse`, `onRequest`, etc.), these need rewriting.
 
 ### Simple request/response transforms
 
 ```ts
-// v1
+// v8
 const myMiddleware = {
   processOptions: (options) => ({...options, headers: {...options.headers, 'X-Custom': 'value'}}),
   onResponse: (response) => ({...response, body: transform(response.body)}),
 }
 
-// v2 — TransformMiddleware
+// v9 — TransformMiddleware
 const myMiddleware: TransformMiddleware = {
   beforeRequest: (options) => ({
     ...options,
@@ -225,7 +225,7 @@ const myMiddleware: TransformMiddleware = {
 ### Wrapping middleware (retry, error recovery)
 
 ```ts
-// v2 — WrappingMiddleware (a function, not an object)
+// v9 — WrappingMiddleware (a function, not an object)
 const myWrapper: WrappingMiddleware = async (options, next) => {
   try {
     return await next(options)
@@ -239,29 +239,29 @@ const myWrapper: WrappingMiddleware = async (options, next) => {
 ## Step 8: Remove .use() chaining
 
 ```ts
-// v1
+// v8
 const request = getIt([promise()])
 request.use(retry())
 request.use(debug())
 
-// v2 — pass all middleware at creation time
+// v9 — pass all middleware at creation time
 const request = createRequest({
   middleware: [retry(), debug()],
 })
 ```
 
-There is no `.use()` method in v2.
+There is no `.use()` method in v9.
 
 ## Step 9: Update proxy configuration
 
 If the codebase explicitly configures proxies:
 
 ```ts
-// v1
+// v8
 import {proxy} from 'get-it/middleware'
 const request = getIt([proxy({host: 'proxy', port: 8080}), promise()])
 
-// v2 — automatic in Node (reads HTTP_PROXY env var)
+// v9 — automatic in Node (reads HTTP_PROXY env var)
 // For explicit proxy:
 import {nodeFetch} from 'get-it/node'
 const request = createRequest({
