@@ -1,6 +1,6 @@
 import type {BufferedResponse} from './types'
 
-const decoder = new TextDecoder()
+let decoder: TextDecoder
 
 /** @public */
 export function createBufferedResponse(
@@ -20,7 +20,7 @@ export function createBufferedResponse(
 
     text(): string {
       if (cachedText === undefined) {
-        cachedText = decoder.decode(body)
+        cachedText = (decoder ??= new TextDecoder()).decode(body)
       }
       return cachedText
     },
