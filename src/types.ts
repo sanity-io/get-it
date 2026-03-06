@@ -19,6 +19,7 @@ export interface FetchInit {
   body?: FetchBody | null
   signal?: AbortSignal
   redirect?: 'error' | 'follow' | 'manual'
+  credentials?: 'include' | 'omit' | 'same-origin'
 }
 
 /** @public */
@@ -46,6 +47,7 @@ export interface CreateRequestOptions {
   httpErrors?: boolean
   timeout?: number | false
   fetch?: FetchFunction
+  credentials?: 'include' | 'omit' | 'same-origin'
   middleware?: Array<TransformMiddleware | WrappingMiddleware>
 }
 
@@ -61,6 +63,7 @@ export interface RequestOptions {
   httpErrors?: boolean
   timeout?: number | false
   fetch?: FetchFunction
+  credentials?: 'include' | 'omit' | 'same-origin'
   meta?: Record<string, unknown>
 }
 
