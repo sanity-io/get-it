@@ -1,7 +1,7 @@
 import type {HttpRequest, MiddlewareResponse, RequestOptions} from 'get-it'
 import parseHeaders from 'parse-headers'
-import type {RequestAdapter} from '../types'
 
+import type {RequestAdapter} from '../types'
 import {FetchXhr} from './browser/fetchXhr'
 
 /**

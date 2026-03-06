@@ -2,7 +2,6 @@ import fs from 'node:fs'
 import http from 'node:http'
 import https from 'node:https'
 import path from 'node:path'
-import url from 'node:url'
 
 const httpsServerOptions = {
   key: fs.readFileSync(path.join(__dirname, '..', 'certs', 'server', 'key.pem')),
@@ -18,11 +17,11 @@ export function createProxyServer(proto: 'http' | 'https' = 'http') {
     const protoPort = isHttp ? httpPort : httpsPort
     const protoOpts = isHttp ? {} : httpsServerOptions
     const requestHandler = (request: any, response: any) => {
-      const parsed = url.parse(request.url)
+      const parsed = new URL(request.url)
       const opts = {
         host: parsed.hostname,
-        port: parsed.port,
-        path: parsed.path,
+        port: parsed.port || undefined,
+        path: `${parsed.pathname}${parsed.search}`,
         rejectUnauthorized: false,
       }
 

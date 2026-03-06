@@ -4,22 +4,10 @@
  * Apache License 2.0
  */
 import * as tunnel from 'tunnel-agent'
-import url from 'url'
 
-const uriParts = [
-  'protocol',
-  'slashes',
-  'auth',
-  'host',
-  'port',
-  'hostname',
-  'hash',
-  'search',
-  'query',
-  'pathname',
-  'path',
-  'href',
-]
+import {parseUrl} from './parseUrl'
+
+const uriParts = ['protocol', 'auth', 'host', 'port', 'hostname', 'query', 'path', 'href'] as const
 
 const defaultProxyHeaderWhiteList = [
   'accept',
@@ -56,7 +44,7 @@ export function shouldEnable(options: any) {
   }
 
   // If the destination is HTTPS, tunnel.
-  const uri = url.parse(options.url)
+  const uri = parseUrl(options.url)
   if (uri.protocol === 'https:') {
     return true
   }

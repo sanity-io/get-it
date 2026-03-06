@@ -3,9 +3,8 @@
  * Apache License 2.0
  */
 
-import url, {type UrlWithStringQuery} from 'url'
-
 import type {ProxyOptions, RequestOptions} from '../../types'
+import {type ParsedUrl, parseUrl} from './parseUrl'
 
 function formatHostname(hostname: string) {
   // canonicalize the hostname, so that 'oogle.com' won't match 'google.com'
@@ -23,7 +22,7 @@ function parseNoProxyZone(zoneStr: string) {
   return {hostname: zoneHost, port: zonePort, hasPort: hasPort}
 }
 
-function uriInNoProxy(uri: UrlWithStringQuery, noProxy: string) {
+function uriInNoProxy(uri: ParsedUrl, noProxy: string) {
   const port = uri.port || (uri.protocol === 'https:' ? '443' : '80')
   const hostname = formatHostname(uri.hostname || '')
   const noProxyList = noProxy.split(',')
@@ -42,7 +41,7 @@ function uriInNoProxy(uri: UrlWithStringQuery, noProxy: string) {
   })
 }
 
-function getProxyFromUri(uri: UrlWithStringQuery): string | null {
+function getProxyFromUri(uri: ParsedUrl): string | null {
   // Decide the proper request proxy to use based on the request URI object and the
   // environmental variables (NO_PROXY, HTTP_PROXY, etc.)
   // respect NO_PROXY environment variables (see: http://lynx.isc.org/current/breakout/lynx_help/keystrokes/environments.html)
@@ -78,7 +77,7 @@ function getProxyFromUri(uri: UrlWithStringQuery): string | null {
   return null
 }
 
-function getHostFromUri(uri: UrlWithStringQuery) {
+function getHostFromUri(uri: ParsedUrl) {
   let host = uri.host
 
   // Drop :port suffix from Host header if known protocol.
@@ -94,15 +93,15 @@ function getHostFromUri(uri: UrlWithStringQuery) {
   return host
 }
 
-function getHostHeaderWithPort(uri: UrlWithStringQuery) {
+function getHostHeaderWithPort(uri: ParsedUrl) {
   const port = uri.port || (uri.protocol === 'https:' ? '443' : '80')
   return `${uri.hostname}:${port}`
 }
 
 export function rewriteUriForProxy(
-  reqOpts: RequestOptions & UrlWithStringQuery,
-  uri: UrlWithStringQuery,
-  proxy: UrlWithStringQuery | ProxyOptions,
+  reqOpts: RequestOptions & ParsedUrl,
+  uri: ParsedUrl,
+  proxy: ParsedUrl | ProxyOptions,
 ) {
   const headers = reqOpts.headers || {}
   const options = Object.assign({}, reqOpts, {headers})
@@ -117,13 +116,13 @@ export function rewriteUriForProxy(
   options.port = proxy.port ? `${proxy.port}` : options.port
   options.host = getHostFromUri(Object.assign({}, uri, proxy))
   options.href = `${options.protocol}//${options.host}${options.path}`
-  options.path = url.format(uri)
+  options.path = `${uri.protocol}//${uri.host}${uri.path}`
   return options
 }
 
-export function getProxyOptions(options: RequestOptions): UrlWithStringQuery | ProxyOptions | null {
+export function getProxyOptions(options: RequestOptions): ParsedUrl | ProxyOptions | null {
   const proxy =
-    typeof options.proxy === 'undefined' ? getProxyFromUri(url.parse(options.url)) : options.proxy
+    typeof options.proxy === 'undefined' ? getProxyFromUri(parseUrl(options.url)) : options.proxy
 
-  return typeof proxy === 'string' ? url.parse(proxy) : proxy || null
+  return typeof proxy === 'string' ? parseUrl(proxy) : proxy || null
 }
