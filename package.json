@@ -22,6 +22,10 @@
   "exports": {
     ".": {
       "source": "./src/index.ts",
+      "react-server": {
+        "source": "./src/index.ts",
+        "import": "./dist/index.js"
+      },
       "node": {
         "source": "./src/index.node.ts",
         "import": "./dist/index.node.js"
