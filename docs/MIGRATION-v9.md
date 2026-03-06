@@ -42,6 +42,20 @@ v9 is ESM-only. If your project uses CommonJS, you'll need to either:
 - Switch to ESM (`"type": "module"` in package.json)
 - Use dynamic `import()` from CommonJS
 
+## Behavioral changes
+
+### Query parameters use `set` instead of `append`
+
+When a URL already contains a query parameter and the same key is passed via the `query` option, v9 **replaces** the existing value instead of appending a duplicate:
+
+```ts
+await request({url: '/api?tag=a', query: {tag: 'b'}})
+// v8 → /api?tag=a&tag=b  (both preserved)
+// v9 → /api?tag=b        (replaces existing)
+```
+
+This uses `URLSearchParams.set()` (idempotent, last-write-wins) rather than v8's `.append()`. If you rely on duplicate query parameters, build the full URL yourself before passing it to `request`.
+
 ## Creating a request instance
 
 ### Before (v8)
