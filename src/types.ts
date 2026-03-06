@@ -1,14 +1,24 @@
 // ---------------------------------------------------------------------------
+// Web platform type aliases — inlined so we don't depend on the DOM lib
+// ---------------------------------------------------------------------------
+
+/** @public */
+export type FetchBody = string | ArrayBuffer | Blob | FormData | URLSearchParams | ReadableStream
+
+/** @public */
+export type FetchHeaders = [string, string][] | Record<string, string> | Headers
+
+// ---------------------------------------------------------------------------
 // Fetch subset
 // ---------------------------------------------------------------------------
 
 /** @public */
 export interface FetchInit {
   method?: string
-  headers?: HeadersInit
-  body?: BodyInit | null
+  headers?: FetchHeaders
+  body?: FetchBody | null
   signal?: AbortSignal
-  redirect?: RequestRedirect
+  redirect?: 'error' | 'follow' | 'manual'
 }
 
 /** @public */
@@ -32,7 +42,7 @@ export type FetchFunction = (input: string, init?: FetchInit) => Promise<FetchRe
 /** @public */
 export interface CreateRequestOptions {
   base?: string
-  headers?: HeadersInit
+  headers?: FetchHeaders
   httpErrors?: boolean
   timeout?: number | false
   fetch?: FetchFunction
@@ -44,7 +54,7 @@ export interface RequestOptions {
   url: string
   method?: string
   body?: unknown
-  headers?: HeadersInit
+  headers?: FetchHeaders
   query?: Record<string, string | number | boolean | undefined>
   as?: 'json' | 'text' | 'stream'
   signal?: AbortSignal
