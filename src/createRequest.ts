@@ -305,7 +305,7 @@ export function createRequest(options?: CreateRequestOptions): RequestFunction {
     // Resolve instance-level config into the options so middleware sees the full picture
     let url = raw.url
     if (instanceBase && !url.startsWith('http://') && !url.startsWith('https://')) {
-      url = instanceBase + url
+      url = instanceBase.replace(/\/$/, '') + '/' + url.replace(/^\//, '')
     }
     const opts: RequestOptions = {
       ...raw,
