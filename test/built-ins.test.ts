@@ -211,6 +211,15 @@ describe('built-in behaviors', () => {
       const res = await request({url: '/query-string', query: {flag: true}})
       expect(getString(res.json(), 'flag')).toBe('true')
     })
+
+    it('accepts URLSearchParams as query', async () => {
+      const params = new URLSearchParams()
+      params.append('tags', 'a')
+      params.append('tags', 'b')
+      const request = createRequest({base: baseUrl})
+      const res = await request({url: '/query-string', query: params})
+      expect(getString(res.json(), 'tags')).toEqual(['a', 'b'])
+    })
   })
 
   // 4e: HTTP Errors

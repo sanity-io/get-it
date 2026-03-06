@@ -55,7 +55,7 @@ export interface RequestOptions {
   method?: string
   body?: unknown
   headers?: FetchHeaders
-  query?: Record<string, string | number | boolean | undefined>
+  query?: Record<string, string | number | boolean | undefined> | URLSearchParams
   as?: 'json' | 'text' | 'stream'
   signal?: AbortSignal
   httpErrors?: boolean

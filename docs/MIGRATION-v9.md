@@ -44,18 +44,6 @@ v9 is ESM-only. If your project uses CommonJS, you'll need to either:
 
 ## Behavioral changes
 
-### Query parameters use `set` instead of `append`
-
-When a URL already contains a query parameter and the same key is passed via the `query` option, v9 **replaces** the existing value instead of appending a duplicate:
-
-```ts
-await request({url: '/api?tag=a', query: {tag: 'b'}})
-// v8 → /api?tag=a&tag=b  (both preserved)
-// v9 → /api?tag=b        (replaces existing)
-```
-
-This uses `URLSearchParams.set()` (idempotent, last-write-wins) rather than v8's `.append()`. If you rely on duplicate query parameters, build the full URL yourself before passing it to `request`.
-
 ### Query parameters no longer accept arrays
 
 v8 expanded arrays into repeated keys: `{tags: ['a', 'b']}` → `tags=a&tags=b`. v9's `query` option only accepts scalar values (`string | number | boolean | undefined`). Passing an array will silently produce a single comma-joined value via `String()`:
@@ -69,13 +57,13 @@ await request({url: '/api', query: {tags: ['a', 'b']}})
 await request({url: '/api', query: {tags: ['a', 'b']}})
 ```
 
-If you need repeated query keys, build the query string yourself:
+If you need repeated query keys, pass a `URLSearchParams` instance:
 
 ```ts
 const params = new URLSearchParams()
 params.append('tags', 'a')
 params.append('tags', 'b')
-await request({url: `/api?${params}`})
+await request({url: '/api', query: params})
 ```
 
 ## Creating a request instance

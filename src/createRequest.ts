@@ -73,10 +73,11 @@ function buildFetchArgs(
   // Query string — merge query params into URL
   if (opts.query) {
     const urlObj = new URL(url)
-    for (const [key, value] of Object.entries(opts.query)) {
-      if (value !== undefined) {
-        urlObj.searchParams.set(key, String(value))
-      }
+    const entries =
+      opts.query instanceof URLSearchParams ? opts.query.entries() : Object.entries(opts.query)
+    for (const [key, value] of entries) {
+      if (value === undefined) continue
+      urlObj.searchParams.append(key, `${value}`)
     }
     url = urlObj.toString()
   }
