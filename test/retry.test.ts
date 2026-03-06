@@ -1,7 +1,6 @@
+import {createRequest} from 'get-it'
+import {retry} from 'get-it/middleware'
 import {describe, expect, it} from 'vitest'
-
-import {createRequest} from '../src/index'
-import {retry} from '../src/middleware/retry'
 
 const baseUrl = 'http://localhost:9980/req-test'
 

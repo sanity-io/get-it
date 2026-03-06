@@ -1,7 +1,7 @@
 import {Agent, EnvHttpProxyAgent, ProxyAgent} from 'undici'
 import type Dispatcher from 'undici/types/dispatcher'
 
-import type {FetchFunction, FetchInit, FetchResponse} from '../types'
+import type {FetchFunction, FetchInit, FetchResponse} from './types'
 
 /** @public */
 export interface TlsOptions {

@@ -1,7 +1,6 @@
+import type {WrappingMiddleware} from 'get-it'
+import {createRequest} from 'get-it'
 import {describe, expect, it} from 'vitest'
-
-import {createRequest} from '../src/index'
-import type {WrappingMiddleware} from '../src/types'
 
 const baseUrl = 'http://localhost:9980/req-test'
 

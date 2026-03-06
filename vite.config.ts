@@ -11,9 +11,9 @@ export const sharedConfig = {
   ],
   reporters: process.env.GITHUB_ACTIONS ? ['default', 'github-actions'] : 'default',
   alias: {
-    'get-it/middleware': new URL('./src/middleware', import.meta.url).pathname,
-    'get-it/node': new URL('./src/node', import.meta.url).pathname,
-    'get-it': new URL('./src', import.meta.url).pathname,
+    'get-it/middleware': new URL('./src/_exports/middleware.ts', import.meta.url).pathname,
+    'get-it/node': new URL('./src/_exports/node.ts', import.meta.url).pathname,
+    'get-it': new URL('./src/_exports', import.meta.url).pathname,
   },
 } satisfies ViteUserConfig['test']
 

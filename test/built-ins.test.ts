@@ -1,6 +1,5 @@
+import {createRequest, HttpError} from 'get-it'
 import {describe, expect, it} from 'vitest'
-
-import {createRequest, HttpError} from '../src/index'
 
 const baseUrl = 'http://localhost:9980/req-test'
 

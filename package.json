@@ -21,49 +21,39 @@
   "type": "module",
   "exports": {
     ".": {
-      "source": "./src/index.ts",
+      "source": "./src/_exports/index.ts",
       "react-server": {
-        "source": "./src/index.ts",
+        "source": "./src/_exports/index.ts",
         "import": "./dist/index.js"
       },
       "node": {
-        "source": "./src/index.node.ts",
+        "source": "./src/_exports/index.node.ts",
         "import": "./dist/index.node.js"
       },
       "bun": {
-        "source": "./src/index.node.ts",
+        "source": "./src/_exports/index.node.ts",
         "import": "./dist/index.node.js"
       },
       "deno": {
-        "source": "./src/index.node.ts",
+        "source": "./src/_exports/index.node.ts",
         "import": "./dist/index.node.js"
       },
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
     "./middleware": {
-      "source": "./src/middleware/index.ts",
+      "source": "./src/_exports/middleware.ts",
       "import": "./dist/middleware.js",
       "default": "./dist/middleware.js"
     },
     "./node": {
-      "source": "./src/node/index.ts",
+      "source": "./src/_exports/node.ts",
       "import": "./dist/node.js",
       "default": "./dist/node.js"
     },
     "./package.json": "./package.json"
   },
   "types": "./dist/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "middleware": [
-        "./dist/middleware.d.ts"
-      ],
-      "node": [
-        "./dist/node.d.ts"
-      ]
-    }
-  },
   "files": [
     "dist",
     "src"

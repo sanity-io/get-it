@@ -1,7 +1,6 @@
+import {createRequest} from 'get-it'
+import {urlEncoded} from 'get-it/middleware'
 import {describe, expect, it} from 'vitest'
-
-import {createRequest} from '../src/index'
-import {urlEncoded} from '../src/middleware/urlEncoded'
 
 const baseUrl = 'http://localhost:9980/req-test'
 

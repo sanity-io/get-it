@@ -21,3 +21,6 @@ build/Release
 
 # Dependencies
 node_modules
+
+# Bundle stats
+.bundle-stats

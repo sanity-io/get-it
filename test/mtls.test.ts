@@ -1,10 +1,10 @@
 import fs from 'node:fs'
 import https from 'node:https'
 import path from 'node:path'
-import {afterAll, beforeAll, describe, expect, it} from 'vitest'
 
-import {createRequest} from '../src/index.node'
-import {nodeFetch} from '../src/node/nodeFetch'
+import {createRequest} from 'get-it'
+import {nodeFetch} from 'get-it/node'
+import {afterAll, beforeAll, describe, expect, it} from 'vitest'
 
 const certsDir = path.join(__dirname, 'certs', 'mtls')
 const invalidCertsDir = path.join(__dirname, 'certs', 'invalid-mtls')
