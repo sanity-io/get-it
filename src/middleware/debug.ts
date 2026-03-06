@@ -1,4 +1,4 @@
-import type {TransformMiddleware} from '../types'
+import type {FetchHeaders, TransformMiddleware} from '../types'
 
 type LogFunction = (message: string, ...args: unknown[]) => void
 
@@ -8,7 +8,7 @@ interface DebugOptions {
   verbose?: boolean
 }
 
-function headersToObject(headers: HeadersInit, redactSet: Set<string>): Record<string, string> {
+function headersToObject(headers: FetchHeaders, redactSet: Set<string>): Record<string, string> {
   const result: Record<string, string> = {}
   new Headers(headers).forEach((value, key) => {
     result[key] = redactSet.has(key.toLowerCase()) ? 'REDACTED' : value

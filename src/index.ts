@@ -2,7 +2,9 @@ import {createBufferedResponse} from './response'
 import type {
   BufferedResponse,
   CreateRequestOptions,
+  FetchBody,
   FetchFunction,
+  FetchHeaders,
   FetchInit,
   JsonResponse,
   RequestFunction,
@@ -18,7 +20,10 @@ export {createBufferedResponse} from './response'
 export type {
   BufferedResponse,
   CreateRequestOptions,
+  FetchBody,
   FetchFunction,
+  FetchHeaders,
+  FetchInit,
   JsonResponse,
   RequestFunction,
   RequestOptions,
@@ -39,9 +44,9 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 /**
  * Type guard for values that are valid fetch body types.
  * Needed because TS 5.9+ narrows `instanceof Uint8Array` to
- * `Uint8Array<ArrayBufferLike>` which isn't assignable to `BodyInit`.
+ * `Uint8Array<ArrayBufferLike>` which isn't assignable to `FetchBody`.
  */
-function isBinaryBody(value: unknown): value is BodyInit {
+function isBinaryBody(value: unknown): value is FetchBody {
   return (
     value instanceof Blob ||
     value instanceof ArrayBuffer ||
@@ -57,10 +62,10 @@ function isTransformMiddleware(
 }
 
 /**
- * Merge two HeadersInit values into a single Headers instance.
+ * Merge two FetchHeaders values into a single Headers instance.
  * The second argument wins on conflicts.
  */
-function mergeHeaders(base: HeadersInit | undefined, override: HeadersInit | undefined): Headers {
+function mergeHeaders(base: FetchHeaders | undefined, override: FetchHeaders | undefined): Headers {
   const headers = new Headers(base)
   if (override) {
     new Headers(override).forEach((value, key) => {

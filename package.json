@@ -80,7 +80,7 @@
     "test:esm:browser": "node -C browser --test test-esm/test.mjs",
     "test:esm:deno": "deno test --allow-read --allow-net --allow-env --import-map=test-deno/import_map.json test-deno",
     "test:react-server": "npm test -- --config ./vitest.react-server.config.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.check-node.json"
   },
   "browserslist": [
     "node >= 20.19",
