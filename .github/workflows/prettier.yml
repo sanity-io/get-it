@@ -19,15 +19,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          cache: npm
+          cache: pnpm
           node-version: lts/*
-      - run: npm ci --ignore-scripts --only-dev
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - uses: actions/cache@v4
         with:
           path: node_modules/.cache/prettier/.prettier-cache
-          key: prettier-${{ hashFiles('package-lock.json') }}-${{ hashFiles('.gitignore') }}
+          key: prettier-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('.gitignore') }}
       - run: npx prettier --ignore-path .gitignore --cache --write .
       - run: git restore .github/workflows
       - uses: actions/create-github-app-token@v2

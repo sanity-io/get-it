@@ -7,7 +7,7 @@ Reference: `docs/MIGRATION-v9.md` in the get-it repo for full details.
 ## Step 1: Update the package
 
 ```bash
-npm install get-it@2
+npm install get-it@^9
 ```
 
 Remove any get-it-related packages that are no longer needed (there are none — get-it was always a single package).
