@@ -60,8 +60,12 @@
   ],
   "scripts": {
     "build": "pkg build --strict --check --clean",
+    "check": "pnpm run format && pnpm run lint:fix && pnpm run knip && pnpm run typecheck",
     "coverage": "vitest run --coverage",
+    "format": "prettier --ignore-path .gitignore --cache --write .",
+    "knip": "knip",
     "lint": "eslint . --ext .cjs,.js,.ts --report-unused-disable-directives",
+    "lint:fix": "eslint . --ext .cjs,.js,.ts --report-unused-disable-directives --fix",
     "prepublishOnly": "pnpm run build",
     "test": "vitest",
     "test:browser": "pnpm test -- --config ./vitest.browser.config.ts --dom",
