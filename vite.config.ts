@@ -2,7 +2,7 @@ import {configDefaults, defineConfig, type UserConfig} from 'vitest/config'
 
 export const sharedConfig = {
   // Ignore deno and esm tests
-  exclude: [...configDefaults.exclude, 'test-deno/*', 'test-esm/*', '_v1/**', '.claude/**'],
+  exclude: [...configDefaults.exclude, 'test-deno/*', 'test-esm/*', '.claude/**'],
   globalSetup: [
     './test/helpers/globalSetup.http.ts',
     './test/helpers/globalSetup.https.ts',
