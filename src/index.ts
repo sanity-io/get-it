@@ -222,6 +222,7 @@ function runAfterResponse(
   return result
 }
 
+/** @public */
 export function createRequest(options?: CreateRequestOptions): RequestFunction {
   const instanceFetch = options?.fetch
   const instanceHeaders = options?.headers

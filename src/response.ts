@@ -2,6 +2,7 @@ import type {BufferedResponse} from './types'
 
 const decoder = new TextDecoder()
 
+/** @public */
 export function createBufferedResponse(
   status: number,
   statusText: string,

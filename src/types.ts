@@ -2,6 +2,7 @@
 // Fetch subset
 // ---------------------------------------------------------------------------
 
+/** @public */
 export interface FetchInit {
   method?: string
   headers?: HeadersInit
@@ -10,6 +11,7 @@ export interface FetchInit {
   redirect?: RequestRedirect
 }
 
+/** @public */
 export interface FetchResponse {
   ok: boolean
   status: number
@@ -20,12 +22,14 @@ export interface FetchResponse {
   arrayBuffer(): Promise<ArrayBuffer>
 }
 
+/** @public */
 export type FetchFunction = (input: string, init?: FetchInit) => Promise<FetchResponse>
 
 // ---------------------------------------------------------------------------
 // Request options
 // ---------------------------------------------------------------------------
 
+/** @public */
 export interface CreateRequestOptions {
   base?: string
   headers?: HeadersInit
@@ -35,6 +39,7 @@ export interface CreateRequestOptions {
   middleware?: Array<TransformMiddleware | WrappingMiddleware>
 }
 
+/** @public */
 export interface RequestOptions {
   url: string
   method?: string
@@ -52,6 +57,7 @@ export interface RequestOptions {
 // Response types
 // ---------------------------------------------------------------------------
 
+/** @public */
 export interface BufferedResponse {
   status: number
   statusText: string
@@ -62,6 +68,7 @@ export interface BufferedResponse {
   bytes(): Uint8Array
 }
 
+/** @public */
 export interface JsonResponse<T = unknown> {
   status: number
   statusText: string
@@ -69,6 +76,7 @@ export interface JsonResponse<T = unknown> {
   body: T
 }
 
+/** @public */
 export interface TextResponse {
   status: number
   statusText: string
@@ -76,6 +84,7 @@ export interface TextResponse {
   body: string
 }
 
+/** @public */
 export interface StreamResponse {
   status: number
   statusText: string
@@ -87,11 +96,13 @@ export interface StreamResponse {
 // Middleware
 // ---------------------------------------------------------------------------
 
+/** @public */
 export interface TransformMiddleware {
   beforeRequest?: (options: RequestOptions) => RequestOptions
   afterResponse?: (response: BufferedResponse) => BufferedResponse
 }
 
+/** @public */
 export type WrappingMiddleware = (
   options: RequestOptions,
   next: (opts: RequestOptions) => Promise<BufferedResponse>,
@@ -101,6 +112,7 @@ export type WrappingMiddleware = (
 // HttpError
 // ---------------------------------------------------------------------------
 
+/** @public */
 export class HttpError extends Error {
   status: number
   statusText: string
@@ -129,6 +141,7 @@ export class HttpError extends Error {
 // Request function overloads
 // ---------------------------------------------------------------------------
 
+/** @public */
 export interface RequestFunction {
   <T = unknown>(options: RequestOptions & {as: 'json'}): Promise<JsonResponse<T>>
   (options: RequestOptions & {as: 'text'}): Promise<TextResponse>

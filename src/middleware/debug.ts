@@ -16,6 +16,7 @@ function headersToObject(headers: HeadersInit, redactSet: Set<string>): Record<s
   return result
 }
 
+/** @public */
 export function debug(opts?: DebugOptions): TransformMiddleware {
   const log = opts?.log
   const redactSet = new Set((opts?.redactHeaders ?? []).map((h) => h.toLowerCase()))
