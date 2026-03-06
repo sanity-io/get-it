@@ -323,4 +323,51 @@ describe('built-in behaviors', () => {
       await expect(promise).rejects.toThrow()
     })
   })
+
+  // 4h: Credentials
+  describe('credentials', () => {
+    it('passes instance-level credentials to fetch', async () => {
+      let calledInit: RequestInit | undefined
+      const fakeFetch = async (_input: string, init?: RequestInit) => {
+        calledInit = init
+        return new Response('ok')
+      }
+      const request = createRequest({fetch: fakeFetch, credentials: 'include'})
+      await request('https://example.com/api')
+      expect(calledInit?.credentials).toBe('include')
+    })
+
+    it('passes per-request credentials to fetch', async () => {
+      let calledInit: RequestInit | undefined
+      const fakeFetch = async (_input: string, init?: RequestInit) => {
+        calledInit = init
+        return new Response('ok')
+      }
+      const request = createRequest({fetch: fakeFetch})
+      await request({url: 'https://example.com/api', credentials: 'include'})
+      expect(calledInit?.credentials).toBe('include')
+    })
+
+    it('per-request credentials override instance credentials', async () => {
+      let calledInit: RequestInit | undefined
+      const fakeFetch = async (_input: string, init?: RequestInit) => {
+        calledInit = init
+        return new Response('ok')
+      }
+      const request = createRequest({fetch: fakeFetch, credentials: 'include'})
+      await request({url: 'https://example.com/api', credentials: 'omit'})
+      expect(calledInit?.credentials).toBe('omit')
+    })
+
+    it('does not set credentials when not configured', async () => {
+      let calledInit: RequestInit | undefined
+      const fakeFetch = async (_input: string, init?: RequestInit) => {
+        calledInit = init
+        return new Response('ok')
+      }
+      const request = createRequest({fetch: fakeFetch})
+      await request('https://example.com/api')
+      expect(calledInit?.credentials).toBeUndefined()
+    })
+  })
 })

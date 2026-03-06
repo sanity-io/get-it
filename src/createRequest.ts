@@ -67,6 +67,7 @@ function mergeHeaders(base: FetchHeaders | undefined, override: FetchHeaders | u
 function buildFetchArgs(
   opts: RequestOptions,
   instanceTimeout: number | false | undefined,
+  instanceCredentials: 'include' | 'omit' | 'same-origin' | undefined,
 ): {url: string; init: FetchInit} {
   let url = opts.url
 
@@ -124,6 +125,9 @@ function buildFetchArgs(
     }
   }
   if (signal) init.signal = signal
+
+  const credentials = opts.credentials ?? instanceCredentials
+  if (credentials) init.credentials = credentials
 
   return {url, init}
 }
@@ -223,6 +227,7 @@ export function createRequest(options?: CreateRequestOptions): RequestFunction {
   const instanceBase = options?.base
   const instanceHttpErrors = options?.httpErrors
   const instanceTimeout = options?.timeout
+  const instanceCredentials = options?.credentials
 
   // Separate middleware into transforms and wrappers by shape
   const middleware = options?.middleware ?? []
@@ -242,7 +247,7 @@ export function createRequest(options?: CreateRequestOptions): RequestFunction {
    */
   async function coreFetchBuffered(opts: RequestOptions): Promise<BufferedResponse> {
     const fetchFn: FetchFunction = opts.fetch ?? instanceFetch ?? globalThis.fetch
-    const {url, init} = buildFetchArgs(opts, instanceTimeout)
+    const {url, init} = buildFetchArgs(opts, instanceTimeout, instanceCredentials)
     const response = await fetchFn(url, init)
     const httpErrors = opts.httpErrors ?? instanceHttpErrors ?? true
     return bufferAndCheck(response, httpErrors)
@@ -282,7 +287,7 @@ export function createRequest(options?: CreateRequestOptions): RequestFunction {
 
     async function coreStreamFetch(reqOpts: RequestOptions): Promise<BufferedResponse> {
       const fetchFn: FetchFunction = reqOpts.fetch ?? instanceFetch ?? globalThis.fetch
-      const {url, init} = buildFetchArgs(reqOpts, instanceTimeout)
+      const {url, init} = buildFetchArgs(reqOpts, instanceTimeout, instanceCredentials)
       const response = await fetchFn(url, init)
       const httpErrors = reqOpts.httpErrors ?? instanceHttpErrors ?? true
 
