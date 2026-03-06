@@ -1,4 +1,5 @@
 import {describe, expect, it} from 'vitest'
+
 import {createRequest} from '../src/index'
 
 const baseUrl = 'http://localhost:9980/req-test'

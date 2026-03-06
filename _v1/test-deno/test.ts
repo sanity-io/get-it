@@ -14,9 +14,8 @@ Deno.test('importing package json', async () => {
 })
 
 Deno.test('named middleware imports', async () => {
-  const {jsonRequest, jsonResponse, httpErrors, headers, promise} = await import(
-    '../dist/middleware.browser.js'
-  )
+  const {jsonRequest, jsonResponse, httpErrors, headers, promise} =
+    await import('../dist/middleware.browser.js')
 
   assertEquals(typeof jsonRequest, 'function')
   assertEquals(typeof jsonResponse, 'function')

@@ -37,7 +37,7 @@ export function retry(opts?: RetryOptions): WrappingMiddleware {
 
   return async function retryMiddleware(
     options: RequestOptions,
-    next: (options: RequestOptions) => Promise<BufferedResponse>,
+    next: (reqOpts: RequestOptions) => Promise<BufferedResponse>,
   ): Promise<BufferedResponse> {
     let lastError: unknown
     for (let attempt = 0; attempt <= maxRetries; attempt++) {

@@ -13,7 +13,6 @@ export function createRequest(options?: CreateRequestOptions) {
 
 // Re-export everything from core
 export {createBufferedResponse} from './response'
-export {HttpError} from './types'
 export type {
   BufferedResponse,
   CreateRequestOptions,
@@ -26,3 +25,4 @@ export type {
   TransformMiddleware,
   WrappingMiddleware,
 } from './types'
+export {HttpError} from './types'

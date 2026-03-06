@@ -1,4 +1,5 @@
 import {describe, expect, it} from 'vitest'
+
 import {createRequest} from '../src/index'
 import {retry} from '../src/middleware/retry'
 

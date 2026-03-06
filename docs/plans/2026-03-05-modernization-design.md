@@ -69,11 +69,11 @@ const res = await request('/users')
 const res = await request({
   url: '/users',
   method: 'POST',
-  body: { name: 'Espen' },            // auto-JSON if plain object
-  as: 'json',                          // determines body type
-  signal: controller.signal,            // AbortController cancellation
-  headers: { 'X-Custom': 'value' },    // merged with instance headers
-  fetch: otherFetch,                    // per-request fetch override
+  body: {name: 'Espen'}, // auto-JSON if plain object
+  as: 'json', // determines body type
+  signal: controller.signal, // AbortController cancellation
+  headers: {'X-Custom': 'value'}, // merged with instance headers
+  fetch: otherFetch, // per-request fetch override
 })
 ```
 
@@ -95,17 +95,17 @@ interface Response<T> {
 
 When `as` is omitted, the response body is buffered as `Uint8Array` and the convenience methods decode from that buffer. They are synchronous (data is already fetched) and can be called multiple times.
 
-| `as` value | `body` type | Buffered? |
-|---|---|---|
-| omitted | `Uint8Array` + `.json()`, `.text()`, `.bytes()` | yes |
-| `'json'` | `unknown` (or generic `T`) | yes |
-| `'text'` | `string` | yes |
-| `'stream'` | `ReadableStream<Uint8Array>` | no |
+| `as` value | `body` type                                     | Buffered? |
+| ---------- | ----------------------------------------------- | --------- |
+| omitted    | `Uint8Array` + `.json()`, `.text()`, `.bytes()` | yes       |
+| `'json'`   | `unknown` (or generic `T`)                      | yes       |
+| `'text'`   | `string`                                        | yes       |
+| `'stream'` | `ReadableStream<Uint8Array>`                    | no        |
 
 Generic type parameter for JSON:
 
 ```ts
-const res = await request<User[]>({ url: '/users', as: 'json' })
+const res = await request<User[]>({url: '/users', as: 'json'})
 // res.body: User[]
 ```
 
@@ -142,7 +142,7 @@ Applied as a flat pipeline: all `beforeRequest` hooks run sequentially before fe
 ```ts
 type WrappingMiddleware = (
   request: RequestOptions,
-  next: (request: RequestOptions) => Promise<Response>
+  next: (request: RequestOptions) => Promise<Response>,
 ) => Promise<Response>
 ```
 
@@ -163,6 +163,7 @@ afterResponse transforms (sequential, flat)
 ## Middleware That Ships
 
 ### `retry(options?)`
+
 - **Type**: Wrapping
 - **Purpose**: Retry failed requests with exponential backoff
 - **Options**: `maxRetries` (default 5), `retryDelay`, `shouldRetry`
@@ -170,6 +171,7 @@ afterResponse transforms (sequential, flat)
 - **Backoff**: `100 * 2^attempt + random(0-100ms)`
 
 ### `debug(options?)`
+
 - **Type**: Transform
 - **Purpose**: Log requests/responses with header redaction
 - **Options**: `log` function, `redactHeaders` list, `verbose` flag
@@ -177,10 +179,12 @@ afterResponse transforms (sequential, flat)
 - **Compatible with**: `console.log`, `debug('namespace')`, any custom logger
 
 ### `urlEncoded()`
+
 - **Type**: Transform
 - **Purpose**: Encode request body as `application/x-www-form-urlencoded`
 
 ### `mtls(options)` (Node-only)
+
 - **Type**: Transform
 - **Purpose**: Mutual TLS — configures cert/key/ca via custom undici dispatcher
 - **Options**: `{ ca, cert, key }`
@@ -192,11 +196,11 @@ afterResponse transforms (sequential, flat)
 Creates a `fetch` function with a custom undici dispatcher. For advanced transport-level configuration:
 
 ```ts
-import { nodeFetch } from 'get-it/node'
+import {nodeFetch} from 'get-it/node'
 
 const request = createRequest({
   fetch: nodeFetch({
-    proxy: 'http://proxy:8080',   // explicit proxy
+    proxy: 'http://proxy:8080', // explicit proxy
     // or proxy: true             // read from env (default behavior of node entry)
     maxSockets: 30,
     maxTotalSockets: 256,
@@ -211,7 +215,7 @@ Standard `AbortController` — pass `signal` in request options:
 
 ```ts
 const controller = new AbortController()
-const res = request({ url: '/users', signal: controller.signal })
+const res = request({url: '/users', signal: controller.signal})
 controller.abort()
 ```
 
@@ -228,8 +232,8 @@ class HttpError extends Error {
   status: number
   statusText: string
   headers: Headers
-  body: unknown         // parsed body if available
-  response: Response    // full response object
+  body: unknown // parsed body if available
+  response: Response // full response object
 }
 ```
 
@@ -257,19 +261,19 @@ Passed through as-is from fetch. The retry middleware can catch and retry these.
 
 ## Migration Path
 
-| v1 | v2 |
-|---|---|
-| `getIt([promise()])` | `createRequest()` |
+| v1                               | v2                                         |
+| -------------------------------- | ------------------------------------------ |
+| `getIt([promise()])`             | `createRequest()`                          |
 | `getIt([base(url), headers(h)])` | `createRequest({ base: url, headers: h })` |
-| `promise.CancelToken.source()` | `new AbortController()` |
-| `cancelToken: source.token` | `signal: controller.signal` |
-| `jsonResponse()` middleware | `as: 'json'` or `res.json()` |
-| `jsonRequest()` middleware | built-in (auto-JSON plain objects) |
-| `httpErrors()` middleware | built-in, on by default |
-| `observable()` middleware | `from(promise)` in consumer |
-| `progress()` middleware | handle in consumer |
-| `keepAlive()` middleware | built into fetch |
-| `agent(opts)` middleware | `nodeFetch(opts)` or injectable fetch |
-| `res.body` (pre-parsed) | `res.json()` / `res.text()` / `as` option |
-| `stream: true` | `as: 'stream'` |
-| `rawBody: true` | `as` omitted (body is `Uint8Array`) |
+| `promise.CancelToken.source()`   | `new AbortController()`                    |
+| `cancelToken: source.token`      | `signal: controller.signal`                |
+| `jsonResponse()` middleware      | `as: 'json'` or `res.json()`               |
+| `jsonRequest()` middleware       | built-in (auto-JSON plain objects)         |
+| `httpErrors()` middleware        | built-in, on by default                    |
+| `observable()` middleware        | `from(promise)` in consumer                |
+| `progress()` middleware          | handle in consumer                         |
+| `keepAlive()` middleware         | built into fetch                           |
+| `agent(opts)` middleware         | `nodeFetch(opts)` or injectable fetch      |
+| `res.body` (pre-parsed)          | `res.json()` / `res.text()` / `as` option  |
+| `stream: true`                   | `as: 'stream'`                             |
+| `rawBody: true`                  | `as` omitted (body is `Uint8Array`)        |

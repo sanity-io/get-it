@@ -4,7 +4,7 @@
 
 export interface FetchInit {
   method?: string
-  headers?: Record<string, string>
+  headers?: HeadersInit
   body?: BodyInit | null
   signal?: AbortSignal
   redirect?: RequestRedirect
@@ -28,7 +28,7 @@ export type FetchFunction = (input: string, init?: FetchInit) => Promise<FetchRe
 
 export interface CreateRequestOptions {
   base?: string
-  headers?: Record<string, string>
+  headers?: HeadersInit
   httpErrors?: boolean
   timeout?: number | false
   fetch?: FetchFunction
@@ -39,7 +39,7 @@ export interface RequestOptions {
   url: string
   method?: string
   body?: unknown
-  headers?: Record<string, string>
+  headers?: HeadersInit
   query?: Record<string, string | number | boolean | undefined>
   as?: 'json' | 'text' | 'stream'
   signal?: AbortSignal
@@ -94,7 +94,7 @@ export interface TransformMiddleware {
 
 export type WrappingMiddleware = (
   options: RequestOptions,
-  next: (options: RequestOptions) => Promise<BufferedResponse>,
+  next: (opts: RequestOptions) => Promise<BufferedResponse>,
 ) => Promise<BufferedResponse>
 
 // ---------------------------------------------------------------------------

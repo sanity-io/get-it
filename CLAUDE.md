@@ -3,6 +3,7 @@
 **NEVER use type assertions (`as`, `<Type>`, `as any`, `as unknown as X`).** There are zero acceptable uses in this codebase — not in production code, not in tests, not "just this once."
 
 When a type doesn't match, it means one of these:
+
 1. The upstream type is wrong — fix it at the source.
 2. You need to narrow — use `typeof`, `instanceof`, `in`, discriminated unions, or a type guard.
 3. You need a user-defined type guard — write an `is` predicate function.
@@ -47,8 +48,8 @@ export function resolveUrl(base: string, url: string): string {
 }
 
 // src/index.ts — public API only
-export { createRequest } from './request'
-export type { RequestOptions, BufferedResponse } from './types'
+export {createRequest} from './request'
+export type {RequestOptions, BufferedResponse} from './types'
 // resolveUrl is NOT re-exported here
 ```
 
@@ -67,7 +68,7 @@ vi.mock('../src/resolve', () => ({
 }))
 
 // RIGHT — test the real function
-import { resolveUrl } from '../src/resolve'
+import {resolveUrl} from '../src/resolve'
 expect(resolveUrl('http://example.com', '/foo')).toBe('http://example.com/foo')
 ```
 

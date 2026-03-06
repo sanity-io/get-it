@@ -1,4 +1,5 @@
 import {afterEach, describe, expect, it} from 'vitest'
+
 import {createRequest} from '../src/index'
 import {nodeFetch} from '../src/node/nodeFetch'
 
@@ -16,7 +17,12 @@ async function resetProxyCounter(): Promise<void> {
 async function getProxyConnectCount(): Promise<number> {
   const res = await fetch(`${proxyUrl}/__proxy_connect_count`)
   const data: unknown = await res.json()
-  if (typeof data === 'object' && data !== null && 'count' in data && typeof data.count === 'number') {
+  if (
+    typeof data === 'object' &&
+    data !== null &&
+    'count' in data &&
+    typeof data.count === 'number'
+  ) {
     return data.count
   }
   throw new Error('Unexpected proxy counter response')

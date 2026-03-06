@@ -1,3 +1,4 @@
+import {createBufferedResponse} from './response'
 import type {
   BufferedResponse,
   CreateRequestOptions,
@@ -11,11 +12,9 @@ import type {
   TransformMiddleware,
   WrappingMiddleware,
 } from './types'
-import {createBufferedResponse} from './response'
 import {HttpError} from './types'
 
 export {createBufferedResponse} from './response'
-export {HttpError} from './types'
 export type {
   BufferedResponse,
   CreateRequestOptions,
@@ -28,12 +27,27 @@ export type {
   TransformMiddleware,
   WrappingMiddleware,
 } from './types'
+export {HttpError} from './types'
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   if (typeof value !== 'object' || value === null) return false
   if (Array.isArray(value)) return false
   const proto = Object.getPrototypeOf(value) as unknown
   return proto === Object.prototype || proto === null
+}
+
+/**
+ * Type guard for values that are valid fetch body types.
+ * Needed because TS 5.9+ narrows `instanceof Uint8Array` to
+ * `Uint8Array<ArrayBufferLike>` which isn't assignable to `BodyInit`.
+ */
+function isBinaryBody(value: unknown): value is BodyInit {
+  return (
+    value instanceof Blob ||
+    value instanceof ArrayBuffer ||
+    value instanceof ReadableStream ||
+    ArrayBuffer.isView(value)
+  )
 }
 
 function isTransformMiddleware(
@@ -43,20 +57,28 @@ function isTransformMiddleware(
 }
 
 /**
+ * Merge two HeadersInit values into a single Headers instance.
+ * The second argument wins on conflicts.
+ */
+function mergeHeaders(base: HeadersInit | undefined, override: HeadersInit | undefined): Headers {
+  const headers = new Headers(base)
+  if (override) {
+    new Headers(override).forEach((value, key) => {
+      headers.set(key, value)
+    })
+  }
+  return headers
+}
+
+/**
  * Build the URL, headers, and fetch init from request options.
- * Shared by all `as` modes.
+ * Expects headers to already be merged (via mergeHeaders in request()).
  */
 function buildFetchArgs(
   opts: RequestOptions,
-  instanceBase: string | undefined,
-  instanceHeaders: Record<string, string> | undefined,
   instanceTimeout: number | false | undefined,
 ): {url: string; init: FetchInit} {
-  // Base URL — prepend base if URL is not absolute
   let url = opts.url
-  if (instanceBase && !url.startsWith('http://') && !url.startsWith('https://')) {
-    url = instanceBase + url
-  }
 
   // Query string — merge query params into URL
   if (opts.query) {
@@ -69,16 +91,12 @@ function buildFetchArgs(
     url = urlObj.toString()
   }
 
-  // Merge instance headers with per-request headers
-  const headers: Record<string, string> = {
-    ...instanceHeaders,
-    ...opts.headers,
-  }
+  // Headers — opts.headers is already a merged Headers instance
+  const headers = new Headers(opts.headers)
 
   // Build fetch init
   const init: FetchInit = {}
   if (opts.method) init.method = opts.method
-  if (Object.keys(headers).length > 0) init.headers = headers
 
   // JSON request body — auto-serialize plain objects and arrays
   if (opts.body !== undefined && opts.body !== null) {
@@ -86,14 +104,10 @@ function buildFetchArgs(
       init.body = opts.body
     } else if (isPlainObject(opts.body) || Array.isArray(opts.body)) {
       init.body = JSON.stringify(opts.body)
-      headers['content-type'] = 'application/json'
-      init.headers = headers
-    } else if (
-      opts.body instanceof Uint8Array ||
-      opts.body instanceof ArrayBuffer ||
-      opts.body instanceof ReadableStream ||
-      opts.body instanceof Blob
-    ) {
+      if (!headers.has('content-type')) {
+        headers.set('content-type', 'application/json')
+      }
+    } else if (isBinaryBody(opts.body)) {
       init.body = opts.body
     } else if (typeof FormData !== 'undefined' && opts.body instanceof FormData) {
       init.body = opts.body
@@ -101,6 +115,13 @@ function buildFetchArgs(
       init.body = opts.body
     }
   }
+
+  // Only set headers on init if there are any
+  let hasHeaders = false
+  headers.forEach(() => {
+    hasHeaders = true
+  })
+  if (hasHeaders) init.headers = headers
 
   // Timeout — resolve timeout value (per-request wins over instance)
   const timeoutValue = opts.timeout !== undefined ? opts.timeout : instanceTimeout
@@ -125,7 +146,12 @@ function buildFetchArgs(
  * Optionally throws HttpError for error status codes.
  */
 async function bufferAndCheck(
-  response: {status: number; statusText: string; headers: Headers; arrayBuffer(): Promise<ArrayBuffer>},
+  response: {
+    status: number
+    statusText: string
+    headers: Headers
+    arrayBuffer(): Promise<ArrayBuffer>
+  },
   httpErrors: boolean,
 ): Promise<BufferedResponse> {
   const arrayBuffer = await response.arrayBuffer()
@@ -170,10 +196,7 @@ function composeFetchChain(
 /**
  * Run all beforeRequest transforms sequentially, returning the final options.
  */
-function runBeforeRequest(
-  opts: RequestOptions,
-  transforms: TransformMiddleware[],
-): RequestOptions {
+function runBeforeRequest(opts: RequestOptions, transforms: TransformMiddleware[]): RequestOptions {
   let result = opts
   for (const mw of transforms) {
     if (mw.beforeRequest) {
@@ -224,7 +247,7 @@ export function createRequest(options?: CreateRequestOptions): RequestFunction {
    */
   async function coreFetchBuffered(opts: RequestOptions): Promise<BufferedResponse> {
     const fetchFn: FetchFunction = opts.fetch ?? instanceFetch ?? globalThis.fetch
-    const {url, init} = buildFetchArgs(opts, instanceBase, instanceHeaders, instanceTimeout)
+    const {url, init} = buildFetchArgs(opts, instanceTimeout)
     const response = await fetchFn(url, init)
     const httpErrors = opts.httpErrors ?? instanceHttpErrors ?? true
     return bufferAndCheck(response, httpErrors)
@@ -274,7 +297,7 @@ export function createRequest(options?: CreateRequestOptions): RequestFunction {
     const transformedOpts = runBeforeRequest(opts, transforms)
 
     const fetchFn: FetchFunction = transformedOpts.fetch ?? instanceFetch ?? globalThis.fetch
-    const {url, init} = buildFetchArgs(transformedOpts, instanceBase, instanceHeaders, instanceTimeout)
+    const {url, init} = buildFetchArgs(transformedOpts, instanceTimeout)
     const response = await fetchFn(url, init)
     const httpErrors = transformedOpts.httpErrors ?? instanceHttpErrors ?? true
 
@@ -283,11 +306,13 @@ export function createRequest(options?: CreateRequestOptions): RequestFunction {
       await bufferAndCheck(response, httpErrors)
     }
 
-    const streamBody = response.body ?? new ReadableStream<Uint8Array>({
-      start(controller) {
-        controller.close()
-      },
-    })
+    const streamBody =
+      response.body ??
+      new ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.close()
+        },
+      })
 
     return {
       status: response.status,
@@ -299,10 +324,10 @@ export function createRequest(options?: CreateRequestOptions): RequestFunction {
 
   // Overloaded request function — each overload dispatches to the
   // appropriately-typed helper, so no type assertions are needed.
-  function request<T = unknown>(options: RequestOptions & {as: 'json'}): Promise<JsonResponse<T>>
-  function request(options: RequestOptions & {as: 'text'}): Promise<TextResponse>
-  function request(options: RequestOptions & {as: 'stream'}): Promise<StreamResponse>
-  function request(options: RequestOptions): Promise<BufferedResponse>
+  function request<T = unknown>(opts: RequestOptions & {as: 'json'}): Promise<JsonResponse<T>>
+  function request(opts: RequestOptions & {as: 'text'}): Promise<TextResponse>
+  function request(opts: RequestOptions & {as: 'stream'}): Promise<StreamResponse>
+  function request(opts: RequestOptions): Promise<BufferedResponse>
   function request(url: string): Promise<BufferedResponse>
   function request(
     input: string | RequestOptions,
@@ -317,7 +342,7 @@ export function createRequest(options?: CreateRequestOptions): RequestFunction {
     const opts: RequestOptions = {
       ...raw,
       url,
-      headers: {...instanceHeaders, ...raw.headers},
+      headers: mergeHeaders(instanceHeaders, raw.headers),
     }
 
     switch (opts.as) {

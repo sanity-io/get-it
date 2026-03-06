@@ -14,12 +14,8 @@ export function urlEncoded(): TransformMiddleware {
       if (!isPlainObject(options.body)) return options
 
       // Don't override existing content-type
-      if (options.headers) {
-        const hasContentType = Object.keys(options.headers).some(
-          (k) => k.toLowerCase() === 'content-type',
-        )
-        if (hasContentType) return options
-      }
+      const headers = new Headers(options.headers)
+      if (headers.has('content-type')) return options
 
       const params = new URLSearchParams()
       for (const [key, value] of Object.entries(options.body)) {
@@ -28,13 +24,11 @@ export function urlEncoded(): TransformMiddleware {
         }
       }
 
+      headers.set('content-type', 'application/x-www-form-urlencoded')
       return {
         ...options,
         body: params.toString(),
-        headers: {
-          ...options.headers,
-          'content-type': 'application/x-www-form-urlencoded',
-        },
+        headers,
       }
     },
   }

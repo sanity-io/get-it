@@ -8,20 +8,9 @@ interface DebugOptions {
   verbose?: boolean
 }
 
-function redactHeaderValues(
-  headers: Record<string, string>,
-  redactSet: Set<string>,
-): Record<string, string> {
+function headersToObject(headers: HeadersInit, redactSet: Set<string>): Record<string, string> {
   const result: Record<string, string> = {}
-  for (const [key, value] of Object.entries(headers)) {
-    result[key] = redactSet.has(key.toLowerCase()) ? 'REDACTED' : value
-  }
-  return result
-}
-
-function headersToObject(headers: Headers, redactSet: Set<string>): Record<string, string> {
-  const result: Record<string, string> = {}
-  headers.forEach((value, key) => {
+  new Headers(headers).forEach((value, key) => {
     result[key] = redactSet.has(key.toLowerCase()) ? 'REDACTED' : value
   })
   return result
@@ -40,8 +29,7 @@ export function debug(opts?: DebugOptions): TransformMiddleware {
       log('[request] %s %s', method, options.url)
 
       if (verbose && options.headers) {
-        const redacted =
-          redactSet.size > 0 ? redactHeaderValues(options.headers, redactSet) : options.headers
+        const redacted = headersToObject(options.headers, redactSet)
         log('[request] headers %o', redacted)
       }
 

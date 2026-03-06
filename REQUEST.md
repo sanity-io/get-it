@@ -23,7 +23,7 @@ This is our shared request library that we use for things like `@sanity/client`,
 
 Things I don't _know_ if fetch in node automatically does:
 
-- Automatically requesting compressed responses, automatic decompression? 
+- Automatically requesting compressed responses, automatic decompression?
 - More?
 
 The nice part is that a majority of this functionality is "injectable" through middleware, in a way that was at least _supposed_ to not bloat the bundle size for browsers.
