@@ -1,4 +1,4 @@
-import {configDefaults, defineConfig, type UserConfig} from 'vitest/config'
+import {configDefaults, defineConfig, type ViteUserConfig} from 'vitest/config'
 
 export const sharedConfig = {
   // Ignore deno and esm tests
@@ -15,7 +15,7 @@ export const sharedConfig = {
     'get-it/node': new URL('./src/node', import.meta.url).pathname,
     'get-it': new URL('./src', import.meta.url).pathname,
   },
-} satisfies UserConfig['test']
+} satisfies ViteUserConfig['test']
 
 export default defineConfig({
   test: sharedConfig,
