@@ -35,23 +35,6 @@ interface NodeRequestInit extends RequestInit {
 }
 
 /**
- * Adapts a standard `Response` (from globalThis.fetch) into our
- * `FetchResponse` interface. This avoids type assertions by explicitly
- * mapping the structural overlap.
- */
-function adaptResponse(response: Response): FetchResponse {
-  return {
-    ok: response.ok,
-    status: response.status,
-    statusText: response.statusText,
-    headers: response.headers,
-    body: response.body,
-    text: () => response.text(),
-    arrayBuffer: () => response.arrayBuffer(),
-  }
-}
-
-/**
  * A typed reference to `globalThis.fetch` that accepts `NodeRequestInit`,
  * which includes the `dispatcher` property.
  *
@@ -111,5 +94,22 @@ export function nodeFetch(options?: NodeFetchOptions): FetchFunction {
       nodeInit.body = init.body
     }
     return nodeFetchFn(input, nodeInit).then(adaptResponse)
+  }
+}
+
+/**
+ * Adapts a standard `Response` (from globalThis.fetch) into our
+ * `FetchResponse` interface. This avoids type assertions by explicitly
+ * mapping the structural overlap.
+ */
+function adaptResponse(response: Response): FetchResponse {
+  return {
+    ok: response.ok,
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+    body: response.body,
+    text: () => response.text(),
+    arrayBuffer: () => response.arrayBuffer(),
   }
 }

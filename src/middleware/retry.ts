@@ -6,6 +6,32 @@ interface RetryOptions {
   shouldRetry?: (error: unknown, attemptNumber: number, options: RequestOptions) => boolean
 }
 
+/** @public */
+export function retry(opts?: RetryOptions): WrappingMiddleware {
+  const maxRetries = opts?.maxRetries ?? 5
+  const retryDelay = opts?.retryDelay ?? defaultRetryDelay
+  const shouldRetry = opts?.shouldRetry ?? defaultShouldRetry
+
+  return async function retryMiddleware(
+    options: RequestOptions,
+    next: (reqOpts: RequestOptions) => Promise<BufferedResponse>,
+  ): Promise<BufferedResponse> {
+    let lastError: unknown
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        return await next(options)
+      } catch (error: unknown) {
+        lastError = error
+        if (attempt >= maxRetries || !shouldRetry(error, attempt, options)) {
+          throw error
+        }
+        await sleep(retryDelay(attempt), options.signal)
+      }
+    }
+    throw lastError
+  }
+}
+
 /** @internal */
 export function defaultRetryDelay(attemptNumber: number): number {
   return 100 * Math.pow(2, attemptNumber) + Math.random() * 100
@@ -42,30 +68,4 @@ function sleep(ms: number, signal?: AbortSignal): Promise<void> {
       {once: true},
     )
   })
-}
-
-/** @public */
-export function retry(opts?: RetryOptions): WrappingMiddleware {
-  const maxRetries = opts?.maxRetries ?? 5
-  const retryDelay = opts?.retryDelay ?? defaultRetryDelay
-  const shouldRetry = opts?.shouldRetry ?? defaultShouldRetry
-
-  return async function retryMiddleware(
-    options: RequestOptions,
-    next: (reqOpts: RequestOptions) => Promise<BufferedResponse>,
-  ): Promise<BufferedResponse> {
-    let lastError: unknown
-    for (let attempt = 0; attempt <= maxRetries; attempt++) {
-      try {
-        return await next(options)
-      } catch (error: unknown) {
-        lastError = error
-        if (attempt >= maxRetries || !shouldRetry(error, attempt, options)) {
-          throw error
-        }
-        await sleep(retryDelay(attempt), options.signal)
-      }
-    }
-    throw lastError
-  }
 }
