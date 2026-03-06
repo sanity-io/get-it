@@ -104,6 +104,24 @@ describe('built-in behaviors', () => {
       const headers = getRecord(res.json(), 'headers')
       expect(headers['x-a']).toBe('2')
     })
+
+    it('strips undefined header values from instance headers', async () => {
+      const headers = {'X-Present': 'yes', 'X-Missing': undefined} as Record<string, string>
+      const request = createRequest({base: baseUrl, headers})
+      const res = await request('/debug')
+      const sent = getRecord(res.json(), 'headers')
+      expect(sent['x-present']).toBe('yes')
+      expect(sent).not.toHaveProperty('x-missing')
+    })
+
+    it('strips undefined header values from per-request headers', async () => {
+      const request = createRequest({base: baseUrl})
+      const headers = {'X-Present': 'yes', 'X-Missing': undefined} as Record<string, string>
+      const res = await request({url: '/debug', headers})
+      const sent = getRecord(res.json(), 'headers')
+      expect(sent['x-present']).toBe('yes')
+      expect(sent).not.toHaveProperty('x-missing')
+    })
   })
 
   // 4c: Implicit POST
