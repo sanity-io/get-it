@@ -146,6 +146,8 @@ async function bufferAndCheck(
     arrayBuffer(): Promise<ArrayBuffer>
   },
   httpErrors: boolean,
+  requestUrl: string,
+  requestMethod: string,
 ): Promise<BufferedResponse> {
   const arrayBuffer = await response.arrayBuffer()
   const bytes = new Uint8Array(arrayBuffer)
@@ -158,6 +160,8 @@ async function bufferAndCheck(
 
   if (httpErrors && response.status >= 400) {
     throw new HttpError({
+      url: requestUrl,
+      method: requestMethod,
       status: response.status,
       statusText: response.statusText,
       headers: response.headers,
@@ -252,7 +256,7 @@ export function createRequest(options?: CreateRequestOptions): RequestFunction {
     const {url, init} = buildFetchArgs(opts, instanceTimeout, instanceCredentials)
     const response = await fetchFn(url, init)
     const httpErrors = opts.httpErrors ?? instanceHttpErrors ?? true
-    return bufferAndCheck(response, httpErrors)
+    return bufferAndCheck(response, httpErrors, url, init.method ?? 'GET')
   }
 
   // Compose wrapping middlewares around the core fetch
@@ -294,7 +298,7 @@ export function createRequest(options?: CreateRequestOptions): RequestFunction {
       const httpErrors = reqOpts.httpErrors ?? instanceHttpErrors ?? true
 
       if (httpErrors && response.status >= 400) {
-        return bufferAndCheck(response, httpErrors)
+        return bufferAndCheck(response, httpErrors, url, init.method ?? 'GET')
       }
 
       capturedResponse = response

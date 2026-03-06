@@ -276,6 +276,48 @@ describe('built-in behaviors', () => {
       }
     })
 
+    it('HttpError message includes method and URL', async () => {
+      const request = createRequest({base: baseUrl})
+      try {
+        await request({url: '/status?code=404', method: 'GET'})
+        expect.fail('should have thrown')
+      } catch (err: unknown) {
+        expect(err).toBeInstanceOf(HttpError)
+        if (err instanceof HttpError) {
+          expect(err.message).toContain('GET')
+          expect(err.message).toContain('/status?code=404')
+        }
+      }
+    })
+
+    it('HttpError message includes URL and method for implicit POST', async () => {
+      const request = createRequest({base: baseUrl})
+      try {
+        await request({url: '/status?code=500', body: {test: true}})
+        expect.fail('should have thrown')
+      } catch (err: unknown) {
+        expect(err).toBeInstanceOf(HttpError)
+        if (err instanceof HttpError) {
+          expect(err.message).toContain('POST')
+          expect(err.message).toContain('/status?code=500')
+        }
+      }
+    })
+
+    it('HttpError exposes url and method properties', async () => {
+      const request = createRequest({base: baseUrl})
+      try {
+        await request({url: '/status?code=404', method: 'DELETE'})
+        expect.fail('should have thrown')
+      } catch (err: unknown) {
+        expect(err).toBeInstanceOf(HttpError)
+        if (err instanceof HttpError) {
+          expect(err.url).toContain('/status?code=404')
+          expect(err.method).toBe('DELETE')
+        }
+      }
+    })
+
     it('does not throw when httpErrors is false (instance)', async () => {
       const request = createRequest({base: baseUrl, httpErrors: false})
       const res = await request('/status?code=404')
