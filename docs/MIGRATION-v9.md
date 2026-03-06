@@ -1,12 +1,12 @@
-# Migrating from get-it v1 to v2
+# Migrating from get-it v8 to v9
 
-get-it v2 is a ground-up rewrite. It replaces the pub/sub channel system and Node `http`/`https` transport with standard `fetch()`, drops CommonJS, and simplifies the API surface.
+get-it v9 is a ground-up rewrite. It replaces the pub/sub channel system and Node `http`/`https` transport with standard `fetch()`, drops CommonJS, and simplifies the API surface.
 
 This guide covers every breaking change and shows how to update your code.
 
 ## Quick reference
 
-| v1                              | v2                                                 |
+| v8                              | v9                                                 |
 | ------------------------------- | -------------------------------------------------- |
 | `getIt([promise(), base(url)])` | `createRequest({ base: url })`                     |
 | `res.body` (pre-parsed)         | `res.json()` / `res.text()` / `as` option          |
@@ -34,17 +34,17 @@ This guide covers every breaking change and shows how to update your code.
 ## Installation
 
 ```bash
-npm install get-it@2
+npm install get-it@9
 ```
 
-v2 is ESM-only. If your project uses CommonJS, you'll need to either:
+v9 is ESM-only. If your project uses CommonJS, you'll need to either:
 
 - Switch to ESM (`"type": "module"` in package.json)
 - Use dynamic `import()` from CommonJS
 
 ## Creating a request instance
 
-### Before (v1)
+### Before (v8)
 
 ```ts
 import getIt from 'get-it'
@@ -60,7 +60,7 @@ const request = getIt([
 ])
 ```
 
-### After (v2)
+### After (v9)
 
 ```ts
 import {createRequest} from 'get-it'
@@ -76,14 +76,14 @@ Base URL, default headers, JSON request serialization, HTTP error throwing, and 
 
 ## Making requests
 
-### Before (v1)
+### Before (v8)
 
 ```ts
 const response = await request({url: '/users', method: 'POST', body: {name: 'Espen'}})
 const data = response.body // pre-parsed if jsonResponse() was used
 ```
 
-### After (v2)
+### After (v9)
 
 ```ts
 // Option A: use `as: 'json'` for typed responses
@@ -104,13 +104,13 @@ const response = await request('/users')
 The response object has changed:
 
 ```ts
-// v1
+// v8
 response.statusCode // number
 response.statusMessage // string
 response.headers // Record<string, string>
 response.body // pre-parsed body (depends on middleware)
 
-// v2
+// v9
 response.status // number
 response.statusText // string
 response.headers // Headers instance (use .get(), .has(), .forEach())
@@ -123,16 +123,16 @@ response.bytes() // returns body as Uint8Array (synchronous)
 ### Reading response headers
 
 ```ts
-// v1
+// v8
 const contentType = response.headers['content-type']
 
-// v2
+// v9
 const contentType = response.headers.get('content-type')
 ```
 
 ## Body type selection with `as`
 
-v2 introduces the `as` option to control how the response body is processed:
+v9 introduces the `as` option to control how the response body is processed:
 
 | `as` value  | `body` type                                     | Buffered? |
 | ----------- | ----------------------------------------------- | --------- |
@@ -155,7 +155,7 @@ res.body // Uint8Array
 
 ## Cancellation
 
-### Before (v1)
+### Before (v8)
 
 ```ts
 import {promise} from 'get-it/middleware'
@@ -165,7 +165,7 @@ const res = request({url: '/users', cancelToken: source.token})
 source.cancel('Operation cancelled')
 ```
 
-### After (v2)
+### After (v9)
 
 ```ts
 const controller = new AbortController()
@@ -177,7 +177,7 @@ Standard `AbortController` — no custom cancellation primitives.
 
 ## HTTP errors
 
-### Before (v1)
+### Before (v8)
 
 ```ts
 import {httpErrors} from 'get-it/middleware'
@@ -186,7 +186,7 @@ const request = getIt([httpErrors(), promise()])
 // Throws on 4xx/5xx
 ```
 
-### After (v2)
+### After (v9)
 
 HTTP error throwing is built in and on by default. Opt out per-instance or per-request:
 
@@ -215,14 +215,14 @@ try {
 
 ## Timeout
 
-### Before (v1)
+### Before (v8)
 
 ```ts
 const request = getIt([promise()])
 await request({url: '/slow', timeout: {connect: 5000, socket: 30000}})
 ```
 
-### After (v2)
+### After (v9)
 
 Timeout uses `AbortSignal.timeout()`. A single value in milliseconds:
 
@@ -240,7 +240,7 @@ The timeout signal is automatically combined with any user-provided `signal` usi
 
 ## Middleware
 
-v2 has two middleware types instead of the v1 hook-based system:
+v9 has two middleware types instead of the v8 hook-based system:
 
 ### Transform middleware (object with hooks)
 
@@ -289,7 +289,7 @@ const request = createRequest({
 })
 ```
 
-Note: v1's `requester.use(middleware)` chaining is removed. Pass all middleware at creation time.
+Note: v8's `requester.use(middleware)` chaining is removed. Pass all middleware at creation time.
 
 ## Middleware migration
 
@@ -310,7 +310,7 @@ Note: v1's `requester.use(middleware)` chaining is removed. Pass all middleware 
 
 ### Still available
 
-| v1             | v2             | Import              |
+| v8             | v9             | Import              |
 | -------------- | -------------- | ------------------- |
 | `retry()`      | `retry()`      | `get-it/middleware` |
 | `debug()`      | `debug()`      | `get-it/middleware` |
@@ -318,9 +318,9 @@ Note: v1's `requester.use(middleware)` chaining is removed. Pass all middleware 
 
 ### Proxy / agent configuration
 
-v1 had `agent()` and `proxy()` middleware that configured Node's `http.Agent`.
+v8 had `agent()` and `proxy()` middleware that configured Node's `http.Agent`.
 
-v2 uses conditional exports: when running in Node/Bun/Deno, `createRequest` automatically uses `nodeFetch()` which reads proxy configuration from environment variables (`HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY`).
+v9 uses conditional exports: when running in Node/Bun/Deno, `createRequest` automatically uses `nodeFetch()` which reads proxy configuration from environment variables (`HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY`).
 
 For custom proxy or connection pool settings:
 
@@ -339,7 +339,7 @@ const request = createRequest({
 
 ## Injectable fetch
 
-v2 lets you provide a custom `fetch` implementation at instance or request level:
+v9 lets you provide a custom `fetch` implementation at instance or request level:
 
 ```ts
 // Instance level — used for all requests
@@ -349,11 +349,11 @@ const request = createRequest({fetch: myCustomFetch})
 await request({url: '/test', fetch: mockFetch})
 ```
 
-This replaces v1's `injectResponse()` for testing and `agent()` for custom transports.
+This replaces v8's `injectResponse()` for testing and `agent()` for custom transports.
 
 ## Headers
 
-v2 uses standard `HeadersInit` for input and `Headers` instances internally:
+v9 uses standard `HeadersInit` for input and `Headers` instances internally:
 
 ```ts
 // All of these work as header input:
@@ -380,7 +380,7 @@ await request({url: '/test', headers: {'X-B': '2'}})
 
 ## TypeScript
 
-v2 is written in TypeScript with erasable type syntax. All types are exported:
+v9 is written in TypeScript with erasable type syntax. All types are exported:
 
 ```ts
 import type {
@@ -411,7 +411,7 @@ res.body // User[] (type-only, no runtime validation)
 
 ## Complete migration example
 
-### Before (v1)
+### Before (v8)
 
 ```ts
 import getIt from 'get-it'
@@ -450,7 +450,7 @@ const res = request({url: '/users', cancelToken: source.token})
 source.cancel()
 ```
 
-### After (v2)
+### After (v9)
 
 ```ts
 import {createRequest, HttpError} from 'get-it'
