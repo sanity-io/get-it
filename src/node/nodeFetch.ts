@@ -4,6 +4,16 @@ import type Dispatcher from 'undici/types/dispatcher'
 import type {FetchFunction, FetchInit, FetchResponse} from '../types'
 
 /** @public */
+export interface TlsOptions {
+  /** Client certificate (PEM-encoded) */
+  cert?: string | Buffer
+  /** Client private key (PEM-encoded) */
+  key?: string | Buffer
+  /** Certificate authority (PEM-encoded) — use for self-signed server certs */
+  ca?: string | Buffer
+}
+
+/** @public */
 export interface NodeFetchOptions {
   /** true = read proxy from env (default), string = explicit proxy URL, false = no proxy */
   proxy?: string | boolean
@@ -11,6 +21,8 @@ export interface NodeFetchOptions {
   connections?: number
   /** Enable HTTP/2 support */
   allowH2?: boolean
+  /** TLS options for mutual TLS (client certificates) */
+  tls?: TlsOptions
 }
 
 /**
@@ -62,21 +74,26 @@ export function nodeFetch(options?: NodeFetchOptions): FetchFunction {
 
   let dispatcher: Dispatcher
 
+  const tls = options?.tls
+
   if (proxyOption === true) {
     dispatcher = new EnvHttpProxyAgent({
       connections: options?.connections,
       allowH2: options?.allowH2,
+      requestTls: tls ? {cert: tls.cert, key: tls.key, ca: tls.ca} : undefined,
     })
   } else if (typeof proxyOption === 'string') {
     dispatcher = new ProxyAgent({
       uri: proxyOption,
       connections: options?.connections,
       allowH2: options?.allowH2,
+      requestTls: tls ? {cert: tls.cert, key: tls.key, ca: tls.ca} : undefined,
     })
   } else {
     dispatcher = new Agent({
       connections: options?.connections,
       allowH2: options?.allowH2,
+      connect: tls ? {cert: tls.cert, key: tls.key, ca: tls.ca} : undefined,
     })
   }
 
