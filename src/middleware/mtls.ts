@@ -20,12 +20,7 @@ export function mtls(config: any = {}) {
         return options
       }
 
-      const mtlsOpts = {
-        cert: config.cert,
-        key: config.key,
-        ca: config.ca,
-      }
-      return Object.assign({}, options, mtlsOpts)
+      return {...options, cert: config.cert, key: config.key, ca: config.ca}
     },
   } satisfies Middleware
 }

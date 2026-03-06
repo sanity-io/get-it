@@ -3,12 +3,11 @@ import type {Middleware} from 'get-it'
 
 const SENSITIVE_HEADERS = ['cookie', 'authorization']
 
-const hasOwn = Object.prototype.hasOwnProperty
 const redactKeys = (source: any, redacted: any) => {
   const target: any = {}
   for (const key in source) {
-    if (hasOwn.call(source, key)) {
-      target[key] = redacted.indexOf(key.toLowerCase()) > -1 ? '<redacted>' : source[key]
+    if (Object.hasOwn(source, key)) {
+      target[key] = redacted.includes(key.toLowerCase()) ? '<redacted>' : source[key]
     }
   }
   return target
@@ -88,7 +87,7 @@ export function debug(opts: any = {}) {
 
 function stringifyBody(res: any) {
   const contentType = (res.headers['content-type'] || '').toLowerCase()
-  const isJson = contentType.indexOf('application/json') !== -1
+  const isJson = contentType.includes('application/json')
   return isJson ? tryFormat(res.body) : res.body
 }
 

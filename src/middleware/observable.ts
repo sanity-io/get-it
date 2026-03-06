@@ -21,11 +21,9 @@ export function observable(
     onReturn: (channels, context) =>
       new Observable((observer: any) => {
         channels.error.subscribe((err) => observer.error(err))
-        channels.progress.subscribe((event) =>
-          observer.next(Object.assign({type: 'progress'}, event)),
-        )
+        channels.progress.subscribe((event) => observer.next({type: 'progress', ...event}))
         channels.response.subscribe((response) => {
-          observer.next(Object.assign({type: 'response'}, response))
+          observer.next({type: 'response', ...response})
           observer.complete()
         })
 

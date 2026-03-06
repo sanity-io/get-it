@@ -5,10 +5,7 @@ import {describe, expect, it} from 'vitest'
 
 import {decompressResponse} from '../src/request/node/decompressResponse'
 
-function createMockResponse(
-  headers: Record<string, string>,
-  body: Buffer,
-): IncomingMessage {
+function createMockResponse(headers: Record<string, string>, body: Buffer): IncomingMessage {
   const stream = new PassThrough() as PassThrough & Partial<IncomingMessage>
   stream.headers = headers
   stream.statusCode = 200

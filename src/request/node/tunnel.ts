@@ -54,30 +54,29 @@ export function shouldEnable(options: any) {
 }
 
 export function applyAgent(opts: any = {}, proxy: any) {
-  const options = Object.assign({}, opts)
+  const options = {...opts}
 
   // Setup proxy header exclusive list and whitelist
-  const proxyHeaderWhiteList = defaultProxyHeaderWhiteList
-    .concat(options.proxyHeaderWhiteList || [])
-    .map((header) => header.toLowerCase())
+  const proxyHeaderWhiteList = [
+    ...defaultProxyHeaderWhiteList,
+    ...(options.proxyHeaderWhiteList || []),
+  ].map((header) => header.toLowerCase())
 
-  const proxyHeaderExclusiveList = defaultProxyHeaderExclusiveList
-    .concat(options.proxyHeaderExclusiveList || [])
-    .map((header) => header.toLowerCase())
+  const proxyHeaderExclusiveList = [
+    ...defaultProxyHeaderExclusiveList,
+    ...(options.proxyHeaderExclusiveList || []),
+  ].map((header) => header.toLowerCase())
 
   // Get the headers we should send to the proxy
   const proxyHeaders = getAllowedProxyHeaders(options.headers, proxyHeaderWhiteList)
   proxyHeaders.host = constructProxyHost(options)
 
   // Reduce headers to the ones not exclusive for the proxy
-  options.headers = Object.keys(options.headers || {}).reduce((headers, header) => {
-    const isAllowed = proxyHeaderExclusiveList.indexOf(header.toLowerCase()) === -1
-    if (isAllowed) {
-      headers[header] = options.headers[header]
-    }
-
-    return headers
-  }, {} as any)
+  options.headers = Object.fromEntries(
+    Object.entries(options.headers || {}).filter(
+      ([header]) => !proxyHeaderExclusiveList.includes(header.toLowerCase()),
+    ),
+  )
 
   const tunnelFn = getTunnelFn(options, proxy)
   const tunnelOptions = constructTunnelOptions(options, proxy, proxyHeaders)
@@ -93,10 +92,7 @@ function getTunnelFn(options: any, proxy: any) {
 }
 
 function getUriParts(options: any) {
-  return uriParts.reduce((uri, part) => {
-    uri[part] = options[part]
-    return uri
-  }, {} as any)
+  return Object.fromEntries(uriParts.map((part) => [part, options[part]]))
 }
 
 type UriProtocol = `http` | `https`
@@ -124,12 +120,9 @@ function constructProxyHost(uri: any) {
 }
 
 function getAllowedProxyHeaders(headers: any, whiteList: any): any {
-  return Object.keys(headers)
-    .filter((header) => whiteList.indexOf(header.toLowerCase()) !== -1)
-    .reduce((set: any, header: any) => {
-      set[header] = headers[header]
-      return set
-    }, {})
+  return Object.fromEntries(
+    Object.entries(headers).filter(([header]) => whiteList.includes(header.toLowerCase())),
+  )
 }
 
 function constructTunnelOptions(options: any, proxy: any, proxyHeaders: any) {

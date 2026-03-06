@@ -5,9 +5,7 @@ export function headers(_headers: any, opts: any = {}) {
   return {
     processOptions: (options) => {
       const existing = options.headers || {}
-      options.headers = opts.override
-        ? Object.assign({}, existing, _headers)
-        : Object.assign({}, _headers, existing)
+      options.headers = opts.override ? {...existing, ..._headers} : {..._headers, ...existing}
 
       return options
     },

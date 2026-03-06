@@ -17,7 +17,7 @@ function parseNoProxyZone(zoneStr: string) {
   const zoneParts = zone.split(':', 2)
   const zoneHost = formatHostname(zoneParts[0])
   const zonePort = zoneParts[1]
-  const hasPort = zone.indexOf(':') > -1
+  const hasPort = zone.includes(':')
 
   return {hostname: zoneHost, port: zonePort, hasPort: hasPort}
 }
@@ -29,9 +29,7 @@ function uriInNoProxy(uri: ParsedUrl, noProxy: string) {
 
   // iterate through the noProxyList until it finds a match.
   return noProxyList.map(parseNoProxyZone).some((noProxyZone) => {
-    const isMatchedAt = hostname.indexOf(noProxyZone.hostname)
-    const hostnameMatched =
-      isMatchedAt > -1 && isMatchedAt === hostname.length - noProxyZone.hostname.length
+    const hostnameMatched = hostname.endsWith(noProxyZone.hostname)
 
     if (noProxyZone.hasPort) {
       return port === noProxyZone.port && hostnameMatched
@@ -104,7 +102,7 @@ export function rewriteUriForProxy(
   proxy: ParsedUrl | ProxyOptions,
 ) {
   const headers = reqOpts.headers || {}
-  const options = Object.assign({}, reqOpts, {headers})
+  const options = {...reqOpts, headers}
   headers.host = headers.host || getHostHeaderWithPort(uri)
   options.protocol = proxy.protocol || options.protocol
   options.hostname = (
@@ -114,7 +112,7 @@ export function rewriteUriForProxy(
     ''
   ).replace(/:\d+/, '')
   options.port = proxy.port ? `${proxy.port}` : options.port
-  options.host = getHostFromUri(Object.assign({}, uri, proxy))
+  options.host = getHostFromUri({...uri, ...proxy})
   options.href = `${options.protocol}//${options.host}${options.path}`
   options.path = `${uri.protocol}//${uri.host}${uri.path}`
   return options

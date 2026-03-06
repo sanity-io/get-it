@@ -18,18 +18,17 @@ export function jsonRequest() {
       const shouldSerialize =
         !isStream &&
         !isBuffer(body) &&
-        (serializeTypes.indexOf(typeof body) !== -1 || Array.isArray(body) || isPlainObject(body))
+        (serializeTypes.includes(typeof body) || Array.isArray(body) || isPlainObject(body))
 
       if (!shouldSerialize) {
         return options
       }
 
-      return Object.assign({}, options, {
+      return {
+        ...options,
         body: JSON.stringify(options.body),
-        headers: Object.assign({}, options.headers, {
-          'Content-Type': 'application/json',
-        }),
-      })
+        headers: {...options.headers, 'Content-Type': 'application/json'},
+      }
     },
   } satisfies Middleware
 }
