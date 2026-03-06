@@ -3,7 +3,8 @@
   "compilerOptions": {
     "paths": {
       "get-it": ["./src"],
-      "get-it/middleware": ["./src/middleware"]
+      "get-it/middleware": ["./src/middleware"],
+      "get-it/node": ["./src/node"]
     },
 
     "outDir": "./dist",
