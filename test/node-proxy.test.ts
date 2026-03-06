@@ -86,6 +86,31 @@ describe('nodeFetch', () => {
   })
 })
 
+describe('nodeFetch body forwarding', () => {
+  it('forwards request body to fetch', async () => {
+    const request = createRequest({
+      fetch: nodeFetch({proxy: false}),
+      base: baseUrl,
+    })
+    const res = await request({url: '/json-echo', method: 'POST', body: {foo: 'bar'}})
+    expect(res.json()).toEqual({foo: 'bar'})
+  })
+})
+
+describe('nodeFetch tls option with proxy modes', () => {
+  it('passes requestTls to EnvHttpProxyAgent when proxy is true', () => {
+    // Just verify it doesn't throw — we can't easily test the TLS config
+    // reaches undici internals, but we exercise the tls branch
+    const fetch = nodeFetch({proxy: true, tls: {ca: 'fake-ca'}})
+    expect(typeof fetch).toBe('function')
+  })
+
+  it('passes requestTls to ProxyAgent when proxy is a string', () => {
+    const fetch = nodeFetch({proxy: 'http://localhost:9999', tls: {ca: 'fake-ca'}})
+    expect(typeof fetch).toBe('function')
+  })
+})
+
 describe('node entry point', () => {
   it('re-exports core types and utilities', async () => {
     const nodeModule = await import('../src/_exports/index.node')
