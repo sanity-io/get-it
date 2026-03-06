@@ -90,7 +90,6 @@
     "@sanity/prettier-config": "^2.0.3",
     "@sanity/semantic-release-preset": "^5.0.0",
     "@sanity/tsconfig": "^2.1.0",
-    "@types/debug": "^4.1.12",
     "@types/node": "^20.8.8",
     "@typescript-eslint/eslint-plugin": "^8.56.1",
     "@typescript-eslint/parser": "^8.56.1",
