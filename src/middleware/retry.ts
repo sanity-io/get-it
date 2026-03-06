@@ -67,7 +67,6 @@ export function retry(opts?: RetryOptions): WrappingMiddleware {
         await sleep(retryDelay(attempt), options.signal)
       }
     }
-    /* v8 ignore next -- unreachable: final iteration always throws above */
     throw lastError
   }
 }
