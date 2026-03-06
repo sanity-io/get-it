@@ -5,180 +5,205 @@
 [![gzip size][gzip-badge]][bundlephobia]
 [![size][size-badge]][bundlephobia]
 
-Generic HTTP request library for node.js (>= 20.19) and [modern browsers].
-
-## Motivation
-
-We wanted an HTTP request library that worked transparently in Node.js and browsers with a small browser bundle footprint.
-
-To be able to use the same library in a range of different applications with varying requirements, but still keep the bundle size down, we took inspiration from [http-client](https://github.com/mjackson/http-client) which cleverly composes functionality into the client.
+Generic HTTP request library for node.js (>= 20.19), browsers, and edge runtimes. Built on `fetch()`.
 
 ## Features
 
-Using a middleware approach, `get-it` has the following feature set:
+- Promise-based API with full TypeScript support
+- Automatic JSON serialization/deserialization
+- Base URL and default headers
+- HTTP error throwing (on by default)
+- Timeout via `AbortSignal.timeout()`
+- Cancellation via standard `AbortController`
+- Proxy support in Node.js (reads `HTTP_PROXY`/`HTTPS_PROXY` from environment)
+- Middleware system for retry, debug logging, and custom logic
+- Injectable `fetch` for testing and custom transports
+- Works in Node.js, browsers, Deno, Bun, and edge runtimes
 
-- Promise, observable and low-level event-emitter patterns
-- Automatic retrying with customizable number of attempts and filtering functionality
-- Cancellation of requests
-- Configurable connect/socket timeouts
-- Automatic parsing of JSON responses
-- Automatic stringifying of JSON request bodies
-- Automatic gzip unwrapping in Node
-- Automatically prepend base URL
-- Automatically follow redirects (configurable number of retries)
-- Upload/download progress events
-- Treat HTTP status codes >=400 as errors
-- Debug requests with environment variables/localStorage setting
+## Installation
+
+```bash
+npm install get-it
+```
 
 ## Usage
 
-How `get-it` behaves depends on which middleware you've loaded, but common to all approaches is the setup process.
+```ts
+import {createRequest} from 'get-it'
 
-```js
-// Import the core get-it package, which is used to generate a requester
-import {getIt} from 'get-it'
+const request = createRequest({
+  base: 'https://api.example.com',
+  headers: {Authorization: 'Bearer ...'},
+})
 
-// And import whatever middleware you want to use
-import {base, jsonResponse, promise} from 'get-it/middleware'
+// Simple GET
+const res = await request('/users')
+console.log(res.json())
 
-// Now compose the middleware you want to use
-const request = getIt([base('https://api.your.service/v1'), jsonResponse()])
-
-// You can also register middleware using `.use(middleware)`
-request.use(promise())
-
-// Now you're ready to use the requester:
-request({url: '/projects'})
-  .then((response) => console.log(response.body))
-  .catch((err) => console.error(err))
+// POST with JSON body (auto-serialized)
+const res = await request({
+  url: '/users',
+  method: 'POST',
+  body: {name: 'Espen'},
+  as: 'json',
+})
+console.log(res.body) // parsed JSON
 ```
 
-In most larger projects, you'd probably make a `httpClient.js` or similar, where you would instantiate the requester and export it for other modules to reuse.
+## Response
+
+The response object depends on the `as` option:
+
+| `as` value | `body` type | Buffered? |
+| --- | --- | --- |
+| _(omitted)_ | `Uint8Array` + `.json()`, `.text()`, `.bytes()` | yes |
+| `'json'` | `unknown` (or generic `T`) | yes |
+| `'text'` | `string` | yes |
+| `'stream'` | `ReadableStream<Uint8Array>` | no |
+
+```ts
+// Default — buffered with convenience methods
+const res = await request('/data')
+res.status        // number
+res.statusText    // string
+res.headers       // Headers
+res.body          // Uint8Array
+res.json()        // parse as JSON (synchronous)
+res.text()        // decode as string (synchronous)
+
+// Typed JSON
+const res = await request<User[]>({url: '/users', as: 'json'})
+res.body // User[]
+
+// Streaming
+const res = await request({url: '/large-file', as: 'stream'})
+res.body // ReadableStream<Uint8Array>
+```
 
 ## Options
 
-- `url` - URL to the resource you want to reach.
-- `method` - HTTP method to use for request. Default: `GET`, unless a body is provided, in which case the default is `POST`.
-- `headers` - Object of HTTP headers to send. Note that cross-origin requests in IE9 will not be able to set these headers.
-- `body` - The request body. If the `jsonRequest` middleware is used, it will serialize to a JSON string before sending. Otherwise, it tries to send whatever is passed to it using the underlying adapter. Supported types:
-  - _Browser_: `string`, `ArrayBufferView`, `Blob`, `Document`, `FormData` (deprecated: `ArrayBuffer`)
-  - _Node_: `string`, `Buffer`, `Iterable`, `AsyncIterable`, `stream.Readable`
-- `bodySize` - Size of body, in bytes. Only used in Node when passing a `ReadStream` as body, in order for progress events to emit status on upload progress.
-- `timeout` - Timeout in millisecond for the request. Takes an object with `connect` and `socket` properties.
-- `maxRedirects` - Maximum number of redirects to follow before giving up. Note that this is only used in Node, as browsers have built-in redirect handling which cannot be adjusted. Default: `5`
-- `rawBody` - Set to `true` to return the raw value of the response body, instead of a string. The type returned differs based on the underlying adapter:
-  - _Browser_: `ArrayBuffer`
-  - _Node_: `Buffer`
+### Instance options (`createRequest`)
 
-## Return values
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `base` | `string` | — | Base URL prepended to relative paths |
+| `headers` | `HeadersInit` | — | Default headers for all requests |
+| `httpErrors` | `boolean` | `true` | Throw `HttpError` on status >= 400 |
+| `timeout` | `number \| false` | — | Timeout in ms (uses `AbortSignal.timeout`) |
+| `fetch` | `FetchFunction` | `globalThis.fetch` | Custom fetch implementation |
+| `middleware` | `Array` | `[]` | Transform and wrapping middleware |
 
-By default, `get-it` will return an object of single-channel event emitters. This is done in order to provide a low-level API surface that others can build upon, which is what the `promise` and `observable` middlewares do. Unless you really know what you're doing, you'll probably want to use those middlewares.
+### Per-request options
 
-## Response objects
+| Option | Type | Description |
+| --- | --- | --- |
+| `url` | `string` | Request URL (required) |
+| `method` | `string` | HTTP method |
+| `body` | `unknown` | Request body (objects auto-serialized as JSON) |
+| `headers` | `HeadersInit` | Merged with instance headers |
+| `query` | `Record<string, string \| number \| boolean \| undefined>` | URL query parameters |
+| `as` | `'json' \| 'text' \| 'stream'` | Response body type |
+| `signal` | `AbortSignal` | Cancellation signal |
+| `httpErrors` | `boolean` | Override instance setting |
+| `timeout` | `number \| false` | Override instance timeout |
+| `fetch` | `FetchFunction` | Override instance fetch |
 
-`get-it` does not expose the low-level primitives such as the `XMLHttpRequest` or `http.IncomingMessage` instances. Instead, it provides a response object with the following properties:
+## Error handling
 
-```js
-{
-  // body is `string` by default. When `rawBody` is set to true, will return `ArrayBuffer` in browsers and `Buffer` in Node.js.
-  body: 'Response body'
-  // The final URL, after following redirects (configure `maxRedirects` to change the number of redirects to follow)
-  url: 'http://foo.bar/baz',
-  method: 'GET',
-  statusCode: 200,
-  statusMessage: 'OK',
-  headers: {
-    'Date': 'Fri, 09 Dec 2016 14:55:32 GMT',
-    'Cache-Control': 'public, max-age=120'
+```ts
+import {HttpError} from 'get-it'
+
+try {
+  await request('/not-found')
+} catch (err) {
+  if (err instanceof HttpError) {
+    console.log(err.status)    // 404
+    console.log(err.response)  // full response object
   }
+}
+
+// Disable for a single request
+const res = await request({url: '/maybe-404', httpErrors: false})
+```
+
+## Cancellation
+
+```ts
+const controller = new AbortController()
+const promise = request({url: '/slow', signal: controller.signal})
+controller.abort()
+```
+
+Timeout and user-provided signals are combined automatically with `AbortSignal.any()`.
+
+## Middleware
+
+Two types of middleware, passed in the `middleware` array:
+
+**Transform middleware** (object) — flat pipeline, invisible in stack traces:
+
+```ts
+const addHeader: TransformMiddleware = {
+  beforeRequest(options) {
+    return {...options, headers: new Headers({...Object.fromEntries(new Headers(options.headers)), 'X-Custom': 'value'})}
+  },
 }
 ```
 
-## Promise API
+**Wrapping middleware** (function) — wraps the fetch call, appears in stack traces:
 
-For the most part, you simply have to register the middleware and you should be good to go. Sometimes you only need the response body, in which case you can set the `onlyBody` option to `true`. Otherwise the promise will be resolved with the response object mentioned earlier.
-
-```js
-import {getIt} from 'get-it'
-import {promise} from 'get-it/middleware'
-
-const request = getIt([promise({onlyBody: true})])
-
-request({url: 'http://foo.bar/api/projects'})
-  .then((projects) => console.log(projects))
-  .catch((err) => console.error(err))
+```ts
+const logger: WrappingMiddleware = async (options, next) => {
+  console.log('fetching', options.url)
+  const response = await next(options)
+  console.log('done', response.status)
+  return response
+}
 ```
 
-### Cancelling promise-based requests
+### Built-in middleware
 
-With the Promise API, you can cancel requests using a _cancel token_. This API is based on the [Cancelable Promises proposal](https://github.com/tc39/proposal-cancelable-promises), which was at Stage 1 before it was withdrawn.
+```ts
+import {retry, debug, urlEncoded} from 'get-it/middleware'
 
-You can create a cancel token using the `CancelToken.source` factory as shown below:
-
-```js
-import {promise} from 'get-it/middleware'
-
-const request = getIt([promise()])
-
-const source = promise.CancelToken.source()
-
-request
-  .get({
-    url: 'http://foo.bar/baz',
-    cancelToken: source.token,
-  })
-  .catch((err) => {
-    if (promise.isCancel(err)) {
-      console.log('Request canceled', err.message)
-    } else {
-      // handle error
-    }
-  })
-
-// Cancel the request (the message parameter is optional)
-source.cancel('Operation canceled by the user')
+const request = createRequest({
+  middleware: [
+    retry({maxRetries: 3}),
+    debug({log: console.log, verbose: true}),
+  ],
+})
 ```
 
-## Observable API
+## Node.js proxy support
 
-The observable API requires you to pass an Observable-implementation that you want to use. Optionally, you can register it under the global `Observable`, but this is not recommended.
+In Node.js, Bun, and Deno, `createRequest` automatically uses an undici-based fetch that reads proxy configuration from environment variables.
 
-```js
-import {getIt} from 'get-it'
-import {observable} from 'get-it/middleware'
-import {Observable as RxjsObservable} from 'rxjs'
+For custom proxy or connection pool settings:
 
-const request = getIt()
+```ts
+import {createRequest} from 'get-it'
+import {nodeFetch} from 'get-it/node'
 
-request.use(
-  observable({
-    implementation: RxjsObservable,
+const request = createRequest({
+  fetch: nodeFetch({
+    proxy: 'http://proxy:8080',
+    connections: 30,
+    allowH2: true,
   }),
-)
-
-const observer = request({url: 'http://foo.bar/baz'})
-  .filter((ev) => ev.type === 'response')
-  .subscribe({
-    next: (res) => console.log(res.body),
-    error: (err) => console.error(err),
-  })
-
-// If you want to cancel the request, simply unsubscribe:
-observer.unsubscribe()
+})
 ```
 
-It's important to note that the observable middleware does not only emit `response` objects, but also `progress` events. You should always filter to specify what you're interested in receiving. Every emitted value has a `type` property.
+## Entry points
 
-## Prior art
+| Import | Purpose |
+| --- | --- |
+| `get-it` | Core (auto-selects Node variant via conditional exports) |
+| `get-it/middleware` | `retry`, `debug`, `urlEncoded` |
+| `get-it/node` | `nodeFetch()` for custom undici dispatcher config |
 
-This module was inspired by the great work of others:
+## Migrating from v1
 
-- [got](https://github.com/sindresorhus/got)
-- [simple-get](https://github.com/feross/simple-get)
-- [xhr](https://github.com/naugtur/xhr)
-- [Axios](https://github.com/mzabriskie/axios/)
-- [http-client](https://github.com/mjackson/http-client)
-- [request](https://github.com/request/request)
+See [docs/MIGRATION-v2.md](docs/MIGRATION-v2.md) for a comprehensive migration guide.
 
 ## License
 
@@ -194,4 +219,3 @@ Semantic release will only release on configured branches, so it is safe to run 
 [gzip-badge]: https://img.shields.io/bundlephobia/minzip/get-it?label=gzip%20size&style=flat-square
 [size-badge]: https://img.shields.io/bundlephobia/min/get-it?label=size&style=flat-square
 [bundlephobia]: https://bundlephobia.com/package/get-it
-[modern browsers]: https://browsersl.ist/#q=%3E+0.2%25+and+supports+es6-module+and+supports+es6-module-dynamic-import+and+not+dead+and+not+IE+11

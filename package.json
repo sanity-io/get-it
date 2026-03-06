@@ -108,7 +108,6 @@
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-prettier": "^5.5.1",
     "eslint-plugin-simple-import-sort": "^12.1.1",
-    "get-uri": "^6.0.4",
     "happy-dom": "^18.0.1",
     "knip": "^5.85.0",
     "ls-engines": "^0.9.3",
