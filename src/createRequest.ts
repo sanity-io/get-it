@@ -17,6 +17,146 @@ import type {
   WrappingMiddleware,
 } from './types'
 
+/** @public */
+export function createRequest(options?: CreateRequestOptions): RequestFunction {
+  const instanceFetch = options?.fetch
+  const instanceHeaders = options?.headers
+  const instanceBase = options?.base
+  const instanceHttpErrors = options?.httpErrors
+  const instanceTimeout = options?.timeout
+  const instanceCredentials = options?.credentials
+
+  // Separate middleware into transforms and wrappers by shape
+  const middleware = options?.middleware ?? []
+  const transforms: TransformMiddleware[] = []
+  const wrappers: WrappingMiddleware[] = []
+  for (const mw of middleware) {
+    if (isTransformMiddleware(mw)) {
+      transforms.push(mw)
+    } else {
+      wrappers.push(mw)
+    }
+  }
+
+  /**
+   * Core fetch + buffer function. This is the innermost layer
+   * that wrapping middlewares eventually call.
+   */
+  async function coreFetchBuffered(opts: RequestOptions): Promise<BufferedResponse> {
+    const fetchFn: FetchFunction = opts.fetch ?? instanceFetch ?? globalThis.fetch
+    const {url, init} = buildFetchArgs(opts, instanceTimeout, instanceCredentials)
+    const response = await fetchFn(url, init)
+    const httpErrors = opts.httpErrors ?? instanceHttpErrors ?? true
+    return bufferAndCheck(response, httpErrors, url, init.method ?? 'GET')
+  }
+
+  // Compose wrapping middlewares around the core fetch
+  const fetchChain = composeFetchChain(coreFetchBuffered, wrappers)
+
+  /**
+   * Execute the full buffered pipeline:
+   * beforeRequest transforms → wrapping chain → afterResponse transforms
+   */
+  async function executeBuffered(opts: RequestOptions): Promise<BufferedResponse> {
+    const transformedOpts = runBeforeRequest(opts, transforms)
+    const buffered = await fetchChain(transformedOpts)
+    return runAfterResponse(buffered, transforms)
+  }
+
+  async function requestJson(opts: RequestOptions): Promise<JsonResponse> {
+    const buffered = await executeBuffered(opts)
+    return responseOf(buffered, JSON.parse(buffered.text()) as unknown)
+  }
+
+  async function requestText(opts: RequestOptions): Promise<TextResponse> {
+    const buffered = await executeBuffered(opts)
+    return responseOf(buffered, buffered.text())
+  }
+
+  async function requestStream(opts: RequestOptions): Promise<StreamResponse> {
+    // Stream mode: beforeRequest transforms + wrapping middleware apply.
+    // afterResponse transforms do NOT apply (there is no BufferedResponse to transform).
+    const transformedOpts = runBeforeRequest(opts, transforms)
+
+    // Capture the raw fetch response so we can extract the stream after
+    // the wrapping middleware chain completes.
+    let capturedResponse: FetchResponse | undefined
+
+    async function coreStreamFetch(reqOpts: RequestOptions): Promise<BufferedResponse> {
+      const fetchFn: FetchFunction = reqOpts.fetch ?? instanceFetch ?? globalThis.fetch
+      const {url, init} = buildFetchArgs(reqOpts, instanceTimeout, instanceCredentials)
+      const response = await fetchFn(url, init)
+      const httpErrors = reqOpts.httpErrors ?? instanceHttpErrors ?? true
+
+      if (httpErrors && response.status >= 400) {
+        return bufferAndCheck(response, httpErrors, url, init.method ?? 'GET')
+      }
+
+      capturedResponse = response
+      return createBufferedResponse(
+        response.status,
+        response.statusText,
+        response.headers,
+        new Uint8Array(0),
+      )
+    }
+
+    const streamChain = composeFetchChain(coreStreamFetch, wrappers)
+    await streamChain(transformedOpts)
+
+    if (!capturedResponse) {
+      throw new Error('Stream response was not captured')
+    }
+
+    const streamBody =
+      capturedResponse.body ??
+      new ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.close()
+        },
+      })
+
+    return responseOf(capturedResponse, streamBody)
+  }
+
+  // Overloaded request function — each overload dispatches to the
+  // appropriately-typed helper, so no type assertions are needed.
+  function request<T = unknown>(opts: RequestOptions & {as: 'json'}): Promise<JsonResponse<T>>
+  function request(opts: RequestOptions & {as: 'text'}): Promise<TextResponse>
+  function request(opts: RequestOptions & {as: 'stream'}): Promise<StreamResponse>
+  function request(opts: RequestOptions): Promise<BufferedResponse>
+  function request(url: string): Promise<BufferedResponse>
+  function request(
+    input: string | RequestOptions,
+  ): Promise<BufferedResponse | JsonResponse | TextResponse | StreamResponse> {
+    const raw: RequestOptions = typeof input === 'string' ? {url: input} : input
+
+    // Resolve instance-level config into the options so middleware sees the full picture
+    let url = raw.url
+    if (instanceBase && !url.startsWith('http://') && !url.startsWith('https://')) {
+      url = instanceBase.replace(/\/$/, '') + '/' + url.replace(/^\//, '')
+    }
+    const opts: RequestOptions = {
+      ...raw,
+      url,
+      headers: mergeHeaders(instanceHeaders, raw.headers),
+    }
+
+    switch (opts.as) {
+      case 'json':
+        return requestJson(opts)
+      case 'text':
+        return requestText(opts)
+      case 'stream':
+        return requestStream(opts)
+      default:
+        return executeBuffered(opts)
+    }
+  }
+
+  return request
+}
+
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   if (typeof value !== 'object' || value === null) return false
   if (Array.isArray(value)) return false
@@ -240,144 +380,4 @@ function responseOf<T>(
   body: T,
 ): {status: number; statusText: string; headers: Headers; body: T} {
   return {status: source.status, statusText: source.statusText, headers: source.headers, body}
-}
-
-/** @public */
-export function createRequest(options?: CreateRequestOptions): RequestFunction {
-  const instanceFetch = options?.fetch
-  const instanceHeaders = options?.headers
-  const instanceBase = options?.base
-  const instanceHttpErrors = options?.httpErrors
-  const instanceTimeout = options?.timeout
-  const instanceCredentials = options?.credentials
-
-  // Separate middleware into transforms and wrappers by shape
-  const middleware = options?.middleware ?? []
-  const transforms: TransformMiddleware[] = []
-  const wrappers: WrappingMiddleware[] = []
-  for (const mw of middleware) {
-    if (isTransformMiddleware(mw)) {
-      transforms.push(mw)
-    } else {
-      wrappers.push(mw)
-    }
-  }
-
-  /**
-   * Core fetch + buffer function. This is the innermost layer
-   * that wrapping middlewares eventually call.
-   */
-  async function coreFetchBuffered(opts: RequestOptions): Promise<BufferedResponse> {
-    const fetchFn: FetchFunction = opts.fetch ?? instanceFetch ?? globalThis.fetch
-    const {url, init} = buildFetchArgs(opts, instanceTimeout, instanceCredentials)
-    const response = await fetchFn(url, init)
-    const httpErrors = opts.httpErrors ?? instanceHttpErrors ?? true
-    return bufferAndCheck(response, httpErrors, url, init.method ?? 'GET')
-  }
-
-  // Compose wrapping middlewares around the core fetch
-  const fetchChain = composeFetchChain(coreFetchBuffered, wrappers)
-
-  /**
-   * Execute the full buffered pipeline:
-   * beforeRequest transforms → wrapping chain → afterResponse transforms
-   */
-  async function executeBuffered(opts: RequestOptions): Promise<BufferedResponse> {
-    const transformedOpts = runBeforeRequest(opts, transforms)
-    const buffered = await fetchChain(transformedOpts)
-    return runAfterResponse(buffered, transforms)
-  }
-
-  async function requestJson(opts: RequestOptions): Promise<JsonResponse> {
-    const buffered = await executeBuffered(opts)
-    return responseOf(buffered, JSON.parse(buffered.text()) as unknown)
-  }
-
-  async function requestText(opts: RequestOptions): Promise<TextResponse> {
-    const buffered = await executeBuffered(opts)
-    return responseOf(buffered, buffered.text())
-  }
-
-  async function requestStream(opts: RequestOptions): Promise<StreamResponse> {
-    // Stream mode: beforeRequest transforms + wrapping middleware apply.
-    // afterResponse transforms do NOT apply (there is no BufferedResponse to transform).
-    const transformedOpts = runBeforeRequest(opts, transforms)
-
-    // Capture the raw fetch response so we can extract the stream after
-    // the wrapping middleware chain completes.
-    let capturedResponse: FetchResponse | undefined
-
-    async function coreStreamFetch(reqOpts: RequestOptions): Promise<BufferedResponse> {
-      const fetchFn: FetchFunction = reqOpts.fetch ?? instanceFetch ?? globalThis.fetch
-      const {url, init} = buildFetchArgs(reqOpts, instanceTimeout, instanceCredentials)
-      const response = await fetchFn(url, init)
-      const httpErrors = reqOpts.httpErrors ?? instanceHttpErrors ?? true
-
-      if (httpErrors && response.status >= 400) {
-        return bufferAndCheck(response, httpErrors, url, init.method ?? 'GET')
-      }
-
-      capturedResponse = response
-      return createBufferedResponse(
-        response.status,
-        response.statusText,
-        response.headers,
-        new Uint8Array(0),
-      )
-    }
-
-    const streamChain = composeFetchChain(coreStreamFetch, wrappers)
-    await streamChain(transformedOpts)
-
-    if (!capturedResponse) {
-      throw new Error('Stream response was not captured')
-    }
-
-    const streamBody =
-      capturedResponse.body ??
-      new ReadableStream<Uint8Array>({
-        start(controller) {
-          controller.close()
-        },
-      })
-
-    return responseOf(capturedResponse, streamBody)
-  }
-
-  // Overloaded request function — each overload dispatches to the
-  // appropriately-typed helper, so no type assertions are needed.
-  function request<T = unknown>(opts: RequestOptions & {as: 'json'}): Promise<JsonResponse<T>>
-  function request(opts: RequestOptions & {as: 'text'}): Promise<TextResponse>
-  function request(opts: RequestOptions & {as: 'stream'}): Promise<StreamResponse>
-  function request(opts: RequestOptions): Promise<BufferedResponse>
-  function request(url: string): Promise<BufferedResponse>
-  function request(
-    input: string | RequestOptions,
-  ): Promise<BufferedResponse | JsonResponse | TextResponse | StreamResponse> {
-    const raw: RequestOptions = typeof input === 'string' ? {url: input} : input
-
-    // Resolve instance-level config into the options so middleware sees the full picture
-    let url = raw.url
-    if (instanceBase && !url.startsWith('http://') && !url.startsWith('https://')) {
-      url = instanceBase.replace(/\/$/, '') + '/' + url.replace(/^\//, '')
-    }
-    const opts: RequestOptions = {
-      ...raw,
-      url,
-      headers: mergeHeaders(instanceHeaders, raw.headers),
-    }
-
-    switch (opts.as) {
-      case 'json':
-        return requestJson(opts)
-      case 'text':
-        return requestText(opts)
-      case 'stream':
-        return requestStream(opts)
-      default:
-        return executeBuffered(opts)
-    }
-  }
-
-  return request
 }

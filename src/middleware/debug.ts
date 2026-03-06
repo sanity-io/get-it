@@ -8,14 +8,6 @@ interface DebugOptions {
   verbose?: boolean
 }
 
-function headersToObject(headers: FetchHeaders, redactSet: Set<string>): Record<string, string> {
-  const result: Record<string, string> = {}
-  new Headers(headers).forEach((value, key) => {
-    result[key] = redactSet.has(key.toLowerCase()) ? 'REDACTED' : value
-  })
-  return result
-}
-
 /** @public */
 export function debug(opts?: DebugOptions): TransformMiddleware {
   const log = opts?.log
@@ -48,4 +40,12 @@ export function debug(opts?: DebugOptions): TransformMiddleware {
       return response
     },
   }
+}
+
+function headersToObject(headers: FetchHeaders, redactSet: Set<string>): Record<string, string> {
+  const result: Record<string, string> = {}
+  new Headers(headers).forEach((value, key) => {
+    result[key] = redactSet.has(key.toLowerCase()) ? 'REDACTED' : value
+  })
+  return result
 }
