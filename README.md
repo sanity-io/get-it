@@ -54,22 +54,22 @@ console.log(res.body) // parsed JSON
 
 The response object depends on the `as` option:
 
-| `as` value | `body` type | Buffered? |
-| --- | --- | --- |
-| _(omitted)_ | `Uint8Array` + `.json()`, `.text()`, `.bytes()` | yes |
-| `'json'` | `unknown` (or generic `T`) | yes |
-| `'text'` | `string` | yes |
-| `'stream'` | `ReadableStream<Uint8Array>` | no |
+| `as` value  | `body` type                                     | Buffered? |
+| ----------- | ----------------------------------------------- | --------- |
+| _(omitted)_ | `Uint8Array` + `.json()`, `.text()`, `.bytes()` | yes       |
+| `'json'`    | `unknown` (or generic `T`)                      | yes       |
+| `'text'`    | `string`                                        | yes       |
+| `'stream'`  | `ReadableStream<Uint8Array>`                    | no        |
 
 ```ts
 // Default — buffered with convenience methods
 const res = await request('/data')
-res.status        // number
-res.statusText    // string
-res.headers       // Headers
-res.body          // Uint8Array
-res.json()        // parse as JSON (synchronous)
-res.text()        // decode as string (synchronous)
+res.status // number
+res.statusText // string
+res.headers // Headers
+res.body // Uint8Array
+res.json() // parse as JSON (synchronous)
+res.text() // decode as string (synchronous)
 
 // Typed JSON
 const res = await request<User[]>({url: '/users', as: 'json'})
@@ -84,29 +84,29 @@ res.body // ReadableStream<Uint8Array>
 
 ### Instance options (`createRequest`)
 
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `base` | `string` | — | Base URL prepended to relative paths |
-| `headers` | `HeadersInit` | — | Default headers for all requests |
-| `httpErrors` | `boolean` | `true` | Throw `HttpError` on status >= 400 |
-| `timeout` | `number \| false` | — | Timeout in ms (uses `AbortSignal.timeout`) |
-| `fetch` | `FetchFunction` | `globalThis.fetch` | Custom fetch implementation |
-| `middleware` | `Array` | `[]` | Transform and wrapping middleware |
+| Option       | Type              | Default            | Description                                |
+| ------------ | ----------------- | ------------------ | ------------------------------------------ |
+| `base`       | `string`          | —                  | Base URL prepended to relative paths       |
+| `headers`    | `HeadersInit`     | —                  | Default headers for all requests           |
+| `httpErrors` | `boolean`         | `true`             | Throw `HttpError` on status >= 400         |
+| `timeout`    | `number \| false` | —                  | Timeout in ms (uses `AbortSignal.timeout`) |
+| `fetch`      | `FetchFunction`   | `globalThis.fetch` | Custom fetch implementation                |
+| `middleware` | `Array`           | `[]`               | Transform and wrapping middleware          |
 
 ### Per-request options
 
-| Option | Type | Description |
-| --- | --- | --- |
-| `url` | `string` | Request URL (required) |
-| `method` | `string` | HTTP method |
-| `body` | `unknown` | Request body (objects auto-serialized as JSON) |
-| `headers` | `HeadersInit` | Merged with instance headers |
-| `query` | `Record<string, string \| number \| boolean \| undefined>` | URL query parameters |
-| `as` | `'json' \| 'text' \| 'stream'` | Response body type |
-| `signal` | `AbortSignal` | Cancellation signal |
-| `httpErrors` | `boolean` | Override instance setting |
-| `timeout` | `number \| false` | Override instance timeout |
-| `fetch` | `FetchFunction` | Override instance fetch |
+| Option       | Type                                                       | Description                                    |
+| ------------ | ---------------------------------------------------------- | ---------------------------------------------- |
+| `url`        | `string`                                                   | Request URL (required)                         |
+| `method`     | `string`                                                   | HTTP method                                    |
+| `body`       | `unknown`                                                  | Request body (objects auto-serialized as JSON) |
+| `headers`    | `HeadersInit`                                              | Merged with instance headers                   |
+| `query`      | `Record<string, string \| number \| boolean \| undefined>` | URL query parameters                           |
+| `as`         | `'json' \| 'text' \| 'stream'`                             | Response body type                             |
+| `signal`     | `AbortSignal`                                              | Cancellation signal                            |
+| `httpErrors` | `boolean`                                                  | Override instance setting                      |
+| `timeout`    | `number \| false`                                          | Override instance timeout                      |
+| `fetch`      | `FetchFunction`                                            | Override instance fetch                        |
 
 ## Error handling
 
@@ -117,8 +117,8 @@ try {
   await request('/not-found')
 } catch (err) {
   if (err instanceof HttpError) {
-    console.log(err.status)    // 404
-    console.log(err.response)  // full response object
+    console.log(err.status) // 404
+    console.log(err.response) // full response object
   }
 }
 
@@ -145,7 +145,13 @@ Two types of middleware, passed in the `middleware` array:
 ```ts
 const addHeader: TransformMiddleware = {
   beforeRequest(options) {
-    return {...options, headers: new Headers({...Object.fromEntries(new Headers(options.headers)), 'X-Custom': 'value'})}
+    return {
+      ...options,
+      headers: new Headers({
+        ...Object.fromEntries(new Headers(options.headers)),
+        'X-Custom': 'value',
+      }),
+    }
   },
 }
 ```
@@ -167,10 +173,7 @@ const logger: WrappingMiddleware = async (options, next) => {
 import {retry, debug, urlEncoded} from 'get-it/middleware'
 
 const request = createRequest({
-  middleware: [
-    retry({maxRetries: 3}),
-    debug({log: console.log, verbose: true}),
-  ],
+  middleware: [retry({maxRetries: 3}), debug({log: console.log, verbose: true})],
 })
 ```
 
@@ -195,11 +198,11 @@ const request = createRequest({
 
 ## Entry points
 
-| Import | Purpose |
-| --- | --- |
-| `get-it` | Core (auto-selects Node variant via conditional exports) |
-| `get-it/middleware` | `retry`, `debug`, `urlEncoded` |
-| `get-it/node` | `nodeFetch()` for custom undici dispatcher config |
+| Import              | Purpose                                                  |
+| ------------------- | -------------------------------------------------------- |
+| `get-it`            | Core (auto-selects Node variant via conditional exports) |
+| `get-it/middleware` | `retry`, `debug`, `urlEncoded`                           |
+| `get-it/node`       | `nodeFetch()` for custom undici dispatcher config        |
 
 ## Migrating from v1
 

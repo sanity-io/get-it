@@ -30,7 +30,7 @@ import getIt from 'get-it'
 const getIt = require('get-it')
 
 // v2
-import { createRequest } from 'get-it'
+import {createRequest} from 'get-it'
 ```
 
 Note: `getIt` was a default export. `createRequest` is a named export.
@@ -39,10 +39,23 @@ Note: `getIt` was a default export. `createRequest` is a named export.
 
 ```ts
 // v1
-import { promise, base, headers, jsonRequest, jsonResponse, httpErrors, retry, debug, observable, progress, keepAlive, agent } from 'get-it/middleware'
+import {
+  promise,
+  base,
+  headers,
+  jsonRequest,
+  jsonResponse,
+  httpErrors,
+  retry,
+  debug,
+  observable,
+  progress,
+  keepAlive,
+  agent,
+} from 'get-it/middleware'
 
 // v2 — only these middleware still exist:
-import { retry, debug, urlEncoded } from 'get-it/middleware'
+import {retry, debug, urlEncoded} from 'get-it/middleware'
 // Everything else is built into createRequest() or removed
 ```
 
@@ -51,7 +64,7 @@ import { retry, debug, urlEncoded } from 'get-it/middleware'
 ```ts
 // v1 — no equivalent
 // v2
-import { nodeFetch } from 'get-it/node'
+import {nodeFetch} from 'get-it/node'
 ```
 
 ## Step 3: Transform instance creation
@@ -62,23 +75,24 @@ Search for `getIt(` calls and transform them:
 // v1
 const request = getIt([
   base('https://api.example.com'),
-  headers({ Authorization: 'Bearer ...' }),
+  headers({Authorization: 'Bearer ...'}),
   jsonRequest(),
   jsonResponse(),
   httpErrors(),
-  retry({ maxRetries: 3 }),
+  retry({maxRetries: 3}),
   promise(),
 ])
 
 // v2
 const request = createRequest({
   base: 'https://api.example.com',
-  headers: { Authorization: 'Bearer ...' },
-  middleware: [retry({ maxRetries: 3 })],
+  headers: {Authorization: 'Bearer ...'},
+  middleware: [retry({maxRetries: 3})],
 })
 ```
 
 Mapping of v1 middleware to v2 createRequest options:
+
 - `base(url)` → `{ base: url }`
 - `headers(obj)` → `{ headers: obj }`
 - `httpErrors()` → built-in, on by default. Use `{ httpErrors: false }` to opt out.
@@ -99,14 +113,14 @@ Search for `CancelToken` and `cancelToken`:
 
 ```ts
 // v1
-import { promise } from 'get-it/middleware'
+import {promise} from 'get-it/middleware'
 const source = promise.CancelToken.source()
-request({ url: '/api', cancelToken: source.token })
+request({url: '/api', cancelToken: source.token})
 source.cancel('reason')
 
 // v2
 const controller = new AbortController()
-request({ url: '/api', signal: controller.signal })
+request({url: '/api', signal: controller.signal})
 controller.abort()
 ```
 
@@ -156,30 +170,30 @@ response.headers.get('content-type')
 
 ```ts
 // v1 (with jsonResponse middleware)
-response.body  // already parsed
+response.body // already parsed
 
 // v2 — choose one:
-response.json()                           // parse as JSON (synchronous)
-response.text()                           // decode as string (synchronous)
-response.body                             // raw Uint8Array
+response.json() // parse as JSON (synchronous)
+response.text() // decode as string (synchronous)
+response.body // raw Uint8Array
 
 // Or use `as` option:
-const res = await request({ url, as: 'json' })
-res.body  // parsed JSON
+const res = await request({url, as: 'json'})
+res.body // parsed JSON
 ```
 
 ## Step 6: Transform stream and rawBody options
 
 ```ts
 // v1
-request({ url, stream: true })
+request({url, stream: true})
 // v2
-request({ url, as: 'stream' })
+request({url, as: 'stream'})
 
 // v1
-request({ url, rawBody: true })
+request({url, rawBody: true})
 // v2 — this is now the default behavior
-request({ url })  // body is Uint8Array
+request({url}) // body is Uint8Array
 ```
 
 ## Step 7: Transform custom middleware
@@ -191,13 +205,19 @@ If the codebase has custom v1 middleware using the hook system (`processOptions`
 ```ts
 // v1
 const myMiddleware = {
-  processOptions: (options) => ({ ...options, headers: { ...options.headers, 'X-Custom': 'value' } }),
-  onResponse: (response) => ({ ...response, body: transform(response.body) }),
+  processOptions: (options) => ({...options, headers: {...options.headers, 'X-Custom': 'value'}}),
+  onResponse: (response) => ({...response, body: transform(response.body)}),
 }
 
 // v2 — TransformMiddleware
 const myMiddleware: TransformMiddleware = {
-  beforeRequest: (options) => ({ ...options, headers: new Headers({ ...Object.fromEntries(new Headers(options.headers)), 'X-Custom': 'value' }) }),
+  beforeRequest: (options) => ({
+    ...options,
+    headers: new Headers({
+      ...Object.fromEntries(new Headers(options.headers)),
+      'X-Custom': 'value',
+    }),
+  }),
   afterResponse: (response) => response, // modify as needed
 }
 ```
@@ -238,14 +258,14 @@ If the codebase explicitly configures proxies:
 
 ```ts
 // v1
-import { proxy } from 'get-it/middleware'
-const request = getIt([proxy({ host: 'proxy', port: 8080 }), promise()])
+import {proxy} from 'get-it/middleware'
+const request = getIt([proxy({host: 'proxy', port: 8080}), promise()])
 
 // v2 — automatic in Node (reads HTTP_PROXY env var)
 // For explicit proxy:
-import { nodeFetch } from 'get-it/node'
+import {nodeFetch} from 'get-it/node'
 const request = createRequest({
-  fetch: nodeFetch({ proxy: 'http://proxy:8080' }),
+  fetch: nodeFetch({proxy: 'http://proxy:8080'}),
 })
 ```
 
@@ -258,6 +278,7 @@ After completing all transformations:
 3. Manually test key workflows
 
 Common issues to check:
+
 - Response body access patterns (`.body` vs `.json()` vs `.text()`)
 - Header access (bracket notation vs `.get()`)
 - Status code property name (`statusCode` vs `status`)
