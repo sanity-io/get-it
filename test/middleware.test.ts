@@ -190,6 +190,43 @@ describe('middleware system', () => {
     expect(res.body).toBe('Just some plain text for you to consume')
   })
 
+  it('wrapping middleware runs for stream requests', async () => {
+    let wrappedCalled = false
+    const wrapping: WrappingMiddleware = async (opts, next) => {
+      wrappedCalled = true
+      return next(opts)
+    }
+    const request = createRequest({base: baseUrl, middleware: [wrapping]})
+    const res = await request({url: '/plain-text', as: 'stream'})
+    await res.body.cancel()
+    expect(wrappedCalled).toBe(true)
+  })
+
+  it('wrapping middleware can modify options for stream requests', async () => {
+    const addHeader: WrappingMiddleware = async (opts, next) => {
+      return next({...opts, headers: {...opts.headers, 'X-Stream-MW': 'yes'}})
+    }
+    const request = createRequest({base: baseUrl, middleware: [addHeader]})
+    const res = await request({url: '/debug', as: 'stream'})
+    const reader = res.body.getReader()
+    const chunks: Uint8Array[] = []
+    let done = false
+    while (!done) {
+      const result = await reader.read()
+      if (result.value) chunks.push(result.value)
+      done = result.done
+    }
+    const combined = new Uint8Array(chunks.reduce((acc, c) => acc + c.length, 0))
+    let offset = 0
+    for (const chunk of chunks) {
+      combined.set(chunk, offset)
+      offset += chunk.length
+    }
+    const debug = JSON.parse(new TextDecoder().decode(combined)) as Record<string, unknown>
+    const headers = debug['headers'] as Record<string, string>
+    expect(headers['x-stream-mw']).toBe('yes')
+  })
+
   it('stream mode gets beforeRequest but not afterResponse', async () => {
     let beforeCalled = false
     let afterCalled = false
