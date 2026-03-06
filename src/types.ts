@@ -1,6 +1,6 @@
 import type {IncomingHttpHeaders, IncomingMessage} from 'http'
-import type {UrlWithStringQuery} from 'url'
 
+import type {ParsedUrl} from './request/node/parseUrl'
 import type {ProgressStream} from './util/progress-stream'
 
 /** @public */
@@ -66,7 +66,7 @@ export interface MiddlewareChannels {
 }
 
 /** @public */
-export interface FinalizeNodeOptionsPayload extends UrlWithStringQuery {
+export interface FinalizeNodeOptionsPayload extends ParsedUrl {
   method: RequestOptions['method']
   headers: RequestOptions['headers']
   maxRedirects: RequestOptions['maxRedirects']
