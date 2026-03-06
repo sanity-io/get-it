@@ -56,6 +56,28 @@ await request({url: '/api?tag=a', query: {tag: 'b'}})
 
 This uses `URLSearchParams.set()` (idempotent, last-write-wins) rather than v8's `.append()`. If you rely on duplicate query parameters, build the full URL yourself before passing it to `request`.
 
+### Query parameters no longer accept arrays
+
+v8 expanded arrays into repeated keys: `{tags: ['a', 'b']}` → `tags=a&tags=b`. v9's `query` option only accepts scalar values (`string | number | boolean | undefined`). Passing an array will silently produce a single comma-joined value via `String()`:
+
+```ts
+// v8
+await request({url: '/api', query: {tags: ['a', 'b']}})
+// → /api?tags=a&tags=b
+
+// v9 — WRONG, produces /api?tags=a%2Cb
+await request({url: '/api', query: {tags: ['a', 'b']}})
+```
+
+If you need repeated query keys, build the query string yourself:
+
+```ts
+const params = new URLSearchParams()
+params.append('tags', 'a')
+params.append('tags', 'b')
+await request({url: `/api?${params}`})
+```
+
 ## Creating a request instance
 
 ### Before (v8)
