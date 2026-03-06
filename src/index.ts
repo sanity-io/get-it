@@ -307,7 +307,18 @@ export function createRequest(options?: CreateRequestOptions): RequestFunction {
   function request(
     input: string | RequestOptions,
   ): Promise<BufferedResponse | JsonResponse | TextResponse | StreamResponse> {
-    const opts: RequestOptions = typeof input === 'string' ? {url: input} : input
+    const raw: RequestOptions = typeof input === 'string' ? {url: input} : input
+
+    // Resolve instance-level config into the options so middleware sees the full picture
+    let url = raw.url
+    if (instanceBase && !url.startsWith('http://') && !url.startsWith('https://')) {
+      url = instanceBase + url
+    }
+    const opts: RequestOptions = {
+      ...raw,
+      url,
+      headers: {...instanceHeaders, ...raw.headers},
+    }
 
     switch (opts.as) {
       case 'json':
