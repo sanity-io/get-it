@@ -10,8 +10,8 @@ const testTimeout = 250
 const testTimeoutThreshold = testTimeout * 0.95
 
 describe('timeouts', {timeout: 10000}, () => {
-  // @TODO make the this test work in happy-dom
-  it.skipIf(adapter === 'xhr' && environment === 'browser')(
+  // @TODO make this test work in happy-dom and edge runtime
+  it.skipIf(environment === 'browser')(
     'should be able to set a "global" timeout',
     () =>
       new Promise((resolve, reject) => {
