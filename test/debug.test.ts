@@ -1,4 +1,5 @@
 import {describe, expect, it} from 'vitest'
+
 import {createRequest} from '../src/index'
 import {debug} from '../src/middleware/debug'
 

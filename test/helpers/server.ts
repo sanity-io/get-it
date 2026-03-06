@@ -213,7 +213,8 @@ function getResponseHandler(proto = 'http') {
       case '/req-test/unicode-chunked': {
         // Send multi-byte UTF-8 text in small chunks to force mid-character splits.
         // Each emoji is 4 bytes; writing 3 bytes at a time guarantees splits.
-        const text = '\u{1F389}\u{1F680}\u{1F30D}\u{1F3B8}\u{1F4A1}\u{1F525}\u2728\u{1F3AF}\u{1F427}\u{1F308}'
+        const text =
+          '\u{1F389}\u{1F680}\u{1F30D}\u{1F3B8}\u{1F4A1}\u{1F525}\u2728\u{1F3AF}\u{1F427}\u{1F308}'
         const encoded = Buffer.from(text, 'utf8')
         res.writeHead(200, {'Content-Type': 'text/plain; charset=utf-8'})
         let offset = 0
@@ -233,7 +234,8 @@ function getResponseHandler(proto = 'http') {
       }
       case '/req-test/unicode-gzip': {
         // Gzip-compressed multi-byte UTF-8 text
-        const uText = '\u{1F389}\u{1F680}\u{1F30D}\u{1F3B8}\u{1F4A1}\u{1F525}\u2728\u{1F3AF}\u{1F427}\u{1F308}'
+        const uText =
+          '\u{1F389}\u{1F680}\u{1F30D}\u{1F3B8}\u{1F4A1}\u{1F525}\u2728\u{1F3AF}\u{1F427}\u{1F308}'
         res.setHeader('Content-Type', 'text/plain; charset=utf-8')
         res.setHeader('Content-Encoding', 'gzip')
         zlib.gzip(Buffer.from(uText, 'utf8'), (_err, result) => res.end(result))

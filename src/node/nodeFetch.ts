@@ -45,8 +45,7 @@ function adaptResponse(response: Response): FetchResponse {
  * This works because Node's built-in fetch (undici) does accept `dispatcher`
  * at runtime — we just need to widen the init type.
  */
-const nodeFetchFn: (input: string, init?: NodeRequestInit) => Promise<Response> =
-  globalThis.fetch
+const nodeFetchFn: (input: string, init?: NodeRequestInit) => Promise<Response> = globalThis.fetch
 
 /**
  * Creates a `FetchFunction` backed by an undici dispatcher.

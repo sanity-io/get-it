@@ -202,6 +202,6 @@ export type RequestAdapter = 'node' | 'xhr' | 'fetch'
 /** @public */
 export type Requester = {
   use: (middleware: Middleware) => Requester
-  clone: () => Requester
+  clone: () => Requester;
   (options: RequestOptions | string): any
 }

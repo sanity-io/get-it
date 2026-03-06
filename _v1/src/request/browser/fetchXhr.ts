@@ -1,9 +1,10 @@
 /**
  * Mimicks the XMLHttpRequest API with only the parts needed for get-it's XHR adapter
  */
-export class FetchXhr
-  implements Pick<XMLHttpRequest, 'open' | 'abort' | 'getAllResponseHeaders' | 'setRequestHeader'>
-{
+export class FetchXhr implements Pick<
+  XMLHttpRequest,
+  'open' | 'abort' | 'getAllResponseHeaders' | 'setRequestHeader'
+> {
   /**
    * Public interface, interop with real XMLHttpRequest
    */

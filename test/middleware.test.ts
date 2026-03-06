@@ -1,4 +1,5 @@
 import {describe, expect, it} from 'vitest'
+
 import {createRequest} from '../src/index'
 import type {WrappingMiddleware} from '../src/types'
 
@@ -10,8 +11,18 @@ describe('middleware system', () => {
     const request = createRequest({
       base: baseUrl,
       middleware: [
-        {beforeRequest: (opts) => { order.push('a'); return opts }},
-        {beforeRequest: (opts) => { order.push('b'); return opts }},
+        {
+          beforeRequest: (opts) => {
+            order.push('a')
+            return opts
+          },
+        },
+        {
+          beforeRequest: (opts) => {
+            order.push('b')
+            return opts
+          },
+        },
       ],
     })
     await request('/plain-text')
@@ -41,8 +52,18 @@ describe('middleware system', () => {
     const request = createRequest({
       base: baseUrl,
       middleware: [
-        {afterResponse: (res) => { order.push('a'); return res }},
-        {afterResponse: (res) => { order.push('b'); return res }},
+        {
+          afterResponse: (res) => {
+            order.push('a')
+            return res
+          },
+        },
+        {
+          afterResponse: (res) => {
+            order.push('b')
+            return res
+          },
+        },
       ],
     })
     await request('/plain-text')
@@ -95,14 +116,24 @@ describe('middleware system', () => {
     const request = createRequest({
       base: baseUrl,
       middleware: [
-        {beforeRequest: (opts) => { order.push('before'); return opts }},
+        {
+          beforeRequest: (opts) => {
+            order.push('before')
+            return opts
+          },
+        },
         async (opts, next) => {
           order.push('wrap-pre')
           const r = await next(opts)
           order.push('wrap-post')
           return r
         },
-        {afterResponse: (res) => { order.push('after'); return res }},
+        {
+          afterResponse: (res) => {
+            order.push('after')
+            return res
+          },
+        },
       ],
     })
     await request('/plain-text')
@@ -167,8 +198,14 @@ describe('middleware system', () => {
       base: baseUrl,
       middleware: [
         {
-          beforeRequest: (opts) => { beforeCalled = true; return opts },
-          afterResponse: (res) => { afterCalled = true; return res },
+          beforeRequest: (opts) => {
+            beforeCalled = true
+            return opts
+          },
+          afterResponse: (res) => {
+            afterCalled = true
+            return res
+          },
         },
       ],
     })

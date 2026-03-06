@@ -21,23 +21,25 @@ export function createProxyServer(proto: 'http' | 'https' = 'http') {
     // Track CONNECT requests for test verification
     let connectCount = 0
 
-    const requestHandler = (request: any, response: any) => {
+    const requestHandler = (request: http.IncomingMessage, response: http.ServerResponse) => {
+      const reqUrl = request.url ?? '/'
+
       // Verification endpoint: returns the number of CONNECT requests received
-      if (request.url === '/__proxy_connect_count') {
+      if (reqUrl === '/__proxy_connect_count') {
         response.setHeader('Content-Type', 'application/json')
         response.end(JSON.stringify({count: connectCount}))
         return
       }
 
       // Reset counter endpoint
-      if (request.url === '/__proxy_reset') {
+      if (reqUrl === '/__proxy_reset') {
         connectCount = 0
         response.end('ok')
         return
       }
 
       // Traditional HTTP forwarding proxy (for non-CONNECT requests)
-      const parsed = new URL(request.url)
+      const parsed = new URL(reqUrl)
       const opts = {
         host: parsed.hostname,
         port: parsed.port || undefined,
@@ -52,8 +54,8 @@ export function createProxyServer(proto: 'http' | 'https' = 'http') {
           body += data
         })
         res.on('end', () => {
-          response.setHeader('X-Proxy-Auth', request.headers['proxy-authorization'] || 'none')
-          response.setHeader('X-Proxy-Host', request.headers.host)
+          response.setHeader('X-Proxy-Auth', request.headers['proxy-authorization'] ?? 'none')
+          response.setHeader('X-Proxy-Host', request.headers.host ?? '')
           response.setHeader('Content-Type', 'text/plain; charset=UTF-8')
           response.end(`${body} + proxy`)
         })
