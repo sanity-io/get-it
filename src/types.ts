@@ -61,6 +61,7 @@ export interface RequestOptions {
   httpErrors?: boolean
   timeout?: number | false
   fetch?: FetchFunction
+  meta?: Record<string, unknown>
 }
 
 // ---------------------------------------------------------------------------

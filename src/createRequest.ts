@@ -6,6 +6,7 @@ import type {
   FetchFunction,
   FetchHeaders,
   FetchInit,
+  FetchResponse,
   JsonResponse,
   RequestFunction,
   RequestOptions,

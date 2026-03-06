@@ -267,6 +267,38 @@ describe('middleware system', () => {
     expect(res.status).toBe(999)
   })
 
+  it('passes meta through to middleware', async () => {
+    let receivedMeta: Record<string, unknown> | undefined
+    const request = createRequest({
+      base: baseUrl,
+      middleware: [
+        {
+          beforeRequest: (opts) => {
+            receivedMeta = opts.meta
+            return opts
+          },
+        },
+      ],
+    })
+    await request({url: '/plain-text', meta: {lineage: 'abc', traceId: 123}})
+    expect(receivedMeta).toEqual({lineage: 'abc', traceId: 123})
+  })
+
+  it('meta is available in wrapping middleware', async () => {
+    let receivedMeta: Record<string, unknown> | undefined
+    const request = createRequest({
+      base: baseUrl,
+      middleware: [
+        async (opts, next) => {
+          receivedMeta = opts.meta
+          return next(opts)
+        },
+      ],
+    })
+    await request({url: '/plain-text', meta: {lineage: 'xyz'}})
+    expect(receivedMeta).toEqual({lineage: 'xyz'})
+  })
+
   it('works with no middleware', async () => {
     const request = createRequest({base: baseUrl, middleware: []})
     const res = await request('/plain-text')
