@@ -126,8 +126,10 @@ function buildFetchArgs(
   }
   if (signal) init.signal = signal
 
+  // Only set credentials in browser-like environments — some runtimes
+  // (e.g. Cloudflare Workers) crash if credentials is set on fetch init.
   const credentials = opts.credentials ?? instanceCredentials
-  if (credentials) init.credentials = credentials
+  if (credentials && 'window' in globalThis) init.credentials = credentials
 
   return {url, init}
 }

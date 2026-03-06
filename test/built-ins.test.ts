@@ -326,37 +326,56 @@ describe('built-in behaviors', () => {
 
   // 4h: Credentials
   describe('credentials', () => {
-    it('passes instance-level credentials to fetch', async () => {
-      let calledInit: RequestInit | undefined
-      const fakeFetch = async (_input: string, init?: RequestInit) => {
-        calledInit = init
-        return new Response('ok')
+    // Credentials are only set in browser-like environments (where `window` exists)
+    // to avoid crashes in runtimes like Cloudflare Workers.
+    const hasWindow = 'window' in globalThis
+
+    it('passes instance-level credentials to fetch in browser env', async () => {
+      if (!hasWindow) (globalThis as Record<string, unknown>).window = globalThis
+      try {
+        let calledInit: RequestInit | undefined
+        const fakeFetch = async (_input: string, init?: RequestInit) => {
+          calledInit = init
+          return new Response('ok')
+        }
+        const request = createRequest({fetch: fakeFetch, credentials: 'include'})
+        await request('https://example.com/api')
+        expect(calledInit?.credentials).toBe('include')
+      } finally {
+        if (!hasWindow) delete (globalThis as Record<string, unknown>).window
       }
-      const request = createRequest({fetch: fakeFetch, credentials: 'include'})
-      await request('https://example.com/api')
-      expect(calledInit?.credentials).toBe('include')
     })
 
-    it('passes per-request credentials to fetch', async () => {
-      let calledInit: RequestInit | undefined
-      const fakeFetch = async (_input: string, init?: RequestInit) => {
-        calledInit = init
-        return new Response('ok')
+    it('passes per-request credentials to fetch in browser env', async () => {
+      if (!hasWindow) (globalThis as Record<string, unknown>).window = globalThis
+      try {
+        let calledInit: RequestInit | undefined
+        const fakeFetch = async (_input: string, init?: RequestInit) => {
+          calledInit = init
+          return new Response('ok')
+        }
+        const request = createRequest({fetch: fakeFetch})
+        await request({url: 'https://example.com/api', credentials: 'include'})
+        expect(calledInit?.credentials).toBe('include')
+      } finally {
+        if (!hasWindow) delete (globalThis as Record<string, unknown>).window
       }
-      const request = createRequest({fetch: fakeFetch})
-      await request({url: 'https://example.com/api', credentials: 'include'})
-      expect(calledInit?.credentials).toBe('include')
     })
 
     it('per-request credentials override instance credentials', async () => {
-      let calledInit: RequestInit | undefined
-      const fakeFetch = async (_input: string, init?: RequestInit) => {
-        calledInit = init
-        return new Response('ok')
+      if (!hasWindow) (globalThis as Record<string, unknown>).window = globalThis
+      try {
+        let calledInit: RequestInit | undefined
+        const fakeFetch = async (_input: string, init?: RequestInit) => {
+          calledInit = init
+          return new Response('ok')
+        }
+        const request = createRequest({fetch: fakeFetch, credentials: 'include'})
+        await request({url: 'https://example.com/api', credentials: 'omit'})
+        expect(calledInit?.credentials).toBe('omit')
+      } finally {
+        if (!hasWindow) delete (globalThis as Record<string, unknown>).window
       }
-      const request = createRequest({fetch: fakeFetch, credentials: 'include'})
-      await request({url: 'https://example.com/api', credentials: 'omit'})
-      expect(calledInit?.credentials).toBe('omit')
     })
 
     it('does not set credentials when not configured', async () => {
@@ -366,6 +385,18 @@ describe('built-in behaviors', () => {
         return new Response('ok')
       }
       const request = createRequest({fetch: fakeFetch})
+      await request('https://example.com/api')
+      expect(calledInit?.credentials).toBeUndefined()
+    })
+
+    it('does not set credentials in non-browser environments', async () => {
+      if (hasWindow) return // skip in browser test runners
+      let calledInit: RequestInit | undefined
+      const fakeFetch = async (_input: string, init?: RequestInit) => {
+        calledInit = init
+        return new Response('ok')
+      }
+      const request = createRequest({fetch: fakeFetch, credentials: 'include'})
       await request('https://example.com/api')
       expect(calledInit?.credentials).toBeUndefined()
     })
