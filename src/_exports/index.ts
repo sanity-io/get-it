@@ -1,5 +1,4 @@
 export {createRequest} from '../createRequest'
-export {createBufferedResponse} from '../response'
 export type {
   BufferedResponse,
   CreateRequestOptions,

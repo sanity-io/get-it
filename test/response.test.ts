@@ -1,5 +1,6 @@
-import {createBufferedResponse} from 'get-it'
 import {describe, expect, it} from 'vitest'
+
+import {createBufferedResponse} from '../src/response'
 
 describe('createBufferedResponse', () => {
   it('exposes status, statusText, headers', () => {
