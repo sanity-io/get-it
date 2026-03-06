@@ -1,0 +1,15 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "ignore": ["_v1/**"],
+  "entry": [
+    "package.config.ts",
+    "vitest.browser.config.ts",
+    "vitest.edge.config.ts",
+    "vitest.react-server.config.ts"
+  ],
+  "ignoreDependencies": [
+    "@sanity/semantic-release-preset",
+    "@vitest/coverage-v8",
+    "vite"
+  ]
+}

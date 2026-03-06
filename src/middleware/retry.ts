@@ -30,6 +30,7 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+/** @public */
 export function retry(opts?: RetryOptions): WrappingMiddleware {
   const maxRetries = opts?.maxRetries ?? 5
   const retryDelay = opts?.retryDelay ?? defaultRetryDelay

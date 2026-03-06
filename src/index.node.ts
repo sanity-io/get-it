@@ -1,9 +1,10 @@
-import {createRequest as coreCreateRequest} from './index'
-import {nodeFetch} from './node/nodeFetch'
-import type {CreateRequestOptions} from './types'
+import type {CreateRequestOptions} from 'get-it'
+import {createRequest as coreCreateRequest} from 'get-it'
+import {nodeFetch} from 'get-it/node'
 
 const defaultFetch = nodeFetch()
 
+/** @public */
 export function createRequest(options?: CreateRequestOptions) {
   return coreCreateRequest({
     ...options,
@@ -12,10 +13,8 @@ export function createRequest(options?: CreateRequestOptions) {
 }
 
 // Re-export everything from core
-export {createBufferedResponse} from './response'
 export type {
   BufferedResponse,
-  CreateRequestOptions,
   FetchFunction,
   JsonResponse,
   RequestFunction,
@@ -24,5 +23,5 @@ export type {
   TextResponse,
   TransformMiddleware,
   WrappingMiddleware,
-} from './types'
-export {HttpError} from './types'
+} from 'get-it'
+export {createBufferedResponse, HttpError} from 'get-it'

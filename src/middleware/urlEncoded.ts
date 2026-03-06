@@ -7,6 +7,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return proto === Object.prototype || proto === null
 }
 
+/** @public */
 export function urlEncoded(): TransformMiddleware {
   return {
     beforeRequest(options) {

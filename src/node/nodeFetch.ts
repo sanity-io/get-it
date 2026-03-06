@@ -3,6 +3,7 @@ import type Dispatcher from 'undici/types/dispatcher'
 
 import type {FetchFunction, FetchInit, FetchResponse} from '../types'
 
+/** @public */
 export interface NodeFetchOptions {
   /** true = read proxy from env (default), string = explicit proxy URL, false = no proxy */
   proxy?: string | boolean
@@ -54,6 +55,7 @@ const nodeFetchFn: (input: string, init?: NodeRequestInit) => Promise<Response> 
  *   `HTTP_PROXY` / `HTTPS_PROXY` / `NO_PROXY` from the environment.
  * - `proxy: "<url>"` — uses `ProxyAgent` with an explicit proxy URL.
  * - `proxy: false` — uses a plain `Agent` with no proxy.
+ * @public
  */
 export function nodeFetch(options?: NodeFetchOptions): FetchFunction {
   const proxyOption = options?.proxy ?? true
