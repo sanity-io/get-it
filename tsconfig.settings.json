@@ -1,5 +1,5 @@
 {
-  "extends": "@sanity/pkg-utils/tsconfig/strictest.json",
+  "extends": "@sanity/tsconfig/strictest",
   "compilerOptions": {
     "paths": {
       "get-it": ["./src"],
@@ -11,8 +11,6 @@
     "rootDir": ".",
 
     "noUncheckedIndexedAccess": false,
-    "exactOptionalPropertyTypes": false,
-    "useUnknownInCatchVariables": true,
-    "erasableSyntaxOnly": true
+    "exactOptionalPropertyTypes": false
   }
 }
