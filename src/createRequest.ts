@@ -109,8 +109,8 @@ function buildFetchArgs(
 
   init.headers = headers
 
-  // Timeout — resolve timeout value (per-request wins over instance)
-  const timeoutValue = opts.timeout !== undefined ? opts.timeout : instanceTimeout
+  // Timeout — resolve timeout value (per-request wins over instance, default 120s)
+  const timeoutValue = opts.timeout !== undefined ? opts.timeout : (instanceTimeout ?? 120_000)
 
   // Signal — build the final abort signal
   let signal: AbortSignal | undefined = opts.signal

@@ -261,6 +261,17 @@ describe('built-in behaviors', () => {
 
   // 4f: Timeout
   describe('timeout', () => {
+    it('applies a default timeout when none is configured', async () => {
+      let receivedSignal: AbortSignal | undefined
+      const fakeFetch = async (_input: string, init?: RequestInit) => {
+        receivedSignal = init?.signal ?? undefined
+        return new Response('ok')
+      }
+      const request = createRequest({fetch: fakeFetch})
+      await request('https://example.com/test')
+      expect(receivedSignal).toBeDefined()
+    })
+
     it('aborts request after timeout', async () => {
       const request = createRequest({base: baseUrl, timeout: 200})
       await expect(request('/delay?delay=2000')).rejects.toThrow()
