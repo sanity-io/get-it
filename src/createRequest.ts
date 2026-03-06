@@ -270,29 +270,44 @@ export function createRequest(options?: CreateRequestOptions): RequestFunction {
   }
 
   async function requestStream(opts: RequestOptions): Promise<StreamResponse> {
-    // Stream mode: only beforeRequest transforms apply.
-    // No wrapping middleware or afterResponse transforms.
+    // Stream mode: beforeRequest transforms + wrapping middleware apply.
+    // afterResponse transforms do NOT apply (there is no BufferedResponse to transform).
     const transformedOpts = runBeforeRequest(opts, transforms)
 
-    const fetchFn: FetchFunction = transformedOpts.fetch ?? instanceFetch ?? globalThis.fetch
-    const {url, init} = buildFetchArgs(transformedOpts, instanceTimeout)
-    const response = await fetchFn(url, init)
-    const httpErrors = transformedOpts.httpErrors ?? instanceHttpErrors ?? true
+    // Capture the raw fetch response so we can extract the stream after
+    // the wrapping middleware chain completes.
+    let capturedResponse: FetchResponse | undefined
 
-    // For stream mode with httpErrors, check status and throw with buffered error body
-    if (httpErrors && response.status >= 400) {
-      await bufferAndCheck(response, httpErrors)
+    async function coreStreamFetch(reqOpts: RequestOptions): Promise<BufferedResponse> {
+      const fetchFn: FetchFunction = reqOpts.fetch ?? instanceFetch ?? globalThis.fetch
+      const {url, init} = buildFetchArgs(reqOpts, instanceTimeout)
+      const response = await fetchFn(url, init)
+      const httpErrors = reqOpts.httpErrors ?? instanceHttpErrors ?? true
+
+      if (httpErrors && response.status >= 400) {
+        return bufferAndCheck(response, httpErrors)
+      }
+
+      capturedResponse = response
+      return createBufferedResponse(response.status, response.statusText, response.headers, new Uint8Array(0))
+    }
+
+    const streamChain = composeFetchChain(coreStreamFetch, wrappers)
+    await streamChain(transformedOpts)
+
+    if (!capturedResponse) {
+      throw new Error('Stream response was not captured')
     }
 
     const streamBody =
-      response.body ??
+      capturedResponse.body ??
       new ReadableStream<Uint8Array>({
         start(controller) {
           controller.close()
         },
       })
 
-    return responseOf(response, streamBody)
+    return responseOf(capturedResponse, streamBody)
   }
 
   // Overloaded request function — each overload dispatches to the
