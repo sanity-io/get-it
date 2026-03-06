@@ -5,7 +5,7 @@
 [![gzip size][gzip-badge]][bundlephobia]
 [![size][size-badge]][bundlephobia]
 
-Generic HTTP request library for node.js (>= 14) and [modern browsers].
+Generic HTTP request library for node.js (>= 20.19) and [modern browsers].
 
 ## Motivation
 
