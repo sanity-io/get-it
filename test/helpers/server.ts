@@ -24,6 +24,8 @@ const httpPort = 9980
 const httpsPort = 9443
 const state: any = {failures: {}}
 
+const requestCounters: Record<string, number> = {}
+
 function getResponseHandler(proto = 'http'): any {
   const isSecure = proto === 'https'
   return (req: any, res: any, next: any) => {
@@ -177,6 +179,13 @@ function getResponseHandler(proto = 'http'): any {
         res.setHeader('Content-Type', 'text/plain')
         res.end(`${req.connection.remotePort}`)
         break
+      case '/req-test/request-count': {
+        const key = (parts.query['key'] as string) || 'default'
+        requestCounters[key] = (requestCounters[key] || 0) + 1
+        res.setHeader('Content-Type', 'text/plain')
+        res.end(`${requestCounters[key]}`)
+        break
+      }
       default:
         if (next) {
           next()
