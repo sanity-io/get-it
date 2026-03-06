@@ -1,4 +1,4 @@
-import type {IncomingHttpHeaders, IncomingMessage} from 'http'
+import type {IncomingHttpHeaders, IncomingMessage} from 'node:http'
 
 import type {ParsedUrl} from './request/node/parseUrl'
 import type {ProgressStream} from './util/progress-stream'

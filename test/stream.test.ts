@@ -1,6 +1,6 @@
 import {environment, getIt} from 'get-it'
 import {getUri} from 'get-uri'
-import {Readable} from 'stream'
+import {Readable} from 'node:stream'
 import {describe, expect, it} from 'vitest'
 
 import {concat} from '../src/request/node/simpleConcat'
