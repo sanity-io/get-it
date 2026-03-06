@@ -1,4 +1,5 @@
 export {createRequest} from '../createRequest'
+export {HttpError} from '../errors'
 export type {
   BufferedResponse,
   CreateRequestOptions,
@@ -14,4 +15,3 @@ export type {
   TransformMiddleware,
   WrappingMiddleware,
 } from '../types'
-export {HttpError} from '../types'
