@@ -35,6 +35,50 @@ describe('built-in behaviors', () => {
       const res = await request(`${baseUrl}/plain-text`)
       expect(res.text()).toBe('Just some plain text for you to consume')
     })
+
+    it('joins base without trailing slash and path without leading slash', async () => {
+      let calledUrl: string | undefined
+      const fakeFetch = async (input: string) => {
+        calledUrl = input
+        return new Response('ok')
+      }
+      const request = createRequest({base: 'https://api.com', fetch: fakeFetch})
+      await request('users')
+      expect(calledUrl).toBe('https://api.com/users')
+    })
+
+    it('joins base with trailing slash and path with leading slash', async () => {
+      let calledUrl: string | undefined
+      const fakeFetch = async (input: string) => {
+        calledUrl = input
+        return new Response('ok')
+      }
+      const request = createRequest({base: 'https://api.com/', fetch: fakeFetch})
+      await request('/users')
+      expect(calledUrl).toBe('https://api.com/users')
+    })
+
+    it('joins base with trailing slash and path without leading slash', async () => {
+      let calledUrl: string | undefined
+      const fakeFetch = async (input: string) => {
+        calledUrl = input
+        return new Response('ok')
+      }
+      const request = createRequest({base: 'https://api.com/', fetch: fakeFetch})
+      await request('users')
+      expect(calledUrl).toBe('https://api.com/users')
+    })
+
+    it('joins base without trailing slash and path with leading slash', async () => {
+      let calledUrl: string | undefined
+      const fakeFetch = async (input: string) => {
+        calledUrl = input
+        return new Response('ok')
+      }
+      const request = createRequest({base: 'https://api.com', fetch: fakeFetch})
+      await request('/users')
+      expect(calledUrl).toBe('https://api.com/users')
+    })
   })
 
   // 4b: Default Headers
