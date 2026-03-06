@@ -62,4 +62,15 @@ describe('as option', () => {
     expect(res.body).toBeInstanceOf(ReadableStream)
     await res.body.cancel()
   })
+
+  it('as: "stream" returns empty ReadableStream when response has no body', async () => {
+    const fakeFetch = async () => new Response(null, {status: 204})
+    const req = createRequest({fetch: fakeFetch})
+    const res = await req({url: 'https://example.com/empty', as: 'stream'})
+    expect(res.status).toBe(204)
+    expect(res.body).toBeInstanceOf(ReadableStream)
+    const reader = res.body.getReader()
+    const {done} = await reader.read()
+    expect(done).toBe(true)
+  })
 })

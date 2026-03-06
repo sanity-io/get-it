@@ -105,6 +105,13 @@ describe('built-in behaviors', () => {
       expect(headers['x-a']).toBe('2')
     })
 
+    it('passes Headers instance through without modification', async () => {
+      const request = createRequest({base: baseUrl, headers: new Headers({'X-Via': 'headers'})})
+      const res = await request('/debug')
+      const sent = getRecord(res.json(), 'headers')
+      expect(sent['x-via']).toBe('headers')
+    })
+
     it('strips undefined header values from instance headers', async () => {
       const headers = {'X-Present': 'yes', 'X-Missing': undefined} as Record<string, string>
       const request = createRequest({base: baseUrl, headers})
@@ -187,6 +194,30 @@ describe('built-in behaviors', () => {
       expect(headers['content-type']).toBe('application/json')
     })
 
+    it('preserves explicit content-type when body is a plain object', async () => {
+      const request = createRequest({base: baseUrl})
+      const res = await request({
+        url: '/debug',
+        method: 'POST',
+        body: {test: true},
+        headers: {'content-type': 'application/json; charset=utf-8'},
+      })
+      const headers = getRecord(res.json(), 'headers')
+      expect(headers['content-type']).toBe('application/json; charset=utf-8')
+    })
+
+    it('sends Blob body without JSON serialization', async () => {
+      let sentBody: BodyInit | undefined
+      const fakeFetch = async (_input: string, init?: RequestInit) => {
+        sentBody = init?.body ?? undefined
+        return new Response('ok')
+      }
+      const request = createRequest({fetch: fakeFetch})
+      const blob = new Blob(['binary data'], {type: 'application/octet-stream'})
+      await request({url: 'https://example.com/upload', method: 'POST', body: blob})
+      expect(sentBody).toBeInstanceOf(Blob)
+    })
+
     it('does not serialize string bodies as JSON', async () => {
       const request = createRequest({base: baseUrl})
       const res = await request({url: '/echo', method: 'POST', body: 'raw string'})
@@ -197,6 +228,17 @@ describe('built-in behaviors', () => {
       const request = createRequest({base: baseUrl})
       const res = await request({url: '/debug', method: 'POST', body: null})
       expect(getString(res.json(), 'body')).toBe('')
+    })
+
+    it('silently drops non-serializable body types like numbers', async () => {
+      let sentBody: BodyInit | null | undefined
+      const fakeFetch = async (_input: string, init?: RequestInit) => {
+        sentBody = init?.body
+        return new Response('ok')
+      }
+      const request = createRequest({fetch: fakeFetch})
+      await request({url: 'https://example.com/api', method: 'POST', body: 42})
+      expect(sentBody).toBeUndefined()
     })
   })
 
