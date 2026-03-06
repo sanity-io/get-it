@@ -106,7 +106,49 @@ describe('built-in behaviors', () => {
     })
   })
 
-  // 4c: JSON Request Body
+  // 4c: Implicit POST
+  describe('implicit POST when body is present', () => {
+    it('defaults to POST when body is provided and no method is set', async () => {
+      let calledInit: RequestInit | undefined
+      const fakeFetch = async (_input: string, init?: RequestInit) => {
+        calledInit = init
+        return new Response('ok')
+      }
+      const request = createRequest({fetch: fakeFetch})
+      await request({url: 'https://example.com/api', body: {name: 'test'}})
+      expect(calledInit?.method).toBe('POST')
+    })
+
+    it('does not override an explicit method when body is present', async () => {
+      let calledInit: RequestInit | undefined
+      const fakeFetch = async (_input: string, init?: RequestInit) => {
+        calledInit = init
+        return new Response('ok')
+      }
+      const request = createRequest({fetch: fakeFetch})
+      await request({url: 'https://example.com/api', method: 'PUT', body: {name: 'test'}})
+      expect(calledInit?.method).toBe('PUT')
+    })
+
+    it('does not set method when no body is provided', async () => {
+      let calledInit: RequestInit | undefined
+      const fakeFetch = async (_input: string, init?: RequestInit) => {
+        calledInit = init
+        return new Response('ok')
+      }
+      const request = createRequest({fetch: fakeFetch})
+      await request({url: 'https://example.com/api'})
+      expect(calledInit?.method).toBeUndefined()
+    })
+
+    it('sends body as POST to real server when method is omitted', async () => {
+      const request = createRequest({base: baseUrl})
+      const res = await request({url: '/json-echo', body: {foo: 'bar'}})
+      expect(res.json()).toEqual({foo: 'bar'})
+    })
+  })
+
+  // 4d: JSON Request Body
   describe('JSON request body', () => {
     it('auto-serializes plain object body as JSON', async () => {
       const request = createRequest({base: baseUrl})
