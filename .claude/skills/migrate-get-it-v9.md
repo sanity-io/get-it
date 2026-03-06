@@ -55,7 +55,7 @@ import {
 } from 'get-it/middleware'
 
 // v9 — only these middleware still exist:
-import {retry, debug, urlEncoded} from 'get-it/middleware'
+import {retry, debug} from 'get-it/middleware'
 // Everything else is built into createRequest() or removed
 ```
 
@@ -101,7 +101,7 @@ Mapping of v8 middleware to v9 createRequest options:
 - `jsonResponse()` → not needed, use `as: 'json'` or `res.json()`
 - `retry(opts)` → keep as `middleware: [retry(opts)]`
 - `debug(opts)` → keep as `middleware: [debug(opts)]`
-- `urlEncoded()` → keep as `middleware: [urlEncoded()]`
+- `urlEncoded()` → remove, pass `new URLSearchParams(...)` as body instead
 - `observable()` → remove, wrap promise with `from()` in consumer
 - `progress()` → remove entirely, no replacement
 - `keepAlive()` → remove, built into fetch

@@ -182,6 +182,33 @@ describe('built-in behaviors', () => {
     })
   })
 
+  // 4d: URLSearchParams request body
+  describe('URLSearchParams request body', () => {
+    it('sends URLSearchParams body as form-urlencoded', async () => {
+      const request = createRequest({base: baseUrl})
+      const params = new URLSearchParams()
+      params.set('foo', 'bar')
+      params.set('baz', 'qux')
+      const res = await request({url: '/urlencoded', method: 'POST', body: params})
+      expect(res.json()).toEqual({foo: 'bar', baz: 'qux'})
+    })
+
+    it('sets content-type to application/x-www-form-urlencoded automatically', async () => {
+      const request = createRequest({base: baseUrl})
+      const params = new URLSearchParams({foo: 'bar'})
+      const res = await request({url: '/debug', method: 'POST', body: params})
+      const headers = getRecord(res.json(), 'headers')
+      expect(headers['content-type']).toBe('application/x-www-form-urlencoded;charset=UTF-8')
+    })
+
+    it('does not JSON-serialize URLSearchParams body', async () => {
+      const request = createRequest({base: baseUrl})
+      const params = new URLSearchParams({foo: 'bar'})
+      const res = await request({url: '/echo', method: 'POST', body: params})
+      expect(res.text()).toBe('foo=bar')
+    })
+  })
+
   // 4d: Query String
   describe('query string', () => {
     it('appends query parameters to URL', async () => {
