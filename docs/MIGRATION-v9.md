@@ -341,6 +341,7 @@ Note: v8's `requester.use(middleware)` chaining is removed. Pass all middleware 
 | `progress()`       | Removed — no replacement in fetch-based architecture            |
 | `keepAlive()`      | Built into fetch connection pooling                             |
 | `injectResponse()` | Removed — use injectable `fetch` for testing                    |
+| `urlEncoded()`  | Pass `new URLSearchParams(...)` as body — fetch sets content-type automatically |
 
 ### Still available
 
@@ -348,7 +349,6 @@ Note: v8's `requester.use(middleware)` chaining is removed. Pass all middleware 
 | -------------- | -------------- | ------------------- |
 | `retry()`      | `retry()`      | `get-it/middleware` |
 | `debug()`      | `debug()`      | `get-it/middleware` |
-| `urlEncoded()` | `urlEncoded()` | `get-it/middleware` |
 
 ### Proxy / agent configuration
 
@@ -409,7 +409,7 @@ await request({url: '/test', headers: {'X-B': '2'}})
 | Import              | Purpose                                                                               |
 | ------------------- | ------------------------------------------------------------------------------------- |
 | `get-it`            | Core. In Node/Bun/Deno, automatically includes proxy support via conditional exports. |
-| `get-it/middleware` | `retry`, `debug`, `urlEncoded`                                                        |
+| `get-it/middleware` | `retry`, `debug`                                                                      |
 | `get-it/node`       | `nodeFetch()` for custom undici dispatcher configuration                              |
 
 ## TypeScript

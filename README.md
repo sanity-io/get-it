@@ -170,7 +170,7 @@ const logger: WrappingMiddleware = async (options, next) => {
 ### Built-in middleware
 
 ```ts
-import {retry, debug, urlEncoded} from 'get-it/middleware'
+import {retry, debug} from 'get-it/middleware'
 
 const request = createRequest({
   middleware: [retry({maxRetries: 3}), debug({log: console.log, verbose: true})],
@@ -201,7 +201,7 @@ const request = createRequest({
 | Import              | Purpose                                                  |
 | ------------------- | -------------------------------------------------------- |
 | `get-it`            | Core (auto-selects Node variant via conditional exports) |
-| `get-it/middleware` | `retry`, `debug`, `urlEncoded`                           |
+| `get-it/middleware` | `retry`, `debug`                                         |
 | `get-it/node`       | `nodeFetch()` for custom undici dispatcher config        |
 
 ## Migrating from v8
