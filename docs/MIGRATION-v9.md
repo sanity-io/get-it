@@ -34,7 +34,7 @@ This guide covers every breaking change and shows how to update your code.
 ## Installation
 
 ```bash
-npm install get-it@9
+npm install get-it@^9
 ```
 
 v9 is ESM-only. If your project uses CommonJS, you'll need to either:

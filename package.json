@@ -62,14 +62,14 @@
     "build": "pkg build --strict --check --clean",
     "coverage": "vitest run --coverage",
     "lint": "eslint . --ext .cjs,.js,.ts --report-unused-disable-directives",
-    "prepublishOnly": "npm run build",
+    "prepublishOnly": "pnpm run build",
     "test": "vitest",
-    "test:browser": "npm test -- --config ./vitest.browser.config.ts --dom",
-    "test:edge-runtime": "npm test -- --config ./vitest.edge.config.ts",
+    "test:browser": "pnpm test -- --config ./vitest.browser.config.ts --dom",
+    "test:edge-runtime": "pnpm test -- --config ./vitest.edge.config.ts",
     "test:esm": "node --test ./test-esm/*",
     "test:esm:browser": "node -C browser --test test-esm/test.mjs",
     "test:esm:deno": "deno test --allow-read --allow-net --allow-env --import-map=test-deno/import_map.json test-deno",
-    "test:react-server": "npm test -- --config ./vitest.react-server.config.ts",
+    "test:react-server": "pnpm test -- --config ./vitest.react-server.config.ts",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.check-node.json"
   },
   "browserslist": [
@@ -107,7 +107,7 @@
     "vite": "^7.0.0",
     "vitest": "^3.2.4"
   },
-  "packageManager": "npm@11.4.2",
+  "packageManager": "pnpm@10.12.1",
   "engines": {
     "node": ">=20.19.0"
   },
