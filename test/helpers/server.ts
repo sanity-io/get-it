@@ -170,6 +170,52 @@ function getResponseHandler(proto = 'http'): any {
         res.writeHead(200, {'Content-Type': 'application/json', 'Content-Encoding': 'gzip'})
         res.end()
         break
+      case '/req-test/binary': {
+        // Return 256 bytes: 0x00..0xFF
+        const buf = Buffer.alloc(256)
+        for (let i = 0; i < 256; i++) buf[i] = i
+        res.writeHead(200, {'Content-Type': 'application/octet-stream'})
+        res.end(buf)
+        break
+      }
+      case '/req-test/binary-gzip': {
+        // Gzip-compressed binary payload
+        const binBuf = Buffer.alloc(256)
+        for (let i = 0; i < 256; i++) binBuf[i] = i
+        res.setHeader('Content-Type', 'application/octet-stream')
+        res.setHeader('Content-Encoding', 'gzip')
+        zlib.gzip(binBuf, (_err, result) => res.end(result))
+        break
+      }
+      case '/req-test/unicode-chunked': {
+        // Send multi-byte UTF-8 text in small chunks to force mid-character splits.
+        // Each emoji is 4 bytes; writing 3 bytes at a time guarantees splits.
+        const text = '🎉🚀🌍🎸💡🔥✨🎯🐧🌈'
+        const encoded = Buffer.from(text, 'utf8')
+        res.writeHead(200, {'Content-Type': 'text/plain; charset=utf-8'})
+        let offset = 0
+        const chunkSize = 3
+        const writeNext = () => {
+          if (offset >= encoded.length) {
+            res.end()
+            return
+          }
+          const end = Math.min(offset + chunkSize, encoded.length)
+          res.write(encoded.subarray(offset, end))
+          offset = end
+          setImmediate(writeNext)
+        }
+        writeNext()
+        break
+      }
+      case '/req-test/unicode-gzip': {
+        // Gzip-compressed multi-byte UTF-8 text
+        const uText = '🎉🚀🌍🎸💡🔥✨🎯🐧🌈'
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8')
+        res.setHeader('Content-Encoding', 'gzip')
+        zlib.gzip(Buffer.from(uText, 'utf8'), (_err, result) => res.end(result))
+        break
+      }
       case '/req-test/drip':
         drip(res)
         break
