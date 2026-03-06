@@ -13,7 +13,7 @@ export function base(baseUrl: string) {
       }
 
       const url = [baseUri, options.url.replace(leadingSlash, '')].join('/')
-      return Object.assign({}, options, {url})
+      return {...options, url}
     },
   } satisfies Middleware
 }

@@ -5,18 +5,18 @@ export function jsonResponse(opts?: any) {
   return {
     onResponse: (response) => {
       const contentType = response.headers['content-type'] || ''
-      const shouldDecode = (opts && opts.force) || contentType.indexOf('application/json') !== -1
+      const shouldDecode = (opts && opts.force) || contentType.includes('application/json')
       if (!response.body || !contentType || !shouldDecode) {
         return response
       }
 
-      return Object.assign({}, response, {body: tryParse(response.body)})
+      return {...response, body: tryParse(response.body)}
     },
 
-    processOptions: (options) =>
-      Object.assign({}, options, {
-        headers: Object.assign({Accept: 'application/json'}, options.headers),
-      }),
+    processOptions: (options) => ({
+      ...options,
+      headers: {Accept: 'application/json', ...options.headers},
+    }),
   } satisfies Middleware
 
   function tryParse(body: any) {

@@ -149,11 +149,12 @@ export const httpRequester: HttpRequest = (context, cb) => {
   })
 
   // Create a reduced subset of options meant for the http.request() method
-  let reqOpts: any = Object.assign({}, uri, {
+  let reqOpts: any = {
+    ...uri,
     method: options.method,
-    headers: Object.assign({}, lowerCaseHeaders(options.headers), lengthHeader),
+    headers: {...lowerCaseHeaders(options.headers), ...lengthHeader},
     maxRedirects: options.maxRedirects,
-  })
+  }
 
   // Figure out proxying/tunnel options
   const proxy = getProxyOptions(options)

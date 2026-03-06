@@ -39,9 +39,10 @@ export function buildKeepAlive(agent: (opts: AgentOptions) => Pick<Middleware, '
           const attemptNumber = context.options.attemptNumber || 0
           if (attemptNumber < maxRetries) {
             // Create a new context with an increased attempt number, so we can exit if we reach a limit
-            const newContext = Object.assign({}, context, {
-              options: Object.assign({}, context.options, {attemptNumber: attemptNumber + 1}),
-            })
+            const newContext = {
+              ...context,
+              options: {...context.options, attemptNumber: attemptNumber + 1},
+            }
             // If this is a reused socket we retry immediately
             setImmediate(() => context.channels.request.publish(newContext))
 
