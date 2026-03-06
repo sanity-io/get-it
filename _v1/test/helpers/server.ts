@@ -4,47 +4,28 @@ import https from 'node:https'
 import path from 'node:path'
 import zlib from 'node:zlib'
 
+import {concat} from '../../src/request/node/simpleConcat'
 import debugRequest from './debugRequest'
-
-/**
- * Simple stream concatenation helper (inlined from simple-concat).
- * MIT License. Feross Aboukhadijeh <https://feross.org/opensource>
- */
-function concat(stream: NodeJS.ReadableStream, cb: (err: Error | null, body: Buffer) => void) {
-  const chunks: Buffer[] = []
-  let callback: ((err: Error | null, body: Buffer) => void) | null = cb
-  stream.on('data', (chunk: Buffer) => {
-    chunks.push(chunk)
-  })
-  stream.once('end', () => {
-    if (callback) callback(null, Buffer.concat(chunks))
-    callback = null
-  })
-  stream.once('error', (err: Error) => {
-    if (callback) callback(err, Buffer.alloc(0))
-    callback = null
-  })
-}
 
 const httpsServerOptions: https.ServerOptions = {
   key: fs.readFileSync(path.join(__dirname, '..', 'certs', 'server', 'key.pem')),
   cert: fs.readFileSync(path.join(__dirname, '..', 'certs', 'server', 'cert.pem')),
 }
 
-const createError = (code: string, msg?: string) => {
-  const err: Error & {code?: string} = new Error(msg || code)
+const createError = (code: any, msg?: string) => {
+  const err: any = new Error(msg || code)
   err.code = code
   return err
 }
 
 const httpPort = 9980
 const httpsPort = 9443
-const state: {failures: Record<string, number>} = {failures: {}}
+const state: any = {failures: {}}
 
-function getResponseHandler(proto = 'http') {
+function getResponseHandler(proto = 'http'): any {
   const isSecure = proto === 'https'
-  return (req: http.IncomingMessage, res: http.ServerResponse, next?: () => void) => {
-    const parts = new URL(req.url || '/', `${proto}://localhost`)
+  return (req: any, res: any, next: any) => {
+    const parts = new URL(req.url, `${proto}://localhost`)
     const num = Number(parts.searchParams.get('n') || '0')
     const atMax = num >= 10
     const uuid = parts.searchParams.get('uuid') || ''
@@ -110,7 +91,7 @@ function getResponseHandler(proto = 'http') {
         req.pipe(res)
         break
       case '/req-test/urlencoded':
-        concat(req, (_unused, body) => {
+        concat(req, (_unused: any, body: any) => {
           res.setHeader('Content-Type', 'application/json')
           res.end(JSON.stringify(Object.fromEntries(new URLSearchParams(body.toString()))))
         })
@@ -120,7 +101,7 @@ function getResponseHandler(proto = 'http') {
         break
       case '/req-test/debug':
         res.setHeader('Content-Type', 'application/json')
-        concat(req, (_unused, body) => {
+        concat(req, (_unused: any, body: any) => {
           res.end(JSON.stringify(debugRequest(req, body)))
         })
         break
@@ -213,7 +194,7 @@ function getResponseHandler(proto = 'http') {
       case '/req-test/unicode-chunked': {
         // Send multi-byte UTF-8 text in small chunks to force mid-character splits.
         // Each emoji is 4 bytes; writing 3 bytes at a time guarantees splits.
-        const text = '\u{1F389}\u{1F680}\u{1F30D}\u{1F3B8}\u{1F4A1}\u{1F525}\u2728\u{1F3AF}\u{1F427}\u{1F308}'
+        const text = '🎉🚀🌍🎸💡🔥✨🎯🐧🌈'
         const encoded = Buffer.from(text, 'utf8')
         res.writeHead(200, {'Content-Type': 'text/plain; charset=utf-8'})
         let offset = 0
@@ -233,7 +214,7 @@ function getResponseHandler(proto = 'http') {
       }
       case '/req-test/unicode-gzip': {
         // Gzip-compressed multi-byte UTF-8 text
-        const uText = '\u{1F389}\u{1F680}\u{1F30D}\u{1F3B8}\u{1F4A1}\u{1F525}\u2728\u{1F3AF}\u{1F427}\u{1F308}'
+        const uText = '🎉🚀🌍🎸💡🔥✨🎯🐧🌈'
         res.setHeader('Content-Type', 'text/plain; charset=utf-8')
         res.setHeader('Content-Encoding', 'gzip')
         zlib.gzip(Buffer.from(uText, 'utf8'), (_err, result) => res.end(result))
@@ -260,13 +241,13 @@ function getResponseHandler(proto = 'http') {
 
 function drip(res: http.ServerResponse) {
   let iterations = 0
-  let interval: ReturnType<typeof setInterval> | null = null
+  let interval: any = null
 
   setTimeout(() => {
     res.writeHead(200, {'Content-Type': 'text/plain', 'Content-Length': '45'})
     interval = setInterval(() => {
       if (++iterations === 10) {
-        if (interval) clearInterval(interval)
+        clearInterval(interval)
         res.end()
         return
       }
