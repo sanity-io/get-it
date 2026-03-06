@@ -10,6 +10,7 @@ export function createBufferedResponse(
   body: Uint8Array,
 ): BufferedResponse {
   let cachedText: string | undefined
+  let cachedJson: {value: unknown} | undefined
 
   return {
     status,
@@ -25,7 +26,10 @@ export function createBufferedResponse(
     },
 
     json(): unknown {
-      return JSON.parse(this.text())
+      if (cachedJson === undefined) {
+        cachedJson = {value: JSON.parse(this.text())}
+      }
+      return cachedJson.value
     },
 
     bytes(): Uint8Array {
