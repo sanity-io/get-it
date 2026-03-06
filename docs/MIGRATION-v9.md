@@ -329,26 +329,26 @@ Note: v8's `requester.use(middleware)` chaining is removed. Pass all middleware 
 
 ### Removed middleware (no replacement needed)
 
-| Middleware         | Reason                                                          |
-| ------------------ | --------------------------------------------------------------- |
-| `promise()`        | All requests return promises by default                         |
-| `jsonRequest()`    | Built in — plain objects and arrays are auto-serialized as JSON |
-| `jsonResponse()`   | Use `as: 'json'` or `res.json()`                                |
-| `httpErrors()`     | Built in, on by default                                         |
-| `base(url)`        | Use `createRequest({ base: url })`                              |
-| `headers(obj)`     | Use `createRequest({ headers: obj })`                           |
-| `observable()`     | Wrap with RxJS `from(promise)` or similar                       |
-| `progress()`       | Removed — no replacement in fetch-based architecture            |
-| `keepAlive()`      | Built into fetch connection pooling                             |
-| `injectResponse()` | Removed — use injectable `fetch` for testing                    |
-| `urlEncoded()`  | Pass `new URLSearchParams(...)` as body — fetch sets content-type automatically |
+| Middleware         | Reason                                                                          |
+| ------------------ | ------------------------------------------------------------------------------- |
+| `promise()`        | All requests return promises by default                                         |
+| `jsonRequest()`    | Built in — plain objects and arrays are auto-serialized as JSON                 |
+| `jsonResponse()`   | Use `as: 'json'` or `res.json()`                                                |
+| `httpErrors()`     | Built in, on by default                                                         |
+| `base(url)`        | Use `createRequest({ base: url })`                                              |
+| `headers(obj)`     | Use `createRequest({ headers: obj })`                                           |
+| `observable()`     | Wrap with RxJS `from(promise)` or similar                                       |
+| `progress()`       | Removed — no replacement in fetch-based architecture                            |
+| `keepAlive()`      | Built into fetch connection pooling                                             |
+| `injectResponse()` | Removed — use injectable `fetch` for testing                                    |
+| `urlEncoded()`     | Pass `new URLSearchParams(...)` as body — fetch sets content-type automatically |
 
 ### Still available
 
-| v8             | v9             | Import              |
-| -------------- | -------------- | ------------------- |
-| `retry()`      | `retry()`      | `get-it/middleware` |
-| `debug()`      | `debug()`      | `get-it/middleware` |
+| v8        | v9        | Import              |
+| --------- | --------- | ------------------- |
+| `retry()` | `retry()` | `get-it/middleware` |
+| `debug()` | `debug()` | `get-it/middleware` |
 
 ### Debug middleware changes
 
