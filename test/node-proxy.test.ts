@@ -90,7 +90,6 @@ describe('node entry point', () => {
   it('re-exports core types and utilities', async () => {
     const nodeModule = await import('../src/_exports/index.node')
     expect(typeof nodeModule.createRequest).toBe('function')
-    expect(typeof nodeModule.createBufferedResponse).toBe('function')
     expect(typeof nodeModule.HttpError).toBe('function')
   })
 

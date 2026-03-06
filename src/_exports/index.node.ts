@@ -1,6 +1,5 @@
 import {createRequest as coreCreateRequest} from '../createRequest'
 import {nodeFetch} from '../nodeFetch'
-import {createBufferedResponse} from '../response'
 import type {CreateRequestOptions} from '../types'
 import {HttpError} from '../types'
 
@@ -26,4 +25,4 @@ export type {
   TransformMiddleware,
   WrappingMiddleware,
 } from '../types'
-export {createBufferedResponse, HttpError}
+export {HttpError}
