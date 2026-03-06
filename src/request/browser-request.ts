@@ -1,7 +1,7 @@
 import type {HttpRequest, MiddlewareResponse, RequestOptions} from 'get-it'
 import parseHeaders from 'parse-headers'
-import type {RequestAdapter} from '../types'
 
+import type {RequestAdapter} from '../types'
 import {FetchXhr} from './browser/fetchXhr'
 
 /**
@@ -143,6 +143,9 @@ export const httpRequester: HttpRequest = (context, callback) => {
   }
 
   function timeoutRequest(code: any) {
+    if (timedOut || aborted || loaded) {
+      return
+    }
     timedOut = true
     xhr.abort()
     const error: any = new Error(
@@ -155,7 +158,7 @@ export const httpRequester: HttpRequest = (context, callback) => {
   }
 
   function resetTimers() {
-    if (!delays) {
+    if (!delays || aborted || timedOut || loaded) {
       return
     }
 

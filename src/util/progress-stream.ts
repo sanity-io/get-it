@@ -3,8 +3,7 @@
  * that fixes a bug with `content-length` header. BSD 2-Clause Simplified License,
  * Copyright (c) Tobias Baunbæk <freeall@gmail.com>.
  */
-import type {Transform} from 'stream'
-import through from 'through2'
+import {Transform} from 'node:stream'
 
 import {speedometer} from './speedometer'
 
@@ -55,28 +54,25 @@ export function progressStream(options: {time: number; length?: number}): Progre
     tr.emit('progress', update)
   }
 
-  const write = function (
-    chunk: Buffer,
-    _enc: string,
-    callback: (err: Error | null, data?: Buffer) => void,
-  ) {
-    const len = chunk.length
-    transferred += len
-    delta += len
-    update.transferred = transferred
-    update.remaining = length >= transferred ? length - transferred : 0
+  const tr = new Transform({
+    transform(chunk: Buffer, _enc: string, callback: (err: Error | null, data?: Buffer) => void) {
+      const len = chunk.length
+      transferred += len
+      delta += len
+      update.transferred = transferred
+      update.remaining = length >= transferred ? length - transferred : 0
 
-    if (Date.now() >= nextUpdate) emit(false)
-    callback(null, chunk)
-  }
+      if (Date.now() >= nextUpdate) emit(false)
+      callback(null, chunk)
+    },
 
-  const end = function (callback: (err?: Error | null) => void) {
-    emit(true)
-    speed.clear()
-    callback()
-  }
+    flush(callback: (err?: Error | null) => void) {
+      emit(true)
+      speed.clear()
+      callback()
+    },
+  })
 
-  const tr = through({}, write, end) as ProgressStream
   const onlength = function (newLength: number) {
     length = newLength
     update.length = length
@@ -116,14 +112,15 @@ export function progressStream(options: {time: number; length?: number}): Progre
     })
   })
 
-  tr.progress = function () {
-    update.speed = speed.getSpeed(0)
-    update.eta = Math.round(update.remaining / update.speed)
+  const stream = Object.assign(tr, {
+    progress(): Progress {
+      update.speed = speed.getSpeed(0)
+      update.eta = Math.round(update.remaining / update.speed)
+      return update
+    },
+  })
 
-    return update
-  }
-
-  return tr
+  return stream
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

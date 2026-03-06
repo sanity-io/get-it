@@ -1,6 +1,6 @@
 import {getIt} from 'get-it'
 import {debug, jsonRequest, jsonResponse} from 'get-it/middleware'
-import util from 'util'
+import util from 'node:util'
 import {describe, expect, it} from 'vitest'
 
 import {baseUrl} from './helpers'

@@ -1,6 +1,6 @@
 import {environment, getIt} from 'get-it'
 import {jsonResponse, urlEncoded} from 'get-it/middleware'
-import {Readable} from 'stream'
+import {Readable} from 'node:stream'
 import {describe, it} from 'vitest'
 
 import {baseUrl, debugRequest, expectRequestBody} from './helpers'
