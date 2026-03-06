@@ -71,7 +71,7 @@ export function progressStream(options: {time: number; length?: number}): Progre
       speed.clear()
       callback()
     },
-  }) as ProgressStream
+  })
 
   const onlength = function (newLength: number) {
     length = newLength
@@ -112,14 +112,15 @@ export function progressStream(options: {time: number; length?: number}): Progre
     })
   })
 
-  tr.progress = function () {
-    update.speed = speed.getSpeed(0)
-    update.eta = Math.round(update.remaining / update.speed)
+  const stream = Object.assign(tr, {
+    progress(): Progress {
+      update.speed = speed.getSpeed(0)
+      update.eta = Math.round(update.remaining / update.speed)
+      return update
+    },
+  })
 
-    return update
-  }
-
-  return tr
+  return stream
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

@@ -112,7 +112,18 @@ export function rewriteUriForProxy(
     ''
   ).replace(/:\d+/, '')
   options.port = proxy.port ? `${proxy.port}` : options.port
-  options.host = getHostFromUri({...uri, ...proxy})
+  const proxyHostname = (
+    proxy.host ||
+    ('hostname' in proxy && proxy.hostname) ||
+    uri.hostname ||
+    ''
+  ).replace(/:\d+/, '')
+  options.host = getHostFromUri({
+    ...uri,
+    protocol: proxy.protocol || uri.protocol,
+    hostname: proxyHostname,
+    port: `${proxy.port || uri.port}`,
+  })
   options.href = `${options.protocol}//${options.host}${options.path}`
   options.path = `${uri.protocol}//${uri.host}${uri.path}`
   return options

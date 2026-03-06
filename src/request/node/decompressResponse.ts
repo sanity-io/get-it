@@ -124,7 +124,7 @@ export function decompressResponse(response: http.IncomingMessage): http.Incomin
     },
   })
 
-  finalStream.headers = headers
+  Object.assign(finalStream, {headers})
   mimicResponse(response, finalStream)
 
   response.pipe(checker)
