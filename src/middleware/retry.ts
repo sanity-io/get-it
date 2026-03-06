@@ -7,7 +7,8 @@ interface RetryOptions {
   shouldRetry?: (error: unknown, attemptNumber: number, options: RequestOptions) => boolean
 }
 
-function defaultRetryDelay(attemptNumber: number): number {
+/** @internal */
+export function defaultRetryDelay(attemptNumber: number): number {
   return 100 * Math.pow(2, attemptNumber) + Math.random() * 100
 }
 
@@ -66,6 +67,7 @@ export function retry(opts?: RetryOptions): WrappingMiddleware {
         await sleep(retryDelay(attempt), options.signal)
       }
     }
+    /* v8 ignore next -- unreachable: final iteration always throws above */
     throw lastError
   }
 }

@@ -1,5 +1,6 @@
 import {createRequest} from 'get-it'
 import {retry} from 'get-it/middleware'
+import {defaultRetryDelay} from '../src/middleware/retry'
 import {describe, expect, it} from 'vitest'
 
 const baseUrl = 'http://localhost:9980/req-test'
@@ -106,6 +107,37 @@ describe('retry middleware', {timeout: 15000}, () => {
     await expect(promise).rejects.toThrow()
     // Should have made only 1 attempt — abort during sleep prevents second attempt
     expect(attempts).toBe(1)
+  })
+
+  it('defaultRetryDelay returns exponential backoff with jitter', () => {
+    const delay0 = defaultRetryDelay(0)
+    expect(delay0).toBeGreaterThanOrEqual(100)
+    expect(delay0).toBeLessThan(200)
+
+    const delay2 = defaultRetryDelay(2)
+    expect(delay2).toBeGreaterThanOrEqual(400)
+    expect(delay2).toBeLessThan(500)
+  })
+
+  it('uses default retryDelay when none is provided', async () => {
+    const request = createRequest({
+      base: baseUrl,
+      httpErrors: false,
+      middleware: [retry({maxRetries: 1})],
+    })
+    const res = await request(`/fail?uuid=${Math.random()}&n=1`)
+    expect(res.status).toBe(200)
+  })
+
+  it('rejects immediately when signal is already aborted', async () => {
+    const controller = new AbortController()
+    controller.abort('cancelled')
+    const request = createRequest({
+      base: baseUrl,
+      httpErrors: false,
+      middleware: [retry({retryDelay: () => 5000})],
+    })
+    await expect(request({url: '/permafail', signal: controller.signal})).rejects.toThrow()
   })
 
   it('does not retry POST by default', async () => {
