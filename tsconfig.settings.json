@@ -7,6 +7,8 @@
       "get-it/node": ["./src/node"]
     },
 
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+
     "outDir": "./dist",
     "rootDir": ".",
 
