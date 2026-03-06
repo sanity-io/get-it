@@ -488,4 +488,29 @@ describe('built-in behaviors', () => {
       expect(calledInit?.credentials).toBeUndefined()
     })
   })
+
+  // 4i: Redirect
+  describe('redirect', () => {
+    it('passes per-request redirect option to fetch', async () => {
+      let calledInit: RequestInit | undefined
+      const fakeFetch = async (_input: string, init?: RequestInit) => {
+        calledInit = init
+        return new Response('ok')
+      }
+      const request = createRequest({fetch: fakeFetch})
+      await request({url: 'https://example.com/api', redirect: 'manual'})
+      expect(calledInit?.redirect).toBe('manual')
+    })
+
+    it('does not set redirect when not configured', async () => {
+      let calledInit: RequestInit | undefined
+      const fakeFetch = async (_input: string, init?: RequestInit) => {
+        calledInit = init
+        return new Response('ok')
+      }
+      const request = createRequest({fetch: fakeFetch})
+      await request('https://example.com/api')
+      expect(calledInit?.redirect).toBeUndefined()
+    })
+  })
 })

@@ -64,6 +64,7 @@ export interface RequestOptions {
   timeout?: number | false
   fetch?: FetchFunction
   credentials?: 'include' | 'omit' | 'same-origin'
+  redirect?: 'error' | 'follow' | 'manual'
   meta?: Record<string, unknown>
 }
 
