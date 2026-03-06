@@ -2,14 +2,13 @@ import follow, {type FollowResponse, type RedirectableRequest} from 'follow-redi
 import type {FinalizeNodeOptionsPayload, HttpRequest, MiddlewareResponse} from 'get-it'
 import http from 'http'
 import https from 'https'
-import qs from 'querystring'
 import {Readable, type Stream} from 'stream'
-import url from 'url'
 
 import type {RequestAdapter} from '../types'
 import {lowerCaseHeaders} from '../util/lowerCaseHeaders'
 import {progressStream} from '../util/progress-stream'
 import {decompressResponse} from './node/decompressResponse'
+import {parseUrl} from './node/parseUrl'
 import {getProxyOptions, rewriteUriForProxy} from './node/proxy'
 import {concat} from './node/simpleConcat'
 import {timedOut} from './node/timedOut'
@@ -56,7 +55,7 @@ const reduceResponse = (
 
 export const httpRequester: HttpRequest = (context, cb) => {
   const {options} = context
-  const uri = Object.assign({}, url.parse(options.url))
+  const uri = parseUrl(options.url)
 
   if (typeof fetch === 'function' && options.fetch) {
     const controller = new AbortController()
@@ -190,7 +189,7 @@ export const httpRequester: HttpRequest = (context, cb) => {
   if (!tunnel && proxy && proxy.auth && !reqOpts.headers['proxy-authorization']) {
     const [username, password] =
       typeof proxy.auth === 'string'
-        ? proxy.auth.split(':').map((item) => qs.unescape(item))
+        ? proxy.auth.split(':').map((item) => decodeURIComponent(item))
         : [proxy.auth.username, proxy.auth.password]
 
     const auth = Buffer.from(`${username}:${password}`, 'utf8')
@@ -355,7 +354,7 @@ export const httpRequester: HttpRequest = (context, cb) => {
     request.end(options.body)
   }
 
-  return {abort: () => request.abort()}
+  return {abort: () => request.destroy()}
 }
 
 function getProgressStream(options: any) {

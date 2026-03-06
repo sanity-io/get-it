@@ -1,6 +1,6 @@
 import {environment, getIt} from 'get-it'
 import {base, proxy as proxyMiddleware} from 'get-it/middleware'
-import {afterAll, afterEach, beforeAll, describe, expect, it} from 'vitest'
+import {afterEach, beforeAll, describe, expect, it, vi} from 'vitest'
 
 import {
   baseUrl,
@@ -13,18 +13,13 @@ import {
 } from './helpers'
 
 beforeAll(() => {
-  process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0'
-})
-
-afterAll(() => {
-  process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '1'
+  vi.stubEnv('NODE_TLS_REJECT_UNAUTHORIZED', '0')
 })
 
 describe.runIf(environment === 'node')('proxy', {timeout: 15000}, () => {
-  afterEach(async () => {
-    delete process.env['http_proxy']
-    delete process.env['https_proxy']
-    delete process.env['no_proxy']
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    vi.stubEnv('NODE_TLS_REJECT_UNAUTHORIZED', '0')
   })
 
   it('passing non-object to proxy middleware throws', () => {
@@ -43,7 +38,7 @@ describe.runIf(environment === 'node')('proxy', {timeout: 15000}, () => {
   })
 
   it('http: should not pass through disabled proxy', async () => {
-    process.env['http_proxy'] = 'http://does-not-exists.example.com:4242/'
+    vi.stubEnv('http_proxy', 'http://does-not-exists.example.com:4242/')
 
     const body = 'Just some plain text for you to consume'
     const request = getIt([baseUrl, debugRequest])
@@ -53,7 +48,7 @@ describe.runIf(environment === 'node')('proxy', {timeout: 15000}, () => {
   })
 
   it('http: should proxy if `proxy` option is `undefined`', async () => {
-    process.env['http_proxy'] = 'http://localhost:4000/'
+    vi.stubEnv('http_proxy', 'http://localhost:4000/')
 
     const body = 'Just some plain text for you to consume + proxy'
     const request = getIt([baseUrl, debugRequest])
@@ -66,7 +61,7 @@ describe.runIf(environment === 'node')('proxy', {timeout: 15000}, () => {
     const body = 'Just some plain text for you to consume + proxy'
     const request = getIt([baseUrl, debugRequest])
 
-    process.env['http_proxy'] = 'http://localhost:4000/'
+    vi.stubEnv('http_proxy', 'http://localhost:4000/')
     const req = request({url: '/plain-text'})
     return expectRequest(req).resolves.toHaveProperty('body', body)
   })
@@ -76,8 +71,8 @@ describe.runIf(environment === 'node')('proxy', {timeout: 15000}, () => {
     const proxyBody = `${body} + proxy`
     const request = getIt([baseUrl, debugRequest])
 
-    process.env['http_proxy'] = 'http://localhost:4000/'
-    process.env['no_proxy'] = 'foo.com, localhost,bar.net , , quix.co'
+    vi.stubEnv('http_proxy', 'http://localhost:4000/')
+    vi.stubEnv('no_proxy', 'foo.com, localhost,bar.net , , quix.co')
     const url = '/plain-text'
     const absUrl = `${baseUrlPrefix.replace('localhost', '127.0.0.1')}/plain-text`
 
@@ -102,7 +97,7 @@ describe.runIf(environment === 'node')('proxy', {timeout: 15000}, () => {
   })
 
   it('http: should support HTTP proxy auth from env', async () => {
-    process.env['http_proxy'] = 'http://user:pass@localhost:4000/'
+    vi.stubEnv('http_proxy', 'http://user:pass@localhost:4000/')
 
     const request = getIt([baseUrl, debugRequest])
 
@@ -114,7 +109,7 @@ describe.runIf(environment === 'node')('proxy', {timeout: 15000}, () => {
   })
 
   it('http: should use requested hostname as Host header', async () => {
-    process.env['http_proxy'] = 'http://localhost:4000/'
+    vi.stubEnv('http_proxy', 'http://localhost:4000/')
 
     const request = getIt([base(baseUrlPrefix.replace('localhost', '127.0.0.1')), debugRequest])
 
@@ -134,7 +129,7 @@ describe.runIf(environment === 'node')('proxy', {timeout: 15000}, () => {
   })
 
   it('http: proxy middleware with `false` disables env vars', () => {
-    process.env['http_proxy'] = 'http://localhost:4000/'
+    vi.stubEnv('http_proxy', 'http://localhost:4000/')
 
     const body = 'Just some plain text for you to consume'
     const request = getIt([baseUrl, debugRequest, proxyMiddleware(false)])
@@ -169,13 +164,13 @@ describe.runIf(environment === 'node')('proxy', {timeout: 15000}, () => {
     const body = 'Just some plain text for you to consume + proxy'
     const request = getIt([baseUrl, debugRequest])
 
-    process.env['http_proxy'] = 'https://localhost:4443/'
+    vi.stubEnv('http_proxy', 'https://localhost:4443/')
     const req = request({url: '/plain-text'})
     return expectRequest(req).resolves.toHaveProperty('body', body)
   })
 
   it('https: should not pass through disabled proxy (http request)', () => {
-    process.env['http_proxy'] = 'http://does-not-exists.example.com:4242/'
+    vi.stubEnv('http_proxy', 'http://does-not-exists.example.com:4242/')
 
     const body = 'Just some plain text for you to consume'
     const request = getIt([baseUrl, debugRequest])
@@ -189,8 +184,8 @@ describe.runIf(environment === 'node')('proxy', {timeout: 15000}, () => {
     const proxyBody = `${body} + proxy`
     const request = getIt([baseUrl, debugRequest])
 
-    process.env['http_proxy'] = 'https://localhost:4443/'
-    process.env['no_proxy'] = 'foo.com, localhost,bar.net , , quix.co'
+    vi.stubEnv('http_proxy', 'https://localhost:4443/')
+    vi.stubEnv('no_proxy', 'foo.com, localhost,bar.net , , quix.co')
 
     const url = '/plain-text'
     const absUrl = `${baseUrlPrefix.replace('localhost', '127.0.0.1')}/plain-text`
@@ -202,7 +197,7 @@ describe.runIf(environment === 'node')('proxy', {timeout: 15000}, () => {
   })
 
   it('https: should support HTTP proxy auth from env (http request)', async () => {
-    process.env['http_proxy'] = 'https://user:pass@localhost:4443/'
+    vi.stubEnv('http_proxy', 'https://user:pass@localhost:4443/')
 
     const request = getIt([baseUrl, debugRequest])
 
@@ -218,7 +213,7 @@ describe.runIf(environment === 'node')('proxy', {timeout: 15000}, () => {
     const body = 'Just some secure, plain text for you to consume + proxy'
     const request = getIt([baseUrlHttps, debugRequest])
 
-    process.env['https_proxy'] = 'https://localhost:4443/'
+    vi.stubEnv('https_proxy', 'https://localhost:4443/')
     const req = request({url: '/plain-text', tunnel: false})
     return expectRequest(req).resolves.toHaveProperty('body', body)
   })
@@ -226,7 +221,7 @@ describe.runIf(environment === 'node')('proxy', {timeout: 15000}, () => {
   it.todo('https: should support proxy set via env var (https request / tunnel)')
 
   it('https: should not pass through disabled proxy (https request)', () => {
-    process.env['https_proxy'] = 'http://does-not-exists.example.com:4242/'
+    vi.stubEnv('https_proxy', 'http://does-not-exists.example.com:4242/')
 
     const body = 'Just some secure, plain text for you to consume'
     const request = getIt([baseUrlHttps, debugRequest])
@@ -240,8 +235,8 @@ describe.runIf(environment === 'node')('proxy', {timeout: 15000}, () => {
     const proxyBody = `${body} + proxy`
     const request = getIt([baseUrlHttps, debugRequest])
 
-    process.env['https_proxy'] = 'https://localhost:4443/'
-    process.env['no_proxy'] = 'foo.com, localhost,bar.net , , quix.co'
+    vi.stubEnv('https_proxy', 'https://localhost:4443/')
+    vi.stubEnv('no_proxy', 'foo.com, localhost,bar.net , , quix.co')
     const tunnel = false
     const url = '/plain-text'
     const abUrl = `${baseUrlPrefixHttps.replace('localhost', '127.0.0.1')}/plain-text`
@@ -255,7 +250,7 @@ describe.runIf(environment === 'node')('proxy', {timeout: 15000}, () => {
   it.todo('https: should proxy domains not in no_proxy (https request / tunnel)')
 
   it('https: should support HTTP proxy auth from env (https request / no tunnel)', async () => {
-    process.env['https_proxy'] = 'https://user:pass@localhost:4443/'
+    vi.stubEnv('https_proxy', 'https://user:pass@localhost:4443/')
 
     const request = getIt([baseUrlHttps, debugRequest])
 
@@ -301,7 +296,7 @@ describe.runIf(environment === 'node')('proxy', {timeout: 15000}, () => {
   })
 
   it('https: proxy middleware with `false` disables env vars (http request)', () => {
-    process.env['http_proxy'] = 'https://localhost:4443/'
+    vi.stubEnv('http_proxy', 'https://localhost:4443/')
 
     const body = 'Just some plain text for you to consume'
     const request = getIt([baseUrl, debugRequest, proxyMiddleware(false)])

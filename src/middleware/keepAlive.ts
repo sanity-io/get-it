@@ -1,5 +1,5 @@
-import type {AgentOptions} from 'http'
 import type {Middleware} from 'get-it'
+import type {AgentOptions} from 'http'
 
 import {NodeRequestError} from '../request/node-request'
 
