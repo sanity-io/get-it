@@ -269,7 +269,7 @@ describe('built-in behaviors', () => {
     })
 
     it('sends Blob body without JSON serialization', async () => {
-      let sentBody: BodyInit | undefined
+      let sentBody: RequestInit['body'] | undefined
       const fakeFetch = async (_input: string, init?: RequestInit) => {
         sentBody = init?.body ?? undefined
         return new Response('ok')
@@ -300,7 +300,7 @@ describe('built-in behaviors', () => {
     })
 
     it('sends ArrayBuffer body', async () => {
-      let sentBody: BodyInit | undefined
+      let sentBody: RequestInit['body'] | undefined
       const fakeFetch = async (_input: string, init?: RequestInit) => {
         sentBody = init?.body ?? undefined
         return new Response('ok')
@@ -312,7 +312,7 @@ describe('built-in behaviors', () => {
     })
 
     it('sends FormData body', async () => {
-      let sentBody: BodyInit | undefined
+      let sentBody: RequestInit['body'] | undefined
       const fakeFetch = async (_input: string, init?: RequestInit) => {
         sentBody = init?.body ?? undefined
         return new Response('ok')
@@ -325,7 +325,7 @@ describe('built-in behaviors', () => {
     })
 
     it('sends ReadableStream body', async () => {
-      let sentBody: BodyInit | undefined
+      let sentBody: RequestInit['body'] | undefined
       const fakeFetch = async (_input: string, init?: RequestInit) => {
         sentBody = init?.body ?? undefined
         return new Response('ok')
