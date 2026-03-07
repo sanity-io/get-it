@@ -2,10 +2,13 @@ import {createNodeFetch} from '../createNodeFetch'
 import {createRequest as coreCreateRequest} from '../createRequest'
 import type {CreateRequestOptions} from '../types'
 
-const defaultFetch = createNodeFetch()
+let defaultFetch: ReturnType<typeof createNodeFetch> | undefined
 
 /** @public */
 export function createRequest(options?: CreateRequestOptions) {
+  if (!options?.fetch) {
+    defaultFetch ??= createNodeFetch()
+  }
   return coreCreateRequest({
     ...options,
     fetch: options?.fetch ?? defaultFetch,
