@@ -140,6 +140,21 @@ describe('stack traces', () => {
     })
   })
 
+  describe('internal frames are hidden', () => {
+    it('bufferAndCheck and executeBuffered do not appear in stack', async () => {
+      const request = createRequest({fetch: fetch404})
+      try {
+        await request({url: 'http://example.com/test'})
+        expect.fail('should have thrown')
+      } catch (err: unknown) {
+        if (!(err instanceof HttpError)) throw err
+        const names = stackNames(err)
+        expect(names).not.toContain('bufferAndCheck')
+        expect(names).not.toContain('executeBuffered')
+      }
+    })
+  })
+
   describe('no anonymous functions in critical path', () => {
     it('stack has no anonymous entries', async () => {
       const request = createRequest({

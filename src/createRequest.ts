@@ -53,18 +53,9 @@ export function createRequest(options?: CreateRequestOptions): RequestFunction {
   // Compose wrapping middlewares around the core fetch
   const fetchChain = composeFetchChain(coreFetchBuffered, wrappers)
 
-  /**
-   * Execute the full buffered pipeline:
-   * beforeRequest transforms → wrapping chain → afterResponse transforms
-   */
-  async function executeBuffered(opts: RequestOptions): Promise<BufferedResponse> {
-    const transformedOpts = runBeforeRequest(opts, transforms)
-    const buffered = await fetchChain(transformedOpts)
-    return runAfterResponse(buffered, transforms)
-  }
-
   async function requestJson(opts: RequestOptions): Promise<JsonResponse> {
-    const buffered = await executeBuffered(opts)
+    const transformedOpts = runBeforeRequest(opts, transforms)
+    const buffered = runAfterResponse(await fetchChain(transformedOpts), transforms)
     try {
       return responseOf(buffered, JSON.parse(buffered.text()) as unknown)
     } catch (cause: unknown) {
@@ -76,7 +67,8 @@ export function createRequest(options?: CreateRequestOptions): RequestFunction {
   }
 
   async function requestText(opts: RequestOptions): Promise<TextResponse> {
-    const buffered = await executeBuffered(opts)
+    const transformedOpts = runBeforeRequest(opts, transforms)
+    const buffered = runAfterResponse(await fetchChain(transformedOpts), transforms)
     return responseOf(buffered, buffered.text())
   }
 
@@ -156,8 +148,11 @@ export function createRequest(options?: CreateRequestOptions): RequestFunction {
         return await requestText(opts)
       case 'stream':
         return await requestStream(opts)
-      default:
-        return await executeBuffered(opts)
+      default: {
+        const transformedOpts = runBeforeRequest(opts, transforms)
+        const buffered = runAfterResponse(await fetchChain(transformedOpts), transforms)
+        return buffered
+      }
     }
   }
 
@@ -324,7 +319,7 @@ async function bufferAndCheck(
   )
 
   if (httpErrors && response.status >= 400) {
-    throw new HttpError({
+    const error = new HttpError({
       url: requestUrl,
       method: requestMethod,
       status: response.status,
@@ -333,6 +328,16 @@ async function bufferAndCheck(
       body: buffered.text(),
       response: buffered,
     })
+
+    // Strip bufferAndCheck from the top of the stack trace — it's an
+    // internal detail that adds noise. V8-only (Node, Chrome, Edge);
+    // other engines keep the default trace. Only runs on error so
+    // there's zero cost on the happy path.
+    if (hasV8StackTraceApi(Error)) {
+      Error.captureStackTrace(error, bufferAndCheck)
+    }
+
+    throw error
   }
 
   return buffered
@@ -389,4 +394,16 @@ function responseOf<T>(
   body: T,
 ): {status: number; statusText: string; headers: Headers; body: T} {
   return {status: source.status, statusText: source.statusText, headers: source.headers, body}
+}
+
+/**
+ * V8 (Node, Chrome, Edge) exposes `Error.captureStackTrace` which lets us
+ * strip internal frames from the stack trace so end-users only see relevant
+ * call sites. This type guard enables its use without type assertions — the
+ * API simply doesn't exist on non-V8 engines, where this is a no-op.
+ */
+function hasV8StackTraceApi(ctor: ErrorConstructor): ctor is ErrorConstructor & {
+  captureStackTrace(error: Error, omitFramesAbove: (...args: never) => unknown): void
+} {
+  return 'captureStackTrace' in ctor
 }
