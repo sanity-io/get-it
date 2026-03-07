@@ -65,7 +65,14 @@ export function createRequest(options?: CreateRequestOptions): RequestFunction {
 
   async function requestJson(opts: RequestOptions): Promise<JsonResponse> {
     const buffered = await executeBuffered(opts)
-    return responseOf(buffered, JSON.parse(buffered.text()) as unknown)
+    try {
+      return responseOf(buffered, JSON.parse(buffered.text()) as unknown)
+    } catch (cause: unknown) {
+      throw new TypeError(
+        `Failed to parse JSON response from ${opts.url}: ${cause instanceof Error ? cause.message : cause}`,
+        {cause},
+      )
+    }
   }
 
   async function requestText(opts: RequestOptions): Promise<TextResponse> {

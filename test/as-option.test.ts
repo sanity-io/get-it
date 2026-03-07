@@ -74,8 +74,17 @@ describe('as option', () => {
     expect(done).toBe(true)
   })
 
-  it('as: "json" throws SyntaxError when response is not valid JSON', async () => {
-    await expect(request({url: '/invalid-json', as: 'json'})).rejects.toThrow(SyntaxError)
+  it('as: "json" wraps parse failure in TypeError with response context', async () => {
+    try {
+      await request({url: '/invalid-json', as: 'json'})
+      expect.fail('should have thrown')
+    } catch (err: unknown) {
+      expect(err).toBeInstanceOf(TypeError)
+      if (err instanceof TypeError) {
+        expect(err.message).toContain('/invalid-json')
+        expect(err.cause).toBeInstanceOf(SyntaxError)
+      }
+    }
   })
 
   it('as: "json" throws HttpError with accessible response on 4xx', async () => {
