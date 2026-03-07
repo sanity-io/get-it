@@ -533,6 +533,12 @@ describe('built-in behaviors', () => {
       await expect(request({url: '/delay?delay=2000', timeout: 200})).rejects.toThrow()
     })
 
+    it('timeout: 0 disables timeout (same as false)', async () => {
+      const request = createRequest({base: baseUrl, timeout: 0})
+      const res = await request('/delay?delay=200')
+      expect(res.status).toBe(200)
+    })
+
     it('timeout: false disables timeout', async () => {
       const request = createRequest({base: baseUrl, timeout: false})
       const res = await request('/delay?delay=200')

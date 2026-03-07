@@ -270,7 +270,7 @@ function buildFetchArgs(
 
   // Signal — build the final abort signal
   let signal: AbortSignal | undefined = opts.signal
-  if (timeoutValue !== undefined && timeoutValue !== false) {
+  if (timeoutValue) {
     const timeoutSignal = AbortSignal.timeout(timeoutValue)
     if (signal) {
       signal = AbortSignal.any([signal, timeoutSignal])
