@@ -286,6 +286,13 @@ describe('built-in behaviors', () => {
       expect(res.text()).toBe('raw string')
     })
 
+    it('sends Uint8Array body and round-trips through real server', async () => {
+      const request = createRequest({base: baseUrl})
+      const data = new Uint8Array([0, 1, 2, 127, 128, 255])
+      const res = await request({url: '/echo', method: 'POST', body: data})
+      expect(res.bytes()).toEqual(data)
+    })
+
     it('does not serialize null body', async () => {
       const request = createRequest({base: baseUrl})
       const res = await request({url: '/debug', method: 'POST', body: null})
