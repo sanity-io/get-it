@@ -53,4 +53,19 @@ describe('createBufferedResponse', () => {
     expect(res.text()).toBe('')
     expect(res.bytes()).toEqual(new Uint8Array())
   })
+
+  it('json() throws on every call for invalid JSON (no stale cache)', () => {
+    const bytes = new TextEncoder().encode('not json')
+    const res = createBufferedResponse(200, 'OK', new Headers(), bytes)
+    expect(() => res.json()).toThrow()
+    expect(() => res.json()).toThrow()
+  })
+
+  it('text() returns same reference on repeated calls', () => {
+    const bytes = new TextEncoder().encode('hello')
+    const res = createBufferedResponse(200, 'OK', new Headers(), bytes)
+    const first = res.text()
+    const second = res.text()
+    expect(first).toBe(second)
+  })
 })

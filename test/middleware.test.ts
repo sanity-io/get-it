@@ -2,6 +2,8 @@ import type {WrappingMiddleware} from 'get-it'
 import {createRequest} from 'get-it'
 import {describe, expect, it} from 'vitest'
 
+import {createBufferedResponse} from '../src/response'
+
 const baseUrl = 'http://localhost:9980/req-test'
 
 describe('middleware system', () => {
@@ -304,5 +306,15 @@ describe('middleware system', () => {
     const res = await request('/plain-text')
     expect(res.status).toBe(200)
     expect(res.text()).toBe('Just some plain text for you to consume')
+  })
+
+  it('stream mode throws when wrapping middleware never calls next', async () => {
+    const shortCircuit = async () => {
+      return createBufferedResponse(200, 'OK', new Headers(), new Uint8Array())
+    }
+    const request = createRequest({base: baseUrl, middleware: [shortCircuit]})
+    await expect(request({url: '/plain-text', as: 'stream'})).rejects.toThrow(
+      'Stream response was not captured',
+    )
   })
 })

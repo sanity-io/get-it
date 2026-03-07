@@ -150,4 +150,59 @@ describe('retry middleware', {timeout: 15000}, () => {
       request({url: `/fail?uuid=${Math.random()}&n=2`, method: 'POST', body: 'hello'}),
     ).rejects.toThrow()
   })
+
+  it('retries HEAD requests on network error', async () => {
+    let attempts = 0
+    const request = createRequest({
+      base: baseUrl,
+      httpErrors: false,
+      middleware: [
+        retry({retryDelay: () => 50}),
+        async (opts, next) => {
+          attempts++
+          return next(opts)
+        },
+      ],
+    })
+    const res = await request({url: `/fail?uuid=${Math.random()}&n=2`, method: 'HEAD'})
+    expect(res.status).toBe(200)
+    expect(attempts).toBeGreaterThan(1)
+  })
+
+  it('retries when method is lowercase "get"', async () => {
+    let attempts = 0
+    const request = createRequest({
+      base: baseUrl,
+      httpErrors: false,
+      middleware: [
+        retry({retryDelay: () => 50}),
+        async (opts, next) => {
+          attempts++
+          return next(opts)
+        },
+      ],
+    })
+    const res = await request({url: `/fail?uuid=${Math.random()}&n=2`, method: 'get'})
+    expect(res.status).toBe(200)
+    expect(attempts).toBeGreaterThan(1)
+  })
+
+  it('does not retry lowercase "post"', async () => {
+    let attempts = 0
+    const request = createRequest({
+      base: baseUrl,
+      httpErrors: false,
+      middleware: [
+        retry({retryDelay: () => 10}),
+        async (opts, next) => {
+          attempts++
+          return next(opts)
+        },
+      ],
+    })
+    await expect(
+      request({url: `/fail?uuid=${Math.random()}&n=2`, method: 'post', body: 'x'}),
+    ).rejects.toThrow()
+    expect(attempts).toBe(1)
+  })
 })

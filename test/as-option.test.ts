@@ -1,4 +1,4 @@
-import {createRequest} from 'get-it'
+import {createRequest, HttpError} from 'get-it'
 import {describe, expect, it} from 'vitest'
 
 describe('as option', () => {
@@ -72,5 +72,45 @@ describe('as option', () => {
     const reader = res.body.getReader()
     const {done} = await reader.read()
     expect(done).toBe(true)
+  })
+
+  it('as: "json" throws SyntaxError when response is not valid JSON', async () => {
+    await expect(request({url: '/invalid-json', as: 'json'})).rejects.toThrow(SyntaxError)
+  })
+
+  it('as: "json" throws HttpError with accessible response on 4xx', async () => {
+    try {
+      await request({url: '/status?code=404', as: 'json'})
+      expect.fail('should have thrown')
+    } catch (err: unknown) {
+      expect(err).toBeInstanceOf(HttpError)
+      if (err instanceof HttpError) {
+        expect(err.status).toBe(404)
+        expect(err.response).toBeDefined()
+        expect(err.response.status).toBe(404)
+      }
+    }
+  })
+
+  it('as: "text" throws HttpError on 4xx', async () => {
+    await expect(request({url: '/status?code=404', as: 'text'})).rejects.toThrow(HttpError)
+  })
+
+  it('as: "text" throws HttpError on 5xx', async () => {
+    await expect(request({url: '/status?code=500', as: 'text'})).rejects.toThrow(HttpError)
+  })
+
+  it('as: "stream" throws HttpError with buffered body on error status', async () => {
+    try {
+      await request({url: '/status?code=500', as: 'stream'})
+      expect.fail('should have thrown')
+    } catch (err: unknown) {
+      expect(err).toBeInstanceOf(HttpError)
+      if (err instanceof HttpError) {
+        expect(err.status).toBe(500)
+        expect(typeof err.body).toBe('string')
+        expect(err.response).toBeDefined()
+      }
+    }
   })
 })
