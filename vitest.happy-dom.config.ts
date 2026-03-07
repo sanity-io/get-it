@@ -6,5 +6,6 @@ export default defineConfig({
   test: {
     ...sharedConfig,
     environment: 'happy-dom',
+    setupFiles: ['./test/helpers/suppress-noise.ts'],
   },
 })
