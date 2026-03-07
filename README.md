@@ -185,10 +185,10 @@ For custom proxy or connection pool settings:
 
 ```ts
 import {createRequest} from 'get-it'
-import {nodeFetch} from 'get-it/node'
+import {createNodeFetch} from 'get-it/node'
 
 const request = createRequest({
-  fetch: nodeFetch({
+  fetch: createNodeFetch({
     proxy: 'http://proxy:8080',
     connections: 30,
     allowH2: true,
@@ -202,7 +202,7 @@ const request = createRequest({
 | ------------------- | -------------------------------------------------------- |
 | `get-it`            | Core (auto-selects Node variant via conditional exports) |
 | `get-it/middleware` | `retry`, `debug`                                         |
-| `get-it/node`       | `nodeFetch()` for custom undici dispatcher config        |
+| `get-it/node`       | `createNodeFetch()` for custom undici dispatcher config  |
 
 ## Migrating from v8
 

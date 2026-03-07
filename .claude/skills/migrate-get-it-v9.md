@@ -64,7 +64,7 @@ import {retry, debug} from 'get-it/middleware'
 ```ts
 // v8 — no equivalent
 // v9
-import {nodeFetch} from 'get-it/node'
+import {createNodeFetch} from 'get-it/node'
 ```
 
 ## Step 3: Transform instance creation
@@ -105,7 +105,7 @@ Mapping of v8 middleware to v9 createRequest options:
 - `observable()` → remove, wrap promise with `from()` in consumer
 - `progress()` → remove entirely, no replacement
 - `keepAlive()` → remove, built into fetch
-- `agent(opts)` → use `{ fetch: nodeFetch(opts) }` or remove if default proxy behavior is sufficient
+- `agent(opts)` → use `{ fetch: createNodeFetch(opts) }` or remove if default proxy behavior is sufficient
 
 ## Step 4: Transform CancelToken to AbortController
 
@@ -263,9 +263,9 @@ const request = getIt([proxy({host: 'proxy', port: 8080}), promise()])
 
 // v9 — automatic in Node (reads HTTP_PROXY env var)
 // For explicit proxy:
-import {nodeFetch} from 'get-it/node'
+import {createNodeFetch} from 'get-it/node'
 const request = createRequest({
-  fetch: nodeFetch({proxy: 'http://proxy:8080'}),
+  fetch: createNodeFetch({proxy: 'http://proxy:8080'}),
 })
 ```
 

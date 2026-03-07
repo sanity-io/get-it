@@ -1,5 +1,5 @@
 import {createRequest} from 'get-it'
-import {nodeFetch} from 'get-it/node'
+import {createNodeFetch} from 'get-it/node'
 import {afterEach, describe, expect, it} from 'vitest'
 
 const baseUrl = 'http://localhost:9980/req-test'
@@ -27,7 +27,7 @@ async function getProxyConnectCount(): Promise<number> {
   throw new Error('Unexpected proxy counter response')
 }
 
-describe('nodeFetch', () => {
+describe('createNodeFetch', () => {
   afterEach(async () => {
     // Ensure HTTP_PROXY is cleaned up
     delete process.env['HTTP_PROXY']
@@ -37,7 +37,7 @@ describe('nodeFetch', () => {
   it('routes through explicit proxy', async () => {
     await resetProxyCounter()
     const request = createRequest({
-      fetch: nodeFetch({proxy: proxyUrl}),
+      fetch: createNodeFetch({proxy: proxyUrl}),
     })
     const res = await request(`${baseUrl}/plain-text`)
     expect(res.status).toBe(200)
@@ -50,7 +50,7 @@ describe('nodeFetch', () => {
   it('routes through env proxy (HTTP_PROXY)', async () => {
     await resetProxyCounter()
     process.env['HTTP_PROXY'] = proxyUrl
-    const customFetch = nodeFetch({proxy: true})
+    const customFetch = createNodeFetch({proxy: true})
     const request = createRequest({fetch: customFetch})
     const res = await request(`${baseUrl}/plain-text`)
     expect(res.status).toBe(200)
@@ -62,7 +62,7 @@ describe('nodeFetch', () => {
   it('bypasses proxy when proxy is false', async () => {
     await resetProxyCounter()
     const request = createRequest({
-      fetch: nodeFetch({proxy: false}),
+      fetch: createNodeFetch({proxy: false}),
     })
     const res = await request(`${baseUrl}/plain-text`)
     expect(res.status).toBe(200)
@@ -76,7 +76,7 @@ describe('nodeFetch', () => {
     delete process.env['HTTP_PROXY']
     delete process.env['HTTPS_PROXY']
     const request = createRequest({
-      fetch: nodeFetch(), // defaults to proxy: true (from env)
+      fetch: createNodeFetch(), // defaults to proxy: true (from env)
     })
     const res = await request(`${baseUrl}/plain-text`)
     expect(res.status).toBe(200)
@@ -86,10 +86,10 @@ describe('nodeFetch', () => {
   })
 })
 
-describe('nodeFetch body forwarding', () => {
+describe('createNodeFetch body forwarding', () => {
   it('forwards request body to fetch', async () => {
     const request = createRequest({
-      fetch: nodeFetch({proxy: false}),
+      fetch: createNodeFetch({proxy: false}),
       base: baseUrl,
     })
     const res = await request({url: '/json-echo', method: 'POST', body: {foo: 'bar'}})
@@ -97,16 +97,16 @@ describe('nodeFetch body forwarding', () => {
   })
 })
 
-describe('nodeFetch tls option with proxy modes', () => {
+describe('createNodeFetch tls option with proxy modes', () => {
   it('passes requestTls to EnvHttpProxyAgent when proxy is true', () => {
     // Just verify it doesn't throw — we can't easily test the TLS config
     // reaches undici internals, but we exercise the tls branch
-    const fetch = nodeFetch({proxy: true, tls: {ca: 'fake-ca'}})
+    const fetch = createNodeFetch({proxy: true, tls: {ca: 'fake-ca'}})
     expect(typeof fetch).toBe('function')
   })
 
   it('passes requestTls to ProxyAgent when proxy is a string', () => {
-    const fetch = nodeFetch({proxy: 'http://localhost:9999', tls: {ca: 'fake-ca'}})
+    const fetch = createNodeFetch({proxy: 'http://localhost:9999', tls: {ca: 'fake-ca'}})
     expect(typeof fetch).toBe('function')
   })
 })
