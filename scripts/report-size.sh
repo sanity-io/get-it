@@ -17,6 +17,9 @@ npx terser dist/index.js \
   --mangle-props regex='/^_/' \
   --output dist/index.min.js
 
+cp dist/index.min.js dist/index.min.pretty.js
+npx prettier --ignore-path /dev/null --write dist/index.min.pretty.js --log-level silent
+
 kb() { echo "scale=2; $1 / 1024" | bc; }
 
 original=$(wc -c < dist/index.js | tr -d ' ')

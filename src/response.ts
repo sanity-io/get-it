@@ -19,17 +19,11 @@ export function createBufferedResponse(
     body,
 
     text(): string {
-      if (cachedText === undefined) {
-        cachedText = (decoder ??= new TextDecoder()).decode(body)
-      }
-      return cachedText
+      return (cachedText ??= (decoder ??= new TextDecoder()).decode(body))
     },
 
     json(): unknown {
-      if (cachedJson === undefined) {
-        cachedJson = {value: JSON.parse(this.text())}
-      }
-      return cachedJson.value
+      return (cachedJson ??= {value: JSON.parse(this.text())}).value
     },
 
     bytes(): Uint8Array {

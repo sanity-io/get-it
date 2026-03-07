@@ -3,8 +3,8 @@
  * Prints example stack traces for different error scenarios.
  * Run with: npx tsx print-stack-trace.ts
  */
-import {createRequest} from 'get-it'
-import {retry} from 'get-it/middleware'
+import {createRequest} from './dist/index.min.pretty.js'
+import {retry} from './dist/middleware.js'
 
 const fetch500 = async () => new Response('oops', {status: 500})
 
