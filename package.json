@@ -67,6 +67,7 @@
     "lint": "eslint . --ext .cjs,.js,.ts --report-unused-disable-directives",
     "lint:fix": "eslint . --ext .cjs,.js,.ts --report-unused-disable-directives --fix",
     "prepublishOnly": "pnpm run build",
+    "report-size": "scripts/report-size.sh",
     "test": "vitest",
     "test:browser": "pnpm test -- --config ./vitest.browser.config.ts --dom",
     "test:bun": "bun run vitest run",
