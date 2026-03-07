@@ -135,7 +135,12 @@ describe('built-in behaviors', () => {
     })
 
     it('strips undefined header values from instance headers', async () => {
-      const headers = {'X-Present': 'yes', 'X-Missing': undefined} as Record<string, string>
+      // Simulate JS callers that bypass TypeScript and pass undefined values
+      const headers: Record<string, string> = {
+        'X-Present': 'yes',
+        // @ts-expect-error Signature allows only string, but we want to test behavior of undefined
+        'X-Missing': undefined,
+      }
       const request = createRequest({base: baseUrl, headers})
       const res = await request('/debug')
       const sent = getRecord(res.json(), 'headers')
@@ -145,7 +150,11 @@ describe('built-in behaviors', () => {
 
     it('strips undefined header values from per-request headers', async () => {
       const request = createRequest({base: baseUrl})
-      const headers = {'X-Present': 'yes', 'X-Missing': undefined} as Record<string, string>
+      const headers: Record<string, string> = {
+        'X-Present': 'yes',
+        // @ts-expect-error Signature allows only string, but we want to test behavior of undefined
+        'X-Missing': undefined,
+      }
       const res = await request({url: '/debug', headers})
       const sent = getRecord(res.json(), 'headers')
       expect(sent['x-present']).toBe('yes')
@@ -302,7 +311,7 @@ describe('built-in behaviors', () => {
     it('JSON-serializes Object.create(null) bodies', async () => {
       const request = createRequest({base: baseUrl})
       const body = Object.create(null) as Record<string, string>
-      body.key = 'value'
+      body['key'] = 'value'
       const res = await request({url: '/json-echo', method: 'POST', body})
       expect(res.json()).toEqual({key: 'value'})
     })
@@ -607,7 +616,7 @@ describe('built-in behaviors', () => {
     const hasWindow = 'window' in globalThis
 
     it('passes instance-level credentials to fetch in browser env', async () => {
-      if (!hasWindow) (globalThis as Record<string, unknown>).window = globalThis
+      if (!hasWindow) Object.assign(globalThis, {window: globalThis})
       try {
         let calledInit: RequestInit | undefined
         const fakeFetch = async (_input: string, init?: RequestInit) => {
@@ -618,12 +627,12 @@ describe('built-in behaviors', () => {
         await request('https://example.com/api')
         expect(calledInit?.credentials).toBe('include')
       } finally {
-        if (!hasWindow) delete (globalThis as Record<string, unknown>).window
+        if (!hasWindow) Reflect.deleteProperty(globalThis, 'window')
       }
     })
 
     it('passes per-request credentials to fetch in browser env', async () => {
-      if (!hasWindow) (globalThis as Record<string, unknown>).window = globalThis
+      if (!hasWindow) Object.assign(globalThis, {window: globalThis})
       try {
         let calledInit: RequestInit | undefined
         const fakeFetch = async (_input: string, init?: RequestInit) => {
@@ -634,12 +643,12 @@ describe('built-in behaviors', () => {
         await request({url: 'https://example.com/api', credentials: 'include'})
         expect(calledInit?.credentials).toBe('include')
       } finally {
-        if (!hasWindow) delete (globalThis as Record<string, unknown>).window
+        if (!hasWindow) Reflect.deleteProperty(globalThis, 'window')
       }
     })
 
     it('per-request credentials override instance credentials', async () => {
-      if (!hasWindow) (globalThis as Record<string, unknown>).window = globalThis
+      if (!hasWindow) Object.assign(globalThis, {window: globalThis})
       try {
         let calledInit: RequestInit | undefined
         const fakeFetch = async (_input: string, init?: RequestInit) => {
@@ -650,7 +659,7 @@ describe('built-in behaviors', () => {
         await request({url: 'https://example.com/api', credentials: 'omit'})
         expect(calledInit?.credentials).toBe('omit')
       } finally {
-        if (!hasWindow) delete (globalThis as Record<string, unknown>).window
+        if (!hasWindow) Reflect.deleteProperty(globalThis, 'window')
       }
     })
 
