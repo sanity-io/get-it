@@ -133,7 +133,7 @@ export function createRequest(options?: CreateRequestOptions): RequestFunction {
   function request(opts: RequestOptions & {as: 'stream'}): Promise<StreamResponse>
   function request(opts: RequestOptions): Promise<BufferedResponse>
   function request(url: string): Promise<BufferedResponse>
-  function request(
+  async function request(
     input: string | RequestOptions,
   ): Promise<BufferedResponse | JsonResponse | TextResponse | StreamResponse> {
     const raw: RequestOptions = typeof input === 'string' ? {url: input} : input
@@ -151,13 +151,13 @@ export function createRequest(options?: CreateRequestOptions): RequestFunction {
 
     switch (opts.as) {
       case 'json':
-        return requestJson(opts)
+        return await requestJson(opts)
       case 'text':
-        return requestText(opts)
+        return await requestText(opts)
       case 'stream':
-        return requestStream(opts)
+        return await requestStream(opts)
       default:
-        return executeBuffered(opts)
+        return await executeBuffered(opts)
     }
   }
 
