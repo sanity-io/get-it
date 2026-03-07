@@ -1,9 +1,17 @@
 import {createRequest} from 'get-it'
-import {createNodeFetch} from 'get-it/node'
 import {afterEach, describe, expect, it} from 'vitest'
 
 const baseUrl = 'http://localhost:9980/req-test'
 const proxyUrl = 'http://localhost:4000'
+
+// Probe whether the Node-specific entry point is available (it won't be in
+// browser, edge-runtime, or react-server environments).
+const nodeModule = await import('get-it/node').catch(() => null)
+
+function getCreateNodeFetch() {
+  if (!nodeModule) throw new Error('get-it/node not available')
+  return nodeModule.createNodeFetch
+}
 
 /**
  * Reset the proxy CONNECT counter before each test, and read it after
@@ -27,7 +35,9 @@ async function getProxyConnectCount(): Promise<number> {
   throw new Error('Unexpected proxy counter response')
 }
 
-describe('createNodeFetch', () => {
+describe.runIf(nodeModule)('createNodeFetch', () => {
+  const createNodeFetch = getCreateNodeFetch()
+
   afterEach(async () => {
     // Ensure HTTP_PROXY is cleaned up
     delete process.env['HTTP_PROXY']
@@ -86,7 +96,9 @@ describe('createNodeFetch', () => {
   })
 })
 
-describe('createNodeFetch body forwarding', () => {
+describe.runIf(nodeModule)('createNodeFetch body forwarding', () => {
+  const createNodeFetch = getCreateNodeFetch()
+
   it('forwards request body to fetch', async () => {
     const request = createRequest({
       fetch: createNodeFetch({proxy: false}),
@@ -97,25 +109,27 @@ describe('createNodeFetch body forwarding', () => {
   })
 })
 
-describe('createNodeFetch tls option with proxy modes', () => {
+describe.runIf(nodeModule)('createNodeFetch tls option with proxy modes', () => {
+  const createNodeFetch = getCreateNodeFetch()
+
   it('passes requestTls to EnvHttpProxyAgent when proxy is true', () => {
     // Just verify it doesn't throw — we can't easily test the TLS config
     // reaches undici internals, but we exercise the tls branch
-    const fetch = createNodeFetch({proxy: true, tls: {ca: 'fake-ca'}})
-    expect(typeof fetch).toBe('function')
+    const nodeFetch = createNodeFetch({proxy: true, tls: {ca: 'fake-ca'}})
+    expect(typeof nodeFetch).toBe('function')
   })
 
   it('passes requestTls to ProxyAgent when proxy is a string', () => {
-    const fetch = createNodeFetch({proxy: 'http://localhost:9999', tls: {ca: 'fake-ca'}})
-    expect(typeof fetch).toBe('function')
+    const nodeFetch = createNodeFetch({proxy: 'http://localhost:9999', tls: {ca: 'fake-ca'}})
+    expect(typeof nodeFetch).toBe('function')
   })
 })
 
-describe('node entry point', () => {
+describe.runIf(nodeModule)('node entry point', () => {
   it('re-exports core types and utilities', async () => {
-    const nodeModule = await import('../src/_exports/index.node')
-    expect(typeof nodeModule.createRequest).toBe('function')
-    expect(typeof nodeModule.HttpError).toBe('function')
+    const mod = await import('../src/_exports/index.node')
+    expect(typeof mod.createRequest).toBe('function')
+    expect(typeof mod.HttpError).toBe('function')
   })
 
   it('createRequest from node entry works without custom fetch', async () => {

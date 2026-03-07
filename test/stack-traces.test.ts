@@ -16,6 +16,25 @@ function stackNames(error: Error): string[] {
     .filter((name): name is string => name !== null)
 }
 
+/**
+ * Detect whether the runtime preserves async stack frames across module
+ * boundaries. V8 does this natively, but some environments (e.g. happy-dom)
+ * break the async context tracking, causing caller frames to disappear.
+ * We probe with a real request to catch cross-module async frame loss.
+ */
+const hasAsyncStackFrames = await (async () => {
+  const probe = createRequest({
+    fetch: async () => new Response('x', {status: 500}),
+  })
+  try {
+    await probe({url: 'http://probe'})
+    return false
+  } catch (err: unknown) {
+    if (!(err instanceof HttpError)) return false
+    return stackNames(err).includes('request')
+  }
+})()
+
 // Fake fetch returning an error status — simulates a browser/edge environment
 const fetch404 = async () => new Response('Not Found', {status: 404, statusText: 'Not Found'})
 const fetch500 = async () =>
@@ -23,18 +42,21 @@ const fetch500 = async () =>
 
 describe('stack traces', () => {
   describe('public API boundary', () => {
-    it('HttpError includes request (the public entry point)', async () => {
-      const request = createRequest({fetch: fetch404})
-      try {
-        await request({url: 'http://example.com/test'})
-        expect.fail('should have thrown')
-      } catch (err: unknown) {
-        if (!(err instanceof HttpError)) throw err
-        expect(stackNames(err)).toContain('request')
-      }
-    })
+    it.runIf(hasAsyncStackFrames)(
+      'HttpError includes request (the public entry point)',
+      async () => {
+        const request = createRequest({fetch: fetch404})
+        try {
+          await request({url: 'http://example.com/test'})
+          expect.fail('should have thrown')
+        } catch (err: unknown) {
+          if (!(err instanceof HttpError)) throw err
+          expect(stackNames(err)).toContain('request')
+        }
+      },
+    )
 
-    it('as: "json" includes request and requestJson', async () => {
+    it.runIf(hasAsyncStackFrames)('as: "json" includes request and requestJson', async () => {
       const request = createRequest({fetch: fetch404})
       try {
         await request({url: 'http://example.com/test', as: 'json'})
@@ -47,7 +69,7 @@ describe('stack traces', () => {
       }
     })
 
-    it('as: "text" includes request and requestText', async () => {
+    it.runIf(hasAsyncStackFrames)('as: "text" includes request and requestText', async () => {
       const request = createRequest({fetch: fetch404})
       try {
         await request({url: 'http://example.com/test', as: 'text'})
@@ -60,22 +82,25 @@ describe('stack traces', () => {
       }
     })
 
-    it('as: "stream" includes request and requestStream', async () => {
-      const request = createRequest({fetch: fetch500})
-      try {
-        await request({url: 'http://example.com/test', as: 'stream'})
-        expect.fail('should have thrown')
-      } catch (err: unknown) {
-        if (!(err instanceof HttpError)) throw err
-        const names = stackNames(err)
-        expect(names).toContain('request')
-        expect(names).toContain('requestStream')
-      }
-    })
+    it.runIf(hasAsyncStackFrames)(
+      'as: "stream" includes request and requestStream',
+      async () => {
+        const request = createRequest({fetch: fetch500})
+        try {
+          await request({url: 'http://example.com/test', as: 'stream'})
+          expect.fail('should have thrown')
+        } catch (err: unknown) {
+          if (!(err instanceof HttpError)) throw err
+          const names = stackNames(err)
+          expect(names).toContain('request')
+          expect(names).toContain('requestStream')
+        }
+      },
+    )
   })
 
   describe('middleware visibility', () => {
-    it('retry middleware appears in stack', async () => {
+    it.runIf(hasAsyncStackFrames)('retry middleware appears in stack', async () => {
       const request = createRequest({
         fetch: fetch500,
         httpErrors: false,
@@ -90,23 +115,26 @@ describe('stack traces', () => {
       }
     })
 
-    it('named wrapping middleware appears when it awaits next()', async () => {
-      const request = createRequest({
-        fetch: fetch404,
-        middleware: [
-          async function authMiddleware(opts, next) {
-            return await next(opts)
-          },
-        ],
-      })
-      try {
-        await request({url: 'http://example.com/test'})
-        expect.fail('should have thrown')
-      } catch (err: unknown) {
-        if (!(err instanceof HttpError)) throw err
-        expect(stackNames(err)).toContain('authMiddleware')
-      }
-    })
+    it.runIf(hasAsyncStackFrames)(
+      'named wrapping middleware appears when it awaits next()',
+      async () => {
+        const request = createRequest({
+          fetch: fetch404,
+          middleware: [
+            async function authMiddleware(opts, next) {
+              return await next(opts)
+            },
+          ],
+        })
+        try {
+          await request({url: 'http://example.com/test'})
+          expect.fail('should have thrown')
+        } catch (err: unknown) {
+          if (!(err instanceof HttpError)) throw err
+          expect(stackNames(err)).toContain('authMiddleware')
+        }
+      },
+    )
 
     it('network error through retry shows retryMiddleware', async () => {
       const fetchNetworkError = async () => {

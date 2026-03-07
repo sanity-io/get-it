@@ -6,6 +6,5 @@ export default defineConfig({
   test: {
     ...sharedConfig,
     environment: 'edge-runtime',
-    exclude: [...(sharedConfig.exclude ?? []), 'test/node-proxy.test.ts'],
   },
 })
