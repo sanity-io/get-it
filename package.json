@@ -69,11 +69,12 @@
     "lint:fix": "eslint --report-unused-disable-directives --fix",
     "prepublishOnly": "pnpm run build",
     "report-size": "scripts/report-size.sh",
-    "test": "vitest",
-    "test:browser": "pnpm test -- --config ./vitest.browser.config.ts --dom",
+    "test": "vitest run",
+    "test:all": "pnpm run test && pnpm run test:browser && pnpm run test:bun && pnpm run test:edge-runtime && pnpm run test:react-server",
+    "test:browser": "pnpm test --config ./vitest.browser.config.ts --dom",
     "test:bun": "bun run vitest run",
-    "test:edge-runtime": "pnpm test -- --config ./vitest.edge.config.ts",
-    "test:react-server": "pnpm test -- --config ./vitest.react-server.config.ts",
+    "test:edge-runtime": "pnpm test --config ./vitest.edge.config.ts",
+    "test:react-server": "pnpm test --config ./vitest.react-server.config.ts",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.check-node.json"
   },
   "browserslist": [
