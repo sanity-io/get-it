@@ -156,6 +156,11 @@ export function createRequest(options?: CreateRequestOptions): RequestFunction {
     }
   }
 
+  defineFnName(requestStream, 'requestStream')
+  defineFnName(requestJson, 'requestJson')
+  defineFnName(requestText, 'requestText')
+  defineFnName(request, 'request')
+
   return request
 }
 
@@ -400,4 +405,10 @@ function hasV8StackTraceApi(ctor: ErrorConstructor): ctor is ErrorConstructor & 
   captureStackTrace(error: Error, omitFramesAbove: (...args: never) => unknown): void
 } {
   return 'captureStackTrace' in ctor
+}
+
+// Ensure function name is kept in minified/mangled stack traces
+// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+function defineFnName(fn: Function, name: string): void {
+  Object.defineProperty(fn, 'name', {value: name})
 }
