@@ -283,15 +283,20 @@ describe('built-in behaviors', () => {
       expect(getString(res.json(), 'body')).toBe('')
     })
 
-    it('silently drops non-serializable body types like numbers', async () => {
-      let sentBody: BodyInit | null | undefined
-      const fakeFetch = async (_input: string, init?: RequestInit) => {
-        sentBody = init?.body
-        return new Response('ok')
-      }
+    it('throws TypeError for non-serializable body types', async () => {
+      const fakeFetch = async () => new Response('ok')
       const request = createRequest({fetch: fakeFetch})
-      await request({url: 'https://example.com/api', method: 'POST', body: 42})
-      expect(sentBody).toBeUndefined()
+      await expect(
+        request({url: 'https://example.com/api', method: 'POST', body: 42}),
+      ).rejects.toThrow(TypeError)
+    })
+
+    it('throws TypeError with descriptive message for unrecognized body', async () => {
+      const fakeFetch = async () => new Response('ok')
+      const request = createRequest({fetch: fakeFetch})
+      await expect(
+        request({url: 'https://example.com/api', method: 'POST', body: new Date()}),
+      ).rejects.toThrow(/unsupported body type/i)
     })
 
     it('JSON-serializes Object.create(null) bodies', async () => {

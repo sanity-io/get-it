@@ -260,6 +260,8 @@ function buildFetchArgs(
       }
     } else if (isBinaryBody(opts.body)) {
       init.body = opts.body
+    } else {
+      throw new TypeError(`Unsupported body type: ${typeof opts.body}`)
     }
   }
 
