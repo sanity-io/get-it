@@ -31,7 +31,7 @@ export function createRequest(options?: CreateRequestOptions): RequestFunction {
   const transforms: TransformMiddleware[] = []
   const wrappers: WrappingMiddleware[] = []
   for (const mw of middleware) {
-    if (isTransformMiddleware(mw)) {
+    if (typeof mw === 'object') {
       transforms.push(mw)
     } else {
       wrappers.push(mw)
@@ -132,7 +132,7 @@ export function createRequest(options?: CreateRequestOptions): RequestFunction {
 
     // Resolve instance-level config into the options so middleware sees the full picture
     let url = raw.url
-    if (instanceBase && !url.startsWith('http://') && !url.startsWith('https://')) {
+    if (instanceBase && !/^https?:\/\//.test(url)) {
       url = instanceBase.replace(/\/$/, '') + '/' + url.replace(/^\//, '')
     }
     const opts: RequestOptions = {
@@ -180,12 +180,6 @@ function isBinaryBody(value: unknown): value is FetchBody {
     value instanceof FormData ||
     value instanceof URLSearchParams
   )
-}
-
-function isTransformMiddleware(
-  mw: TransformMiddleware | WrappingMiddleware,
-): mw is TransformMiddleware {
-  return typeof mw === 'object'
 }
 
 /**

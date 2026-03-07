@@ -7,13 +7,13 @@ import type {BufferedResponse, JsonResponse, TextResponse} from './types'
  * @public
  */
 export class HttpError extends Error {
-  url: string
-  method: string
-  status: number
-  statusText: string
-  headers: Headers
-  body: unknown
-  response: BufferedResponse | JsonResponse | TextResponse
+  declare url: string
+  declare method: string
+  declare status: number
+  declare statusText: string
+  declare headers: Headers
+  declare body: unknown
+  declare response: BufferedResponse | JsonResponse | TextResponse
 
   constructor(opts: {
     url: string
