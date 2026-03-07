@@ -742,6 +742,28 @@ describe('built-in behaviors', () => {
       expect(calledInit?.redirect).toBe('manual')
     })
 
+    it('passes redirect: "follow" to fetch', async () => {
+      let calledInit: RequestInit | undefined
+      const fakeFetch = async (_input: string, init?: RequestInit) => {
+        calledInit = init
+        return new Response('ok')
+      }
+      const request = createRequest({fetch: fakeFetch})
+      await request({url: 'https://example.com/api', redirect: 'follow'})
+      expect(calledInit?.redirect).toBe('follow')
+    })
+
+    it('passes redirect: "error" to fetch', async () => {
+      let calledInit: RequestInit | undefined
+      const fakeFetch = async (_input: string, init?: RequestInit) => {
+        calledInit = init
+        return new Response('ok')
+      }
+      const request = createRequest({fetch: fakeFetch})
+      await request({url: 'https://example.com/api', redirect: 'error'})
+      expect(calledInit?.redirect).toBe('error')
+    })
+
     it('does not set redirect when not configured', async () => {
       let calledInit: RequestInit | undefined
       const fakeFetch = async (_input: string, init?: RequestInit) => {
