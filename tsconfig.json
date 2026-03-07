@@ -1,4 +1,7 @@
 {
+  // Development config — used by the IDE and vitest.
+  // Includes both src and test so intellisense and type-checking
+  // cover everything. Auto-includes @types/node since tests run in Node.
   "extends": "./tsconfig.settings",
   "include": ["./src", "./test"]
 }

@@ -1,6 +1,9 @@
 {
   "extends": "@sanity/tsconfig/strictest",
   "compilerOptions": {
+    // Only ES — no DOM, no node. Each check config adds its own
+    // platform types (DOM or @types/node) so we can verify the
+    // library compiles cleanly in both environments.
     "lib": ["ES2022"],
 
     "outDir": "./dist",
