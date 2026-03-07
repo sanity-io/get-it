@@ -1,9 +1,12 @@
 {
+  // Verifies the library compiles in a Node environment.
+  // Uses @types/node for web platform types (Headers, ReadableStream, etc.)
+  // instead of DOM. Includes createNodeFetch and the node entry point,
+  // excludes the generic entry point (index.ts) since Node uses index.node.ts.
   "extends": "./tsconfig.settings",
   "include": ["./src"],
-  "exclude": ["./src/createNodeFetch.ts", "./src/_exports/index.node.ts", "./src/_exports/node.ts"],
+  "exclude": ["./src/_exports/index.ts"],
   "compilerOptions": {
-    "lib": ["ES2023"],
     "types": ["node"]
   }
 }
