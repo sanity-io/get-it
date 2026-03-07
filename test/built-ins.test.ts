@@ -292,6 +292,48 @@ describe('built-in behaviors', () => {
       expect(getString(res.json(), 'body')).toBe('')
     })
 
+    it('sends ArrayBuffer body', async () => {
+      let sentBody: BodyInit | undefined
+      const fakeFetch = async (_input: string, init?: RequestInit) => {
+        sentBody = init?.body ?? undefined
+        return new Response('ok')
+      }
+      const request = createRequest({fetch: fakeFetch})
+      const buf = new ArrayBuffer(4)
+      await request({url: 'https://example.com/upload', method: 'POST', body: buf})
+      expect(sentBody).toBeInstanceOf(ArrayBuffer)
+    })
+
+    it('sends FormData body', async () => {
+      let sentBody: BodyInit | undefined
+      const fakeFetch = async (_input: string, init?: RequestInit) => {
+        sentBody = init?.body ?? undefined
+        return new Response('ok')
+      }
+      const request = createRequest({fetch: fakeFetch})
+      const form = new FormData()
+      form.append('field', 'value')
+      await request({url: 'https://example.com/upload', method: 'POST', body: form})
+      expect(sentBody).toBeInstanceOf(FormData)
+    })
+
+    it('sends ReadableStream body', async () => {
+      let sentBody: BodyInit | undefined
+      const fakeFetch = async (_input: string, init?: RequestInit) => {
+        sentBody = init?.body ?? undefined
+        return new Response('ok')
+      }
+      const request = createRequest({fetch: fakeFetch})
+      const stream = new ReadableStream({
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode('hello'))
+          controller.close()
+        },
+      })
+      await request({url: 'https://example.com/upload', method: 'POST', body: stream})
+      expect(sentBody).toBeInstanceOf(ReadableStream)
+    })
+
     it('throws TypeError for non-serializable body types', async () => {
       const fakeFetch = async () => new Response('ok')
       const request = createRequest({fetch: fakeFetch})
