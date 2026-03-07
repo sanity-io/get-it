@@ -1,8 +1,8 @@
+import {createNodeFetch} from '../createNodeFetch'
 import {createRequest as coreCreateRequest} from '../createRequest'
-import {nodeFetch} from '../nodeFetch'
 import type {CreateRequestOptions} from '../types'
 
-const defaultFetch = nodeFetch()
+const defaultFetch = createNodeFetch()
 
 /** @public */
 export function createRequest(options?: CreateRequestOptions) {

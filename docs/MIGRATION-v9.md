@@ -25,9 +25,9 @@ This guide covers every breaking change and shows how to update your code.
 | `observable()` middleware       | wrap with `from(promise)` in consumer              |
 | `progress()` middleware         | removed, no replacement                            |
 | `keepAlive()` middleware        | built into fetch                                   |
-| `agent(opts)` middleware        | `nodeFetch(opts)` or injectable `fetch`            |
+| `agent(opts)` middleware        | `createNodeFetch(opts)` or injectable `fetch`      |
 | `proxy(opts)` middleware        | automatic via conditional exports                  |
-| `mtls(opts)` middleware         | `nodeFetch({ tls: { cert, key, ca } })`            |
+| `mtls(opts)` middleware         | `createNodeFetch({ tls: { cert, key, ca } })`      |
 | `require('get-it')`             | `import { createRequest } from 'get-it'`           |
 | `require('get-it/middleware')`  | `import { retry, debug } from 'get-it/middleware'` |
 
@@ -385,16 +385,16 @@ const request = createRequest({
 
 v8 had `agent()` and `proxy()` middleware that configured Node's `http.Agent`.
 
-v9 uses conditional exports: when running in Node/Bun/Deno, `createRequest` automatically uses `nodeFetch()` which reads proxy configuration from environment variables (`HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY`).
+v9 uses conditional exports: when running in Node/Bun/Deno, `createRequest` automatically uses `createNodeFetch()` which reads proxy configuration from environment variables (`HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY`).
 
 For custom proxy or connection pool settings:
 
 ```ts
 import {createRequest} from 'get-it'
-import {nodeFetch} from 'get-it/node'
+import {createNodeFetch} from 'get-it/node'
 
 const request = createRequest({
-  fetch: nodeFetch({
+  fetch: createNodeFetch({
     proxy: 'http://proxy:8080', // explicit proxy URL
     connections: 30, // max connections per origin
     allowH2: true, // enable HTTP/2
@@ -441,7 +441,7 @@ await request({url: '/test', headers: {'X-B': '2'}})
 | ------------------- | ------------------------------------------------------------------------------------- |
 | `get-it`            | Core. In Node/Bun/Deno, automatically includes proxy support via conditional exports. |
 | `get-it/middleware` | `retry`, `debug`                                                                      |
-| `get-it/node`       | `nodeFetch()` for custom undici dispatcher configuration                              |
+| `get-it/node`       | `createNodeFetch()` for custom undici dispatcher configuration                        |
 
 ## TypeScript
 

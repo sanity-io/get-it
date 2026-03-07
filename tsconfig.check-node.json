@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.settings",
   "include": ["./src"],
-  "exclude": ["./src/nodeFetch.ts", "./src/_exports/index.node.ts", "./src/_exports/node.ts"],
+  "exclude": ["./src/createNodeFetch.ts", "./src/_exports/index.node.ts", "./src/_exports/node.ts"],
   "compilerOptions": {
     "lib": ["ES2023"],
     "types": ["node"]

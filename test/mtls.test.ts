@@ -3,7 +3,7 @@ import https from 'node:https'
 import path from 'node:path'
 
 import {createRequest} from 'get-it'
-import {nodeFetch} from 'get-it/node'
+import {createNodeFetch} from 'get-it/node'
 import {afterAll, beforeAll, describe, expect, it} from 'vitest'
 
 const certsDir = path.join(__dirname, 'certs', 'mtls')
@@ -19,7 +19,7 @@ const serverOpts: https.ServerOptions = {
 
 const mtlsPort = 9444
 
-describe('mTLS via nodeFetch tls option', () => {
+describe('mTLS via createNodeFetch tls option', () => {
   let server: https.Server
 
   beforeAll(async () => {
@@ -39,7 +39,7 @@ describe('mTLS via nodeFetch tls option', () => {
 
   it('connects with valid client certificate', async () => {
     const request = createRequest({
-      fetch: nodeFetch({
+      fetch: createNodeFetch({
         proxy: false,
         tls: {
           cert: fs.readFileSync(path.join(certsDir, 'client.pem')),
@@ -54,7 +54,7 @@ describe('mTLS via nodeFetch tls option', () => {
 
   it('rejects connection without client certificate', async () => {
     const request = createRequest({
-      fetch: nodeFetch({
+      fetch: createNodeFetch({
         proxy: false,
         tls: {
           ca: fs.readFileSync(path.join(certsDir, 'ca.pem')),
@@ -66,7 +66,7 @@ describe('mTLS via nodeFetch tls option', () => {
 
   it('rejects connection with invalid client certificate', async () => {
     const request = createRequest({
-      fetch: nodeFetch({
+      fetch: createNodeFetch({
         proxy: false,
         tls: {
           cert: fs.readFileSync(path.join(invalidCertsDir, 'client.pem')),

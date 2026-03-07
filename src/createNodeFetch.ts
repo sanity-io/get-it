@@ -1,4 +1,4 @@
-import {Agent, EnvHttpProxyAgent, ProxyAgent} from 'undici'
+import {Agent, EnvHttpProxyAgent, fetch as undiciFetch, ProxyAgent} from 'undici'
 import type Dispatcher from 'undici/types/dispatcher'
 
 import type {FetchFunction, FetchInit, FetchResponse} from './types'
@@ -26,24 +26,6 @@ export interface NodeFetchOptions {
 }
 
 /**
- * Node's `globalThis.fetch` is powered by undici and accepts a `dispatcher`
- * property in its init object, but TypeScript's `RequestInit` doesn't
- * include it. This interface extends `RequestInit` to declare that property.
- */
-interface NodeRequestInit extends RequestInit {
-  dispatcher?: Dispatcher
-}
-
-/**
- * A typed reference to `globalThis.fetch` that accepts `NodeRequestInit`,
- * which includes the `dispatcher` property.
- *
- * This works because Node's built-in fetch (undici) does accept `dispatcher`
- * at runtime — we just need to widen the init type.
- */
-const nodeFetchFn: (input: string, init?: NodeRequestInit) => Promise<Response> = globalThis.fetch
-
-/**
  * Creates a `FetchFunction` backed by an undici dispatcher.
  *
  * - `proxy: true` (default) — uses `EnvHttpProxyAgent` which reads
@@ -52,7 +34,7 @@ const nodeFetchFn: (input: string, init?: NodeRequestInit) => Promise<Response> 
  * - `proxy: false` — uses a plain `Agent` with no proxy.
  * @public
  */
-export function nodeFetch(options?: NodeFetchOptions): FetchFunction {
+export function createNodeFetch(options?: NodeFetchOptions): FetchFunction {
   const proxyOption = options?.proxy ?? true
 
   let dispatcher: Dispatcher
@@ -80,29 +62,38 @@ export function nodeFetch(options?: NodeFetchOptions): FetchFunction {
     })
   }
 
-  return (input: string, init?: FetchInit): Promise<FetchResponse> => {
-    const nodeInit: NodeRequestInit = {
-      method: init?.method,
-      headers: init?.headers,
-      signal: init?.signal,
-      redirect: init?.redirect,
+  return async function nodeFetch(input: string, reqInit?: FetchInit): Promise<FetchResponse> {
+    const {body, ...rest} = reqInit ?? {}
+    const init = {
+      ...rest,
       dispatcher,
+      // Only set body when it's defined — fetch _can_ throw on
+      // `body: undefined` for some request methods in strict mode.
+      ...(body === undefined ? {} : {body}),
     }
-    // Only set body when it's defined — globalThis.fetch throws on
-    // `body: undefined` for some request methods in strict mode.
-    if (init?.body !== undefined) {
-      nodeInit.body = init.body
-    }
-    return nodeFetchFn(input, nodeInit).then(adaptResponse)
+    const response = await undiciFetch(input, init)
+    return adaptResponse(response)
   }
 }
 
 /**
- * Adapts a standard `Response` (from globalThis.fetch) into our
- * `FetchResponse` interface. This avoids type assertions by explicitly
- * mapping the structural overlap.
+ * The subset of Response properties we actually use. Typed structurally to
+ * avoid the undici@7 / undici-types@6.21 version conflict in @types/node.
  */
-function adaptResponse(response: Response): FetchResponse {
+interface FetchResponseLike {
+  ok: boolean
+  status: number
+  statusText: string
+  headers: Headers
+  body: ReadableStream<Uint8Array> | null
+  text(): Promise<string>
+  arrayBuffer(): Promise<ArrayBuffer>
+}
+
+/**
+ * Adapts a fetch `Response` into our `FetchResponse` interface.
+ */
+function adaptResponse(response: FetchResponseLike): FetchResponse {
   return {
     ok: response.ok,
     status: response.status,
