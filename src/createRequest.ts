@@ -17,6 +17,9 @@ import type {
   WrappingMiddleware,
 } from './types'
 
+const isReactNative = typeof navigator === 'undefined' ? false : navigator.product === 'ReactNative'
+const DEFAULT_TIMEOUT = isReactNative ? 60_000 : 120_000
+
 /**
  * Creates a configured {@link RequestFunction} with shared defaults and middleware.
  *
@@ -293,8 +296,10 @@ function buildFetchArgs(
 
   init.headers = headers
 
-  // Timeout — resolve timeout value (per-request wins over instance, default 120s)
-  const timeoutValue = opts.timeout !== undefined ? opts.timeout : (instanceTimeout ?? 120_000)
+  // Timeout — resolve timeout value (per-request wins over instance).
+  // React Native's network stack benefits from a shorter default timeout.
+  const timeoutValue =
+    opts.timeout !== undefined ? opts.timeout : (instanceTimeout ?? DEFAULT_TIMEOUT)
 
   // Signal — build the final abort signal
   let signal: AbortSignal | undefined = opts.signal
