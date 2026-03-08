@@ -1,13 +1,21 @@
-import {createRequest} from 'get-it'
+import {createRequest, type RequestOptions} from 'get-it'
 import {retry} from 'get-it/middleware'
 import {describe, expect, it} from 'vitest'
 
-import {defaultRetryDelay} from '../src/middleware/retry'
+import {defaultRetryDelay, defaultShouldRetry} from '../src/middleware/retry'
 
 const baseUrl = 'http://localhost:9980/req-test'
 
+/**
+ * Tests that rely on `res.destroy()` producing application-visible network errors
+ * only work outside browsers. Browsers transparently retry TCP resets per the
+ * Fetch spec (the network stack retries before our code sees an error), making
+ * retry-middleware behavior untestable for server-initiated connection closures.
+ */
+const canTestNetworkErrors = !('document' in globalThis)
+
 describe('retry middleware', {timeout: 15000}, () => {
-  it('retries on network error and succeeds', async () => {
+  it.runIf(canTestNetworkErrors)('retries on network error and succeeds', async () => {
     const request = createRequest({
       base: baseUrl,
       httpErrors: false,
@@ -17,7 +25,7 @@ describe('retry middleware', {timeout: 15000}, () => {
     expect(res.status).toBe(200)
   })
 
-  it('respects maxRetries', async () => {
+  it.runIf(canTestNetworkErrors)('respects maxRetries', async () => {
     const request = createRequest({
       base: baseUrl,
       httpErrors: false,
@@ -42,7 +50,7 @@ describe('retry middleware', {timeout: 15000}, () => {
     expect(attempts).toBe(1)
   })
 
-  it('custom shouldRetry', async () => {
+  it.runIf(canTestNetworkErrors)('custom shouldRetry', async () => {
     let attemptsSeen = 0
     const request = createRequest({
       base: baseUrl,
@@ -61,7 +69,7 @@ describe('retry middleware', {timeout: 15000}, () => {
     expect(attemptsSeen).toBe(2)
   })
 
-  it('exponential backoff timing', async () => {
+  it.runIf(canTestNetworkErrors)('exponential backoff timing', async () => {
     const delays: number[] = []
     const request = createRequest({
       base: baseUrl,
@@ -85,7 +93,7 @@ describe('retry middleware', {timeout: 15000}, () => {
     expect(elapsed).toBeGreaterThanOrEqual(250)
   })
 
-  it('aborts during retry sleep when signal is aborted', async () => {
+  it.runIf(canTestNetworkErrors)('aborts during retry sleep when signal is aborted', async () => {
     const controller = new AbortController()
     let attempts = 0
     const request = createRequest({
@@ -120,7 +128,7 @@ describe('retry middleware', {timeout: 15000}, () => {
     expect(delay2).toBeLessThan(500)
   })
 
-  it('uses default retryDelay when none is provided', async () => {
+  it.runIf(canTestNetworkErrors)('uses default retryDelay when none is provided', async () => {
     const request = createRequest({
       base: baseUrl,
       httpErrors: false,
@@ -130,7 +138,7 @@ describe('retry middleware', {timeout: 15000}, () => {
     expect(res.status).toBe(200)
   })
 
-  it('rejects immediately when signal is already aborted', async () => {
+  it.runIf(canTestNetworkErrors)('rejects immediately when signal is already aborted', async () => {
     const controller = new AbortController()
     controller.abort('cancelled')
     const request = createRequest({
@@ -141,7 +149,7 @@ describe('retry middleware', {timeout: 15000}, () => {
     await expect(request({url: '/permafail', signal: controller.signal})).rejects.toThrow()
   })
 
-  it('does not retry POST by default', async () => {
+  it.runIf(canTestNetworkErrors)('does not retry POST by default', async () => {
     const request = createRequest({
       base: baseUrl,
       httpErrors: false,
@@ -152,7 +160,7 @@ describe('retry middleware', {timeout: 15000}, () => {
     ).rejects.toThrow()
   })
 
-  it('retries HEAD requests on network error', async () => {
+  it.runIf(canTestNetworkErrors)('retries HEAD requests on network error', async () => {
     let attempts = 0
     const request = createRequest({
       base: baseUrl,
@@ -170,7 +178,7 @@ describe('retry middleware', {timeout: 15000}, () => {
     expect(attempts).toBeGreaterThan(1)
   })
 
-  it('retries when method is lowercase "get"', async () => {
+  it.runIf(canTestNetworkErrors)('retries when method is lowercase "get"', async () => {
     let attempts = 0
     const request = createRequest({
       base: baseUrl,
@@ -188,7 +196,7 @@ describe('retry middleware', {timeout: 15000}, () => {
     expect(attempts).toBeGreaterThan(1)
   })
 
-  it('does not retry lowercase "post"', async () => {
+  it.runIf(canTestNetworkErrors)('does not retry lowercase "post"', async () => {
     let attempts = 0
     const request = createRequest({
       base: baseUrl,
@@ -205,5 +213,48 @@ describe('retry middleware', {timeout: 15000}, () => {
       request({url: `/fail?uuid=${Math.random()}&n=2`, method: 'post', body: 'x'}),
     ).rejects.toThrow()
     expect(attempts).toBe(1)
+  })
+
+  describe('defaultShouldRetry error filtering', () => {
+    const getOpts = {url: 'http://example.com', method: 'GET'} satisfies RequestOptions
+
+    it('retries transient network error codes', () => {
+      for (const code of ['ECONNRESET', 'ECONNREFUSED', 'ETIMEDOUT', 'EPIPE', 'ENOTFOUND']) {
+        const err = Object.assign(new TypeError('fetch failed'), {
+          cause: Object.assign(new Error('connect failed'), {code}),
+        })
+        expect(defaultShouldRetry(err, 0, getOpts)).toBe(true)
+      }
+    })
+
+    it('does not retry non-transient error codes', () => {
+      for (const code of ['EACCES', 'EPERM', 'ENOENT', 'ERR_TLS_CERT_ALTNAME_INVALID']) {
+        const err = Object.assign(new TypeError('fetch failed'), {
+          cause: Object.assign(new Error('connect failed'), {code}),
+        })
+        expect(defaultShouldRetry(err, 0, getOpts)).toBe(false)
+      }
+    })
+
+    it('retries plain TypeError (browser network error)', () => {
+      expect(defaultShouldRetry(new TypeError('Failed to fetch'), 0, getOpts)).toBe(true)
+    })
+
+    it('does not retry HttpError', () => {
+      const err = new Error('HTTP 500')
+      err.name = 'HttpError'
+      expect(defaultShouldRetry(err, 0, getOpts)).toBe(false)
+    })
+
+    it('does not retry non-GET/HEAD methods', () => {
+      const err = new TypeError('Failed to fetch')
+      expect(defaultShouldRetry(err, 0, {url: 'http://example.com', method: 'POST'})).toBe(false)
+      expect(defaultShouldRetry(err, 0, {url: 'http://example.com', method: 'PUT'})).toBe(false)
+    })
+
+    it('retries error with code directly on error object', () => {
+      const err = Object.assign(new TypeError('fetch failed'), {code: 'ECONNRESET'})
+      expect(defaultShouldRetry(err, 0, getOpts)).toBe(true)
+    })
   })
 })
