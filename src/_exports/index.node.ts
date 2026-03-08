@@ -1,6 +1,6 @@
 import {createNodeFetch} from '../createNodeFetch'
-import {createRequester as coreCreateRequester} from '../createRequest'
-import type {CreateRequestOptions} from '../types'
+import {createRequester as coreCreateRequester} from '../createRequester'
+import type {RequesterOptions} from '../types'
 
 let defaultFetch: ReturnType<typeof createNodeFetch> | undefined
 
@@ -16,7 +16,7 @@ let defaultFetch: ReturnType<typeof createNodeFetch> | undefined
  *
  * @public
  */
-export function createRequester(options?: CreateRequestOptions) {
+export function createRequester(options?: RequesterOptions) {
   if (!options?.fetch) {
     defaultFetch ??= createNodeFetch()
   }
@@ -30,7 +30,7 @@ export function createRequester(options?: CreateRequestOptions) {
 export {HttpError} from '../errors'
 export type {
   BufferedResponse,
-  CreateRequestOptions,
+  RequesterOptions,
   FetchBody,
   FetchFunction,
   FetchHeaders,

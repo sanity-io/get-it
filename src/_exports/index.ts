@@ -1,8 +1,8 @@
-export {createRequester} from '../createRequest'
+export {createRequester} from '../createRequester'
 export {HttpError} from '../errors'
 export type {
   BufferedResponse,
-  CreateRequestOptions,
+  RequesterOptions,
   FetchBody,
   FetchFunction,
   FetchHeaders,

@@ -683,7 +683,7 @@ import type {
   FetchHeaders,
   FetchBody,
   FetchInit,
-  CreateRequestOptions,
+  RequesterOptions,
   RequestFunction,
 } from 'get-it'
 ```
