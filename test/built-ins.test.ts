@@ -3,24 +3,6 @@ import {describe, expect, it} from 'vitest'
 
 const baseUrl = 'http://localhost:9980/req-test'
 
-/** Type guard for objects returned from .json() */
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
-}
-
-/** Extract a nested record from a parsed JSON object */
-function getRecord(obj: unknown, key: string): Record<string, unknown> {
-  if (!isRecord(obj)) throw new Error(`Expected object, got ${typeof obj}`)
-  const val = obj[key]
-  if (!isRecord(val)) throw new Error(`Expected object at key "${key}", got ${typeof val}`)
-  return val
-}
-
-function getString(obj: unknown, key: string): unknown {
-  if (!isRecord(obj)) throw new Error(`Expected object, got ${typeof obj}`)
-  return obj[key]
-}
-
 describe('built-in behaviors', () => {
   // 4a: Base URL
   describe('base URL', () => {
@@ -783,3 +765,21 @@ describe('built-in behaviors', () => {
     })
   })
 })
+
+/** Type guard for objects returned from .json() */
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+/** Extract a nested record from a parsed JSON object */
+function getRecord(obj: unknown, key: string): Record<string, unknown> {
+  if (!isRecord(obj)) throw new Error(`Expected object, got ${typeof obj}`)
+  const val = obj[key]
+  if (!isRecord(val)) throw new Error(`Expected object at key "${key}", got ${typeof val}`)
+  return val
+}
+
+function getString(obj: unknown, key: string): unknown {
+  if (!isRecord(obj)) throw new Error(`Expected object, got ${typeof obj}`)
+  return obj[key]
+}
