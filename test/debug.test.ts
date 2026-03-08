@@ -74,4 +74,68 @@ describe('debug middleware', () => {
     await request('/plain-text')
     expect(logs.some((l) => l.includes('headers'))).toBe(false)
   })
+
+  it('redacts cookie and authorization headers by default', async () => {
+    const logs: string[] = []
+    const log = (msg: string, ...args: unknown[]) => logs.push(`${msg} ${JSON.stringify(args)}`)
+    const request = createRequest({
+      base: baseUrl,
+      headers: {Authorization: 'Bearer secret', Cookie: 'session=abc123'},
+      middleware: [debug({log, verbose: true})],
+    })
+    await request('/plain-text')
+    const allLogs = logs.join('\n')
+    expect(allLogs).not.toContain('secret')
+    expect(allLogs).not.toContain('abc123')
+    expect(allLogs).toContain('REDACTED')
+  })
+
+  it('includes request ID in log output', async () => {
+    const logs: string[] = []
+    const log = (msg: string, ...args: unknown[]) => {
+      logs.push(msg.replace(/%s/g, () => String(args.shift())))
+    }
+    const request = createRequest({
+      base: baseUrl,
+      middleware: [debug({log})],
+    })
+    await request('/plain-text')
+    // Request log should start with [<number>]
+    expect(logs.some((l) => /^\[\d+\]/.test(l))).toBe(true)
+  })
+
+  it('verbose mode logs request body', async () => {
+    const logs: string[] = []
+    const log = (msg: string, ...args: unknown[]) => logs.push(`${msg} ${args.join(' ')}`)
+    const request = createRequest({
+      base: baseUrl,
+      middleware: [debug({log, verbose: true})],
+    })
+    await request({url: '/plain-text', method: 'POST', body: {hello: 'world'}})
+    expect(logs.some((l) => l.includes('request body') && l.includes('hello'))).toBe(true)
+  })
+
+  it('verbose mode logs response body', async () => {
+    const logs: string[] = []
+    const log = (msg: string, ...args: unknown[]) => logs.push(`${msg} ${args.join(' ')}`)
+    const request = createRequest({
+      base: baseUrl,
+      middleware: [debug({log, verbose: true})],
+    })
+    await request('/plain-text')
+    expect(
+      logs.some((l) => l.includes('response') && l.includes('body') && l.includes('plain text')),
+    ).toBe(true)
+  })
+
+  it('non-verbose mode does not log bodies', async () => {
+    const logs: string[] = []
+    const log = (msg: string, ...args: unknown[]) => logs.push(`${msg} ${args.join(' ')}`)
+    const request = createRequest({
+      base: baseUrl,
+      middleware: [debug({log})],
+    })
+    await request({url: '/plain-text', method: 'POST', body: {hello: 'world'}})
+    expect(logs.some((l) => l.includes('body'))).toBe(false)
+  })
 })
