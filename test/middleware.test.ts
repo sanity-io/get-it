@@ -48,6 +48,27 @@ describe('middleware system', () => {
     expect(headers['x-added']).toBe('1')
   })
 
+  it('spreading headers in beforeRequest preserves instance headers', async () => {
+    const request = createRequest({
+      base: baseUrl,
+      headers: {'X-Instance': 'from-instance'},
+      middleware: [
+        {
+          beforeRequest: (opts) => ({
+            ...opts,
+            headers: {...opts.headers, 'X-Added': 'from-middleware'},
+          }),
+        },
+      ],
+    })
+    const res = await request({url: '/debug', headers: {'X-Request': 'from-request'}})
+    const debug = res.json() as Record<string, unknown>
+    const headers = debug['headers'] as Record<string, string>
+    expect(headers['x-instance']).toBe('from-instance')
+    expect(headers['x-request']).toBe('from-request')
+    expect(headers['x-added']).toBe('from-middleware')
+  })
+
   it('runs afterResponse transforms in order', async () => {
     const order: string[] = []
     const request = createRequest({
