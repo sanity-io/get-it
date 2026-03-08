@@ -1,28 +1,10 @@
 import {createRequest} from 'get-it'
+import {createNodeFetch} from 'get-it/node'
 import {afterEach, describe, expect, it} from 'vitest'
 
 const baseUrl = 'http://localhost:9980/req-test'
 const proxyUrl = 'http://localhost:4000'
 
-// Probe whether the Node-specific entry point is available. The import may
-// fail (non-Node environments) or the module may crash at init time when
-// bundled for browsers (e.g. undici references `process` which doesn't exist).
-let nodeModule: typeof import('get-it/node') | null
-try {
-  nodeModule = await import('get-it/node')
-} catch {
-  nodeModule = null
-}
-
-function getCreateNodeFetch() {
-  if (!nodeModule) throw new Error('get-it/node not available')
-  return nodeModule.createNodeFetch
-}
-
-/**
- * Reset the proxy CONNECT counter before each test, and read it after
- * to verify the request went through the proxy.
- */
 async function resetProxyCounter(): Promise<void> {
   await fetch(`${proxyUrl}/__proxy_reset`)
 }
@@ -41,11 +23,8 @@ async function getProxyConnectCount(): Promise<number> {
   throw new Error('Unexpected proxy counter response')
 }
 
-describe.runIf(nodeModule)('createNodeFetch', () => {
-  const createNodeFetch = getCreateNodeFetch()
-
+describe('createNodeFetch', () => {
   afterEach(async () => {
-    // Ensure HTTP_PROXY is cleaned up
     delete process.env['HTTP_PROXY']
     delete process.env['HTTPS_PROXY']
   })
@@ -58,7 +37,6 @@ describe.runIf(nodeModule)('createNodeFetch', () => {
     const res = await request(`${baseUrl}/plain-text`)
     expect(res.status).toBe(200)
     expect(res.text()).toBe('Just some plain text for you to consume')
-    // Verify the proxy was actually used (CONNECT tunnel)
     const count = await getProxyConnectCount()
     expect(count).toBeGreaterThan(0)
   })
@@ -102,9 +80,7 @@ describe.runIf(nodeModule)('createNodeFetch', () => {
   })
 })
 
-describe.runIf(nodeModule)('createNodeFetch body forwarding', () => {
-  const createNodeFetch = getCreateNodeFetch()
-
+describe('createNodeFetch body forwarding', () => {
   it('forwards request body to fetch', async () => {
     const request = createRequest({
       fetch: createNodeFetch({proxy: false}),
@@ -115,12 +91,8 @@ describe.runIf(nodeModule)('createNodeFetch body forwarding', () => {
   })
 })
 
-describe.runIf(nodeModule)('createNodeFetch tls option with proxy modes', () => {
-  const createNodeFetch = getCreateNodeFetch()
-
+describe('createNodeFetch tls option with proxy modes', () => {
   it('passes requestTls to EnvHttpProxyAgent when proxy is true', () => {
-    // Just verify it doesn't throw — we can't easily test the TLS config
-    // reaches undici internals, but we exercise the tls branch
     const nodeFetch = createNodeFetch({proxy: true, tls: {ca: 'fake-ca'}})
     expect(typeof nodeFetch).toBe('function')
   })
@@ -131,7 +103,7 @@ describe.runIf(nodeModule)('createNodeFetch tls option with proxy modes', () => 
   })
 })
 
-describe.runIf(nodeModule)('node entry point', () => {
+describe('node entry point', () => {
   it('re-exports core types and utilities', async () => {
     const mod = await import('../src/_exports/index.node')
     expect(typeof mod.createRequest).toBe('function')

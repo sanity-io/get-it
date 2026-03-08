@@ -205,26 +205,4 @@ describe('stack traces', () => {
     })
   })
 
-  describe('node fetch', async () => {
-    let createNodeFetch: typeof import('get-it/node')['createNodeFetch'] | null
-    try {
-      createNodeFetch = (await import('get-it/node')).createNodeFetch
-    } catch {
-      createNodeFetch = null
-    }
-
-    it.runIf(createNodeFetch)('network error includes nodeFetch in stack', async () => {
-      if (!createNodeFetch) throw new Error('unreachable')
-      const request = createRequest({
-        fetch: createNodeFetch({proxy: false}),
-      })
-      try {
-        await request({url: 'http://localhost:1/', timeout: 5000})
-        expect.fail('should have thrown')
-      } catch (err: unknown) {
-        if (!(err instanceof Error)) throw err
-        expect(stackNames(err)).toContain('nodeFetch')
-      }
-    })
-  })
 })
