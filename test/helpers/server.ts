@@ -4,7 +4,7 @@ import https from 'node:https'
 import path from 'node:path'
 import zlib from 'node:zlib'
 
-import debugRequest from './debugRequest'
+import {debugRequest} from './debugRequest'
 
 const httpsServerOptions: https.ServerOptions = {
   key: fs.readFileSync(path.join(__dirname, '..', 'certs', 'server', 'key.pem')),

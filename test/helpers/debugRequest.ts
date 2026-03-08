@@ -1,4 +1,4 @@
-export default function debugRequest(
+export function debugRequest(
   req: {headers: Record<string, string | string[] | undefined>; method?: string; url?: string},
   body: Buffer | null,
 ) {
