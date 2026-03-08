@@ -362,6 +362,51 @@ const request = createRequest({
 
 Note: v8's `requester.use(middleware)` chaining is removed. Pass all middleware at creation time.
 
+### Custom per-request properties (`meta`)
+
+v8 allowed custom properties directly on the request options object. Middleware could access them via `processOptions`:
+
+```ts
+// v8 — custom properties on RequestOptions
+const request = getIt([
+  {
+    processOptions: (opts) => {
+      const lineage = opts.lineage // custom property, no type error
+      if (lineage) opts.headers['x-lineage'] = lineage
+      return opts
+    },
+  },
+  promise(),
+])
+
+await request({url: '/api', lineage: 'abc'})
+```
+
+v9's `RequestOptions` is a closed type — unknown properties are rejected by TypeScript. Use the `meta` field instead, which is typed as `Record<string, unknown>`:
+
+```ts
+// v9 — use meta for custom per-request data
+const request = createRequest({
+  middleware: [
+    {
+      beforeRequest: (opts) => ({
+        ...opts,
+        headers: {
+          ...opts.headers,
+          ...(typeof opts.meta?.['lineage'] === 'string'
+            ? {'x-lineage': opts.meta['lineage']}
+            : {}),
+        },
+      }),
+    },
+  ],
+})
+
+await request({url: '/api', meta: {lineage: 'abc'}})
+```
+
+The `meta` field is passed through to all middleware (both transform and wrapping) but is not sent over the wire.
+
 ## Middleware migration
 
 ### Removed middleware (no replacement needed)
