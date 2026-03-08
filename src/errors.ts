@@ -7,12 +7,19 @@ import type {BufferedResponse, JsonResponse, TextResponse} from './types'
  * @public
  */
 export class HttpError extends Error {
+  /** The URL that was requested. */
   declare url: string
+  /** The HTTP method used (e.g. `"GET"`, `"POST"`). */
   declare method: string
+  /** The HTTP status code (e.g. `404`, `500`). */
   declare status: number
+  /** The HTTP status text (e.g. `"Not Found"`). */
   declare statusText: string
+  /** Response headers. */
   declare headers: Headers
+  /** Response body — may be a string (from text decoding) or other type. */
   declare body: unknown
+  /** The full response object. */
   declare response: BufferedResponse | JsonResponse | TextResponse
 
   constructor(opts: {

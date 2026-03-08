@@ -4,7 +4,18 @@ import type {CreateRequestOptions} from '../types'
 
 let defaultFetch: ReturnType<typeof createNodeFetch> | undefined
 
-/** @public */
+/**
+ * Creates a configured request function for Node.js.
+ *
+ * Identical to the core {@link createRequest} but automatically provides an
+ * undici-backed fetch if no custom `fetch` is given. The default fetch
+ * instance is created lazily and shared across calls.
+ *
+ * @param options - Instance-level configuration (base URL, headers, timeout, middleware, etc.).
+ * @returns A request function that can be called with a URL string or request options.
+ *
+ * @public
+ */
 export function createRequest(options?: CreateRequestOptions) {
   if (!options?.fetch) {
     defaultFetch ??= createNodeFetch()
