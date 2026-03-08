@@ -30,10 +30,10 @@ import getIt from 'get-it'
 const getIt = require('get-it')
 
 // v9
-import {createRequest} from 'get-it'
+import {createRequester} from 'get-it'
 ```
 
-Note: `getIt` was a default export. `createRequest` is a named export.
+Note: `getIt` was a default export. `createRequester` is a named export.
 
 ### Middleware imports
 
@@ -56,7 +56,7 @@ import {
 
 // v9 — only these middleware still exist:
 import {retry, debug} from 'get-it/middleware'
-// Everything else is built into createRequest() or removed
+// Everything else is built into createRequester() or removed
 ```
 
 ### Node helpers
@@ -84,14 +84,14 @@ const request = getIt([
 ])
 
 // v9
-const request = createRequest({
+const request = createRequester({
   base: 'https://api.example.com',
   headers: {Authorization: 'Bearer ...'},
   middleware: [retry({maxRetries: 3})],
 })
 ```
 
-Mapping of v8 middleware to v9 createRequest options:
+Mapping of v8 middleware to v9 createRequester options:
 
 - `base(url)` → `{ base: url }`
 - `headers(obj)` → `{ headers: obj }`
@@ -100,14 +100,45 @@ Mapping of v8 middleware to v9 createRequest options:
 - `jsonRequest()` → not needed, auto-serializes objects
 - `jsonResponse()` → not needed, use `as: 'json'` or `res.json()`
 - `retry(opts)` → keep as `middleware: [retry(opts)]`
-- `debug(opts)` → keep as `middleware: [debug(opts)]`
+- `debug(opts)` → keep as `middleware: [debug(opts)]` — note: now requires explicit `log` function
 - `urlEncoded()` → remove, pass `new URLSearchParams(...)` as body instead
 - `observable()` → remove, wrap promise with `from()` in consumer
 - `progress()` → remove entirely, no replacement
 - `keepAlive()` → remove, built into fetch
 - `agent(opts)` → use `{ fetch: createNodeFetch(opts) }` or remove if default proxy behavior is sufficient
 
-## Step 4: Transform CancelToken to AbortController
+## Step 4: Transform removed request options
+
+Search for these v8 request options and transform them:
+
+```ts
+// v8: withCredentials
+request({url, withCredentials: true})
+// v9: credentials
+request({url, credentials: 'include'})
+
+// v8: bodySize
+request({url, bodySize: 1024})
+// v9: set content-length header
+request({url, headers: {'content-length': '1024'}})
+
+// v8: requestId (used by debug middleware)
+request({url, requestId: 'abc-123'})
+// v9: use meta
+request({url, meta: {requestId: 'abc-123'}})
+
+// v8: compress (default true)
+request({url, compress: false})
+// v9: removed — fetch handles content negotiation automatically
+
+// v8: onlyBody via promise({onlyBody: true})
+const body = await request({url})
+// v9: removed — access body from the response
+const res = await request({url, as: 'json'})
+const body = res.body
+```
+
+## Step 5: Transform CancelToken to AbortController
 
 Search for `CancelToken` and `cancelToken`:
 
@@ -135,7 +166,7 @@ if (promise.isCancel(err)) { ... }
 if (err instanceof DOMException && err.name === 'AbortError') { ... }
 ```
 
-## Step 5: Transform response access
+## Step 6: Transform response access
 
 Search for response property access patterns:
 
@@ -182,7 +213,7 @@ const res = await request({url, as: 'json'})
 res.body // parsed JSON
 ```
 
-## Step 6: Transform stream and rawBody options
+## Step 7: Transform stream and rawBody options
 
 ```ts
 // v8
@@ -196,7 +227,7 @@ request({url, rawBody: true})
 request({url}) // body is Uint8Array
 ```
 
-## Step 7: Transform custom middleware
+## Step 8: Transform custom middleware
 
 If the codebase has custom v8 middleware using the hook system (`processOptions`, `onReturn`, `onResponse`, `onRequest`, etc.), these need rewriting.
 
@@ -210,16 +241,30 @@ const myMiddleware = {
 }
 
 // v9 — TransformMiddleware
+// Note: headers are already Record<string, string> with lowercase keys, so spreading works naturally
 const myMiddleware: TransformMiddleware = {
   beforeRequest: (options) => ({
     ...options,
-    headers: new Headers({
-      ...Object.fromEntries(new Headers(options.headers)),
-      'X-Custom': 'value',
-    }),
+    headers: {...options.headers, 'x-custom': 'value'},
   }),
   afterResponse: (response) => response, // modify as needed
 }
+```
+
+Use **lowercase header names** in middleware — all keys are normalized to lowercase.
+
+### Custom per-request data
+
+v8 allowed arbitrary properties on the request options object. v9 uses the typed `meta` field:
+
+```ts
+// v8
+request({url, myCustomProp: 'value'})
+// in middleware: options.myCustomProp
+
+// v9
+request({url, meta: {myCustomProp: 'value'}})
+// in middleware: options.meta?.myCustomProp
 ```
 
 ### Wrapping middleware (retry, error recovery)
@@ -236,7 +281,7 @@ const myWrapper: WrappingMiddleware = async (options, next) => {
 }
 ```
 
-## Step 8: Remove .use() chaining
+## Step 9: Remove .use() and .clone() chaining
 
 ```ts
 // v8
@@ -245,14 +290,31 @@ request.use(retry())
 request.use(debug())
 
 // v9 — pass all middleware at creation time
-const request = createRequest({
+const request = createRequester({
   middleware: [retry(), debug()],
 })
 ```
 
 There is no `.use()` method in v9.
 
-## Step 9: Update proxy configuration
+```ts
+// v8 — clone
+const base = getIt([base('https://api.example.com'), promise()])
+const withAuth = base.clone().use(headers({Authorization: 'Bearer ...'}))
+
+// v9 — spread shared config
+const shared = {
+  base: 'https://api.example.com',
+  middleware: [retry()],
+}
+const request = createRequester(shared)
+const withAuth = createRequester({
+  ...shared,
+  headers: {Authorization: 'Bearer ...'},
+})
+```
+
+## Step 10: Update proxy configuration
 
 If the codebase explicitly configures proxies:
 
@@ -264,12 +326,32 @@ const request = getIt([proxy({host: 'proxy', port: 8080}), promise()])
 // v9 — automatic in Node (reads HTTP_PROXY env var)
 // For explicit proxy:
 import {createNodeFetch} from 'get-it/node'
-const request = createRequest({
+const request = createRequester({
   fetch: createNodeFetch({proxy: 'http://proxy:8080'}),
 })
 ```
 
-## Step 10: Verify
+## Step 11: Update debug middleware usage
+
+```ts
+// v8 — zero config, controlled via DEBUG env var
+const request = getIt([debug(), promise()])
+// $ DEBUG=get-it:* node app.js
+
+// v9 — requires explicit log function
+import {debug} from 'get-it/middleware'
+const request = createRequester({
+  middleware: [debug({log: console.log, verbose: true})],
+})
+
+// To restore DEBUG env var behavior:
+import createDebug from 'debug'
+const request = createRequester({
+  middleware: [debug({log: createDebug('get-it'), verbose: true})],
+})
+```
+
+## Step 12: Verify
 
 After completing all transformations:
 
@@ -284,3 +366,6 @@ Common issues to check:
 - Status code property name (`statusCode` vs `status`)
 - CancelToken remnants
 - Observable usage that needs wrapping with `from()`
+- Custom request properties that need moving to `meta`
+- `withCredentials` → `credentials`
+- `requestId` → `meta.requestId`
