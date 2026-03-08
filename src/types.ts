@@ -102,6 +102,8 @@ export interface RequesterOptions {
   fetch?: FetchFunction
   /** Credentials mode forwarded to fetch (browser-only). */
   credentials?: 'include' | 'omit' | 'same-origin'
+  /** Default response format. Per-request `as` overrides this. */
+  as?: 'json' | 'text' | 'stream'
   /** Middleware stack applied to every request. */
   middleware?: Array<TransformMiddleware | WrappingMiddleware>
 }
@@ -266,22 +268,41 @@ export type WrappingMiddleware = (
 // ---------------------------------------------------------------------------
 
 /**
+ * The default response type when no per-request `as` is specified,
+ * determined by the instance-level `as` option.
+ *
+ * @public
+ */
+export type DefaultResponse<As extends 'json' | 'text' | 'stream' | undefined = undefined> =
+  As extends 'json'
+    ? JsonResponse
+    : As extends 'text'
+      ? TextResponse
+      : As extends 'stream'
+        ? StreamResponse
+        : BufferedResponse
+
+/**
  * The overloaded function returned by `createRequester`. The return type
- * is determined by the `as` option:
+ * is determined by the per-request `as` option, falling back to the
+ * instance-level default.
  *
  * - `as: 'json'` → {@link JsonResponse}
  * - `as: 'text'` → {@link TextResponse}
  * - `as: 'stream'` → {@link StreamResponse}
- * - _(default)_ → {@link BufferedResponse}
+ * - _(default)_ → depends on instance-level `as`, or {@link BufferedResponse}
  *
  * Can also be called with a plain URL string for simple GET requests.
  *
+ * @typeParam DefaultAs - The instance-level `as` option, used to determine
+ *   the default return type when no per-request `as` is specified.
+ *
  * @public
  */
-export interface RequestFunction {
+export interface RequestFunction<DefaultAs extends 'json' | 'text' | 'stream' | undefined = undefined> {
   <T = unknown>(options: RequestOptions & {as: 'json'}): Promise<JsonResponse<T>>
   (options: RequestOptions & {as: 'text'}): Promise<TextResponse>
   (options: RequestOptions & {as: 'stream'}): Promise<StreamResponse>
-  (options: RequestOptions): Promise<BufferedResponse>
-  (url: string): Promise<BufferedResponse>
+  (options: RequestOptions): Promise<DefaultResponse<DefaultAs>>
+  (url: string): Promise<DefaultResponse<DefaultAs>>
 }

@@ -2,6 +2,7 @@ export {createRequester} from '../createRequester'
 export {HttpError} from '../errors'
 export type {
   BufferedResponse,
+  DefaultResponse,
   RequesterOptions,
   FetchBody,
   FetchFunction,

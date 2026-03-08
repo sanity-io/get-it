@@ -109,6 +109,20 @@ describe('as option', () => {
     await expect(request({url: '/status?code=500', as: 'text'})).rejects.toThrow(HttpError)
   })
 
+  it('instance-level as: "json" applies to all requests', async () => {
+    const jsonRequest = createRequester({base: 'http://localhost:9980/req-test', as: 'json'})
+    const res = await jsonRequest('/json')
+    expect(res.body).toEqual({foo: 'bar'})
+    expect('json' in res).toBe(false)
+  })
+
+  it('per-request as overrides instance-level as', async () => {
+    const jsonRequest = createRequester({base: 'http://localhost:9980/req-test', as: 'json'})
+    const res = await jsonRequest({url: '/plain-text', as: 'text'})
+    expect(typeof res.body).toBe('string')
+    expect(res.body).toBe('Just some plain text for you to consume')
+  })
+
   it('as: "stream" throws HttpError with buffered body on error status', async () => {
     try {
       await request({url: '/status?code=500', as: 'stream'})

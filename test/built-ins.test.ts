@@ -436,7 +436,7 @@ describe('built-in behaviors', () => {
       let capturedUrl = ''
       const request = createRequester({
         fetch: (url) => {
-          capturedUrl = typeof url === 'string' ? url : url.toString()
+          capturedUrl = url
           return Promise.resolve(new Response('ok'))
         },
       })
