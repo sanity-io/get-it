@@ -397,6 +397,12 @@ await request({url: '/slow', timeout: false})
 
 The timeout signal is automatically combined with any user-provided `signal` using `AbortSignal.any()`.
 
+**React Native**: v8 detected React Native (`navigator.product === 'ReactNative'`) and used a 60s default timeout. v9 uses 120s everywhere. To restore the shorter timeout:
+
+```ts
+const request = createRequest({timeout: 60000})
+```
+
 ## Middleware
 
 v9 has two middleware types instead of the v8 hook-based system:
