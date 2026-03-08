@@ -91,7 +91,13 @@ export function createProxyServer(proto: 'http' | 'https' = 'http') {
       })
     })
 
-    server.on('error', reject)
+    server.on('error', (err: NodeJS.ErrnoException) => {
+      if (err.code === 'EADDRINUSE') {
+        resolve(server)
+        return
+      }
+      reject(err)
+    })
     server.listen(protoPort, () => resolve(server))
   })
 }
