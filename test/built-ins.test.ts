@@ -548,6 +548,22 @@ describe('built-in behaviors', () => {
       }
     })
 
+    it('HttpError truncates long URLs in message but preserves full URL on property', async () => {
+      const longQuery = 'q=' + 'a'.repeat(500)
+      const request = createRequester({
+        fetch: async () => new Response('fail', {status: 404, statusText: 'Not Found'}),
+      })
+      try {
+        await request({url: `http://example.com/api?${longQuery}`})
+        expect.fail('should have thrown')
+      } catch (err: unknown) {
+        if (!(err instanceof HttpError)) throw err
+        expect(err.message.length).toBeLessThan(500)
+        expect(err.message).toContain('…')
+        expect(err.url).toContain(longQuery)
+      }
+    })
+
     it('instance httpErrors=true can be disabled per-request', async () => {
       const request = createRequester({base: baseUrl, httpErrors: true})
       const res = await request({url: '/status?code=500', httpErrors: false})

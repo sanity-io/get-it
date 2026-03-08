@@ -31,9 +31,8 @@ export class HttpError extends Error {
     body: unknown
     response: BufferedResponse | JsonResponse | TextResponse
   }) {
-    super(
-      `${opts.method}-request to ${opts.url} resulted in HTTP ${opts.status} ${opts.statusText}`,
-    )
+    const url = opts.url.length > 400 ? opts.url.slice(0, 399) + '…' : opts.url
+    super(`${opts.method}-request to ${url} resulted in HTTP ${opts.status} ${opts.statusText}`)
     this.name = 'HttpError'
     this.url = opts.url
     this.method = opts.method
