@@ -253,14 +253,17 @@ function buildFetchArgs(
 
   // Query string — merge query params into URL
   if (opts.query) {
-    const urlObj = new URL(url)
     const entries =
       opts.query instanceof URLSearchParams ? opts.query.entries() : Object.entries(opts.query)
+    const params = new URLSearchParams()
     for (const [key, value] of entries) {
       if (value === undefined) continue
-      urlObj.searchParams.append(key, `${value}`)
+      params.append(key, `${value}`)
     }
-    url = urlObj.toString()
+    const qs = params.toString()
+    if (qs) {
+      url += (url.includes('?') ? '&' : '?') + qs
+    }
   }
 
   // Headers — opts.headers is already a merged Headers instance

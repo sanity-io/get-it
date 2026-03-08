@@ -431,6 +431,18 @@ describe('built-in behaviors', () => {
       const res = await request({url: '/query-string', query: {enabled: false}})
       expect(getString(res.json(), 'enabled')).toBe('false')
     })
+
+    it('appends query to relative URLs without throwing', async () => {
+      let capturedUrl = ''
+      const request = createRequester({
+        fetch: (url) => {
+          capturedUrl = typeof url === 'string' ? url : url.toString()
+          return Promise.resolve(new Response('ok'))
+        },
+      })
+      await request({url: '/relative/path', query: {foo: 'bar'}})
+      expect(capturedUrl).toBe('/relative/path?foo=bar')
+    })
   })
 
   // 4e: HTTP Errors
