@@ -91,6 +91,49 @@ const request = createRequest({
 })
 ```
 
+### No per-request retry overrides
+
+v8 allowed retry settings on individual requests:
+
+```ts
+// v8
+await request({url: '/critical', maxRetries: 10, shouldRetry: customPredicate})
+```
+
+v9's retry configuration is set once when creating the middleware. To use different retry behavior for different requests, create separate request instances:
+
+```ts
+// v9
+import {retry} from 'get-it/middleware'
+
+const request = createRequest({
+  base: 'https://api.example.com',
+  middleware: [retry({maxRetries: 3})],
+})
+
+const criticalRequest = createRequest({
+  base: 'https://api.example.com',
+  middleware: [retry({maxRetries: 10, shouldRetry: customPredicate})],
+})
+```
+
+Alternatively, use `meta` to pass hints and a custom `shouldRetry` that reads them:
+
+```ts
+const request = createRequest({
+  middleware: [
+    retry({
+      shouldRetry: (error, attempt, opts) => {
+        const max = typeof opts.meta?.['maxRetries'] === 'number' ? opts.meta['maxRetries'] : 5
+        return attempt < max
+      },
+    }),
+  ],
+})
+
+await request({url: '/critical', meta: {maxRetries: 10}})
+```
+
 ### Query parameters no longer accept arrays
 
 v8 expanded arrays into repeated keys: `{tags: ['a', 'b']}` → `tags=a&tags=b`. v9's `query` option only accepts scalar values (`string | number | boolean | undefined`). Passing an array will silently produce a single comma-joined value via `String()`:
