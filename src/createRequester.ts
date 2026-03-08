@@ -39,12 +39,10 @@ export function createRequester(
   options?: RequesterOptions,
 ): RequestFunction<'json' | 'text' | 'stream' | undefined> {
   const instanceFetch = options?.fetch
-  const instanceHeaders = options?.headers
   const instanceBase = options?.base
   const instanceHttpErrors = options?.httpErrors
   const instanceTimeout = options?.timeout
   const instanceCredentials = options?.credentials
-  const instanceAs = options?.as
 
   // Separate middleware into transforms and wrappers by shape
   const middleware = options?.middleware ?? []
@@ -160,10 +158,10 @@ export function createRequester(
     const opts: RequestOptions = {
       ...raw,
       url,
-      headers: mergeHeaders(instanceHeaders, raw.headers),
+      headers: mergeHeaders(options?.headers, raw.headers),
     }
 
-    switch (opts.as ?? instanceAs) {
+    switch (opts.as ?? options?.as) {
       case 'json':
         return await requestJson(opts)
       case 'text':
