@@ -6,40 +6,37 @@ import zlib from 'node:zlib'
 
 import debugRequest from './debugRequest'
 
-/**
- * Simple stream concatenation helper (inlined from simple-concat).
- * MIT License. Feross Aboukhadijeh <https://feross.org/opensource>
- */
-function concat(stream: NodeJS.ReadableStream, cb: (err: Error | null, body: Buffer) => void) {
-  const chunks: Buffer[] = []
-  let callback: ((err: Error | null, body: Buffer) => void) | null = cb
-  stream.on('data', (chunk: Buffer) => {
-    chunks.push(chunk)
-  })
-  stream.once('end', () => {
-    if (callback) callback(null, Buffer.concat(chunks))
-    callback = null
-  })
-  stream.once('error', (err: Error) => {
-    if (callback) callback(err, Buffer.alloc(0))
-    callback = null
-  })
-}
-
 const httpsServerOptions: https.ServerOptions = {
   key: fs.readFileSync(path.join(__dirname, '..', 'certs', 'server', 'key.pem')),
   cert: fs.readFileSync(path.join(__dirname, '..', 'certs', 'server', 'cert.pem')),
 }
 
-const createError = (code: string, msg?: string) => {
-  const err: Error & {code?: string} = new Error(msg || code)
-  err.code = code
-  return err
-}
-
 const httpPort = 9980
 const httpsPort = 9443
 const state: {failures: Record<string, number>} = {failures: {}}
+
+export function createServer(proto?: 'http'): Promise<http.Server>
+export function createServer(proto: 'https'): Promise<https.Server>
+export function createServer(proto: 'http' | 'https' = 'http') {
+  const isHttp = proto === 'http'
+  const protoPort = isHttp ? httpPort : httpsPort
+  const server = isHttp
+    ? http.createServer(getResponseHandler(proto))
+    : https.createServer(httpsServerOptions, getResponseHandler(proto))
+
+  return new Promise((resolve, reject) => {
+    server.on('error', (err: NodeJS.ErrnoException) => {
+      // If the port is already in use (e.g. vitest browser mode runs
+      // globalSetup twice), treat it as a no-op rather than failing.
+      if (err.code === 'EADDRINUSE') {
+        resolve(server)
+        return
+      }
+      reject(err)
+    })
+    server.listen(protoPort, () => resolve(server))
+  })
+}
 
 function getResponseHandler(proto = 'http') {
   const isSecure = proto === 'https'
@@ -307,25 +304,24 @@ function drip(req: http.IncomingMessage, res: http.ServerResponse) {
   })
 }
 
-export function createServer(proto?: 'http'): Promise<http.Server>
-export function createServer(proto: 'https'): Promise<https.Server>
-export function createServer(proto: 'http' | 'https' = 'http') {
-  const isHttp = proto === 'http'
-  const protoPort = isHttp ? httpPort : httpsPort
-  const server = isHttp
-    ? http.createServer(getResponseHandler(proto))
-    : https.createServer(httpsServerOptions, getResponseHandler(proto))
+function createError(code: string, msg?: string) {
+  const err: Error & {code?: string} = new Error(msg || code)
+  err.code = code
+  return err
+}
 
-  return new Promise((resolve, reject) => {
-    server.on('error', (err: NodeJS.ErrnoException) => {
-      // If the port is already in use (e.g. vitest browser mode runs
-      // globalSetup twice), treat it as a no-op rather than failing.
-      if (err.code === 'EADDRINUSE') {
-        resolve(server)
-        return
-      }
-      reject(err)
-    })
-    server.listen(protoPort, () => resolve(server))
+function concat(stream: NodeJS.ReadableStream, cb: (err: Error | null, body: Buffer) => void) {
+  const chunks: Buffer[] = []
+  let callback: ((err: Error | null, body: Buffer) => void) | null = cb
+  stream.on('data', (chunk: Buffer) => {
+    chunks.push(chunk)
+  })
+  stream.once('end', () => {
+    if (callback) callback(null, Buffer.concat(chunks))
+    callback = null
+  })
+  stream.once('error', (err: Error) => {
+    if (callback) callback(err, Buffer.alloc(0))
+    callback = null
   })
 }
