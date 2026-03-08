@@ -17,7 +17,7 @@ function nodeCreateRequester(options?: RequesterOptions): RequestFunction {
 /**
  * Creates a configured request function for Node.js.
  *
- * Identical to the core {@link createRequester} but automatically provides an
+ * Identical to the core `createRequester` but automatically provides an
  * undici-backed fetch if no custom `fetch` is given. The default fetch
  * instance is created lazily and shared across calls.
  *
@@ -27,8 +27,11 @@ function nodeCreateRequester(options?: RequesterOptions): RequestFunction {
  * @public
  */
 export function createRequester(options: RequesterOptions & {as: 'json'}): RequestFunction<'json'>
+/** Creates a requester that returns {@link TextResponse} by default. @public */
 export function createRequester(options: RequesterOptions & {as: 'text'}): RequestFunction<'text'>
+/** Creates a requester that returns {@link StreamResponse} by default. @public */
 export function createRequester(options: RequesterOptions & {as: 'stream'}): RequestFunction<'stream'>
+/** Creates a requester that returns {@link BufferedResponse} by default. @public */
 export function createRequester(options?: RequesterOptions): RequestFunction
 export function createRequester(
   options?: RequesterOptions,
