@@ -55,7 +55,7 @@ export function createRequest(options?: CreateRequestOptions): RequestFunction {
    * Core fetch + buffer function. This is the innermost layer
    * that wrapping middlewares eventually call.
    */
-  async function coreFetchBuffered(opts: RequestOptions): Promise<BufferedResponse> {
+  async function getItBuffered(opts: RequestOptions): Promise<BufferedResponse> {
     const fetchFn: FetchFunction = opts.fetch ?? instanceFetch ?? globalThis.fetch
     const {url, init} = buildFetchArgs(opts, instanceTimeout, instanceCredentials)
     const response = await fetchFn(url, init)
@@ -64,7 +64,7 @@ export function createRequest(options?: CreateRequestOptions): RequestFunction {
   }
 
   // Compose wrapping middlewares around the core fetch
-  const fetchChain = composeFetchChain(coreFetchBuffered, wrappers)
+  const fetchChain = composeFetchChain(getItBuffered, wrappers)
 
   async function requestJson(opts: RequestOptions): Promise<JsonResponse> {
     const transformedOpts = runBeforeRequest(opts, transforms)
@@ -94,7 +94,7 @@ export function createRequest(options?: CreateRequestOptions): RequestFunction {
     // the wrapping middleware chain completes.
     let capturedResponse: FetchResponse | undefined
 
-    async function coreStreamFetch(reqOpts: RequestOptions): Promise<BufferedResponse> {
+    async function getItStreamed(reqOpts: RequestOptions): Promise<BufferedResponse> {
       const fetchFn: FetchFunction = reqOpts.fetch ?? instanceFetch ?? globalThis.fetch
       const {url, init} = buildFetchArgs(reqOpts, instanceTimeout, instanceCredentials)
       const response = await fetchFn(url, init)
@@ -113,7 +113,9 @@ export function createRequest(options?: CreateRequestOptions): RequestFunction {
       )
     }
 
-    const streamChain = composeFetchChain(coreStreamFetch, wrappers)
+    defineFnName(getItStreamed, 'getItStreamed')
+
+    const streamChain = composeFetchChain(getItStreamed, wrappers)
     await streamChain(transformedOpts)
 
     if (!capturedResponse) {
@@ -169,6 +171,7 @@ export function createRequest(options?: CreateRequestOptions): RequestFunction {
     }
   }
 
+  defineFnName(getItBuffered, 'getItBuffered')
   defineFnName(requestStream, 'requestStream')
   defineFnName(requestJson, 'requestJson')
   defineFnName(requestText, 'requestText')
