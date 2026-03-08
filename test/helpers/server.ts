@@ -181,23 +181,31 @@ function getResponseHandler(proto = 'http') {
         res.statusCode = Number(parts.searchParams.get('code') || 200)
         res.end('---')
         break
-      case '/req-test/stall-after-initial':
+      case '/req-test/stall-after-initial': {
         // Need a bit of data before browsers will usually accept it as "open"
         res.writeHead(200, {'Content-Type': 'text/plain'})
         res.write(new Array(2048).join('.'))
-        setTimeout(() => res.end(new Array(1024).join('.')), 1000)
+        const stallTimer = setTimeout(() => res.end(new Array(1024).join('.')), 1000)
+        req.on('close', () => clearTimeout(stallTimer))
         break
+      }
       case '/req-test/stall-after-initial-gzip':
         res.setHeader('Content-Encoding', 'gzip')
         res.writeHead(200, {'Content-Type': 'text/plain'})
         zlib.gzip(JSON.stringify(['harder', 'better', 'faster', 'stronger']), (_unused, result) => {
           res.write(result)
-          setTimeout(() => res.end(), 1000)
+          const gzTimer = setTimeout(() => res.end(), 1000)
+          req.on('close', () => clearTimeout(gzTimer))
         })
         break
-      case '/req-test/delay':
-        setTimeout(() => res.end('Hello future'), Number(parts.searchParams.get('delay') || 1000))
+      case '/req-test/delay': {
+        const delayTimer = setTimeout(
+          () => res.end('Hello future'),
+          Number(parts.searchParams.get('delay') || 1000),
+        )
+        req.on('close', () => clearTimeout(delayTimer))
         break
+      }
       case '/req-test/empty':
         res.writeHead(200, {'Content-Type': 'text/plain'})
         res.end()
@@ -259,7 +267,7 @@ function getResponseHandler(proto = 'http') {
         break
       }
       case '/req-test/drip':
-        drip(res)
+        drip(req, res)
         break
       case '/req-test/remote-port':
         res.setHeader('Content-Type', 'text/plain')
@@ -277,11 +285,11 @@ function getResponseHandler(proto = 'http') {
   }
 }
 
-function drip(res: http.ServerResponse) {
+function drip(req: http.IncomingMessage, res: http.ServerResponse) {
   let iterations = 0
   let interval: ReturnType<typeof setInterval> | null = null
 
-  setTimeout(() => {
+  const timer = setTimeout(() => {
     res.writeHead(200, {'Content-Type': 'text/plain', 'Content-Length': '45'})
     interval = setInterval(() => {
       if (++iterations === 10) {
@@ -293,6 +301,10 @@ function drip(res: http.ServerResponse) {
       res.write('chunk')
     }, 50)
   }, 500)
+  req.on('close', () => {
+    clearTimeout(timer)
+    if (interval) clearInterval(interval)
+  })
 }
 
 export function createServer(proto?: 'http'): Promise<http.Server>
