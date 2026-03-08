@@ -1,4 +1,4 @@
-import type {FetchHeaders, TransformMiddleware} from '../types'
+import type {BufferedResponse, FetchHeaders, RequestOptions, WrappingMiddleware} from '../types'
 
 type LogFunction = (message: string, ...args: unknown[]) => void
 
@@ -13,7 +13,7 @@ interface DebugOptions {
 let requestId = 0
 
 /**
- * Creates a `TransformMiddleware` that logs request and response details.
+ * Creates a `WrappingMiddleware` that logs request, response, and error details.
  *
  * Does nothing if no `log` function is provided.
  *
@@ -24,7 +24,7 @@ let requestId = 0
  *   `redactHeaders` lists header names to replace with `"REDACTED"` (defaults
  *   to `['cookie', 'authorization']`), and `verbose` (default `false`) enables
  *   header and body logging.
- * @returns A transform middleware that logs before/after each request.
+ * @returns A wrapping middleware that logs before/after each request and on errors.
  *
  * @example
  * ```ts
@@ -35,48 +35,54 @@ let requestId = 0
  *
  * @public
  */
-export function debug(opts?: DebugOptions): TransformMiddleware {
+export function debug(opts?: DebugOptions): WrappingMiddleware {
   const log = opts?.log
   const redactSet = new Set(
     (opts?.redactHeaders ?? DEFAULT_REDACT_HEADERS).map((h) => h.toLowerCase()),
   )
   const verbose = opts?.verbose ?? false
 
-  if (!log) return {}
+  if (!log) return noopMiddleware
 
-  return {
-    beforeRequest(options) {
-      const id = ++requestId
-      const method = (options.method ?? 'GET').toUpperCase()
-      log('[%s] %s %s', id, method, options.url)
+  return async function debugMiddleware(
+    options: RequestOptions,
+    next: (reqOpts: RequestOptions) => Promise<BufferedResponse>,
+  ): Promise<BufferedResponse> {
+    const id = ++requestId
+    const method = (options.method ?? 'GET').toUpperCase()
+    log('[%s] %s %s', id, method, options.url)
 
-      if (verbose && options.headers) {
-        const redacted = headersToObject(options.headers, redactSet)
-        log('[%s] request headers %o', id, redacted)
-      }
+    if (verbose && options.headers) {
+      log('[%s] request headers %o', id, headersToObject(options.headers, redactSet))
+    }
 
-      if (verbose && options.body !== undefined && options.body !== null) {
-        log('[%s] request body %s', id, summarizeBody(options.body))
-      }
+    if (verbose && options.body !== undefined && options.body !== null) {
+      log('[%s] request body %s', id, summarizeBody(options.body))
+    }
 
-      return {...options, meta: {...options.meta, debugRequestId: id}}
-    },
+    try {
+      const response = await next(options)
 
-    afterResponse(response) {
-      log('[response] %d %s', response.status, response.statusText)
-
-      if (verbose) {
-        const headerObj = headersToObject(response.headers, redactSet)
-        log('[response] headers %o', headerObj)
-      }
+      log('[%s] %d %s', id, response.status, response.statusText)
 
       if (verbose) {
-        log('[response] body %s', summarizeBody(response.text()))
+        log('[%s] response headers %o', id, headersToObject(response.headers, redactSet))
+        log('[%s] response body %s', id, summarizeBody(response.text()))
       }
 
       return response
-    },
+    } catch (error: unknown) {
+      log('[%s] error %s', id, error instanceof Error ? error.message : String(error))
+      throw error
+    }
   }
+}
+
+async function noopMiddleware(
+  options: RequestOptions,
+  next: (reqOpts: RequestOptions) => Promise<BufferedResponse>,
+): Promise<BufferedResponse> {
+  return next(options)
 }
 
 /**
