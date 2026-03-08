@@ -218,17 +218,26 @@ function sanitizeHeaders(input: FetchHeaders): FetchHeaders {
 }
 
 /**
- * Merge two FetchHeaders values into a single Headers instance.
+ * Merge two FetchHeaders values into a plain Record so that middleware
+ * can safely spread the result (Headers instances have no enumerable
+ * own properties and would be lost on `{ ...opts.headers }`).
  * The second argument wins on conflicts.
  */
-function mergeHeaders(base: FetchHeaders | undefined, override: FetchHeaders | undefined): Headers {
+function mergeHeaders(
+  base: FetchHeaders | undefined,
+  override: FetchHeaders | undefined,
+): Record<string, string> {
   const headers = new Headers(base ? sanitizeHeaders(base) : undefined)
   if (override) {
     new Headers(sanitizeHeaders(override)).forEach((value, key) => {
       headers.set(key, value)
     })
   }
-  return headers
+  const result: Record<string, string> = {}
+  headers.forEach((value, key) => {
+    result[key] = value
+  })
+  return result
 }
 
 /**
