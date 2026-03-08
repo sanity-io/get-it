@@ -96,7 +96,7 @@ export interface CreateRequestOptions {
   headers?: FetchHeaders
   /** When `true` (default), throws {@link HttpError} for 4xx/5xx responses. */
   httpErrors?: boolean
-  /** Default request timeout in milliseconds. Set to `false` to disable. Defaults to 120 000 ms (60 000 ms in React Native). */
+  /** Default request timeout in milliseconds. Set to `false` to disable. Defaults to 120 000 ms. */
   timeout?: number | false
   /** Custom fetch implementation. In Node.js, defaults to an undici-backed fetch. */
   fetch?: FetchFunction
