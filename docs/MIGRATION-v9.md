@@ -29,6 +29,8 @@ This guide covers every breaking change and shows how to update your code.
 | `proxy(opts)` middleware        | automatic via conditional exports                  |
 | `mtls(opts)` middleware         | `createNodeFetch({ tls: { cert, key, ca } })`      |
 | `bodySize: N`                   | `headers: {'content-length': N}`                   |
+| `compress: false`               | removed (fetch always negotiates compression)      |
+| `onlyBody: true`                | removed (use `res.body` / `res.json()` directly)   |
 | `withCredentials: true`         | `credentials: 'include'`                           |
 | `require('get-it')`             | `import { createRequester } from 'get-it'`         |
 | `require('get-it/middleware')`  | `import { retry, debug } from 'get-it/middleware'` |
@@ -201,6 +203,23 @@ const withAuth = createRequester({
   headers: {Authorization: 'Bearer ...'},
 })
 ```
+
+### `onlyBody` removed
+
+v8's `promise({ onlyBody: true })` resolved with just the response body instead of the full response object. v9 always resolves with the full response — access the body directly:
+
+```ts
+// v8
+const body = await request({url: '/users'}) // with onlyBody: true
+
+// v9
+const res = await request({url: '/users', as: 'json'})
+const body = res.body
+```
+
+### `compress` removed
+
+v8 supported a `compress` option (defaulting to `true`) that sent `accept-encoding: gzip, deflate` headers. In v9, fetch handles content negotiation automatically — there is no option to disable it.
 
 ## Creating a request instance
 
