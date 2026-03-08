@@ -113,6 +113,28 @@ params.append('tags', 'b')
 await request({url: '/api', query: params})
 ```
 
+### `clone()` removed
+
+v8 had `request.clone()` to create derived requesters that inherited the parent's middleware stack. v9 has no `clone()` — since `createRequest` takes a plain options object, you get the same result by spreading shared config:
+
+```ts
+// v8
+const base = getIt([base('https://api.example.com'), promise()])
+const withAuth = base.clone().use(headers({Authorization: 'Bearer ...'}))
+
+// v9
+const shared = {
+  base: 'https://api.example.com',
+  middleware: [retry()],
+}
+
+const request = createRequest(shared)
+const withAuth = createRequest({
+  ...shared,
+  headers: {Authorization: 'Bearer ...'},
+})
+```
+
 ## Creating a request instance
 
 ### Before (v8)
