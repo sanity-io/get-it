@@ -8,7 +8,25 @@ interface DebugOptions {
   verbose?: boolean
 }
 
-/** @public */
+/**
+ * Creates a `TransformMiddleware` that logs request and response details.
+ *
+ * Does nothing if no `log` function is provided.
+ *
+ * @param opts - Debug options: `log` is the log function (e.g. `console.log`),
+ *   `redactHeaders` lists header names to replace with `"REDACTED"`,
+ *   and `verbose` (default `false`) enables header logging.
+ * @returns A transform middleware that logs before/after each request.
+ *
+ * @example
+ * ```ts
+ * const request = createRequest({
+ *   middleware: [debug({log: console.log, redactHeaders: ['authorization']})],
+ * })
+ * ```
+ *
+ * @public
+ */
 export function debug(opts?: DebugOptions): TransformMiddleware {
   const log = opts?.log
   const redactSet = new Set((opts?.redactHeaders ?? []).map((h) => h.toLowerCase()))

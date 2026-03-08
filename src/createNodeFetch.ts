@@ -3,7 +3,11 @@ import type Dispatcher from 'undici/types/dispatcher'
 
 import type {FetchFunction, FetchInit, FetchResponse} from './types'
 
-/** @public */
+/**
+ * TLS configuration for mutual TLS (client certificates).
+ *
+ * @public
+ */
 export interface TlsOptions {
   /** Client certificate (PEM-encoded) */
   cert?: string | Buffer
@@ -13,7 +17,11 @@ export interface TlsOptions {
   ca?: string | Buffer
 }
 
-/** @public */
+/**
+ * Options for {@link createNodeFetch}.
+ *
+ * @public
+ */
 export interface NodeFetchOptions {
   /** true = read proxy from env (default), string = explicit proxy URL, false = no proxy */
   proxy?: string | boolean

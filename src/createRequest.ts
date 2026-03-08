@@ -17,7 +17,20 @@ import type {
   WrappingMiddleware,
 } from './types'
 
-/** @public */
+/**
+ * Creates a configured {@link RequestFunction} with shared defaults and middleware.
+ *
+ * @param options - Instance-level configuration (base URL, headers, timeout, middleware, etc.).
+ * @returns A request function that can be called with a URL string or {@link RequestOptions}.
+ *
+ * @example
+ * ```ts
+ * const request = createRequest({base: 'https://api.example.com'})
+ * const response = await request({url: '/users', as: 'json'})
+ * ```
+ *
+ * @public
+ */
 export function createRequest(options?: CreateRequestOptions): RequestFunction {
   const instanceFetch = options?.fetch
   const instanceHeaders = options?.headers

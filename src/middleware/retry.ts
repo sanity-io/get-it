@@ -6,7 +6,29 @@ interface RetryOptions {
   shouldRetry?: (error: unknown, attemptNumber: number, options: RequestOptions) => boolean
 }
 
-/** @public */
+/**
+ * Creates a `WrappingMiddleware` that retries failed requests.
+ *
+ * By default, retries up to 5 times on transient network errors for
+ * idempotent methods (`GET`, `HEAD`) using exponential backoff with jitter.
+ * HTTP errors (4xx/5xx) are never retried.
+ *
+ * @param opts - Retry options: `maxRetries` (default `5`) sets the max attempts,
+ *   `retryDelay` returns the delay in ms for a given attempt (default: exponential
+ *   backoff `100 * 2^attempt + random(0–100)`), and `shouldRetry` is a predicate
+ *   that decides if an error is retryable (default: transient network errors on
+ *   GET/HEAD only).
+ * @returns A wrapping middleware that adds retry logic.
+ *
+ * @example
+ * ```ts
+ * const request = createRequest({
+ *   middleware: [retry({maxRetries: 3})],
+ * })
+ * ```
+ *
+ * @public
+ */
 export function retry(opts?: RetryOptions): WrappingMiddleware {
   const maxRetries = opts?.maxRetries ?? 5
   const retryDelay = opts?.retryDelay ?? defaultRetryDelay
@@ -32,12 +54,32 @@ export function retry(opts?: RetryOptions): WrappingMiddleware {
   }
 }
 
-/** @internal */
+/**
+ * Default retry delay using exponential backoff with jitter:
+ * `100ms * 2^attempt + random(0–100ms)`.
+ *
+ * @param attemptNumber - Zero-based attempt index.
+ * @returns Delay in milliseconds before the next retry.
+ *
+ * @internal
+ */
 export function defaultRetryDelay(attemptNumber: number): number {
   return 100 * Math.pow(2, attemptNumber) + Math.random() * 100
 }
 
-/** @internal */
+/**
+ * Default predicate for deciding whether a failed request should be retried.
+ *
+ * Returns `true` only for transient network errors on idempotent methods
+ * (`GET`, `HEAD`). HTTP errors (`HttpError`) are never retried.
+ *
+ * @param error - The error thrown by the request.
+ * @param _attemptNumber - Zero-based attempt index (unused by default).
+ * @param options - The request options (used to check the HTTP method).
+ * @returns `true` if the request should be retried.
+ *
+ * @internal
+ */
 export function defaultShouldRetry(
   error: unknown,
   _attemptNumber: number,
