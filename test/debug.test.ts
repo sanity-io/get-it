@@ -138,4 +138,15 @@ describe('debug middleware', () => {
     await request({url: '/plain-text', method: 'POST', body: {hello: 'world'}})
     expect(logs.some((l) => l.includes('body'))).toBe(false)
   })
+
+  it('logs errors and re-throws them', async () => {
+    const logs: string[] = []
+    const log = (msg: string, ...args: unknown[]) => logs.push(`${msg} ${args.join(' ')}`)
+    const request = createRequest({
+      base: baseUrl,
+      middleware: [debug({log})],
+    })
+    await expect(request({url: '/status?code=500'})).rejects.toThrow()
+    expect(logs.some((l) => l.includes('error'))).toBe(true)
+  })
 })

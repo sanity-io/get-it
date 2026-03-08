@@ -61,18 +61,18 @@ v8's retry middleware treated `ENOTFOUND` and `ENETUNREACH` as non-retryable. v9
 
 The full set of retryable error codes in v9:
 
-| Retried             | Not retried    |
-| ------------------- | -------------- |
-| `ECONNRESET`        | `ENETUNREACH`  |
-| `ECONNREFUSED`      | HTTP errors    |
-| `ETIMEDOUT`         |                |
-| `EPIPE`             |                |
-| `ENOTFOUND` _(new)_ |                |
-| `ENETDOWN`          |                |
-| `EHOSTUNREACH`      |                |
-| `EAI_AGAIN`         |                |
-| `UND_ERR_CONNECT_TIMEOUT` |          |
-| `UND_ERR_SOCKET`    |                |
+| Retried                   | Not retried   |
+| ------------------------- | ------------- |
+| `ECONNRESET`              | `ENETUNREACH` |
+| `ECONNREFUSED`            | HTTP errors   |
+| `ETIMEDOUT`               |               |
+| `EPIPE`                   |               |
+| `ENOTFOUND` _(new)_       |               |
+| `ENETDOWN`                |               |
+| `EHOSTUNREACH`            |               |
+| `EAI_AGAIN`               |               |
+| `UND_ERR_CONNECT_TIMEOUT` |               |
+| `UND_ERR_SOCKET`          |               |
 
 To restore v8 behavior, provide a custom `shouldRetry`:
 
@@ -171,11 +171,11 @@ await request({url: '/api', credentials: 'include'})
 
 The mapping:
 
-| v8                          | v9                          |
-| --------------------------- | --------------------------- |
-| `withCredentials: true`     | `credentials: 'include'`    |
-| `withCredentials: false`    | `credentials: 'omit'`       |
-| _(not set)_                 | `credentials: 'same-origin'` (browser default) |
+| v8                       | v9                                             |
+| ------------------------ | ---------------------------------------------- |
+| `withCredentials: true`  | `credentials: 'include'`                       |
+| `withCredentials: false` | `credentials: 'omit'`                          |
+| _(not set)_              | `credentials: 'same-origin'` (browser default) |
 
 Note: `credentials` is only relevant in browser environments. Some runtimes (e.g. Cloudflare Workers) will throw if `credentials` is set on a fetch init — get-it only forwards it when `window` is present in the global scope.
 
@@ -554,7 +554,6 @@ const request = createRequest({
 **What's different from v8:**
 
 - **Activation**: v8 used the `DEBUG=get-it:*` env var automatically. v9 requires an explicit `log` function (see above for restoring env var behavior).
-- **Error logging**: v8 logged errors via the `onError` hook. v9's debug middleware is a transform middleware and does not see errors. Use a wrapping middleware if you need error logging.
 - **Body truncation**: v9 truncates logged bodies at 16 KB and summarizes binary/stream bodies, preventing large payloads from flooding logs.
 
 ### Proxy / agent configuration
