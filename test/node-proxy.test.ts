@@ -4,9 +4,15 @@ import {afterEach, describe, expect, it} from 'vitest'
 const baseUrl = 'http://localhost:9980/req-test'
 const proxyUrl = 'http://localhost:4000'
 
-// Probe whether the Node-specific entry point is available (it won't be in
-// browser, edge-runtime, or react-server environments).
-const nodeModule = await import('get-it/node').catch(() => null)
+// Probe whether the Node-specific entry point is available. The import may
+// fail (non-Node environments) or the module may crash at init time when
+// bundled for browsers (e.g. undici references `process` which doesn't exist).
+let nodeModule: typeof import('get-it/node') | null
+try {
+  nodeModule = await import('get-it/node')
+} catch {
+  nodeModule = null
+}
 
 function getCreateNodeFetch() {
   if (!nodeModule) throw new Error('get-it/node not available')
