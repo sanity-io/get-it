@@ -44,6 +44,20 @@ const state: {failures: Record<string, number>} = {failures: {}}
 function getResponseHandler(proto = 'http') {
   const isSecure = proto === 'https'
   return (req: http.IncomingMessage, res: http.ServerResponse, next?: () => void) => {
+    // Allow cross-origin requests from browser-based test runners
+    if (req.headers['origin']) {
+      res.setHeader('Access-Control-Allow-Origin', req.headers['origin'])
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS')
+      res.setHeader('Access-Control-Allow-Headers', req.headers['access-control-request-headers'] || '*')
+      res.setHeader('Access-Control-Expose-Headers', '*')
+    }
+
+    if (req.method === 'OPTIONS') {
+      res.writeHead(204)
+      res.end()
+      return
+    }
+
     const parts = new URL(req.url || '/', `${proto}://localhost`)
     const num = Number(parts.searchParams.get('n') || '0')
     const atMax = num >= 10
@@ -288,7 +302,15 @@ export function createServer(proto: 'http' | 'https' = 'http') {
     : https.createServer(httpsServerOptions, getResponseHandler(proto))
 
   return new Promise((resolve, reject) => {
-    server.on('error', reject)
+    server.on('error', (err: NodeJS.ErrnoException) => {
+      // If the port is already in use (e.g. vitest browser mode runs
+      // globalSetup twice), treat it as a no-op rather than failing.
+      if (err.code === 'EADDRINUSE') {
+        resolve(server)
+        return
+      }
+      reject(err)
+    })
     server.listen(protoPort, () => resolve(server))
   })
 }
