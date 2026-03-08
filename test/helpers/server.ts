@@ -48,7 +48,10 @@ function getResponseHandler(proto = 'http') {
     if (req.headers['origin']) {
       res.setHeader('Access-Control-Allow-Origin', req.headers['origin'])
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS')
-      res.setHeader('Access-Control-Allow-Headers', req.headers['access-control-request-headers'] || '*')
+      res.setHeader(
+        'Access-Control-Allow-Headers',
+        req.headers['access-control-request-headers'] || '*',
+      )
       res.setHeader('Access-Control-Expose-Headers', '*')
     }
 
