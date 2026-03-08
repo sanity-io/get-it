@@ -37,7 +37,8 @@ export function defaultRetryDelay(attemptNumber: number): number {
   return 100 * Math.pow(2, attemptNumber) + Math.random() * 100
 }
 
-function defaultShouldRetry(
+/** @internal */
+export function defaultShouldRetry(
   error: unknown,
   _attemptNumber: number,
   options: RequestOptions,
@@ -49,7 +50,48 @@ function defaultShouldRetry(
   if (error instanceof Error && 'name' in error && error.name === 'HttpError') {
     return false
   }
-  return true
+  return isRetryableError(error)
+}
+
+/**
+ * Network error codes that are safe to retry — transient failures where
+ * the server likely never received (or fully processed) the request.
+ */
+const RETRYABLE_CODES = new Set([
+  'ECONNRESET',
+  'ECONNREFUSED',
+  'ETIMEDOUT',
+  'EPIPE',
+  'ENOTFOUND',
+  'ENETUNREACH',
+  'ENETDOWN',
+  'EHOSTUNREACH',
+  'EAI_AGAIN',
+  'UND_ERR_CONNECT_TIMEOUT',
+  'UND_ERR_SOCKET',
+])
+
+/**
+ * Determine if an error is retryable. In Node.js (undici), fetch throws
+ * `TypeError: fetch failed` with a `.cause` containing the original error
+ * and its `.code`. In browsers, fetch throws a `TypeError` with no `.cause`
+ * — those are always network errors and are retryable.
+ */
+function isRetryableError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false
+
+  // Walk the cause chain to find an error code
+  const code = getErrorCode(error) ?? getErrorCode(error.cause)
+  if (code) return RETRYABLE_CODES.has(code)
+
+  // No error code — browser fetch network errors are plain TypeError
+  // with no cause or code, and are always retryable.
+  return error instanceof TypeError
+}
+
+function getErrorCode(error: unknown): string | undefined {
+  if (!(error instanceof Error)) return undefined
+  return 'code' in error && typeof error.code === 'string' ? error.code : undefined
 }
 
 function sleep(ms: number, signal?: AbortSignal): Promise<void> {
