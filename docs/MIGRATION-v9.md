@@ -28,6 +28,7 @@ This guide covers every breaking change and shows how to update your code.
 | `agent(opts)` middleware        | `createNodeFetch(opts)` or injectable `fetch`      |
 | `proxy(opts)` middleware        | automatic via conditional exports                  |
 | `mtls(opts)` middleware         | `createNodeFetch({ tls: { cert, key, ca } })`      |
+| `bodySize: N`                   | `headers: {'content-length': N}`                   |
 | `withCredentials: true`         | `credentials: 'include'`                           |
 | `require('get-it')`             | `import { createRequester } from 'get-it'`         |
 | `require('get-it/middleware')`  | `import { retry, debug } from 'get-it/middleware'` |
