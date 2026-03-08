@@ -29,9 +29,9 @@ npm install get-it
 ## Usage
 
 ```ts
-import {createRequest} from 'get-it'
+import {createRequester} from 'get-it'
 
-const request = createRequest({
+const request = createRequester({
   base: 'https://api.example.com',
   headers: {Authorization: 'Bearer ...'},
 })
@@ -82,7 +82,7 @@ res.body // ReadableStream<Uint8Array>
 
 ## Options
 
-### Instance options (`createRequest`)
+### Instance options (`createRequester`)
 
 | Option       | Type              | Default            | Description                                |
 | ------------ | ----------------- | ------------------ | ------------------------------------------ |
@@ -147,10 +147,7 @@ const addHeader: TransformMiddleware = {
   beforeRequest(options) {
     return {
       ...options,
-      headers: new Headers({
-        ...Object.fromEntries(new Headers(options.headers)),
-        'X-Custom': 'value',
-      }),
+      headers: {...options.headers, 'x-custom': 'value'},
     }
   },
 }
@@ -172,22 +169,22 @@ const logger: WrappingMiddleware = async (options, next) => {
 ```ts
 import {retry, debug} from 'get-it/middleware'
 
-const request = createRequest({
+const request = createRequester({
   middleware: [retry({maxRetries: 3}), debug({log: console.log, verbose: true})],
 })
 ```
 
 ## Node.js proxy support
 
-In Node.js, Bun, and Deno, `createRequest` automatically uses an undici-based fetch that reads proxy configuration from environment variables.
+In Node.js, Bun, and Deno, `createRequester` automatically uses an undici-based fetch that reads proxy configuration from environment variables.
 
 For custom proxy or connection pool settings:
 
 ```ts
-import {createRequest} from 'get-it'
+import {createRequester} from 'get-it'
 import {createNodeFetch} from 'get-it/node'
 
-const request = createRequest({
+const request = createRequester({
   fetch: createNodeFetch({
     proxy: 'http://proxy:8080',
     connections: 30,

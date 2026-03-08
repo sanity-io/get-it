@@ -48,7 +48,7 @@ export function resolveUrl(base: string, url: string): string {
 }
 
 // src/index.ts — public API only
-export {createRequest} from './request'
+export {createRequester} from './createRequest'
 export type {RequestOptions, BufferedResponse} from './types'
 // resolveUrl is NOT re-exported here
 ```
@@ -57,7 +57,7 @@ export type {RequestOptions, BufferedResponse} from './types'
 
 - **Don't mock modules** — no `vi.mock()`, no `jest.mock()`.
 - **Don't mock functions on objects** — no `vi.spyOn(obj, 'method').mockImplementation(...)`.
-- **Do use the injectable `fetch` option** — this is the designed-in seam. Providing a fake `fetch` to `createRequest({ fetch: fakeFetch })` is not mocking, it's using the API as intended.
+- **Do use the injectable `fetch` option** — this is the designed-in seam. Providing a fake `fetch` to `createRequester({ fetch: fakeFetch })` is not mocking, it's using the API as intended.
 - **Do use the real test HTTP server** — it's there for a reason. Prefer real HTTP requests over intercepting fetch.
 - **Do test small units directly** — if a function is worth testing, it's worth exporting (with `@internal`).
 
@@ -74,6 +74,6 @@ expect(resolveUrl('http://example.com', '/foo')).toBe('http://example.com/foo')
 
 ### When faking is acceptable
 
-- Providing a `fetch` function to `createRequest()` — that's dependency injection, not mocking.
+- Providing a `fetch` function to `createRequester()` — that's dependency injection, not mocking.
 - Providing a `log` function to `debug()` middleware — same idea, it's a designed-in option.
 - Fake timers (`vi.useFakeTimers()`) for testing timeout/delay behavior — but prefer real short delays when practical.
