@@ -3,20 +3,6 @@ import {retry} from 'get-it/middleware'
 import {describe, expect, it} from 'vitest'
 
 /**
- * Extract function names from an Error stack trace.
- */
-function stackNames(error: Error): string[] {
-  if (!error.stack) return []
-  return error.stack
-    .split('\n')
-    .map((line) => {
-      const match = line.match(/at (?:Object\.)?(\S+)\s*\(/)
-      return match ? match[1] : null
-    })
-    .filter((name): name is string => name !== null)
-}
-
-/**
  * Detect whether the runtime preserves async stack frames across module
  * boundaries. V8 does this natively, but some environments (e.g. happy-dom)
  * break the async context tracking, causing caller frames to disappear.
@@ -82,21 +68,18 @@ describe('stack traces', () => {
       }
     })
 
-    it.runIf(hasAsyncStackFrames)(
-      'as: "stream" includes request and requestStream',
-      async () => {
-        const request = createRequest({fetch: fetch500})
-        try {
-          await request({url: 'http://example.com/test', as: 'stream'})
-          expect.fail('should have thrown')
-        } catch (err: unknown) {
-          if (!(err instanceof HttpError)) throw err
-          const names = stackNames(err)
-          expect(names).toContain('request')
-          expect(names).toContain('requestStream')
-        }
-      },
-    )
+    it.runIf(hasAsyncStackFrames)('as: "stream" includes request and requestStream', async () => {
+      const request = createRequest({fetch: fetch500})
+      try {
+        await request({url: 'http://example.com/test', as: 'stream'})
+        expect.fail('should have thrown')
+      } catch (err: unknown) {
+        if (!(err instanceof HttpError)) throw err
+        const names = stackNames(err)
+        expect(names).toContain('request')
+        expect(names).toContain('requestStream')
+      }
+    })
   })
 
   describe('middleware visibility', () => {
@@ -169,18 +152,21 @@ describe('stack traces', () => {
   })
 
   describe('internal frames are hidden', () => {
-    it('bufferAndCheck and executeBuffered do not appear in stack', async () => {
-      const request = createRequest({fetch: fetch404})
-      try {
-        await request({url: 'http://example.com/test'})
-        expect.fail('should have thrown')
-      } catch (err: unknown) {
-        if (!(err instanceof HttpError)) throw err
-        const names = stackNames(err)
-        expect(names).not.toContain('bufferAndCheck')
-        expect(names).not.toContain('executeBuffered')
-      }
-    })
+    it.runIf(hasCaptureStackTrace())(
+      'bufferAndCheck and executeBuffered do not appear in stack',
+      async () => {
+        const request = createRequest({fetch: fetch404})
+        try {
+          await request({url: 'http://example.com/test'})
+          expect.fail('should have thrown')
+        } catch (err: unknown) {
+          if (!(err instanceof HttpError)) throw err
+          const names = stackNames(err)
+          expect(names).not.toContain('bufferAndCheck')
+          expect(names).not.toContain('executeBuffered')
+        }
+      },
+    )
   })
 
   describe('no anonymous functions in critical path', () => {
@@ -204,5 +190,45 @@ describe('stack traces', () => {
       }
     })
   })
-
 })
+
+/**
+ * Extract function names from an Error stack trace.
+ * Supports V8 (`at name (file)`), SpiderMonkey and JSC (`name@file`).
+ */
+function stackNames(error: Error): string[] {
+  if (!error.stack) return []
+  return error.stack
+    .split('\n')
+    .map((line) => {
+      // V8: "    at funcName (file:line:col)" or "    at Object.funcName (file:line:col)"
+      const v8 = line.match(/at (?:Object\.)?(\S+)\s*\(/)
+      if (v8) return v8[1]
+      // SpiderMonkey/JSC: "funcName@file:line:col" or "async*funcName@file:line:col"
+      // Also handles "name/<@file" (Firefox closures). Excludes bare "@file" (anonymous).
+      const sm = line.match(/^(?:async\*)?([^@/<]+)(?:\/<?)?@/)
+      if (sm) return sm[1]
+      return null
+    })
+    .filter((name): name is string => name !== null)
+}
+
+/**
+ * Detect whether Error.captureStackTrace actually strips frames.
+ * WebKit exposes the API but doesn't strip the target function.
+ */
+function hasV8CaptureStackTrace(ctor: ErrorConstructor): ctor is ErrorConstructor & {
+  captureStackTrace(error: Error, omitAbove: (...args: never) => unknown): void
+} {
+  return 'captureStackTrace' in ctor
+}
+
+function hasCaptureStackTrace(): boolean {
+  if (!hasV8CaptureStackTrace(Error)) return false
+  function target() {
+    const err = new Error()
+    Error.captureStackTrace(err, target)
+    return !err.stack?.includes('target')
+  }
+  return target()
+}

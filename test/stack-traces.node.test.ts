@@ -4,14 +4,20 @@ import {describe, expect, it} from 'vitest'
 
 /**
  * Extract function names from an Error stack trace.
+ * Supports V8 (`at name (file)`), SpiderMonkey and JSC (`name@file`).
  */
 function stackNames(error: Error): string[] {
   if (!error.stack) return []
   return error.stack
     .split('\n')
     .map((line) => {
-      const match = line.match(/at (?:Object\.)?(\S+)\s*\(/)
-      return match ? match[1] : null
+      // V8: "    at funcName (file:line:col)" or "    at Object.funcName (file:line:col)"
+      const v8 = line.match(/at (?:Object\.)?(\S+)\s*\(/)
+      if (v8) return v8[1]
+      // SpiderMonkey/JSC: "funcName@file:line:col" or "async*funcName@file:line:col"
+      const sm = line.match(/^(?:async\*)?([^@/<]+)(?:\/<?)?@/)
+      if (sm) return sm[1]
+      return null
     })
     .filter((name): name is string => name !== null)
 }
