@@ -54,6 +54,43 @@ v8 used `follow-redirects` which supported a `maxRedirects` option (defaulting t
 
 If you need to block redirects entirely, pass `redirect: 'error'` or `redirect: 'manual'` in the fetch init. There is no way to allow _some_ redirects but cap the count — fetch does not expose this.
 
+### Retry middleware: changed set of retryable errors
+
+v8's retry middleware treated `ENOTFOUND` and `ENETUNREACH` as non-retryable. v9 retries `ENOTFOUND` (DNS resolution failure) because transient DNS failures on valid hostnames can surface as `ENOTFOUND` rather than `EAI_AGAIN`. `ENETUNREACH` (no route to host) remains non-retryable since it indicates a routing or network interface problem that won't resolve on retry.
+
+The full set of retryable error codes in v9:
+
+| Retried             | Not retried    |
+| ------------------- | -------------- |
+| `ECONNRESET`        | `ENETUNREACH`  |
+| `ECONNREFUSED`      | HTTP errors    |
+| `ETIMEDOUT`         |                |
+| `EPIPE`             |                |
+| `ENOTFOUND` _(new)_ |                |
+| `ENETDOWN`          |                |
+| `EHOSTUNREACH`      |                |
+| `EAI_AGAIN`         |                |
+| `UND_ERR_CONNECT_TIMEOUT` |          |
+| `UND_ERR_SOCKET`    |                |
+
+To restore v8 behavior, provide a custom `shouldRetry`:
+
+```ts
+import {retry} from 'get-it/middleware'
+
+const request = createRequest({
+  middleware: [
+    retry({
+      shouldRetry: (error) => {
+        if (!(error instanceof Error)) return false
+        const code = 'code' in error ? error.code : undefined
+        return code !== 'ENOTFOUND' // don't retry DNS failures
+      },
+    }),
+  ],
+})
+```
+
 ### Query parameters no longer accept arrays
 
 v8 expanded arrays into repeated keys: `{tags: ['a', 'b']}` → `tags=a&tags=b`. v9's `query` option only accepts scalar values (`string | number | boolean | undefined`). Passing an array will silently produce a single comma-joined value via `String()`:
