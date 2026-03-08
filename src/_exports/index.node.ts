@@ -30,7 +30,11 @@ export function createRequest(options?: CreateRequestOptions) {
 export {HttpError} from '../errors'
 export type {
   BufferedResponse,
+  CreateRequestOptions,
+  FetchBody,
   FetchFunction,
+  FetchHeaders,
+  FetchInit,
   JsonResponse,
   RequestFunction,
   RequestOptions,
