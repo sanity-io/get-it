@@ -23,7 +23,9 @@ let requestId = 0
  * @param opts - Debug options: `log` is the log function (e.g. `console.log`),
  *   `redactHeaders` lists header names to replace with `"REDACTED"` (defaults
  *   to `['cookie', 'authorization']`), and `verbose` (default `false`) enables
- *   header and body logging.
+ *   header and body logging. Each request is tagged with an auto-incrementing
+ *   ID, or you can pass `meta: { requestId: 'my-id' }` on the request to use
+ *   a custom identifier.
  * @returns A wrapping middleware that logs before/after each request and on errors.
  *
  * @example
@@ -48,7 +50,8 @@ export function debug(opts?: DebugOptions): WrappingMiddleware {
     options: RequestOptions,
     next: (reqOpts: RequestOptions) => Promise<BufferedResponse>,
   ): Promise<BufferedResponse> {
-    const id = ++requestId
+    const metaId = options.meta?.requestId
+    const id = typeof metaId === 'string' || typeof metaId === 'number' ? metaId : ++requestId
     const method = (options.method ?? 'GET').toUpperCase()
     log('[%s] %s %s', id, method, options.url)
 

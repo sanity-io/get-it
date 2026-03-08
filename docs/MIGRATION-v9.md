@@ -557,6 +557,16 @@ const request = createRequester({
 // $ DEBUG=get-it node app.js
 ```
 
+v8 supported `requestId` as a top-level request option. In v9, pass it via `meta`:
+
+```ts
+// v8
+request({url: '/users', requestId: 'abc-123'})
+
+// v9
+request({url: '/users', meta: {requestId: 'abc-123'}})
+```
+
 **What's different from v8:**
 
 - **Activation**: v8 used the `DEBUG=get-it:*` env var automatically. v9 requires an explicit `log` function (see above for restoring env var behavior).

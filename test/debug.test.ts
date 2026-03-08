@@ -139,6 +139,19 @@ describe('debug middleware', () => {
     expect(logs.some((l) => l.includes('body'))).toBe(false)
   })
 
+  it('uses meta.requestId when provided', async () => {
+    const logs: string[] = []
+    const log = (msg: string, ...args: unknown[]) => {
+      logs.push(msg.replace(/%s|%d/g, () => String(args.shift())))
+    }
+    const request = createRequester({
+      base: baseUrl,
+      middleware: [debug({log})],
+    })
+    await request({url: '/plain-text', meta: {requestId: 'abc-123'}})
+    expect(logs.some((l) => l.includes('[abc-123]'))).toBe(true)
+  })
+
   it('logs errors and re-throws them', async () => {
     const logs: string[] = []
     const log = (msg: string, ...args: unknown[]) => logs.push(`${msg} ${args.join(' ')}`)
