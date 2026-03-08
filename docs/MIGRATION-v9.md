@@ -28,6 +28,7 @@ This guide covers every breaking change and shows how to update your code.
 | `agent(opts)` middleware        | `createNodeFetch(opts)` or injectable `fetch`      |
 | `proxy(opts)` middleware        | automatic via conditional exports                  |
 | `mtls(opts)` middleware         | `createNodeFetch({ tls: { cert, key, ca } })`      |
+| `withCredentials: true`         | `credentials: 'include'`                           |
 | `require('get-it')`             | `import { createRequest } from 'get-it'`           |
 | `require('get-it/middleware')`  | `import { retry, debug } from 'get-it/middleware'` |
 
@@ -155,6 +156,28 @@ params.append('tags', 'a')
 params.append('tags', 'b')
 await request({url: '/api', query: params})
 ```
+
+### `withCredentials` replaced by `credentials`
+
+v8 used the XHR-style boolean `withCredentials: true` to send cookies cross-origin. v9 uses the fetch-style `credentials` option:
+
+```ts
+// v8
+await request({url: '/api', withCredentials: true})
+
+// v9
+await request({url: '/api', credentials: 'include'})
+```
+
+The mapping:
+
+| v8                          | v9                          |
+| --------------------------- | --------------------------- |
+| `withCredentials: true`     | `credentials: 'include'`    |
+| `withCredentials: false`    | `credentials: 'omit'`       |
+| _(not set)_                 | `credentials: 'same-origin'` (browser default) |
+
+Note: `credentials` is only relevant in browser environments. Some runtimes (e.g. Cloudflare Workers) will throw if `credentials` is set on a fetch init — get-it only forwards it when `window` is present in the global scope.
 
 ### `clone()` removed
 
