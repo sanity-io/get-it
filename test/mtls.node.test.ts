@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import https from 'node:https'
 import path from 'node:path'
 
-import {createRequest} from 'get-it'
+import {createRequester} from 'get-it'
 import {createNodeFetch} from 'get-it/node'
 import {afterAll, beforeAll, describe, expect, it} from 'vitest'
 
@@ -38,7 +38,7 @@ describe('mTLS via createNodeFetch tls option', () => {
   })
 
   it('connects with valid client certificate', async () => {
-    const request = createRequest({
+    const request = createRequester({
       fetch: createNodeFetch({
         proxy: false,
         tls: {
@@ -53,7 +53,7 @@ describe('mTLS via createNodeFetch tls option', () => {
   })
 
   it('rejects connection without client certificate', async () => {
-    const request = createRequest({
+    const request = createRequester({
       fetch: createNodeFetch({
         proxy: false,
         tls: {
@@ -65,7 +65,7 @@ describe('mTLS via createNodeFetch tls option', () => {
   })
 
   it('rejects connection with invalid client certificate', async () => {
-    const request = createRequest({
+    const request = createRequester({
       fetch: createNodeFetch({
         proxy: false,
         tls: {

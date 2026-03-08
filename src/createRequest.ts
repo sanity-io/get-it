@@ -25,13 +25,13 @@ import type {
  *
  * @example
  * ```ts
- * const request = createRequest({base: 'https://api.example.com'})
+ * const request = createRequester({base: 'https://api.example.com'})
  * const response = await request({url: '/users', as: 'json'})
  * ```
  *
  * @public
  */
-export function createRequest(options?: CreateRequestOptions): RequestFunction {
+export function createRequester(options?: CreateRequestOptions): RequestFunction {
   const instanceFetch = options?.fetch
   const instanceHeaders = options?.headers
   const instanceBase = options?.base

@@ -28,7 +28,7 @@ let requestId = 0
  *
  * @example
  * ```ts
- * const request = createRequest({
+ * const request = createRequester({
  *   middleware: [debug({log: console.log, redactHeaders: ['authorization']})],
  * })
  * ```

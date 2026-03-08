@@ -1,4 +1,4 @@
-import {createRequest} from 'get-it'
+import {createRequester} from 'get-it'
 import {describe, expect, it} from 'vitest'
 
 describe('injectable fetch', () => {
@@ -8,7 +8,7 @@ describe('injectable fetch', () => {
       calledWith = input
       return new Response('mocked', {status: 200})
     }
-    const request = createRequest({fetch: fakeFetch})
+    const request = createRequester({fetch: fakeFetch})
     const res = await request('https://example.com/test')
     expect(calledWith).toBe('https://example.com/test')
     expect(res.text()).toBe('mocked')
@@ -25,7 +25,7 @@ describe('injectable fetch', () => {
       requestCalled = true
       return new Response('request')
     }
-    const request = createRequest({fetch: instanceFetch})
+    const request = createRequester({fetch: instanceFetch})
     const res = await request({url: 'https://example.com', fetch: requestFetch})
     expect(instanceCalled).toBe(false)
     expect(requestCalled).toBe(true)
@@ -33,7 +33,7 @@ describe('injectable fetch', () => {
   })
 
   it('falls back to globalThis.fetch', async () => {
-    const request = createRequest({base: 'http://localhost:9980/req-test'})
+    const request = createRequester({base: 'http://localhost:9980/req-test'})
     const res = await request('/plain-text')
     expect(res.status).toBe(200)
   })

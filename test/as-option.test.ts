@@ -1,8 +1,8 @@
-import {createRequest, HttpError} from 'get-it'
+import {createRequester, HttpError} from 'get-it'
 import {describe, expect, it} from 'vitest'
 
 describe('as option', () => {
-  const request = createRequest({base: 'http://localhost:9980/req-test'})
+  const request = createRequester({base: 'http://localhost:9980/req-test'})
 
   it('as: "json" returns parsed JSON body', async () => {
     const res = await request({url: '/json', as: 'json'})
@@ -65,7 +65,7 @@ describe('as option', () => {
 
   it('as: "stream" returns empty ReadableStream when response has no body', async () => {
     const fakeFetch = async () => new Response(null, {status: 204})
-    const req = createRequest({fetch: fakeFetch})
+    const req = createRequester({fetch: fakeFetch})
     const res = await req({url: 'https://example.com/empty', as: 'stream'})
     expect(res.status).toBe(204)
     expect(res.body).toBeInstanceOf(ReadableStream)

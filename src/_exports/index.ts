@@ -1,4 +1,4 @@
-export {createRequest} from '../createRequest'
+export {createRequester} from '../createRequest'
 export {HttpError} from '../errors'
 export type {
   BufferedResponse,

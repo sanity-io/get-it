@@ -85,7 +85,7 @@ export type FetchFunction = (input: string, init?: FetchInit) => Promise<FetchRe
 // ---------------------------------------------------------------------------
 
 /**
- * Configuration options for {@link createRequest}.
+ * Configuration options for {@link createRequester}.
  *
  * @public
  */
@@ -263,7 +263,7 @@ export type WrappingMiddleware = (
 // ---------------------------------------------------------------------------
 
 /**
- * The overloaded function returned by `createRequest`. The return type
+ * The overloaded function returned by `createRequester`. The return type
  * is determined by the `as` option:
  *
  * - `as: 'json'` → {@link JsonResponse}

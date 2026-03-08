@@ -1,5 +1,5 @@
 import {createNodeFetch} from '../createNodeFetch'
-import {createRequest as coreCreateRequest} from '../createRequest'
+import {createRequester as coreCreateRequester} from '../createRequest'
 import type {CreateRequestOptions} from '../types'
 
 let defaultFetch: ReturnType<typeof createNodeFetch> | undefined
@@ -7,7 +7,7 @@ let defaultFetch: ReturnType<typeof createNodeFetch> | undefined
 /**
  * Creates a configured request function for Node.js.
  *
- * Identical to the core {@link createRequest} but automatically provides an
+ * Identical to the core {@link createRequester} but automatically provides an
  * undici-backed fetch if no custom `fetch` is given. The default fetch
  * instance is created lazily and shared across calls.
  *
@@ -16,11 +16,11 @@ let defaultFetch: ReturnType<typeof createNodeFetch> | undefined
  *
  * @public
  */
-export function createRequest(options?: CreateRequestOptions) {
+export function createRequester(options?: CreateRequestOptions) {
   if (!options?.fetch) {
     defaultFetch ??= createNodeFetch()
   }
-  return coreCreateRequest({
+  return coreCreateRequester({
     ...options,
     fetch: options?.fetch ?? defaultFetch,
   })

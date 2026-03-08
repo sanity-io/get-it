@@ -1,5 +1,5 @@
 import type {WrappingMiddleware} from 'get-it'
-import {createRequest} from 'get-it'
+import {createRequester} from 'get-it'
 import {describe, expect, it} from 'vitest'
 
 import {createBufferedResponse} from '../src/response'
@@ -9,7 +9,7 @@ const baseUrl = 'http://localhost:9980/req-test'
 describe('middleware system', () => {
   it('runs beforeRequest transforms in order', async () => {
     const order: string[] = []
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       middleware: [
         {
@@ -31,7 +31,7 @@ describe('middleware system', () => {
   })
 
   it('beforeRequest can modify options', async () => {
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       middleware: [
         {
@@ -49,7 +49,7 @@ describe('middleware system', () => {
   })
 
   it('spreading headers in beforeRequest preserves instance headers', async () => {
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       headers: {'X-Instance': 'from-instance'},
       middleware: [
@@ -71,7 +71,7 @@ describe('middleware system', () => {
 
   it('runs afterResponse transforms in order', async () => {
     const order: string[] = []
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       middleware: [
         {
@@ -98,7 +98,7 @@ describe('middleware system', () => {
       wrappedCalled = true
       return next(opts)
     }
-    const request = createRequest({base: baseUrl, middleware: [wrapping]})
+    const request = createRequester({base: baseUrl, middleware: [wrapping]})
     await request('/plain-text')
     expect(wrappedCalled).toBe(true)
   })
@@ -123,7 +123,7 @@ describe('middleware system', () => {
       }
       return next(opts)
     }
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       httpErrors: false,
       middleware: [retryOnce, fakeFirstFailure],
@@ -135,7 +135,7 @@ describe('middleware system', () => {
 
   it('transform and wrapping middleware compose correctly', async () => {
     const order: string[] = []
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       middleware: [
         {
@@ -176,13 +176,13 @@ describe('middleware system', () => {
       order.push('inner-post')
       return r
     }
-    const request = createRequest({base: baseUrl, middleware: [outer, inner]})
+    const request = createRequester({base: baseUrl, middleware: [outer, inner]})
     await request('/plain-text')
     expect(order).toEqual(['outer-pre', 'inner-pre', 'inner-post', 'outer-post'])
   })
 
   it('works with as: "json" option', async () => {
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       middleware: [
         {
@@ -198,7 +198,7 @@ describe('middleware system', () => {
   })
 
   it('works with as: "text" option', async () => {
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       middleware: [
         {
@@ -219,7 +219,7 @@ describe('middleware system', () => {
       wrappedCalled = true
       return next(opts)
     }
-    const request = createRequest({base: baseUrl, middleware: [wrapping]})
+    const request = createRequester({base: baseUrl, middleware: [wrapping]})
     const res = await request({url: '/plain-text', as: 'stream'})
     await res.body.cancel()
     expect(wrappedCalled).toBe(true)
@@ -229,7 +229,7 @@ describe('middleware system', () => {
     const addHeader: WrappingMiddleware = async (opts, next) => {
       return next({...opts, headers: {...opts.headers, 'X-Stream-MW': 'yes'}})
     }
-    const request = createRequest({base: baseUrl, middleware: [addHeader]})
+    const request = createRequester({base: baseUrl, middleware: [addHeader]})
     const res = await request({url: '/debug', as: 'stream'})
     const reader = res.body.getReader()
     const chunks: Uint8Array[] = []
@@ -253,7 +253,7 @@ describe('middleware system', () => {
   it('stream mode gets beforeRequest but not afterResponse', async () => {
     let beforeCalled = false
     let afterCalled = false
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       middleware: [
         {
@@ -275,7 +275,7 @@ describe('middleware system', () => {
   })
 
   it('afterResponse can modify the response', async () => {
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       middleware: [
         {
@@ -292,7 +292,7 @@ describe('middleware system', () => {
 
   it('passes meta through to middleware', async () => {
     let receivedMeta: Record<string, unknown> | undefined
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       middleware: [
         {
@@ -309,7 +309,7 @@ describe('middleware system', () => {
 
   it('meta is available in wrapping middleware', async () => {
     let receivedMeta: Record<string, unknown> | undefined
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       middleware: [
         async (opts, next) => {
@@ -323,7 +323,7 @@ describe('middleware system', () => {
   })
 
   it('works with no middleware', async () => {
-    const request = createRequest({base: baseUrl, middleware: []})
+    const request = createRequester({base: baseUrl, middleware: []})
     const res = await request('/plain-text')
     expect(res.status).toBe(200)
     expect(res.text()).toBe('Just some plain text for you to consume')
@@ -333,7 +333,7 @@ describe('middleware system', () => {
     const shortCircuit = async () => {
       return createBufferedResponse(200, 'OK', new Headers(), new Uint8Array())
     }
-    const request = createRequest({base: baseUrl, middleware: [shortCircuit]})
+    const request = createRequester({base: baseUrl, middleware: [shortCircuit]})
     await expect(request({url: '/plain-text', as: 'stream'})).rejects.toThrow(
       'Stream response was not captured',
     )
