@@ -76,8 +76,6 @@ jobs:
       - run: npx ls-engines
       - run: pnpm run build
       - run: pnpm test
-        # Only run the RSC testing suite if native `fetch` is available
-      - run: node -e "fetch" && pnpm run test:react-server || true
 
   test-browser:
     name: Test Browser
@@ -91,7 +89,7 @@ jobs:
           cache: pnpm
           node-version: lts/*
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run test:browser -- run --coverage
+      - run: pnpm run test:browser -- --coverage
 
   test-bun:
     name: Test Bun
@@ -120,14 +118,42 @@ jobs:
           cache: pnpm
           node-version: lts/*
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run test:edge-runtime -- run --coverage
+      - run: pnpm run test:edge-runtime -- --coverage
+
+  test-happy-dom:
+    name: Test Happy DOM
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          cache: pnpm
+          node-version: lts/*
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run test:happy-dom
+
+  test-react-server:
+    name: Test React Server
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          cache: pnpm
+          node-version: lts/*
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run test:react-server
 
   release:
     permissions:
       id-token: write # to enable use of OIDC for npm provenance
     name: Semantic release
     runs-on: ubuntu-latest
-    needs: [test, test-bun, test-edge, test-browser]
+    needs: [test, test-browser, test-bun, test-edge, test-happy-dom, test-react-server]
     if: inputs.release == true
     steps:
       - uses: actions/create-github-app-token@v2
