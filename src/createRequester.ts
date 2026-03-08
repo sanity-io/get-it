@@ -32,8 +32,11 @@ import type {
  * @public
  */
 export function createRequester(options: RequesterOptions & {as: 'json'}): RequestFunction<'json'>
+/** Creates a requester that returns {@link TextResponse} by default. @public */
 export function createRequester(options: RequesterOptions & {as: 'text'}): RequestFunction<'text'>
+/** Creates a requester that returns {@link StreamResponse} by default. @public */
 export function createRequester(options: RequesterOptions & {as: 'stream'}): RequestFunction<'stream'>
+/** Creates a requester that returns {@link BufferedResponse} by default. @public */
 export function createRequester(options?: RequesterOptions): RequestFunction
 export function createRequester(
   options?: RequesterOptions,

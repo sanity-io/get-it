@@ -85,7 +85,7 @@ export type FetchFunction = (input: string, init?: FetchInit) => Promise<FetchRe
 // ---------------------------------------------------------------------------
 
 /**
- * Configuration options for {@link createRequester}.
+ * Configuration options for `createRequester`.
  *
  * @public
  */
