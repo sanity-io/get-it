@@ -137,7 +137,10 @@ export interface RequestOptions {
   /** Redirect handling strategy. */
   redirect?: 'error' | 'follow' | 'manual'
   /** Arbitrary metadata — not used by get-it, but available to middleware. */
-  meta?: Record<string, unknown>
+  meta?: {
+    /** Custom request identifier used by the `debug` middleware in log output. */
+    requestId?: string | number
+  } & Record<string, unknown>
 }
 
 // ---------------------------------------------------------------------------
