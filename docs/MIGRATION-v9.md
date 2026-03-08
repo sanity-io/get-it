@@ -616,6 +616,18 @@ await request({url: '/test', headers: {'X-B': '2'}})
 // Sends both X-A and X-B
 ```
 
+### Headers in middleware
+
+By the time `beforeRequest` receives the options, headers have been merged into a plain `Record<string, string>` with lowercase keys. This means spreading works naturally:
+
+```ts
+beforeRequest(opts) {
+  return {...opts, headers: {...opts.headers, 'x-custom': 'value'}}
+}
+```
+
+Use **lowercase header names** in middleware — since all keys are normalized to lowercase, using a different casing (e.g. `'Content-Type'` when `'content-type'` already exists) would create a duplicate entry rather than overriding it.
+
 ## Entry points
 
 | Import              | Purpose                                                                               |
