@@ -8,7 +8,7 @@ This guide covers every breaking change and shows how to update your code.
 
 | v8                              | v9                                                 |
 | ------------------------------- | -------------------------------------------------- |
-| `getIt([promise(), base(url)])` | `createRequest({ base: url })`                     |
+| `getIt([promise(), base(url)])` | `createRequester({ base: url })`                   |
 | `res.body` (pre-parsed)         | `res.json()` / `res.text()` / `as` option          |
 | `res.statusCode`                | `res.status`                                       |
 | `res.statusMessage`             | `res.statusText`                                   |
@@ -20,8 +20,8 @@ This guide covers every breaking change and shows how to update your code.
 | `jsonResponse()` middleware     | `as: 'json'` or `res.json()`                       |
 | `jsonRequest()` middleware      | built-in (auto-serializes objects)                 |
 | `httpErrors()` middleware       | built-in, on by default                            |
-| `headers({...})` middleware     | `createRequest({ headers: {...} })`                |
-| `base(url)` middleware          | `createRequest({ base: url })`                     |
+| `headers({...})` middleware     | `createRequester({ headers: {...} })`              |
+| `base(url)` middleware          | `createRequester({ base: url })`                   |
 | `observable()` middleware       | wrap with `from(promise)` in consumer              |
 | `progress()` middleware         | removed, no replacement                            |
 | `keepAlive()` middleware        | built into fetch                                   |
@@ -29,7 +29,7 @@ This guide covers every breaking change and shows how to update your code.
 | `proxy(opts)` middleware        | automatic via conditional exports                  |
 | `mtls(opts)` middleware         | `createNodeFetch({ tls: { cert, key, ca } })`      |
 | `withCredentials: true`         | `credentials: 'include'`                           |
-| `require('get-it')`             | `import { createRequest } from 'get-it'`           |
+| `require('get-it')`             | `import { createRequester } from 'get-it'`         |
 | `require('get-it/middleware')`  | `import { retry, debug } from 'get-it/middleware'` |
 
 ## Installation
@@ -79,7 +79,7 @@ To restore v8 behavior, provide a custom `shouldRetry`:
 ```ts
 import {retry} from 'get-it/middleware'
 
-const request = createRequest({
+const request = createRequester({
   middleware: [
     retry({
       shouldRetry: (error) => {
@@ -107,12 +107,12 @@ v9's retry configuration is set once when creating the middleware. To use differ
 // v9
 import {retry} from 'get-it/middleware'
 
-const request = createRequest({
+const request = createRequester({
   base: 'https://api.example.com',
   middleware: [retry({maxRetries: 3})],
 })
 
-const criticalRequest = createRequest({
+const criticalRequest = createRequester({
   base: 'https://api.example.com',
   middleware: [retry({maxRetries: 10, shouldRetry: customPredicate})],
 })
@@ -121,7 +121,7 @@ const criticalRequest = createRequest({
 Alternatively, use `meta` to pass hints and a custom `shouldRetry` that reads them:
 
 ```ts
-const request = createRequest({
+const request = createRequester({
   middleware: [
     retry({
       shouldRetry: (error, attempt, opts) => {
@@ -181,7 +181,7 @@ Note: `credentials` is only relevant in browser environments. Some runtimes (e.g
 
 ### `clone()` removed
 
-v8 had `request.clone()` to create derived requesters that inherited the parent's middleware stack. v9 has no `clone()` — since `createRequest` takes a plain options object, you get the same result by spreading shared config:
+v8 had `request.clone()` to create derived requesters that inherited the parent's middleware stack. v9 has no `clone()` — since `createRequester` takes a plain options object, you get the same result by spreading shared config:
 
 ```ts
 // v8
@@ -194,8 +194,8 @@ const shared = {
   middleware: [retry()],
 }
 
-const request = createRequest(shared)
-const withAuth = createRequest({
+const request = createRequester(shared)
+const withAuth = createRequester({
   ...shared,
   headers: {Authorization: 'Bearer ...'},
 })
@@ -222,9 +222,9 @@ const request = getIt([
 ### After (v9)
 
 ```ts
-import {createRequest} from 'get-it'
+import {createRequester} from 'get-it'
 
-const request = createRequest({
+const request = createRequester({
   base: 'https://api.example.com',
   headers: {Authorization: 'Bearer ...'},
   // JSON serialization, HTTP errors, and promise-based — all built in
@@ -351,7 +351,7 @@ HTTP error throwing is built in and on by default. Opt out per-instance or per-r
 
 ```ts
 // Disable for all requests
-const request = createRequest({httpErrors: false})
+const request = createRequester({httpErrors: false})
 
 // Disable for a single request
 const res = await request({url: '/maybe-404', httpErrors: false})
@@ -386,7 +386,7 @@ await request({url: '/slow', timeout: {connect: 5000, socket: 30000}})
 Timeout uses `AbortSignal.timeout()`. A single value in milliseconds:
 
 ```ts
-const request = createRequest({timeout: 30000})
+const request = createRequester({timeout: 30000})
 
 // Per-request override
 await request({url: '/slow', timeout: 5000})
@@ -400,7 +400,7 @@ The timeout signal is automatically combined with any user-provided `signal` usi
 **React Native**: v8 detected React Native (`navigator.product === 'ReactNative'`) and used a 60s default timeout. v9 uses 120s everywhere. To restore the shorter timeout:
 
 ```ts
-const request = createRequest({timeout: 60000})
+const request = createRequester({timeout: 60000})
 ```
 
 ## Middleware
@@ -446,10 +446,10 @@ get-it distinguishes the two by shape: object = transform, function = wrapping.
 ### Passing middleware
 
 ```ts
-import {createRequest} from 'get-it'
+import {createRequester} from 'get-it'
 import {retry, debug} from 'get-it/middleware'
 
-const request = createRequest({
+const request = createRequester({
   middleware: [retry({maxRetries: 3}), debug({log: console.log, verbose: true})],
 })
 ```
@@ -480,7 +480,7 @@ v9's `RequestOptions` is a closed type — unknown properties are rejected by Ty
 
 ```ts
 // v9 — use meta for custom per-request data
-const request = createRequest({
+const request = createRequester({
   middleware: [
     {
       beforeRequest: (opts) => ({
@@ -511,8 +511,8 @@ The `meta` field is passed through to all middleware (both transform and wrappin
 | `jsonRequest()`    | Built in — plain objects and arrays are auto-serialized as JSON                 |
 | `jsonResponse()`   | Use `as: 'json'` or `res.json()`                                                |
 | `httpErrors()`     | Built in, on by default                                                         |
-| `base(url)`        | Use `createRequest({ base: url })`                                              |
-| `headers(obj)`     | Use `createRequest({ headers: obj })`                                           |
+| `base(url)`        | Use `createRequester({ base: url })`                                            |
+| `headers(obj)`     | Use `createRequester({ headers: obj })`                                         |
 | `observable()`     | Wrap with RxJS `from(promise)` or similar                                       |
 | `progress()`       | Removed — no replacement in fetch-based architecture                            |
 | `keepAlive()`      | Built into fetch connection pooling                                             |
@@ -540,7 +540,7 @@ const request = getIt([debug()])
 // $ DEBUG=get-it:* node app.js
 
 // v9 — must pass a log function explicitly
-const request = createRequest({
+const request = createRequester({
   middleware: [debug({log: console.log, verbose: true})],
 })
 ```
@@ -551,7 +551,7 @@ To restore `DEBUG` env var behavior, install the `debug` package and pass it as 
 import createDebug from 'debug'
 import {debug} from 'get-it/middleware'
 
-const request = createRequest({
+const request = createRequester({
   middleware: [debug({log: createDebug('get-it'), verbose: true})],
 })
 // $ DEBUG=get-it node app.js
@@ -566,15 +566,15 @@ const request = createRequest({
 
 v8 had `agent()` and `proxy()` middleware that configured Node's `http.Agent`.
 
-v9 uses conditional exports: when running in Node/Bun/Deno, `createRequest` automatically uses `createNodeFetch()` which reads proxy configuration from environment variables (`HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY`).
+v9 uses conditional exports: when running in Node/Bun/Deno, `createRequester` automatically uses `createNodeFetch()` which reads proxy configuration from environment variables (`HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY`).
 
 For custom proxy or connection pool settings:
 
 ```ts
-import {createRequest} from 'get-it'
+import {createRequester} from 'get-it'
 import {createNodeFetch} from 'get-it/node'
 
-const request = createRequest({
+const request = createRequester({
   fetch: createNodeFetch({
     proxy: 'http://proxy:8080', // explicit proxy URL
     connections: 30, // max connections per origin
@@ -589,7 +589,7 @@ v9 lets you provide a custom `fetch` implementation at instance or request level
 
 ```ts
 // Instance level — used for all requests
-const request = createRequest({fetch: myCustomFetch})
+const request = createRequester({fetch: myCustomFetch})
 
 // Per-request override
 await request({url: '/test', fetch: mockFetch})
@@ -603,15 +603,15 @@ v9 uses `FetchHeaders` for input and `Headers` instances internally:
 
 ```ts
 // All of these work as header input:
-createRequest({headers: {'X-Custom': 'value'}}) // Record
-createRequest({headers: new Headers({'X-Custom': 'value'})}) // Headers
-createRequest({headers: [['X-Custom', 'value']]}) // Tuples
+createRequester({headers: {'X-Custom': 'value'}}) // Record
+createRequester({headers: new Headers({'X-Custom': 'value'})}) // Headers
+createRequester({headers: [['X-Custom', 'value']]}) // Tuples
 ```
 
 Per-request headers merge with instance headers (per-request wins on conflict):
 
 ```ts
-const request = createRequest({headers: {'X-A': '1'}})
+const request = createRequester({headers: {'X-A': '1'}})
 await request({url: '/test', headers: {'X-B': '2'}})
 // Sends both X-A and X-B
 ```
@@ -702,10 +702,10 @@ source.cancel()
 ### After (v9)
 
 ```ts
-import {createRequest, HttpError} from 'get-it'
+import {createRequester, HttpError} from 'get-it'
 import {retry} from 'get-it/middleware'
 
-const request = createRequest({
+const request = createRequester({
   base: 'https://api.example.com',
   headers: {Authorization: 'Bearer token'},
   middleware: [retry({maxRetries: 3})],

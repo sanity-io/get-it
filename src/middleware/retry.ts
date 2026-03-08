@@ -22,7 +22,7 @@ interface RetryOptions {
  *
  * @example
  * ```ts
- * const request = createRequest({
+ * const request = createRequester({
  *   middleware: [retry({maxRetries: 3})],
  * })
  * ```

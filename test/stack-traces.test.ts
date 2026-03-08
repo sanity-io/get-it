@@ -1,4 +1,4 @@
-import {createRequest, HttpError} from 'get-it'
+import {createRequester, HttpError} from 'get-it'
 import {retry} from 'get-it/middleware'
 import {describe, expect, it} from 'vitest'
 
@@ -9,7 +9,7 @@ import {describe, expect, it} from 'vitest'
  * We probe with a real request to catch cross-module async frame loss.
  */
 const hasAsyncStackFrames = await (async () => {
-  const probe = createRequest({
+  const probe = createRequester({
     fetch: async () => new Response('x', {status: 500}),
   })
   try {
@@ -31,7 +31,7 @@ describe('stack traces', () => {
     it.runIf(hasAsyncStackFrames)(
       'HttpError includes request (the public entry point)',
       async () => {
-        const request = createRequest({fetch: fetch404})
+        const request = createRequester({fetch: fetch404})
         try {
           await request({url: 'http://example.com/test'})
           expect.fail('should have thrown')
@@ -43,7 +43,7 @@ describe('stack traces', () => {
     )
 
     it.runIf(hasAsyncStackFrames)('as: "json" includes request and requestJson', async () => {
-      const request = createRequest({fetch: fetch404})
+      const request = createRequester({fetch: fetch404})
       try {
         await request({url: 'http://example.com/test', as: 'json'})
         expect.fail('should have thrown')
@@ -56,7 +56,7 @@ describe('stack traces', () => {
     })
 
     it.runIf(hasAsyncStackFrames)('as: "text" includes request and requestText', async () => {
-      const request = createRequest({fetch: fetch404})
+      const request = createRequester({fetch: fetch404})
       try {
         await request({url: 'http://example.com/test', as: 'text'})
         expect.fail('should have thrown')
@@ -69,7 +69,7 @@ describe('stack traces', () => {
     })
 
     it.runIf(hasAsyncStackFrames)('as: "stream" includes request and requestStream', async () => {
-      const request = createRequest({fetch: fetch500})
+      const request = createRequester({fetch: fetch500})
       try {
         await request({url: 'http://example.com/test', as: 'stream'})
         expect.fail('should have thrown')
@@ -84,7 +84,7 @@ describe('stack traces', () => {
 
   describe('middleware visibility', () => {
     it.runIf(hasAsyncStackFrames)('retry middleware appears in stack', async () => {
-      const request = createRequest({
+      const request = createRequester({
         fetch: fetch500,
         httpErrors: false,
         middleware: [retry({maxRetries: 0})],
@@ -101,7 +101,7 @@ describe('stack traces', () => {
     it.runIf(hasAsyncStackFrames)(
       'named wrapping middleware appears when it awaits next()',
       async () => {
-        const request = createRequest({
+        const request = createRequester({
           fetch: fetch404,
           middleware: [
             async function authMiddleware(opts, next) {
@@ -123,7 +123,7 @@ describe('stack traces', () => {
       const fetchNetworkError = async () => {
         throw new Error('connect ECONNREFUSED')
       }
-      const request = createRequest({
+      const request = createRequester({
         fetch: fetchNetworkError,
         middleware: [retry({maxRetries: 0})],
       })
@@ -140,7 +140,7 @@ describe('stack traces', () => {
   describe('error types', () => {
     it('TypeError from invalid JSON includes requestJson', async () => {
       const fetchHtml = async () => new Response('<html>not json</html>', {status: 200})
-      const request = createRequest({fetch: fetchHtml})
+      const request = createRequester({fetch: fetchHtml})
       try {
         await request({url: 'http://example.com/test', as: 'json'})
         expect.fail('should have thrown')
@@ -155,7 +155,7 @@ describe('stack traces', () => {
     it.runIf(hasCaptureStackTrace())(
       'bufferAndCheck and executeBuffered do not appear in stack',
       async () => {
-        const request = createRequest({fetch: fetch404})
+        const request = createRequester({fetch: fetch404})
         try {
           await request({url: 'http://example.com/test'})
           expect.fail('should have thrown')
@@ -171,7 +171,7 @@ describe('stack traces', () => {
 
   describe('no anonymous functions in critical path', () => {
     it('stack has no anonymous entries', async () => {
-      const request = createRequest({
+      const request = createRequester({
         fetch: fetch404,
         middleware: [
           async function myMiddleware(opts, next) {

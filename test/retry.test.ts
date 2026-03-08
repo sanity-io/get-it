@@ -1,4 +1,4 @@
-import {createRequest, type RequestOptions} from 'get-it'
+import {createRequester, type RequestOptions} from 'get-it'
 import {retry} from 'get-it/middleware'
 import {describe, expect, it} from 'vitest'
 
@@ -16,7 +16,7 @@ const canTestNetworkErrors = !('document' in globalThis)
 
 describe('retry middleware', {timeout: 15000}, () => {
   it.runIf(canTestNetworkErrors)('retries on network error and succeeds', async () => {
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       httpErrors: false,
       middleware: [retry({retryDelay: () => 50})],
@@ -26,7 +26,7 @@ describe('retry middleware', {timeout: 15000}, () => {
   })
 
   it.runIf(canTestNetworkErrors)('respects maxRetries', async () => {
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       httpErrors: false,
       middleware: [retry({maxRetries: 1, retryDelay: () => 10})],
@@ -36,7 +36,7 @@ describe('retry middleware', {timeout: 15000}, () => {
 
   it('does not retry HTTP errors by default', async () => {
     let attempts = 0
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       middleware: [
         async (opts, next) => {
@@ -52,7 +52,7 @@ describe('retry middleware', {timeout: 15000}, () => {
 
   it.runIf(canTestNetworkErrors)('custom shouldRetry', async () => {
     let attemptsSeen = 0
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       httpErrors: false,
       middleware: [
@@ -71,7 +71,7 @@ describe('retry middleware', {timeout: 15000}, () => {
 
   it.runIf(canTestNetworkErrors)('exponential backoff timing', async () => {
     const delays: number[] = []
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       httpErrors: false,
       middleware: [
@@ -96,7 +96,7 @@ describe('retry middleware', {timeout: 15000}, () => {
   it.runIf(canTestNetworkErrors)('aborts during retry sleep when signal is aborted', async () => {
     const controller = new AbortController()
     let attempts = 0
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       httpErrors: false,
       middleware: [
@@ -129,7 +129,7 @@ describe('retry middleware', {timeout: 15000}, () => {
   })
 
   it.runIf(canTestNetworkErrors)('uses default retryDelay when none is provided', async () => {
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       httpErrors: false,
       middleware: [retry({maxRetries: 1})],
@@ -141,7 +141,7 @@ describe('retry middleware', {timeout: 15000}, () => {
   it.runIf(canTestNetworkErrors)('rejects immediately when signal is already aborted', async () => {
     const controller = new AbortController()
     controller.abort('cancelled')
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       httpErrors: false,
       middleware: [retry({retryDelay: () => 5000})],
@@ -150,7 +150,7 @@ describe('retry middleware', {timeout: 15000}, () => {
   })
 
   it.runIf(canTestNetworkErrors)('does not retry POST by default', async () => {
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       httpErrors: false,
       middleware: [retry({retryDelay: () => 10})],
@@ -162,7 +162,7 @@ describe('retry middleware', {timeout: 15000}, () => {
 
   it.runIf(canTestNetworkErrors)('retries HEAD requests on network error', async () => {
     let attempts = 0
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       httpErrors: false,
       middleware: [
@@ -180,7 +180,7 @@ describe('retry middleware', {timeout: 15000}, () => {
 
   it.runIf(canTestNetworkErrors)('retries when method is lowercase "get"', async () => {
     let attempts = 0
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       httpErrors: false,
       middleware: [
@@ -198,7 +198,7 @@ describe('retry middleware', {timeout: 15000}, () => {
 
   it.runIf(canTestNetworkErrors)('does not retry lowercase "post"', async () => {
     let attempts = 0
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       httpErrors: false,
       middleware: [

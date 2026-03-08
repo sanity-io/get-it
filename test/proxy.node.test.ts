@@ -1,4 +1,4 @@
-import {createRequest} from 'get-it'
+import {createRequester} from 'get-it'
 import {createNodeFetch} from 'get-it/node'
 import {afterEach, describe, expect, it} from 'vitest'
 
@@ -31,7 +31,7 @@ describe('createNodeFetch', () => {
 
   it('routes through explicit proxy', async () => {
     await resetProxyCounter()
-    const request = createRequest({
+    const request = createRequester({
       fetch: createNodeFetch({proxy: proxyUrl}),
     })
     const res = await request(`${baseUrl}/plain-text`)
@@ -45,7 +45,7 @@ describe('createNodeFetch', () => {
     await resetProxyCounter()
     process.env['HTTP_PROXY'] = proxyUrl
     const customFetch = createNodeFetch({proxy: true})
-    const request = createRequest({fetch: customFetch})
+    const request = createRequester({fetch: customFetch})
     const res = await request(`${baseUrl}/plain-text`)
     expect(res.status).toBe(200)
     expect(res.text()).toBe('Just some plain text for you to consume')
@@ -55,7 +55,7 @@ describe('createNodeFetch', () => {
 
   it('bypasses proxy when proxy is false', async () => {
     await resetProxyCounter()
-    const request = createRequest({
+    const request = createRequester({
       fetch: createNodeFetch({proxy: false}),
     })
     const res = await request(`${baseUrl}/plain-text`)
@@ -69,7 +69,7 @@ describe('createNodeFetch', () => {
     await resetProxyCounter()
     delete process.env['HTTP_PROXY']
     delete process.env['HTTPS_PROXY']
-    const request = createRequest({
+    const request = createRequester({
       fetch: createNodeFetch(), // defaults to proxy: true (from env)
     })
     const res = await request(`${baseUrl}/plain-text`)
@@ -82,7 +82,7 @@ describe('createNodeFetch', () => {
 
 describe('createNodeFetch body forwarding', () => {
   it('forwards request body to fetch', async () => {
-    const request = createRequest({
+    const request = createRequester({
       fetch: createNodeFetch({proxy: false}),
       base: baseUrl,
     })
@@ -106,12 +106,12 @@ describe('createNodeFetch tls option with proxy modes', () => {
 describe('node entry point', () => {
   it('re-exports core types and utilities', async () => {
     const mod = await import('../src/_exports/index.node')
-    expect(typeof mod.createRequest).toBe('function')
+    expect(typeof mod.createRequester).toBe('function')
     expect(typeof mod.HttpError).toBe('function')
   })
 
-  it('createRequest from node entry works without custom fetch', async () => {
-    const {createRequest: nodeCreateRequest} = await import('../src/_exports/index.node')
+  it('createRequester from node entry works without custom fetch', async () => {
+    const {createRequester: nodeCreateRequest} = await import('../src/_exports/index.node')
     const request = nodeCreateRequest()
     const res = await request(`${baseUrl}/plain-text`)
     expect(res.status).toBe(200)

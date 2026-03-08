@@ -1,4 +1,4 @@
-import {createRequest} from 'get-it'
+import {createRequester} from 'get-it'
 import {createNodeFetch} from 'get-it/node'
 import {describe, expect, it} from 'vitest'
 
@@ -24,7 +24,7 @@ function stackNames(error: Error): string[] {
 
 describe('node fetch stack traces', () => {
   it('network error includes nodeFetch in stack', async () => {
-    const request = createRequest({
+    const request = createRequester({
       fetch: createNodeFetch({proxy: false}),
     })
     try {

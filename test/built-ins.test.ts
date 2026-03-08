@@ -1,4 +1,4 @@
-import {createRequest, HttpError} from 'get-it'
+import {createRequester, HttpError} from 'get-it'
 import {describe, expect, it} from 'vitest'
 
 const baseUrl = 'http://localhost:9980/req-test'
@@ -7,13 +7,13 @@ describe('built-in behaviors', () => {
   // 4a: Base URL
   describe('base URL', () => {
     it('prepends base URL to relative paths', async () => {
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       const res = await request('/plain-text')
       expect(res.text()).toBe('Just some plain text for you to consume')
     })
 
     it('does not prepend base URL to absolute URLs', async () => {
-      const request = createRequest({base: 'http://localhost:9999'})
+      const request = createRequester({base: 'http://localhost:9999'})
       const res = await request(`${baseUrl}/plain-text`)
       expect(res.text()).toBe('Just some plain text for you to consume')
     })
@@ -24,7 +24,7 @@ describe('built-in behaviors', () => {
         calledUrl = input
         return new Response('ok')
       }
-      const request = createRequest({base: 'https://api.com/v1', fetch: fakeFetch})
+      const request = createRequester({base: 'https://api.com/v1', fetch: fakeFetch})
       await request('users')
       expect(calledUrl).toBe('https://api.com/v1/users')
     })
@@ -35,7 +35,7 @@ describe('built-in behaviors', () => {
         calledUrl = input
         return new Response('ok')
       }
-      const request = createRequest({base: 'https://api.com/v1/', fetch: fakeFetch})
+      const request = createRequester({base: 'https://api.com/v1/', fetch: fakeFetch})
       await request('/users')
       expect(calledUrl).toBe('https://api.com/v1/users')
     })
@@ -46,7 +46,7 @@ describe('built-in behaviors', () => {
         calledUrl = input
         return new Response('ok')
       }
-      const request = createRequest({base: 'https://api.com', fetch: fakeFetch})
+      const request = createRequester({base: 'https://api.com', fetch: fakeFetch})
       await request('users')
       expect(calledUrl).toBe('https://api.com/users')
     })
@@ -57,7 +57,7 @@ describe('built-in behaviors', () => {
         calledUrl = input
         return new Response('ok')
       }
-      const request = createRequest({base: 'https://api.com/', fetch: fakeFetch})
+      const request = createRequester({base: 'https://api.com/', fetch: fakeFetch})
       await request('/users')
       expect(calledUrl).toBe('https://api.com/users')
     })
@@ -68,7 +68,7 @@ describe('built-in behaviors', () => {
         calledUrl = input
         return new Response('ok')
       }
-      const request = createRequest({base: 'https://api.com/', fetch: fakeFetch})
+      const request = createRequester({base: 'https://api.com/', fetch: fakeFetch})
       await request('users')
       expect(calledUrl).toBe('https://api.com/users')
     })
@@ -79,7 +79,7 @@ describe('built-in behaviors', () => {
         calledUrl = input
         return new Response('ok')
       }
-      const request = createRequest({base: 'https://api.com', fetch: fakeFetch})
+      const request = createRequester({base: 'https://api.com', fetch: fakeFetch})
       await request('/users')
       expect(calledUrl).toBe('https://api.com/users')
     })
@@ -88,14 +88,14 @@ describe('built-in behaviors', () => {
   // 4b: Default Headers
   describe('default headers', () => {
     it('sends default headers on every request', async () => {
-      const request = createRequest({base: baseUrl, headers: {'X-Custom': 'hello'}})
+      const request = createRequester({base: baseUrl, headers: {'X-Custom': 'hello'}})
       const res = await request('/debug')
       const headers = getRecord(res.json(), 'headers')
       expect(headers['x-custom']).toBe('hello')
     })
 
     it('per-request headers merge with defaults', async () => {
-      const request = createRequest({base: baseUrl, headers: {'X-A': '1'}})
+      const request = createRequester({base: baseUrl, headers: {'X-A': '1'}})
       const res = await request({url: '/debug', headers: {'X-B': '2'}})
       const headers = getRecord(res.json(), 'headers')
       expect(headers['x-a']).toBe('1')
@@ -103,14 +103,14 @@ describe('built-in behaviors', () => {
     })
 
     it('per-request headers override defaults', async () => {
-      const request = createRequest({base: baseUrl, headers: {'X-A': '1'}})
+      const request = createRequester({base: baseUrl, headers: {'X-A': '1'}})
       const res = await request({url: '/debug', headers: {'X-A': '2'}})
       const headers = getRecord(res.json(), 'headers')
       expect(headers['x-a']).toBe('2')
     })
 
     it('passes Headers instance through without modification', async () => {
-      const request = createRequest({base: baseUrl, headers: new Headers({'X-Via': 'headers'})})
+      const request = createRequester({base: baseUrl, headers: new Headers({'X-Via': 'headers'})})
       const res = await request('/debug')
       const sent = getRecord(res.json(), 'headers')
       expect(sent['x-via']).toBe('headers')
@@ -123,7 +123,7 @@ describe('built-in behaviors', () => {
         // @ts-expect-error Signature allows only string, but we want to test behavior of undefined
         'X-Missing': undefined,
       }
-      const request = createRequest({base: baseUrl, headers})
+      const request = createRequester({base: baseUrl, headers})
       const res = await request('/debug')
       const sent = getRecord(res.json(), 'headers')
       expect(sent['x-present']).toBe('yes')
@@ -131,7 +131,7 @@ describe('built-in behaviors', () => {
     })
 
     it('strips undefined header values from per-request headers', async () => {
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       const headers: Record<string, string> = {
         'X-Present': 'yes',
         // @ts-expect-error Signature allows only string, but we want to test behavior of undefined
@@ -144,7 +144,7 @@ describe('built-in behaviors', () => {
     })
 
     it('accepts [string, string][] tuple format for instance headers', async () => {
-      const request = createRequest({
+      const request = createRequester({
         base: baseUrl,
         headers: [['X-Tuple', 'works']],
       })
@@ -154,7 +154,7 @@ describe('built-in behaviors', () => {
     })
 
     it('accepts [string, string][] tuple format for per-request headers', async () => {
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       const res = await request({
         url: '/debug',
         headers: [['X-Request-Tuple', 'yes']],
@@ -172,7 +172,7 @@ describe('built-in behaviors', () => {
         calledInit = init
         return new Response('ok')
       }
-      const request = createRequest({fetch: fakeFetch})
+      const request = createRequester({fetch: fakeFetch})
       await request({url: 'https://example.com/api', body: {name: 'test'}})
       expect(calledInit?.method).toBe('POST')
     })
@@ -183,7 +183,7 @@ describe('built-in behaviors', () => {
         calledInit = init
         return new Response('ok')
       }
-      const request = createRequest({fetch: fakeFetch})
+      const request = createRequester({fetch: fakeFetch})
       await request({url: 'https://example.com/api', method: 'PUT', body: {name: 'test'}})
       expect(calledInit?.method).toBe('PUT')
     })
@@ -194,7 +194,7 @@ describe('built-in behaviors', () => {
         calledInit = init
         return new Response('ok')
       }
-      const request = createRequest({fetch: fakeFetch})
+      const request = createRequester({fetch: fakeFetch})
       await request({url: 'https://example.com/api'})
       expect(calledInit?.method).toBeUndefined()
     })
@@ -205,13 +205,13 @@ describe('built-in behaviors', () => {
         calledInit = init
         return new Response('ok')
       }
-      const request = createRequest({fetch: fakeFetch})
+      const request = createRequester({fetch: fakeFetch})
       await request({url: 'https://example.com/api', body: null})
       expect(calledInit?.method).toBeUndefined()
     })
 
     it('sends body as POST to real server when method is omitted', async () => {
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       const res = await request({url: '/json-echo', body: {foo: 'bar'}})
       expect(res.json()).toEqual({foo: 'bar'})
     })
@@ -220,26 +220,26 @@ describe('built-in behaviors', () => {
   // 4d: JSON Request Body
   describe('JSON request body', () => {
     it('auto-serializes plain object body as JSON', async () => {
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       const res = await request({url: '/json-echo', method: 'POST', body: {foo: 'bar'}})
       expect(res.json()).toEqual({foo: 'bar'})
     })
 
     it('auto-serializes array body as JSON', async () => {
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       const res = await request({url: '/json-echo', method: 'POST', body: [1, 2, 3]})
       expect(res.json()).toEqual([1, 2, 3])
     })
 
     it('sets content-type to application/json for object bodies', async () => {
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       const res = await request({url: '/debug', method: 'POST', body: {test: true}})
       const headers = getRecord(res.json(), 'headers')
       expect(headers['content-type']).toBe('application/json')
     })
 
     it('preserves explicit content-type when body is a plain object', async () => {
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       const res = await request({
         url: '/debug',
         method: 'POST',
@@ -256,27 +256,27 @@ describe('built-in behaviors', () => {
         sentBody = init?.body ?? undefined
         return new Response('ok')
       }
-      const request = createRequest({fetch: fakeFetch})
+      const request = createRequester({fetch: fakeFetch})
       const blob = new Blob(['binary data'], {type: 'application/octet-stream'})
       await request({url: 'https://example.com/upload', method: 'POST', body: blob})
       expect(sentBody).toBeInstanceOf(Blob)
     })
 
     it('does not serialize string bodies as JSON', async () => {
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       const res = await request({url: '/echo', method: 'POST', body: 'raw string'})
       expect(res.text()).toBe('raw string')
     })
 
     it('sends Uint8Array body and round-trips through real server', async () => {
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       const data = new Uint8Array([0, 1, 2, 127, 128, 255])
       const res = await request({url: '/echo', method: 'POST', body: data})
       expect(res.bytes()).toEqual(data)
     })
 
     it('does not serialize null body', async () => {
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       const res = await request({url: '/debug', method: 'POST', body: null})
       expect(getString(res.json(), 'body')).toBe('')
     })
@@ -287,7 +287,7 @@ describe('built-in behaviors', () => {
         sentBody = init?.body ?? undefined
         return new Response('ok')
       }
-      const request = createRequest({fetch: fakeFetch})
+      const request = createRequester({fetch: fakeFetch})
       const buf = new ArrayBuffer(4)
       await request({url: 'https://example.com/upload', method: 'POST', body: buf})
       expect(sentBody).toBeInstanceOf(ArrayBuffer)
@@ -299,7 +299,7 @@ describe('built-in behaviors', () => {
         sentBody = init?.body ?? undefined
         return new Response('ok')
       }
-      const request = createRequest({fetch: fakeFetch})
+      const request = createRequester({fetch: fakeFetch})
       const form = new FormData()
       form.append('field', 'value')
       await request({url: 'https://example.com/upload', method: 'POST', body: form})
@@ -312,7 +312,7 @@ describe('built-in behaviors', () => {
         sentBody = init?.body ?? undefined
         return new Response('ok')
       }
-      const request = createRequest({fetch: fakeFetch})
+      const request = createRequester({fetch: fakeFetch})
       const stream = new ReadableStream({
         start(controller) {
           controller.enqueue(new TextEncoder().encode('hello'))
@@ -325,7 +325,7 @@ describe('built-in behaviors', () => {
 
     it('throws TypeError for non-serializable body types', async () => {
       const fakeFetch = async () => new Response('ok')
-      const request = createRequest({fetch: fakeFetch})
+      const request = createRequester({fetch: fakeFetch})
       await expect(
         request({url: 'https://example.com/api', method: 'POST', body: 42}),
       ).rejects.toThrow(TypeError)
@@ -333,14 +333,14 @@ describe('built-in behaviors', () => {
 
     it('throws TypeError with descriptive message for unrecognized body', async () => {
       const fakeFetch = async () => new Response('ok')
-      const request = createRequest({fetch: fakeFetch})
+      const request = createRequester({fetch: fakeFetch})
       await expect(
         request({url: 'https://example.com/api', method: 'POST', body: new Date()}),
       ).rejects.toThrow(/unsupported body type/i)
     })
 
     it('JSON-serializes Object.create(null) bodies', async () => {
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       const body = Object.create(null) as Record<string, string>
       body['key'] = 'value'
       const res = await request({url: '/json-echo', method: 'POST', body})
@@ -351,7 +351,7 @@ describe('built-in behaviors', () => {
   // 4d: URLSearchParams request body
   describe('URLSearchParams request body', () => {
     it('sends URLSearchParams body as form-urlencoded', async () => {
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       const params = new URLSearchParams()
       params.set('foo', 'bar')
       params.set('baz', 'qux')
@@ -360,7 +360,7 @@ describe('built-in behaviors', () => {
     })
 
     it('sets content-type to application/x-www-form-urlencoded automatically', async () => {
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       const params = new URLSearchParams({foo: 'bar'})
       const res = await request({url: '/debug', method: 'POST', body: params})
       const headers = getRecord(res.json(), 'headers')
@@ -368,7 +368,7 @@ describe('built-in behaviors', () => {
     })
 
     it('does not JSON-serialize URLSearchParams body', async () => {
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       const params = new URLSearchParams({foo: 'bar'})
       const res = await request({url: '/echo', method: 'POST', body: params})
       expect(res.text()).toBe('foo=bar')
@@ -378,13 +378,13 @@ describe('built-in behaviors', () => {
   // 4d: Query String
   describe('query string', () => {
     it('appends query parameters to URL', async () => {
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       const res = await request({url: '/query-string', query: {foo: 'bar', num: 42}})
       expect(res.json()).toEqual({foo: 'bar', num: '42'})
     })
 
     it('merges with existing query parameters', async () => {
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       const res = await request({url: '/query-string?existing=1', query: {added: '2'}})
       const body = res.json()
       expect(getString(body, 'existing')).toBe('1')
@@ -392,7 +392,7 @@ describe('built-in behaviors', () => {
     })
 
     it('skips undefined query values', async () => {
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       const res = await request({url: '/query-string', query: {a: '1', b: undefined}})
       const body = res.json()
       expect(getString(body, 'a')).toBe('1')
@@ -400,7 +400,7 @@ describe('built-in behaviors', () => {
     })
 
     it('handles boolean query values', async () => {
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       const res = await request({url: '/query-string', query: {flag: true}})
       expect(getString(res.json(), 'flag')).toBe('true')
     })
@@ -409,25 +409,25 @@ describe('built-in behaviors', () => {
       const params = new URLSearchParams()
       params.append('tags', 'a')
       params.append('tags', 'b')
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       const res = await request({url: '/query-string', query: params})
       expect(getString(res.json(), 'tags')).toEqual(['a', 'b'])
     })
 
     it('handles empty query object', async () => {
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       const res = await request({url: '/plain-text', query: {}})
       expect(res.status).toBe(200)
     })
 
     it('stringifies number 0 as query value', async () => {
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       const res = await request({url: '/query-string', query: {count: 0}})
       expect(getString(res.json(), 'count')).toBe('0')
     })
 
     it('stringifies false as query value', async () => {
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       const res = await request({url: '/query-string', query: {enabled: false}})
       expect(getString(res.json(), 'enabled')).toBe('false')
     })
@@ -436,17 +436,17 @@ describe('built-in behaviors', () => {
   // 4e: HTTP Errors
   describe('HTTP errors', () => {
     it('throws HttpError on 4xx status by default', async () => {
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       await expect(request('/status?code=404')).rejects.toThrow(HttpError)
     })
 
     it('throws HttpError on 5xx status by default', async () => {
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       await expect(request('/status?code=500')).rejects.toThrow(HttpError)
     })
 
     it('HttpError contains response details', async () => {
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       try {
         await request('/status?code=404')
         expect.fail('should have thrown')
@@ -461,7 +461,7 @@ describe('built-in behaviors', () => {
     })
 
     it('HttpError message includes method and URL', async () => {
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       try {
         await request({url: '/status?code=404', method: 'GET'})
         expect.fail('should have thrown')
@@ -475,7 +475,7 @@ describe('built-in behaviors', () => {
     })
 
     it('HttpError message includes URL and method for implicit POST', async () => {
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       try {
         await request({url: '/status?code=500', body: {test: true}})
         expect.fail('should have thrown')
@@ -489,7 +489,7 @@ describe('built-in behaviors', () => {
     })
 
     it('HttpError exposes url and method properties', async () => {
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       try {
         await request({url: '/status?code=404', method: 'DELETE'})
         expect.fail('should have thrown')
@@ -503,25 +503,25 @@ describe('built-in behaviors', () => {
     })
 
     it('does not throw when httpErrors is false (instance)', async () => {
-      const request = createRequest({base: baseUrl, httpErrors: false})
+      const request = createRequester({base: baseUrl, httpErrors: false})
       const res = await request('/status?code=404')
       expect(res.status).toBe(404)
     })
 
     it('does not throw when httpErrors is false (per-request)', async () => {
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       const res = await request({url: '/status?code=404', httpErrors: false})
       expect(res.status).toBe(404)
     })
 
     it('does not throw for successful responses', async () => {
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       const res = await request('/plain-text')
       expect(res.status).toBe(200)
     })
 
     it('HttpError has name set to "HttpError"', async () => {
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       try {
         await request('/status?code=500')
         expect.fail('should have thrown')
@@ -534,7 +534,7 @@ describe('built-in behaviors', () => {
     })
 
     it('HttpError exposes body text and headers', async () => {
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       try {
         await request('/status?code=404')
         expect.fail('should have thrown')
@@ -549,7 +549,7 @@ describe('built-in behaviors', () => {
     })
 
     it('instance httpErrors=true can be disabled per-request', async () => {
-      const request = createRequest({base: baseUrl, httpErrors: true})
+      const request = createRequester({base: baseUrl, httpErrors: true})
       const res = await request({url: '/status?code=500', httpErrors: false})
       expect(res.status).toBe(500)
     })
@@ -563,35 +563,35 @@ describe('built-in behaviors', () => {
         receivedSignal = init?.signal ?? undefined
         return new Response('ok')
       }
-      const request = createRequest({fetch: fakeFetch})
+      const request = createRequester({fetch: fakeFetch})
       await request('https://example.com/test')
       expect(receivedSignal).toBeDefined()
     })
 
     it('aborts request after timeout', async () => {
-      const request = createRequest({base: baseUrl, timeout: 200})
+      const request = createRequester({base: baseUrl, timeout: 200})
       await expect(request('/delay?delay=2000')).rejects.toThrow()
     })
 
     it('per-request timeout overrides instance timeout', async () => {
-      const request = createRequest({base: baseUrl, timeout: 5000})
+      const request = createRequester({base: baseUrl, timeout: 5000})
       await expect(request({url: '/delay?delay=2000', timeout: 200})).rejects.toThrow()
     })
 
     it('timeout: 0 disables timeout (same as false)', async () => {
-      const request = createRequest({base: baseUrl, timeout: 0})
+      const request = createRequester({base: baseUrl, timeout: 0})
       const res = await request('/delay?delay=200')
       expect(res.status).toBe(200)
     })
 
     it('timeout: false disables timeout', async () => {
-      const request = createRequest({base: baseUrl, timeout: false})
+      const request = createRequester({base: baseUrl, timeout: false})
       const res = await request('/delay?delay=200')
       expect(res.status).toBe(200)
     })
 
     it('timeout: false per-request overrides instance timeout', async () => {
-      const request = createRequest({base: baseUrl, timeout: 100})
+      const request = createRequester({base: baseUrl, timeout: 100})
       const res = await request({url: '/delay?delay=200', timeout: false})
       expect(res.status).toBe(200)
     })
@@ -602,7 +602,7 @@ describe('built-in behaviors', () => {
     // happy-dom's fetch does not properly support AbortController on network requests
     it.skipIf('happyDOM' in globalThis)('aborts request when signal is aborted', async () => {
       const controller = new AbortController()
-      const request = createRequest({base: baseUrl})
+      const request = createRequester({base: baseUrl})
       const promise = request({url: '/delay?delay=5000', signal: controller.signal})
       controller.abort()
       await expect(promise).rejects.toThrow()
@@ -610,7 +610,7 @@ describe('built-in behaviors', () => {
 
     it('combines user signal with timeout signal', async () => {
       const controller = new AbortController()
-      const request = createRequest({base: baseUrl, timeout: 200})
+      const request = createRequester({base: baseUrl, timeout: 200})
       const promise = request({url: '/delay?delay=5000', signal: controller.signal})
       // Timeout should fire first at 200ms
       await expect(promise).rejects.toThrow()
@@ -623,7 +623,7 @@ describe('built-in behaviors', () => {
         receivedSignal = init?.signal ?? undefined
         return new Response('ok')
       }
-      const request = createRequest({fetch: fakeFetch, timeout: false})
+      const request = createRequester({fetch: fakeFetch, timeout: false})
       await request({url: 'https://example.com/test', signal: controller.signal})
       expect(receivedSignal).toBe(controller.signal)
     })
@@ -634,7 +634,7 @@ describe('built-in behaviors', () => {
         receivedSignal = init?.signal
         return new Response('ok')
       }
-      const request = createRequest({fetch: fakeFetch, timeout: false})
+      const request = createRequester({fetch: fakeFetch, timeout: false})
       await request('https://example.com/test')
       expect(receivedSignal).toBeUndefined()
     })
@@ -654,7 +654,7 @@ describe('built-in behaviors', () => {
           calledInit = init
           return new Response('ok')
         }
-        const request = createRequest({fetch: fakeFetch, credentials: 'include'})
+        const request = createRequester({fetch: fakeFetch, credentials: 'include'})
         await request('https://example.com/api')
         expect(calledInit?.credentials).toBe('include')
       } finally {
@@ -670,7 +670,7 @@ describe('built-in behaviors', () => {
           calledInit = init
           return new Response('ok')
         }
-        const request = createRequest({fetch: fakeFetch})
+        const request = createRequester({fetch: fakeFetch})
         await request({url: 'https://example.com/api', credentials: 'include'})
         expect(calledInit?.credentials).toBe('include')
       } finally {
@@ -686,7 +686,7 @@ describe('built-in behaviors', () => {
           calledInit = init
           return new Response('ok')
         }
-        const request = createRequest({fetch: fakeFetch, credentials: 'include'})
+        const request = createRequester({fetch: fakeFetch, credentials: 'include'})
         await request({url: 'https://example.com/api', credentials: 'omit'})
         expect(calledInit?.credentials).toBe('omit')
       } finally {
@@ -700,7 +700,7 @@ describe('built-in behaviors', () => {
         calledInit = init
         return new Response('ok')
       }
-      const request = createRequest({fetch: fakeFetch})
+      const request = createRequester({fetch: fakeFetch})
       await request('https://example.com/api')
       expect(calledInit?.credentials).toBeUndefined()
     })
@@ -712,7 +712,7 @@ describe('built-in behaviors', () => {
         calledInit = init
         return new Response('ok')
       }
-      const request = createRequest({fetch: fakeFetch, credentials: 'include'})
+      const request = createRequester({fetch: fakeFetch, credentials: 'include'})
       await request('https://example.com/api')
       expect(calledInit?.credentials).toBeUndefined()
     })
@@ -726,7 +726,7 @@ describe('built-in behaviors', () => {
         calledInit = init
         return new Response('ok')
       }
-      const request = createRequest({fetch: fakeFetch})
+      const request = createRequester({fetch: fakeFetch})
       await request({url: 'https://example.com/api', redirect: 'manual'})
       expect(calledInit?.redirect).toBe('manual')
     })
@@ -737,7 +737,7 @@ describe('built-in behaviors', () => {
         calledInit = init
         return new Response('ok')
       }
-      const request = createRequest({fetch: fakeFetch})
+      const request = createRequester({fetch: fakeFetch})
       await request({url: 'https://example.com/api', redirect: 'follow'})
       expect(calledInit?.redirect).toBe('follow')
     })
@@ -748,7 +748,7 @@ describe('built-in behaviors', () => {
         calledInit = init
         return new Response('ok')
       }
-      const request = createRequest({fetch: fakeFetch})
+      const request = createRequester({fetch: fakeFetch})
       await request({url: 'https://example.com/api', redirect: 'error'})
       expect(calledInit?.redirect).toBe('error')
     })
@@ -759,7 +759,7 @@ describe('built-in behaviors', () => {
         calledInit = init
         return new Response('ok')
       }
-      const request = createRequest({fetch: fakeFetch})
+      const request = createRequester({fetch: fakeFetch})
       await request('https://example.com/api')
       expect(calledInit?.redirect).toBeUndefined()
     })

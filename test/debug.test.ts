@@ -1,4 +1,4 @@
-import {createRequest} from 'get-it'
+import {createRequester} from 'get-it'
 import {debug} from 'get-it/middleware'
 import {describe, expect, it} from 'vitest'
 
@@ -8,7 +8,7 @@ describe('debug middleware', () => {
   it('logs request method and URL', async () => {
     const logs: string[] = []
     const log = (msg: string, ...args: unknown[]) => logs.push(`${msg} ${args.join(' ')}`)
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       middleware: [debug({log})],
     })
@@ -20,7 +20,7 @@ describe('debug middleware', () => {
   it('logs response status', async () => {
     const logs: string[] = []
     const log = (msg: string, ...args: unknown[]) => logs.push(`${msg} ${args.join(' ')}`)
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       middleware: [debug({log})],
     })
@@ -31,7 +31,7 @@ describe('debug middleware', () => {
   it('redacts specified headers', async () => {
     const logs: string[] = []
     const log = (msg: string, ...args: unknown[]) => logs.push(`${msg} ${JSON.stringify(args)}`)
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       headers: {Authorization: 'Bearer secret-token'},
       middleware: [debug({log, redactHeaders: ['authorization'], verbose: true})],
@@ -43,7 +43,7 @@ describe('debug middleware', () => {
   })
 
   it('no-op when log function is not provided', async () => {
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       middleware: [debug()],
     })
@@ -54,7 +54,7 @@ describe('debug middleware', () => {
   it('verbose mode logs request headers', async () => {
     const logs: string[] = []
     const log = (msg: string, ...args: unknown[]) => logs.push(`${msg} ${JSON.stringify(args)}`)
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       headers: {'X-Test': 'hello'},
       middleware: [debug({log, verbose: true})],
@@ -66,7 +66,7 @@ describe('debug middleware', () => {
   it('non-verbose mode does not log headers', async () => {
     const logs: string[] = []
     const log = (msg: string, ...args: unknown[]) => logs.push(`${msg} ${JSON.stringify(args)}`)
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       headers: {'X-Test': 'hello'},
       middleware: [debug({log})],
@@ -78,7 +78,7 @@ describe('debug middleware', () => {
   it('redacts cookie and authorization headers by default', async () => {
     const logs: string[] = []
     const log = (msg: string, ...args: unknown[]) => logs.push(`${msg} ${JSON.stringify(args)}`)
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       headers: {Authorization: 'Bearer secret', Cookie: 'session=abc123'},
       middleware: [debug({log, verbose: true})],
@@ -95,7 +95,7 @@ describe('debug middleware', () => {
     const log = (msg: string, ...args: unknown[]) => {
       logs.push(msg.replace(/%s/g, () => String(args.shift())))
     }
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       middleware: [debug({log})],
     })
@@ -107,7 +107,7 @@ describe('debug middleware', () => {
   it('verbose mode logs request body', async () => {
     const logs: string[] = []
     const log = (msg: string, ...args: unknown[]) => logs.push(`${msg} ${args.join(' ')}`)
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       middleware: [debug({log, verbose: true})],
     })
@@ -118,7 +118,7 @@ describe('debug middleware', () => {
   it('verbose mode logs response body', async () => {
     const logs: string[] = []
     const log = (msg: string, ...args: unknown[]) => logs.push(`${msg} ${args.join(' ')}`)
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       middleware: [debug({log, verbose: true})],
     })
@@ -131,7 +131,7 @@ describe('debug middleware', () => {
   it('non-verbose mode does not log bodies', async () => {
     const logs: string[] = []
     const log = (msg: string, ...args: unknown[]) => logs.push(`${msg} ${args.join(' ')}`)
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       middleware: [debug({log})],
     })
@@ -142,7 +142,7 @@ describe('debug middleware', () => {
   it('logs errors and re-throws them', async () => {
     const logs: string[] = []
     const log = (msg: string, ...args: unknown[]) => logs.push(`${msg} ${args.join(' ')}`)
-    const request = createRequest({
+    const request = createRequester({
       base: baseUrl,
       middleware: [debug({log})],
     })

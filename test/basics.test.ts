@@ -1,10 +1,10 @@
-import {createRequest} from 'get-it'
+import {createRequester} from 'get-it'
 import {describe, expect, it} from 'vitest'
 
 const baseUrl = 'http://localhost:9980/req-test'
 
-describe('createRequest - basics', () => {
-  const request = createRequest()
+describe('createRequester - basics', () => {
+  const request = createRequester()
 
   it('makes a GET request and returns a buffered response', async () => {
     const res = await request(`${baseUrl}/plain-text`)
