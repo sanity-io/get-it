@@ -551,6 +551,12 @@ const request = createRequest({
 // $ DEBUG=get-it node app.js
 ```
 
+**What's different from v8:**
+
+- **Activation**: v8 used the `DEBUG=get-it:*` env var automatically. v9 requires an explicit `log` function (see above for restoring env var behavior).
+- **Error logging**: v8 logged errors via the `onError` hook. v9's debug middleware is a transform middleware and does not see errors. Use a wrapping middleware if you need error logging.
+- **Body truncation**: v9 truncates logged bodies at 16 KB and summarizes binary/stream bodies, preventing large payloads from flooding logs.
+
 ### Proxy / agent configuration
 
 v8 had `agent()` and `proxy()` middleware that configured Node's `http.Agent`.
