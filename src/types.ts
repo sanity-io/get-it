@@ -89,7 +89,7 @@ export type FetchFunction = (input: string, init?: FetchInit) => Promise<FetchRe
  *
  * @public
  */
-export interface CreateRequestOptions {
+export interface RequesterOptions {
   /** Base URL prepended to relative request URLs. */
   base?: string
   /** Default headers sent with every request. Per-request headers take precedence. */
@@ -112,7 +112,7 @@ export interface CreateRequestOptions {
  * @public
  */
 export interface RequestOptions {
-  /** The URL to request. Relative URLs are resolved against `CreateRequestOptions.base`. */
+  /** The URL to request. Relative URLs are resolved against `RequesterOptions.base`. */
   url: string
   /** HTTP method. Defaults to `GET`, or `POST` when a body is present. */
   method?: string

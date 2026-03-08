@@ -48,7 +48,7 @@ export function resolveUrl(base: string, url: string): string {
 }
 
 // src/index.ts — public API only
-export {createRequester} from './createRequest'
+export {createRequester} from './createRequester'
 export type {RequestOptions, BufferedResponse} from './types'
 // resolveUrl is NOT re-exported here
 ```

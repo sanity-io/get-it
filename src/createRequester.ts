@@ -2,7 +2,7 @@ import {HttpError} from './errors'
 import {createBufferedResponse} from './response'
 import type {
   BufferedResponse,
-  CreateRequestOptions,
+  RequesterOptions,
   FetchBody,
   FetchFunction,
   FetchHeaders,
@@ -31,7 +31,7 @@ import type {
  *
  * @public
  */
-export function createRequester(options?: CreateRequestOptions): RequestFunction {
+export function createRequester(options?: RequesterOptions): RequestFunction {
   const instanceFetch = options?.fetch
   const instanceHeaders = options?.headers
   const instanceBase = options?.base
