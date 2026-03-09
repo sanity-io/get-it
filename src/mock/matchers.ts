@@ -29,6 +29,13 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 /**
  * Deep-compare two values, respecting asymmetric matchers on the `expected` side.
+ *
+ * Note: This function compares objects by own enumerable keys, so value types like
+ * `Date` and `RegExp` that store state internally (not as own enumerable keys) will
+ * be compared structurally (by keys) rather than by value — two different `Date`
+ * instances with no own enumerable keys will be considered equal. This is acceptable
+ * for HTTP request/response matching but is a known limitation.
+ *
  * @internal
  */
 export function deepMatch(expected: unknown, actual: unknown): boolean {
