@@ -299,7 +299,9 @@ export type DefaultResponse<As extends 'json' | 'text' | 'stream' | undefined = 
  *
  * @public
  */
-export interface RequestFunction<DefaultAs extends 'json' | 'text' | 'stream' | undefined = undefined> {
+export interface RequestFunction<
+  DefaultAs extends 'json' | 'text' | 'stream' | undefined = undefined,
+> {
   <T = unknown>(options: RequestOptions & {as: 'json'}): Promise<JsonResponse<T>>
   (options: RequestOptions & {as: 'text'}): Promise<TextResponse>
   (options: RequestOptions & {as: 'stream'}): Promise<StreamResponse>

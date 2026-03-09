@@ -1,6 +1,6 @@
 import {createNodeFetch} from '../createNodeFetch'
 import {createRequester as coreCreateRequester} from '../createRequester'
-import type {RequestFunction, RequesterOptions} from '../types'
+import type {RequesterOptions, RequestFunction} from '../types'
 
 let defaultFetch: ReturnType<typeof createNodeFetch> | undefined
 
@@ -30,7 +30,9 @@ export function createRequester(options: RequesterOptions & {as: 'json'}): Reque
 /** Creates a requester that returns {@link TextResponse} by default. @public */
 export function createRequester(options: RequesterOptions & {as: 'text'}): RequestFunction<'text'>
 /** Creates a requester that returns {@link StreamResponse} by default. @public */
-export function createRequester(options: RequesterOptions & {as: 'stream'}): RequestFunction<'stream'>
+export function createRequester(
+  options: RequesterOptions & {as: 'stream'},
+): RequestFunction<'stream'>
 /** Creates a requester that returns {@link BufferedResponse} by default. @public */
 export function createRequester(options?: RequesterOptions): RequestFunction
 export function createRequester(
@@ -44,12 +46,12 @@ export {HttpError} from '../errors'
 export type {
   BufferedResponse,
   DefaultResponse,
-  RequesterOptions,
   FetchBody,
   FetchFunction,
   FetchHeaders,
   FetchInit,
   JsonResponse,
+  RequesterOptions,
   RequestFunction,
   RequestOptions,
   StreamResponse,

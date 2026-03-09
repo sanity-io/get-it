@@ -1,4 +1,3 @@
-export {createMockFetch} from '../mock/createMockFetch'
 export type {
   MockFetch,
   MockHandler,
@@ -6,7 +5,8 @@ export type {
   MockResponseDef,
   RecordedRequest,
 } from '../mock/createMockFetch'
-export {MockFetchError} from '../mock/errors'
+export {createMockFetch} from '../mock/createMockFetch'
 export type {MockDescription} from '../mock/errors'
-export {anyValue, arrayContaining, objectContaining, stringMatching} from '../mock/matchers'
+export {MockFetchError} from '../mock/errors'
 export type {AsymmetricMatcher} from '../mock/matchers'
+export {anyValue, arrayContaining, objectContaining, stringMatching} from '../mock/matchers'

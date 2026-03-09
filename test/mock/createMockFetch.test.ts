@@ -3,12 +3,7 @@ import {describe, expect, it} from 'vitest'
 
 import {createMockFetch} from '../../src/mock/createMockFetch'
 import {MockFetchError} from '../../src/mock/errors'
-import {
-  anyValue,
-  arrayContaining,
-  objectContaining,
-  stringMatching,
-} from '../../src/mock/matchers'
+import {anyValue, arrayContaining, objectContaining, stringMatching} from '../../src/mock/matchers'
 
 describe('createMockFetch', () => {
   describe('basic matching', () => {
@@ -39,7 +34,12 @@ describe('createMockFetch', () => {
         httpErrors: false,
       })
 
-      const res = await request({url: '/api/docs', method: 'POST', body: {title: 'Hello'}, as: 'json'})
+      const res = await request({
+        url: '/api/docs',
+        method: 'POST',
+        body: {title: 'Hello'},
+        as: 'json',
+      })
       expect(res.body).toEqual({id: '1', title: 'Hello'})
     })
 

@@ -1,10 +1,10 @@
+import '../../src/_exports/vitest'
+
 import {createRequester} from 'get-it'
 import {describe, expect, it} from 'vitest'
 
 import {createMockFetch} from '../../src/mock/createMockFetch'
 import {objectContaining} from '../../src/mock/matchers'
-
-import '../../src/_exports/vitest'
 
 describe('vitest custom matchers', () => {
   describe('MockFetch matchers', () => {

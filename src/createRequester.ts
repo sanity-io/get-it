@@ -2,13 +2,13 @@ import {HttpError} from './errors'
 import {createBufferedResponse} from './response'
 import type {
   BufferedResponse,
-  RequesterOptions,
   FetchBody,
   FetchFunction,
   FetchHeaders,
   FetchInit,
   FetchResponse,
   JsonResponse,
+  RequesterOptions,
   RequestFunction,
   RequestOptions,
   StreamResponse,
@@ -35,7 +35,9 @@ export function createRequester(options: RequesterOptions & {as: 'json'}): Reque
 /** Creates a requester that returns {@link TextResponse} by default. @public */
 export function createRequester(options: RequesterOptions & {as: 'text'}): RequestFunction<'text'>
 /** Creates a requester that returns {@link StreamResponse} by default. @public */
-export function createRequester(options: RequesterOptions & {as: 'stream'}): RequestFunction<'stream'>
+export function createRequester(
+  options: RequesterOptions & {as: 'stream'},
+): RequestFunction<'stream'>
 /** Creates a requester that returns {@link BufferedResponse} by default. @public */
 export function createRequester(options?: RequesterOptions): RequestFunction
 export function createRequester(
@@ -76,7 +78,11 @@ export function createRequester(
 
   async function requestJson(opts: RequestOptions): Promise<JsonResponse> {
     const transformedOpts = runBeforeRequest(opts, transforms)
-    const buffered = runAfterResponse(await fetchChain(transformedOpts), transformedOpts, transforms)
+    const buffered = runAfterResponse(
+      await fetchChain(transformedOpts),
+      transformedOpts,
+      transforms,
+    )
     try {
       return responseOf(buffered, JSON.parse(buffered.text()) as unknown)
     } catch (cause: unknown) {
@@ -89,7 +95,11 @@ export function createRequester(
 
   async function requestText(opts: RequestOptions): Promise<TextResponse> {
     const transformedOpts = runBeforeRequest(opts, transforms)
-    const buffered = runAfterResponse(await fetchChain(transformedOpts), transformedOpts, transforms)
+    const buffered = runAfterResponse(
+      await fetchChain(transformedOpts),
+      transformedOpts,
+      transforms,
+    )
     return responseOf(buffered, buffered.text())
   }
 
@@ -173,7 +183,11 @@ export function createRequester(
         return await requestStream(opts)
       default: {
         const transformedOpts = runBeforeRequest(opts, transforms)
-        const buffered = runAfterResponse(await fetchChain(transformedOpts), transformedOpts, transforms)
+        const buffered = runAfterResponse(
+          await fetchChain(transformedOpts),
+          transformedOpts,
+          transforms,
+        )
         return buffered
       }
     }
