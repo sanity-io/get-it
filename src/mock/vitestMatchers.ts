@@ -118,7 +118,8 @@ function toHaveReceivedRequestTimes(
     pass: count === times,
     message:
       count === times
-        ? () => `Expected MockFetch not to have received ${method} ${url} ${times} time(s), but it did`
+        ? () =>
+            `Expected MockFetch not to have received ${method} ${url} ${times} time(s), but it did`
         : () =>
             `Expected MockFetch to have received ${method} ${url} ${times} time(s), but it was received ${count} time(s)`,
   }

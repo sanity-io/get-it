@@ -1,10 +1,10 @@
 import type {FetchFunction, FetchResponse} from '../types'
-import {diffValues} from './diff'
 import type {Diff} from './diff'
-import {MockFetchError} from './errors'
+import {diffValues} from './diff'
 import type {MockDescription} from './errors'
-import {deepMatch, isAsymmetricMatcher, isRecord} from './matchers'
+import {MockFetchError} from './errors'
 import type {AsymmetricMatcher} from './matchers'
+import {deepMatch, isAsymmetricMatcher, isRecord} from './matchers'
 import {matchUrl, parseUrl} from './urlMatch'
 
 // ---------------------------------------------------------------------------
@@ -59,7 +59,11 @@ export interface MockHandler {
  */
 export interface MockFetch {
   fetch: FetchFunction
-  on(method: string, url: string | ((url: string) => boolean), options?: MockMatchOptions): MockHandler
+  on(
+    method: string,
+    url: string | ((url: string) => boolean),
+    options?: MockMatchOptions,
+  ): MockHandler
   onAny(url: string | ((url: string) => boolean), options?: MockMatchOptions): MockHandler
   getRequests(): ReadonlyArray<RecordedRequest>
   assertAllConsumed(): void
@@ -160,7 +164,9 @@ function buildFetchResponse(def: MockResponseDef): FetchResponse {
       return Promise.resolve(bodyString)
     },
     arrayBuffer(): Promise<ArrayBuffer> {
-      return Promise.resolve(bodyBytes.buffer.slice(bodyBytes.byteOffset, bodyBytes.byteOffset + bodyBytes.byteLength))
+      return Promise.resolve(
+        bodyBytes.buffer.slice(bodyBytes.byteOffset, bodyBytes.byteOffset + bodyBytes.byteLength),
+      )
     },
   }
 }
@@ -351,7 +357,8 @@ function buildDiffs(
 
   // URL diff
   if (!matchUrl(handler.urlPatternPath, path)) {
-    const expectedUrl = typeof handler.urlPatternPath === 'function' ? '<function>' : handler.urlPatternPath
+    const expectedUrl =
+      typeof handler.urlPatternPath === 'function' ? '<function>' : handler.urlPatternPath
     diffs.push({path: 'url', expected: expectedUrl, actual: path})
   }
 
@@ -434,7 +441,14 @@ export function createMockFetch(): MockFetch {
     }
 
     // Record the request
-    recordedRequests.push({method, url: path, fullUrl: input, query, headers: normalizedHeaders, body})
+    recordedRequests.push({
+      method,
+      url: path,
+      fullUrl: input,
+      query,
+      headers: normalizedHeaders,
+      body,
+    })
 
     // Find matching handler
     for (const handler of handlers) {

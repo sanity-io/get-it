@@ -3,12 +3,12 @@ export {HttpError} from '../errors'
 export type {
   BufferedResponse,
   DefaultResponse,
-  RequesterOptions,
   FetchBody,
   FetchFunction,
   FetchHeaders,
   FetchInit,
   JsonResponse,
+  RequesterOptions,
   RequestFunction,
   RequestOptions,
   StreamResponse,

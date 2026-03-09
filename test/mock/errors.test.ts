@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest'
 
-import {MockFetchError, formatMockList} from '../../src/mock/errors'
+import {formatMockList, MockFetchError} from '../../src/mock/errors'
 
 describe('MockFetchError', () => {
   it('is an instance of Error', () => {
