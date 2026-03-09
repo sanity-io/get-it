@@ -290,6 +290,23 @@ describe('middleware system', () => {
     expect(res.status).toBe(999)
   })
 
+  it('afterResponse receives request options', async () => {
+    let receivedUrl: string | undefined
+    const request = createRequester({
+      base: baseUrl,
+      middleware: [
+        {
+          afterResponse: (res, opts) => {
+            receivedUrl = opts.url
+            return res
+          },
+        },
+      ],
+    })
+    await request('/plain-text')
+    expect(receivedUrl).toContain('/plain-text')
+  })
+
   it('passes meta through to middleware', async () => {
     let receivedMeta: Record<string, unknown> | undefined
     const request = createRequester({

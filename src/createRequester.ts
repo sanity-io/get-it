@@ -76,7 +76,7 @@ export function createRequester(
 
   async function requestJson(opts: RequestOptions): Promise<JsonResponse> {
     const transformedOpts = runBeforeRequest(opts, transforms)
-    const buffered = runAfterResponse(await fetchChain(transformedOpts), transforms)
+    const buffered = runAfterResponse(await fetchChain(transformedOpts), transformedOpts, transforms)
     try {
       return responseOf(buffered, JSON.parse(buffered.text()) as unknown)
     } catch (cause: unknown) {
@@ -89,7 +89,7 @@ export function createRequester(
 
   async function requestText(opts: RequestOptions): Promise<TextResponse> {
     const transformedOpts = runBeforeRequest(opts, transforms)
-    const buffered = runAfterResponse(await fetchChain(transformedOpts), transforms)
+    const buffered = runAfterResponse(await fetchChain(transformedOpts), transformedOpts, transforms)
     return responseOf(buffered, buffered.text())
   }
 
@@ -173,7 +173,7 @@ export function createRequester(
         return await requestStream(opts)
       default: {
         const transformedOpts = runBeforeRequest(opts, transforms)
-        const buffered = runAfterResponse(await fetchChain(transformedOpts), transforms)
+        const buffered = runAfterResponse(await fetchChain(transformedOpts), transformedOpts, transforms)
         return buffered
       }
     }
@@ -413,12 +413,13 @@ function runBeforeRequest(opts: RequestOptions, transforms: TransformMiddleware[
  */
 function runAfterResponse(
   response: BufferedResponse,
+  options: RequestOptions,
   transforms: TransformMiddleware[],
 ): BufferedResponse {
   let result = response
   for (const mw of transforms) {
     if (mw.afterResponse) {
-      result = mw.afterResponse(result)
+      result = mw.afterResponse(result, options)
     }
   }
   return result
