@@ -369,8 +369,13 @@ describe('createMockFetch', () => {
       expect(requests).toHaveLength(2)
       expect(requests[0].method).toBe('GET')
       expect(requests[0].url).toBe('/api/docs')
+      expect(requests[0].fullUrl).toBe('https://api.example.com/api/docs')
+      expect(requests[0].headers).toBeInstanceOf(Headers)
       expect(requests[1].method).toBe('POST')
       expect(requests[1].url).toBe('/api/docs')
+      expect(requests[1].fullUrl).toBe('https://api.example.com/api/docs')
+      expect(requests[1].headers).toBeInstanceOf(Headers)
+      expect(requests[1].headers.get('content-type')).toBe('application/json')
       expect(requests[1].body).toEqual({title: 'Hello'})
     })
 
@@ -389,6 +394,8 @@ describe('createMockFetch', () => {
       const requests = mock.getRequests()
       expect(requests).toHaveLength(1)
       expect(requests[0].url).toBe('/api/docs')
+      expect(requests[0].fullUrl).toBe('https://api.example.com/api/docs?limit=10&offset=0')
+      expect(requests[0].headers).toBeInstanceOf(Headers)
       expect(requests[0].query).toEqual({limit: '10', offset: '0'})
     })
   })
@@ -516,6 +523,34 @@ describe('createMockFetch', () => {
 
       const res = await request({url: '/api/docs'})
       expect(res.headers.get('content-type')).toBe('application/json')
+    })
+
+    it('uses custom statusText when provided', async () => {
+      const mock = createMockFetch()
+      mock.on('GET', '/api/docs').respond({status: 200, statusText: 'All Good', body: {items: []}})
+
+      const request = createRequester({
+        base: 'https://api.example.com',
+        fetch: mock.fetch,
+        httpErrors: false,
+      })
+
+      const res = await request({url: '/api/docs'})
+      expect(res.statusText).toBe('All Good')
+    })
+
+    it('falls back to auto-derived statusText', async () => {
+      const mock = createMockFetch()
+      mock.on('GET', '/api/docs').respond({status: 404, body: null})
+
+      const request = createRequester({
+        base: 'https://api.example.com',
+        fetch: mock.fetch,
+        httpErrors: false,
+      })
+
+      const res = await request({url: '/api/docs'})
+      expect(res.statusText).toBe('Not Found')
     })
 
     it('includes custom response headers', async () => {
