@@ -244,7 +244,7 @@ export interface TransformMiddleware {
   /** Called before each request. Return modified options. */
   beforeRequest?: (options: RequestOptions) => RequestOptions
   /** Called after each response is buffered. Return modified response. */
-  afterResponse?: (response: BufferedResponse) => BufferedResponse
+  afterResponse?: (response: BufferedResponse, options: RequestOptions) => BufferedResponse
 }
 
 /**
