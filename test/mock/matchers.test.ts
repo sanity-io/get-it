@@ -3,9 +3,66 @@ import {describe, expect, it} from 'vitest'
 import {
   anyValue,
   arrayContaining,
+  deepMatch,
+  isAsymmetricMatcher,
   objectContaining,
   stringMatching,
 } from '../../src/mock/matchers'
+
+describe('isAsymmetricMatcher', () => {
+  it('returns true for objects with an asymmetricMatch function', () => {
+    const matcher = {asymmetricMatch: () => true}
+    expect(isAsymmetricMatcher(matcher)).toBe(true)
+  })
+
+  it('returns false for null', () => {
+    expect(isAsymmetricMatcher(null)).toBe(false)
+  })
+
+  it('returns false for plain objects without asymmetricMatch', () => {
+    expect(isAsymmetricMatcher({a: 1})).toBe(false)
+  })
+
+  it('returns false when asymmetricMatch is not a function', () => {
+    expect(isAsymmetricMatcher({asymmetricMatch: 'not a function'})).toBe(false)
+    expect(isAsymmetricMatcher({asymmetricMatch: 42})).toBe(false)
+  })
+})
+
+describe('deepMatch', () => {
+  it('matches equal primitives', () => {
+    expect(deepMatch(1, 1)).toBe(true)
+    expect(deepMatch('hello', 'hello')).toBe(true)
+    expect(deepMatch(true, true)).toBe(true)
+  })
+
+  it('does not match when types differ', () => {
+    expect(deepMatch(1, '1')).toBe(false)
+    expect(deepMatch(0, false)).toBe(false)
+  })
+
+  it('matches null to null', () => {
+    expect(deepMatch(null, null)).toBe(true)
+  })
+
+  it('does not match arrays of different lengths', () => {
+    expect(deepMatch([1, 2], [1, 2, 3])).toBe(false)
+    expect(deepMatch([1, 2, 3], [1, 2])).toBe(false)
+  })
+
+  it('supports nested asymmetric matchers in arrays', () => {
+    expect(deepMatch([stringMatching(/^foo/), 2], ['foobar', 2])).toBe(true)
+    expect(deepMatch([stringMatching(/^foo/), 2], ['bar', 2])).toBe(false)
+  })
+
+  it('treats Date instances with no own keys as structurally equal (known limitation)', () => {
+    const d1 = new Date('2024-01-01')
+    const d2 = new Date('2025-06-15')
+    // Both Date objects have zero own enumerable keys, so deepMatch considers them equal.
+    // This is a known limitation: deepMatch compares by own enumerable keys, not by value.
+    expect(deepMatch(d1, d2)).toBe(true)
+  })
+})
 
 describe('anyValue', () => {
   it('matches any value', () => {
