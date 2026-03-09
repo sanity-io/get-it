@@ -31,8 +31,8 @@ interface RetryOptions {
  */
 export function retry(opts?: RetryOptions): WrappingMiddleware {
   const maxRetries = opts?.maxRetries ?? 5
-  const retryDelay = opts?.retryDelay ?? defaultRetryDelay
-  const shouldRetry = opts?.shouldRetry ?? defaultShouldRetry
+  const retryDelay = opts?.retryDelay ?? getRetryDelay
+  const shouldRetry = opts?.shouldRetry ?? isRetryableRequest
 
   return async function retryMiddleware(
     options: RequestOptions,
@@ -61,9 +61,9 @@ export function retry(opts?: RetryOptions): WrappingMiddleware {
  * @param attemptNumber - Zero-based attempt index.
  * @returns Delay in milliseconds before the next retry.
  *
- * @internal
+ * @public
  */
-export function defaultRetryDelay(attemptNumber: number): number {
+export function getRetryDelay(attemptNumber: number): number {
   return 100 * Math.pow(2, attemptNumber) + Math.random() * 100
 }
 
@@ -78,9 +78,9 @@ export function defaultRetryDelay(attemptNumber: number): number {
  * @param options - The request options (used to check the HTTP method).
  * @returns `true` if the request should be retried.
  *
- * @internal
+ * @public
  */
-export function defaultShouldRetry(
+export function isRetryableRequest(
   error: unknown,
   _attemptNumber: number,
   options: RequestOptions,
