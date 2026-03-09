@@ -54,6 +54,21 @@ export interface MockHandler {
 }
 
 /**
+ * A scoped view of the mock, constraining handlers and requests to a specific origin.
+ * @public
+ */
+export interface MockScope {
+  on(
+    method: string,
+    url: string | ((url: string) => boolean),
+    options?: MockMatchOptions,
+  ): MockHandler
+  onAny(url: string | ((url: string) => boolean), options?: MockMatchOptions): MockHandler
+  getRequests(): ReadonlyArray<RecordedRequest>
+  assertAllConsumed(): void
+}
+
+/**
  * The mock fetch instance returned by `createMockFetch()`.
  * @public
  */
@@ -68,6 +83,7 @@ export interface MockFetch {
   getRequests(): ReadonlyArray<RecordedRequest>
   assertAllConsumed(): void
   clear(): void
+  scope(baseUrl: string): MockScope
 }
 
 // ---------------------------------------------------------------------------
@@ -82,6 +98,7 @@ interface ResponseEntry {
 
 interface InternalHandler {
   method: string | null // null = any method
+  origin: string // empty string = match any origin; non-empty = must match
   urlPatternPath: string | ((url: string) => boolean) // path portion only (no query)
   patternQuery: Record<string, string> // query parsed from the url pattern
   matchOptions: MockMatchOptions
@@ -200,6 +217,16 @@ function statusTextForCode(code: number): string {
 }
 
 /**
+ * Check whether a handler's origin matches the incoming request's origin.
+ * If the handler origin is empty, it matches any origin (path-only matching).
+ * @internal
+ */
+function originMatches(handler: InternalHandler, requestOrigin: string): boolean {
+  if (handler.origin === '') return true
+  return handler.origin === requestOrigin
+}
+
+/**
  * Get a human-readable description for a handler.
  * @internal
  */
@@ -209,7 +236,8 @@ function describeHandler(handler: InternalHandler): string {
   if (typeof handler.urlPatternPath === 'function') {
     urlPart = '<function predicate>'
   } else {
-    urlPart = handler.urlPatternPath
+    urlPart =
+      handler.origin !== '' ? `${handler.origin}${handler.urlPatternPath}` : handler.urlPatternPath
   }
   const queryKeys = Object.keys(handler.patternQuery)
   const optionQueryKeys = isRecord(handler.matchOptions.query)
@@ -272,17 +300,23 @@ function queryMatches(handler: InternalHandler, query: Record<string, string>): 
 
 /**
  * Score how well a handler matches a request. Higher is better.
- * Returns 0-4 based on which dimensions match.
+ * Returns 0-5 based on which dimensions match.
  * @internal
  */
 function scoreMatch(
   handler: InternalHandler,
   method: string,
+  origin: string,
   path: string,
   query: Record<string, string>,
   body: unknown,
 ): number {
   let score = 0
+
+  // Origin match
+  if (originMatches(handler, origin)) {
+    score += 1
+  }
 
   // Method match
   if (handler.method === null || handler.method === method) {
@@ -344,11 +378,17 @@ function mergeQueryMatchers(
 function buildDiffs(
   handler: InternalHandler,
   method: string,
+  origin: string,
   path: string,
   query: Record<string, string>,
   body: unknown,
 ): Diff[] {
   const diffs: Diff[] = []
+
+  // Origin diff
+  if (!originMatches(handler, origin)) {
+    diffs.push({path: 'origin', expected: handler.origin, actual: origin})
+  }
 
   // Method diff
   if (handler.method !== null && handler.method !== method) {
@@ -416,6 +456,7 @@ export function createMockFetch(): MockFetch {
   const fetchFn: FetchFunction = async (input, init) => {
     const method = init?.method ?? 'GET'
     const parsed = parseUrl(input)
+    const requestOrigin = parsed.origin
     const path = parsed.path
     const query = parsed.query
 
@@ -452,6 +493,9 @@ export function createMockFetch(): MockFetch {
 
     // Find matching handler
     for (const handler of handlers) {
+      // Check origin
+      if (!originMatches(handler, requestOrigin)) continue
+
       // Check method
       if (handler.method !== null && handler.method !== method) continue
 
@@ -488,7 +532,7 @@ export function createMockFetch(): MockFetch {
     let closestHandler: InternalHandler | undefined
     let closestScore = -1
     for (const handler of handlers) {
-      const score = scoreMatch(handler, method, path, query, body)
+      const score = scoreMatch(handler, method, requestOrigin, path, query, body)
       if (score > closestScore) {
         closestScore = score
         closestHandler = handler
@@ -499,37 +543,28 @@ export function createMockFetch(): MockFetch {
     let closestDescription: string | undefined
     if (closestHandler !== undefined) {
       closestDescription = describeHandler(closestHandler)
-      diffs = buildDiffs(closestHandler, method, path, query, body)
+      diffs = buildDiffs(closestHandler, method, requestOrigin, path, query, body)
     }
 
     throw new MockFetchError(method, path, query, body, diffs, allMocks, closestDescription)
   }
 
-  function on(
-    method: string,
-    url: string | ((url: string) => boolean),
-    options?: MockMatchOptions,
-  ): MockHandler {
-    return registerHandler(method, url, options)
-  }
-
-  function onAny(
-    url: string | ((url: string) => boolean),
-    options?: MockMatchOptions,
-  ): MockHandler {
-    return registerHandler(null, url, options)
-  }
-
   function registerHandler(
     method: string | null,
     url: string | ((url: string) => boolean),
-    options?: MockMatchOptions,
+    options: MockMatchOptions | undefined,
+    scopeOrigin: string,
   ): MockHandler {
+    let origin: string = scopeOrigin
     let urlPatternPath: string | ((url: string) => boolean)
     let patternQuery: Record<string, string> = {}
 
     if (typeof url === 'string') {
       const parsed = parseUrl(url)
+      // If the URL string itself has an origin, use it (overrides scope origin)
+      if (parsed.origin !== '') {
+        origin = parsed.origin
+      }
       urlPatternPath = parsed.path
       patternQuery = parsed.query
     } else {
@@ -538,6 +573,7 @@ export function createMockFetch(): MockFetch {
 
     const handler: InternalHandler = {
       method,
+      origin,
       urlPatternPath,
       patternQuery,
       matchOptions: options ?? {},
@@ -560,26 +596,63 @@ export function createMockFetch(): MockFetch {
     return mockHandler
   }
 
+  function on(
+    method: string,
+    url: string | ((url: string) => boolean),
+    options?: MockMatchOptions,
+  ): MockHandler {
+    return registerHandler(method, url, options, '')
+  }
+
+  function onAny(
+    url: string | ((url: string) => boolean),
+    options?: MockMatchOptions,
+  ): MockHandler {
+    return registerHandler(null, url, options, '')
+  }
+
   function getRequests(): ReadonlyArray<RecordedRequest> {
     return [...recordedRequests]
   }
 
   function assertAllConsumed(): void {
-    const unconsumed: string[] = []
-    for (const handler of handlers) {
-      const remaining = responsesRemaining(handler)
-      if (remaining > 0 && remaining !== Infinity) {
-        unconsumed.push(`${describeHandler(handler)} (${remaining} unconsumed)`)
-      }
-    }
-    if (unconsumed.length > 0) {
-      throw new Error(`Mock has unconsumed responses:\n  ${unconsumed.join('\n  ')}`)
-    }
+    checkUnconsumedHandlers(handlers)
   }
 
   function clear(): void {
     handlers.length = 0
     recordedRequests.length = 0
+  }
+
+  function scope(baseUrl: string): MockScope {
+    const parsed = parseUrl(baseUrl)
+    const scopeOrigin = parsed.origin
+    if (scopeOrigin === '') {
+      throw new Error(`scope() requires a full URL with origin, got: ${baseUrl}`)
+    }
+
+    return {
+      on(
+        method: string,
+        url: string | ((url: string) => boolean),
+        options?: MockMatchOptions,
+      ): MockHandler {
+        return registerHandler(method, url, options, scopeOrigin)
+      },
+      onAny(url: string | ((url: string) => boolean), options?: MockMatchOptions): MockHandler {
+        return registerHandler(null, url, options, scopeOrigin)
+      },
+      getRequests(): ReadonlyArray<RecordedRequest> {
+        return recordedRequests.filter((req) => {
+          const reqParsed = parseUrl(req.fullUrl)
+          return reqParsed.origin === scopeOrigin
+        })
+      },
+      assertAllConsumed(): void {
+        const scopedHandlers = handlers.filter((h) => h.origin === scopeOrigin)
+        checkUnconsumedHandlers(scopedHandlers)
+      },
+    }
   }
 
   return {
@@ -589,6 +662,24 @@ export function createMockFetch(): MockFetch {
     getRequests,
     assertAllConsumed,
     clear,
+    scope,
+  }
+}
+
+/**
+ * Check a set of handlers for unconsumed responses and throw if any are found.
+ * @internal
+ */
+function checkUnconsumedHandlers(handlersToCheck: ReadonlyArray<InternalHandler>): void {
+  const unconsumed: string[] = []
+  for (const handler of handlersToCheck) {
+    const remaining = responsesRemaining(handler)
+    if (remaining > 0 && remaining !== Infinity) {
+      unconsumed.push(`${describeHandler(handler)} (${remaining} unconsumed)`)
+    }
+  }
+  if (unconsumed.length > 0) {
+    throw new Error(`Mock has unconsumed responses:\n  ${unconsumed.join('\n  ')}`)
   }
 }
 

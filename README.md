@@ -251,6 +251,35 @@ mock.on('GET', '/api/flaky')
 
 Use `.respondPersist()` for handlers that should match indefinitely.
 
+### Scoped mocks
+
+When your code talks to multiple hosts, use `mock.scope()` to assert the right requests go to the right place:
+
+```ts
+const mock = createMockFetch()
+const api = mock.scope('https://abc123.api.sanity.io')
+const cdn = mock.scope('https://abc123.apicdn.sanity.io')
+
+api.on('POST', '/v1/data/mutate/prod').respond({status: 200, body: {transactionId: 'tx1'}})
+cdn.on('GET', '/v1/data/query/prod').respond({status: 200, body: {result: []}})
+
+const request = createRequester({fetch: mock.fetch})
+await request({url: 'https://abc123.apicdn.sanity.io/v1/data/query/prod', as: 'json'})
+
+// Each scope only sees its own traffic
+cdn.getRequests() // 1 request
+api.getRequests() // 0 requests
+mock.getRequests() // all requests
+```
+
+You can also pass full URLs directly without scopes for one-offs:
+
+```ts
+mock.on('GET', 'https://api.sanity.io/v1/projects').respond({status: 200, body: []})
+```
+
+Handlers registered without an origin (plain paths like `/api/docs`) match requests to any host.
+
 ### Unmatched requests
 
 Any request that doesn't match a registered handler throws a `MockFetchError` with the closest matching handler and a field-level diff:

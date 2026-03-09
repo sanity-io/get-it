@@ -572,4 +572,226 @@ describe('createMockFetch', () => {
       expect(res.headers.get('content-type')).toBe('application/json')
     })
   })
+
+  describe('full URL matching', () => {
+    it('matches when handler uses full URL', async () => {
+      const mock = createMockFetch()
+      mock.on('GET', 'https://api.example.com/api/docs').respond({status: 200, body: {items: []}})
+
+      const request = createRequester({fetch: mock.fetch, httpErrors: false})
+
+      const res = await request({url: 'https://api.example.com/api/docs', as: 'json'})
+      expect(res.body).toEqual({items: []})
+    })
+
+    it('does not match different origins', async () => {
+      const mock = createMockFetch()
+      mock.on('GET', 'https://api.example.com/api/docs').respond({status: 200, body: {items: []}})
+
+      const request = createRequester({fetch: mock.fetch, httpErrors: false})
+
+      try {
+        await request({url: 'https://other.example.com/api/docs', as: 'json'})
+        expect.fail('Expected MockFetchError to be thrown')
+      } catch (err: unknown) {
+        if (!(err instanceof MockFetchError)) throw err
+        expect(err.message).toContain('No mock matched')
+      }
+    })
+
+    it('error message includes origin in diff', async () => {
+      const mock = createMockFetch()
+      mock.on('GET', 'https://api.example.com/api/docs').respond({status: 200, body: {items: []}})
+
+      const request = createRequester({fetch: mock.fetch, httpErrors: false})
+
+      try {
+        await request({url: 'https://other.example.com/api/docs', as: 'json'})
+        expect.fail('Expected MockFetchError to be thrown')
+      } catch (err: unknown) {
+        if (!(err instanceof MockFetchError)) throw err
+        expect(err.message).toContain('origin')
+        expect(err.message).toContain('https://api.example.com')
+      }
+    })
+  })
+
+  describe('scope', () => {
+    it('scoped handlers only match their origin', async () => {
+      const mock = createMockFetch()
+      const api = mock.scope('https://api.example.com')
+      api.on('GET', '/api/docs').respond({status: 200, body: {items: []}})
+
+      const request = createRequester({fetch: mock.fetch, httpErrors: false})
+
+      // Should match the scoped origin
+      const res = await request({url: 'https://api.example.com/api/docs', as: 'json'})
+      expect(res.body).toEqual({items: []})
+
+      // Should NOT match a different origin
+      try {
+        await request({url: 'https://other.example.com/api/docs', as: 'json'})
+        expect.fail('Expected MockFetchError to be thrown')
+      } catch (err: unknown) {
+        if (!(err instanceof MockFetchError)) throw err
+        expect(err.message).toContain('No mock matched')
+      }
+    })
+
+    it('unscoped handlers match any origin', async () => {
+      const mock = createMockFetch()
+      mock.on('GET', '/api/docs').respondPersist({status: 200, body: {items: []}})
+
+      const request = createRequester({fetch: mock.fetch, httpErrors: false})
+
+      // Should match any origin
+      const res1 = await request({url: 'https://api.example.com/api/docs', as: 'json'})
+      expect(res1.body).toEqual({items: []})
+
+      const res2 = await request({url: 'https://other.example.com/api/docs', as: 'json'})
+      expect(res2.body).toEqual({items: []})
+    })
+
+    it('scope.getRequests() only returns requests to that origin', async () => {
+      const mock = createMockFetch()
+      const api = mock.scope('https://api.example.com')
+      api.on('GET', '/api/docs').respond({status: 200, body: {items: []}})
+      mock.on('GET', '/api/docs').respond({status: 200, body: {other: true}})
+
+      const request = createRequester({fetch: mock.fetch, httpErrors: false})
+
+      await request({url: 'https://api.example.com/api/docs', as: 'json'})
+      await request({url: 'https://other.example.com/api/docs', as: 'json'})
+
+      const scopedRequests = api.getRequests()
+      expect(scopedRequests).toHaveLength(1)
+      expect(scopedRequests[0].url).toBe('/api/docs')
+      expect(scopedRequests[0].fullUrl).toBe('https://api.example.com/api/docs')
+    })
+
+    it('mock.getRequests() returns all requests including scoped', async () => {
+      const mock = createMockFetch()
+      const api = mock.scope('https://api.example.com')
+      api.on('GET', '/api/docs').respond({status: 200, body: {items: []}})
+      mock.on('GET', '/api/docs').respond({status: 200, body: {other: true}})
+
+      const request = createRequester({fetch: mock.fetch, httpErrors: false})
+
+      await request({url: 'https://api.example.com/api/docs', as: 'json'})
+      await request({url: 'https://other.example.com/api/docs', as: 'json'})
+
+      expect(mock.getRequests()).toHaveLength(2)
+    })
+
+    it('scope.assertAllConsumed() only checks scoped handlers', async () => {
+      const mock = createMockFetch()
+      const api = mock.scope('https://api.example.com')
+      api.on('GET', '/api/docs').respond({status: 200, body: {items: []}})
+      mock.on('GET', '/other').respond({status: 200, body: {other: true}})
+
+      const request = createRequester({fetch: mock.fetch, httpErrors: false})
+
+      // Consume only the scoped handler
+      await request({url: 'https://api.example.com/api/docs', as: 'json'})
+
+      // Scoped assertAllConsumed should pass (scoped handler is consumed)
+      api.assertAllConsumed()
+
+      // Root assertAllConsumed should fail (unscoped handler is not consumed)
+      try {
+        mock.assertAllConsumed()
+        expect.fail('Expected error to be thrown')
+      } catch (err: unknown) {
+        if (!(err instanceof Error)) throw err
+        expect(err.message).toContain('unconsumed')
+      }
+    })
+
+    it('multiple scopes work independently', async () => {
+      const mock = createMockFetch()
+      const api = mock.scope('https://abc123.api.sanity.io')
+      const cdn = mock.scope('https://abc123.apicdn.sanity.io')
+
+      api.on('POST', '/v1/data/mutate/prod').respond({status: 200, body: {transactionId: 'tx1'}})
+      cdn.on('GET', '/v1/data/query/prod').respond({status: 200, body: {result: []}})
+
+      const request = createRequester({fetch: mock.fetch, httpErrors: false})
+
+      const mutateRes = await request({
+        url: 'https://abc123.api.sanity.io/v1/data/mutate/prod',
+        method: 'POST',
+        body: {mutations: []},
+        as: 'json',
+      })
+      expect(mutateRes.body).toEqual({transactionId: 'tx1'})
+
+      const queryRes = await request({
+        url: 'https://abc123.apicdn.sanity.io/v1/data/query/prod',
+        as: 'json',
+      })
+      expect(queryRes.body).toEqual({result: []})
+
+      // Each scope only sees its own requests
+      expect(api.getRequests()).toHaveLength(1)
+      expect(api.getRequests()[0].url).toBe('/v1/data/mutate/prod')
+      expect(cdn.getRequests()).toHaveLength(1)
+      expect(cdn.getRequests()[0].url).toBe('/v1/data/query/prod')
+
+      // Root sees all
+      expect(mock.getRequests()).toHaveLength(2)
+    })
+
+    it('scope works with query params and body matching', async () => {
+      const mock = createMockFetch()
+      const api = mock.scope('https://api.example.com')
+      api
+        .on('POST', '/api/docs', {query: {draft: 'true'}, body: {title: 'Hello'}})
+        .respond({status: 201, body: {id: '1'}})
+
+      const request = createRequester({fetch: mock.fetch, httpErrors: false})
+
+      const res = await request({
+        url: 'https://api.example.com/api/docs',
+        method: 'POST',
+        query: {draft: 'true'},
+        body: {title: 'Hello'},
+        as: 'json',
+      })
+      expect(res.body).toEqual({id: '1'})
+    })
+
+    it('scope.onAny() matches any method for that origin', async () => {
+      const mock = createMockFetch()
+      const api = mock.scope('https://api.example.com')
+      api.onAny('/api/docs').respondPersist({status: 200, body: {ok: true}})
+
+      const request = createRequester({fetch: mock.fetch, httpErrors: false})
+
+      const getRes = await request({
+        url: 'https://api.example.com/api/docs',
+        method: 'GET',
+        as: 'json',
+      })
+      expect(getRes.body).toEqual({ok: true})
+
+      const postRes = await request({
+        url: 'https://api.example.com/api/docs',
+        method: 'POST',
+        body: {x: 1},
+        as: 'json',
+      })
+      expect(postRes.body).toEqual({ok: true})
+    })
+
+    it('throws when scope() is called with a relative URL', () => {
+      const mock = createMockFetch()
+      try {
+        mock.scope('/api')
+        expect.fail('Expected error to be thrown')
+      } catch (err: unknown) {
+        if (!(err instanceof Error)) throw err
+        expect(err.message).toContain('scope() requires a full URL with origin')
+      }
+    })
+  })
 })

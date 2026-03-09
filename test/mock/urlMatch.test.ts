@@ -5,24 +5,42 @@ import {matchUrl, parseUrl} from '../../src/mock/urlMatch'
 describe('parseUrl', () => {
   it('splits path and query from a simple path', () => {
     const result = parseUrl('/api/docs')
+    expect(result.origin).toBe('')
     expect(result.path).toBe('/api/docs')
     expect(result.query).toEqual({})
   })
 
   it('parses query params', () => {
     const result = parseUrl('/api/docs?limit=10&type=post')
+    expect(result.origin).toBe('')
     expect(result.path).toBe('/api/docs')
     expect(result.query).toEqual({limit: '10', type: 'post'})
   })
 
   it('handles full URLs', () => {
     const result = parseUrl('https://api.example.com/api/docs?limit=10')
+    expect(result.origin).toBe('https://api.example.com')
     expect(result.path).toBe('/api/docs')
     expect(result.query).toEqual({limit: '10'})
   })
 
   it('handles full URLs without query', () => {
     const result = parseUrl('https://api.example.com/api/docs')
+    expect(result.origin).toBe('https://api.example.com')
+    expect(result.path).toBe('/api/docs')
+    expect(result.query).toEqual({})
+  })
+
+  it('extracts origin with port', () => {
+    const result = parseUrl('https://localhost:3000/api/docs')
+    expect(result.origin).toBe('https://localhost:3000')
+    expect(result.path).toBe('/api/docs')
+    expect(result.query).toEqual({})
+  })
+
+  it('extracts origin for http URLs', () => {
+    const result = parseUrl('http://api.example.com/api/docs')
+    expect(result.origin).toBe('http://api.example.com')
     expect(result.path).toBe('/api/docs')
     expect(result.query).toEqual({})
   })
