@@ -16,7 +16,8 @@
       "get-it": ["./src/_exports/index.ts"],
       "get-it/middleware": ["./src/_exports/middleware.ts"],
       "get-it/node": ["./src/_exports/node.ts"],
-      "get-it/mock": ["./src/_exports/mock.ts"]
+      "get-it/mock": ["./src/_exports/mock.ts"],
+      "get-it/vitest": ["./src/_exports/vitest.ts"]
     }
   }
 }
