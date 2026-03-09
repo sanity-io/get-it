@@ -198,7 +198,7 @@ const request = createRequester({
 | Import              | Purpose                                                  |
 | ------------------- | -------------------------------------------------------- |
 | `get-it`            | Core (auto-selects Node variant via conditional exports) |
-| `get-it/middleware` | `retry`, `debug`                                         |
+| `get-it/middleware` | `retry`, `debug`, `isRetryableRequest`, `getRetryDelay`  |
 | `get-it/node`       | `createNodeFetch()` for custom undici dispatcher config  |
 
 ## Migrating from v8

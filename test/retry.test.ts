@@ -2,7 +2,7 @@ import {createRequester, type RequestOptions} from 'get-it'
 import {retry} from 'get-it/middleware'
 import {describe, expect, it} from 'vitest'
 
-import {defaultRetryDelay, defaultShouldRetry} from '../src/middleware/retry'
+import {getRetryDelay, isRetryableRequest} from '../src/middleware/retry'
 
 const baseUrl = 'http://localhost:9980/req-test'
 
@@ -118,12 +118,12 @@ describe('retry middleware', {timeout: 15000}, () => {
     expect(attempts).toBe(1)
   })
 
-  it('defaultRetryDelay returns exponential backoff with jitter', () => {
-    const delay0 = defaultRetryDelay(0)
+  it('getRetryDelay returns exponential backoff with jitter', () => {
+    const delay0 = getRetryDelay(0)
     expect(delay0).toBeGreaterThanOrEqual(100)
     expect(delay0).toBeLessThan(200)
 
-    const delay2 = defaultRetryDelay(2)
+    const delay2 = getRetryDelay(2)
     expect(delay2).toBeGreaterThanOrEqual(400)
     expect(delay2).toBeLessThan(500)
   })
@@ -215,7 +215,7 @@ describe('retry middleware', {timeout: 15000}, () => {
     expect(attempts).toBe(1)
   })
 
-  describe('defaultShouldRetry error filtering', () => {
+  describe('isRetryableRequest error filtering', () => {
     const getOpts = {url: 'http://example.com', method: 'GET'} satisfies RequestOptions
 
     it('retries transient network error codes', () => {
@@ -223,7 +223,7 @@ describe('retry middleware', {timeout: 15000}, () => {
         const err = Object.assign(new TypeError('fetch failed'), {
           cause: Object.assign(new Error('connect failed'), {code}),
         })
-        expect(defaultShouldRetry(err, 0, getOpts)).toBe(true)
+        expect(isRetryableRequest(err, 0, getOpts)).toBe(true)
       }
     })
 
@@ -232,29 +232,29 @@ describe('retry middleware', {timeout: 15000}, () => {
         const err = Object.assign(new TypeError('fetch failed'), {
           cause: Object.assign(new Error('connect failed'), {code}),
         })
-        expect(defaultShouldRetry(err, 0, getOpts)).toBe(false)
+        expect(isRetryableRequest(err, 0, getOpts)).toBe(false)
       }
     })
 
     it('retries plain TypeError (browser network error)', () => {
-      expect(defaultShouldRetry(new TypeError('Failed to fetch'), 0, getOpts)).toBe(true)
+      expect(isRetryableRequest(new TypeError('Failed to fetch'), 0, getOpts)).toBe(true)
     })
 
     it('does not retry HttpError', () => {
       const err = new Error('HTTP 500')
       err.name = 'HttpError'
-      expect(defaultShouldRetry(err, 0, getOpts)).toBe(false)
+      expect(isRetryableRequest(err, 0, getOpts)).toBe(false)
     })
 
     it('does not retry non-GET/HEAD methods', () => {
       const err = new TypeError('Failed to fetch')
-      expect(defaultShouldRetry(err, 0, {url: 'http://example.com', method: 'POST'})).toBe(false)
-      expect(defaultShouldRetry(err, 0, {url: 'http://example.com', method: 'PUT'})).toBe(false)
+      expect(isRetryableRequest(err, 0, {url: 'http://example.com', method: 'POST'})).toBe(false)
+      expect(isRetryableRequest(err, 0, {url: 'http://example.com', method: 'PUT'})).toBe(false)
     })
 
     it('retries error with code directly on error object', () => {
       const err = Object.assign(new TypeError('fetch failed'), {code: 'ECONNRESET'})
-      expect(defaultShouldRetry(err, 0, getOpts)).toBe(true)
+      expect(isRetryableRequest(err, 0, getOpts)).toBe(true)
     })
   })
 })

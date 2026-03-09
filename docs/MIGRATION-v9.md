@@ -139,6 +139,30 @@ const request = createRequester({
 await request({url: '/critical', meta: {maxRetries: 10}})
 ```
 
+v9 exports the default retry helpers so you can extend them instead of rewriting from scratch:
+
+```ts
+import {retry, isRetryableRequest, getRetryDelay} from 'get-it/middleware'
+
+const request = createRequester({
+  middleware: [
+    retry({
+      shouldRetry: (error, attempt, opts) => {
+        // Retry POST on ECONNRESET, plus all defaults
+        if (opts.method === 'POST') {
+          const cause = error instanceof Error ? error.cause : undefined
+          if (cause instanceof Error && 'code' in cause && cause.code === 'ECONNRESET') {
+            return true
+          }
+        }
+        return isRetryableRequest(error, attempt, opts)
+      },
+      retryDelay: getRetryDelay,
+    }),
+  ],
+})
+```
+
 ### Query parameters no longer accept arrays
 
 v8 expanded arrays into repeated keys: `{tags: ['a', 'b']}` → `tags=a&tags=b`. v9's `query` option only accepts scalar values (`string | number | boolean | undefined`). Passing an array will silently produce a single comma-joined value via `String()`:

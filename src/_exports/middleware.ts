@@ -1,2 +1,2 @@
 export {debug} from '../middleware/debug'
-export {retry} from '../middleware/retry'
+export {getRetryDelay, isRetryableRequest, retry} from '../middleware/retry'
