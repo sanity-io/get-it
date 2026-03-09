@@ -56,6 +56,11 @@
       "import": "./dist/mock.js",
       "default": "./dist/mock.js"
     },
+    "./vitest": {
+      "source": "./src/_exports/vitest.ts",
+      "import": "./dist/vitest.js",
+      "default": "./dist/vitest.js"
+    },
     "./package.json": "./package.json"
   },
   "types": "./dist/index.d.ts",
@@ -152,6 +157,10 @@
       "./mock": {
         "import": "./dist/mock.js",
         "default": "./dist/mock.js"
+      },
+      "./vitest": {
+        "import": "./dist/vitest.js",
+        "default": "./dist/vitest.js"
       },
       "./package.json": "./package.json"
     }
