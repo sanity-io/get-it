@@ -3,6 +3,7 @@ export type {
   MockHandler,
   MockMatchOptions,
   MockResponseDef,
+  MockScope,
   RecordedRequest,
 } from '../mock/createMockFetch'
 export {createMockFetch} from '../mock/createMockFetch'

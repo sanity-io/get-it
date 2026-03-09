@@ -1,8 +1,9 @@
 /**
- * Parsed URL with path and query parameters separated.
+ * Parsed URL with origin, path, and query parameters separated.
  * @public
  */
 export interface ParsedUrl {
+  origin: string // e.g. 'https://api.example.com', empty string for relative URLs
   path: string
   query: Record<string, string>
 }
@@ -14,14 +15,17 @@ export interface ParsedUrl {
  * @internal
  */
 export function parseUrl(url: string): ParsedUrl {
+  let origin: string
   let path: string
   let search: string
 
   if (/^https?:\/\//.test(url)) {
     const parsed = new URL(url)
+    origin = parsed.origin
     path = parsed.pathname
     search = parsed.search
   } else {
+    origin = ''
     const qIndex = url.indexOf('?')
     if (qIndex === -1) {
       path = url
@@ -40,7 +44,7 @@ export function parseUrl(url: string): ParsedUrl {
     })
   }
 
-  return {path, query}
+  return {origin, path, query}
 }
 
 /**
