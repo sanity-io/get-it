@@ -26,6 +26,7 @@ export interface MockMatchOptions {
  */
 export interface MockResponseDef {
   status?: number
+  statusText?: string
   body?: unknown
   headers?: Record<string, string>
 }
@@ -37,7 +38,9 @@ export interface MockResponseDef {
 export interface RecordedRequest {
   method: string
   url: string
+  fullUrl: string
   query: Record<string, string>
+  headers: Headers
   body: unknown
 }
 
@@ -123,7 +126,7 @@ function tryParseJson(value: string): {parsed: unknown} | undefined {
 function buildFetchResponse(def: MockResponseDef): FetchResponse {
   const status = def.status ?? 200
   const ok = status >= 200 && status < 300
-  const statusText = statusTextForCode(status)
+  const statusText = def.statusText ?? statusTextForCode(status)
   const responseHeaders = new Headers(def.headers)
 
   let bodyString: string
@@ -429,7 +432,10 @@ export function createMockFetch(): MockFetch {
     }
 
     // Record the request
-    recordedRequests.push({method, url: path, query, body})
+    const recordedHeaders = isHeaders(init?.headers)
+      ? new Headers(init.headers)
+      : new Headers(init?.headers ?? undefined)
+    recordedRequests.push({method, url: path, fullUrl: input, query, headers: recordedHeaders, body})
 
     // Find matching handler
     for (const handler of handlers) {
