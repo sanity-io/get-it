@@ -100,11 +100,8 @@ function isHeaders(value: unknown): value is Headers {
  * Get the content-type from a Headers object.
  * @internal
  */
-function getContentType(headers: unknown): string | null {
-  if (isHeaders(headers)) {
-    return headers.get('content-type')
-  }
-  return null
+function getContentType(headers: Headers): string | null {
+  return headers.get('content-type')
 }
 
 /**
@@ -409,16 +406,21 @@ export function createMockFetch(): MockFetch {
   /**
    * The mock fetch function injected into createRequester via the `fetch` option.
    */
-  const fetchFn: FetchFunction = (input, init) => {
+  const fetchFn: FetchFunction = async (input, init) => {
     const method = init?.method ?? 'GET'
     const parsed = parseUrl(input)
     const path = parsed.path
     const query = parsed.query
 
+    // Normalize headers once — works for Headers, Record<string, string>, and [string, string][]
+    const normalizedHeaders = isHeaders(init?.headers)
+      ? new Headers(init.headers)
+      : new Headers(init?.headers ?? undefined)
+
     // Parse body if content-type is JSON
     let body: unknown = undefined
     if (init?.body !== undefined && init.body !== null && typeof init.body === 'string') {
-      const ct = getContentType(init.headers)
+      const ct = getContentType(normalizedHeaders)
       if (ct !== null && ct.includes('application/json')) {
         const result = tryParseJson(init.body)
         if (result !== undefined) {
@@ -432,10 +434,7 @@ export function createMockFetch(): MockFetch {
     }
 
     // Record the request
-    const recordedHeaders = isHeaders(init?.headers)
-      ? new Headers(init.headers)
-      : new Headers(init?.headers ?? undefined)
-    recordedRequests.push({method, url: path, fullUrl: input, query, headers: recordedHeaders, body})
+    recordedRequests.push({method, url: path, fullUrl: input, query, headers: normalizedHeaders, body})
 
     // Find matching handler
     for (const handler of handlers) {
@@ -462,7 +461,7 @@ export function createMockFetch(): MockFetch {
         responseEntry.consumed = true
       }
 
-      return Promise.resolve(buildFetchResponse(responseEntry.def))
+      return buildFetchResponse(responseEntry.def)
     }
 
     // No match found — build error
