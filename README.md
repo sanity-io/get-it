@@ -18,6 +18,7 @@ Generic HTTP request library for node.js (>= 20.19), browsers, and edge runtimes
 - Proxy support in Node.js (reads `HTTP_PROXY`/`HTTPS_PROXY` from environment)
 - Middleware system for retry, debug logging, and custom logic
 - Injectable `fetch` for testing and custom transports
+- Built-in mock fetch with request matching, recording, and vitest matchers
 - Works in Node.js, browsers, Deno, Bun, and edge runtimes
 
 ## Installation
@@ -193,6 +194,126 @@ const request = createRequester({
 })
 ```
 
+## Testing
+
+`get-it/mock` provides a mock fetch for testing code that uses get-it. No network, no global patching — just inject `mock.fetch` where you'd normally pass `fetch`.
+
+```ts
+import {createRequester} from 'get-it'
+import {createMockFetch, objectContaining} from 'get-it/mock'
+
+const mock = createMockFetch()
+const request = createRequester({fetch: mock.fetch, base: 'https://api.example.com'})
+
+// Register handlers — responses are one-shot by default
+mock.on('GET', '/api/docs', {query: {limit: '10'}})
+  .respond({status: 200, body: {results: []}})
+
+mock.on('POST', '/api/docs', {body: objectContaining({_type: 'post'})})
+  .respond({status: 201, body: {id: 'abc'}})
+
+const res = await request({url: '/api/docs', query: {limit: 10}, as: 'json'})
+// res.body → {results: []}
+```
+
+### Request matching
+
+Requests are matched strictly by default — method, URL path, query parameters, and body must all match exactly. For looser matching, use the built-in matchers:
+
+```ts
+import {objectContaining, arrayContaining, stringMatching, anyValue} from 'get-it/mock'
+
+mock.on('POST', '/api/docs', {
+  body: objectContaining({_type: 'post', title: stringMatching(/^Hello/)}),
+}).respond({status: 201, body: {id: 'abc'}})
+```
+
+These implement the `asymmetricMatch` protocol, so vitest's `expect.objectContaining()` and friends work too.
+
+URL matching supports exact strings, glob patterns (`/api/docs/*/revisions`), and function predicates:
+
+```ts
+mock.on('GET', '/api/docs/*/revisions').respond({status: 200, body: []})
+mock.on('GET', (url) => url.startsWith('/api/')).respond({status: 200, body: 'ok'})
+```
+
+### Response sequences
+
+Chain `.respond()` for ordered sequences (useful for testing retries):
+
+```ts
+mock.on('GET', '/api/flaky')
+  .respond({status: 500, body: 'error'})
+  .respond({status: 200, body: 'ok'})
+
+// First call → 500, second call → 200, third call → throws
+```
+
+Use `.respondPersist()` for handlers that should match indefinitely.
+
+### Unmatched requests
+
+Any request that doesn't match a registered handler throws a `MockFetchError` with the closest matching handler and a field-level diff:
+
+```
+MockFetchError: No mock matched POST /api/documents?limit=10
+
+  Closest mock:
+    POST /api/documents?limit=20
+
+  Differences:
+    query.limit: expected "20", received "10"
+```
+
+### Request inspection
+
+Every request is recorded for later inspection:
+
+```ts
+await request({url: '/api/docs', body: {title: 'Hello'}, method: 'POST'})
+
+const reqs = mock.getRequests()
+reqs[0].method  // 'POST'
+reqs[0].url     // '/api/docs'
+reqs[0].body    // {title: 'Hello'}
+reqs[0].headers // Headers
+```
+
+### Lifecycle
+
+```ts
+afterEach(() => {
+  mock.assertAllConsumed() // fail if registered responses weren't used
+  mock.clear()
+})
+```
+
+### Vitest matchers
+
+`get-it/vitest` adds custom matchers to vitest's `expect`:
+
+```ts
+// In your test setup file or vitest.config setupFiles
+import 'get-it/vitest'
+```
+
+```ts
+// Assert requests were made
+expect(mock).toHaveReceivedRequest('POST', '/api/docs', {
+  body: objectContaining({_type: 'post'}),
+})
+expect(mock).toHaveReceivedRequestTimes('GET', '/api/docs', 2)
+expect(mock).toHaveConsumedAllMocks()
+
+// Assert on individual recorded requests
+const req = mock.getRequests()[0]
+expect(req).toHaveHeader('authorization', 'Bearer token123')
+expect(req).toHaveBody(objectContaining({_type: 'post'}))
+expect(req).toHaveQuery({limit: '10'})
+expect(req).toHaveMethod('POST')
+expect(req).toHaveUrl('/api/docs')
+```
+
 ## Entry points
 
 | Import              | Purpose                                                  |
@@ -200,6 +321,8 @@ const request = createRequester({
 | `get-it`            | Core (auto-selects Node variant via conditional exports) |
 | `get-it/middleware` | `retry`, `debug`, `isRetryableRequest`, `getRetryDelay`  |
 | `get-it/node`       | `createNodeFetch()` for custom undici dispatcher config  |
+| `get-it/mock`       | `createMockFetch()` and matchers for testing             |
+| `get-it/vitest`     | Custom vitest matchers for mock assertions               |
 
 ## Migrating from v8
 
