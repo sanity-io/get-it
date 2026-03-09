@@ -1,12 +1,4 @@
-/**
- * A single difference between an expected and actual value.
- * @internal
- */
-export interface Diff {
-  path: string
-  expected: unknown
-  actual: unknown
-}
+import type {Diff} from './diff'
 
 /**
  * Description of a registered mock for error reporting.
