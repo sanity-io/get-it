@@ -31,6 +31,7 @@ This guide covers every breaking change and shows how to update your code.
 | `bodySize: N`                   | `headers: {'content-length': N}`                   |
 | `compress: false`               | removed (fetch always negotiates compression)      |
 | `onlyBody: true`                | removed (use `res.body` / `res.json()` directly)   |
+| `fetch: {cache: 'no-store'}`    | wrap fetch (see below)                             |
 | `withCredentials: true`         | `credentials: 'include'`                           |
 | `require('get-it')`             | `import { createRequester } from 'get-it'`         |
 | `require('get-it/middleware')`  | `import { retry, debug } from 'get-it/middleware'` |
@@ -181,6 +182,25 @@ The mapping:
 | _(not set)_              | `credentials: 'same-origin'` (browser default) |
 
 Note: `credentials` is only relevant in browser environments. Some runtimes (e.g. Cloudflare Workers) will throw if `credentials` is set on a fetch init — get-it only forwards it when `window` is present in the global scope.
+
+### `fetch` option changed meaning
+
+v8's `fetch` option on request options was a `boolean | Omit<RequestInit, 'method'>` that opted into using the native `fetch` API instead of Node's `http`/`https` modules, and could pass through `RequestInit` options like `cache`:
+
+```ts
+// v8 — opt into native fetch with cache control
+await request({url: '/api', fetch: {cache: 'no-store'}})
+```
+
+In v9, `fetch` is always used (there is no `http`/`https` transport), and the `fetch` option on both `RequesterOptions` and `RequestOptions` is a `FetchFunction` — an injectable fetch implementation, not a config flag.
+
+To pass `RequestInit` options like `cache`, wrap the global fetch:
+
+```ts
+const request = createRequester({
+  fetch: (url, init) => globalThis.fetch(url, {...init, cache: 'no-store'}),
+})
+```
 
 ### `clone()` removed
 
