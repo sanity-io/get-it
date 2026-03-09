@@ -1,6 +1,6 @@
 {
   "name": "get-it",
-  "version": "8.7.0",
+  "version": "9.0.0-alpha.5",
   "description": "Generic HTTP request library for node, browsers and workers",
   "keywords": [
     "request",
@@ -50,6 +50,11 @@
       "source": "./src/_exports/node.ts",
       "import": "./dist/node.js",
       "default": "./dist/node.js"
+    },
+    "./mock": {
+      "source": "./src/_exports/mock.ts",
+      "import": "./dist/mock.js",
+      "default": "./dist/mock.js"
     },
     "./package.json": "./package.json"
   },
@@ -143,6 +148,10 @@
       "./node": {
         "import": "./dist/node.js",
         "default": "./dist/node.js"
+      },
+      "./mock": {
+        "import": "./dist/mock.js",
+        "default": "./dist/mock.js"
       },
       "./package.json": "./package.json"
     }
