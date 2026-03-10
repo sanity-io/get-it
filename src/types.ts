@@ -60,6 +60,10 @@ export interface FetchResponse {
   statusText: string
   /** Response headers. */
   headers: Headers
+  /** The final URL after any redirects. */
+  url: string
+  /** Whether the response was the result of a redirect. */
+  redirected: boolean
   /** Readable stream of the response body, or `null` if empty. */
   body: ReadableStream<Uint8Array> | null
   /** Reads the entire body as a string. */

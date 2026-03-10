@@ -141,7 +141,7 @@ function tryParseJson(value: string): {parsed: unknown} | undefined {
  * Build a FetchResponse-compatible object from a MockResponseDef.
  * @internal
  */
-function buildFetchResponse(def: MockResponseDef): FetchResponse {
+function buildFetchResponse(def: MockResponseDef, url: string): FetchResponse {
   const status = def.status ?? 200
   const ok = status >= 200 && status < 300
   const statusText = def.statusText ?? statusTextForCode(status)
@@ -176,6 +176,8 @@ function buildFetchResponse(def: MockResponseDef): FetchResponse {
     status,
     statusText,
     headers: responseHeaders,
+    url,
+    redirected: false,
     body: stream,
     text(): Promise<string> {
       return Promise.resolve(bodyString)
@@ -519,7 +521,7 @@ export function createMockFetch(): MockFetch {
         responseEntry.consumed = true
       }
 
-      return buildFetchResponse(responseEntry.def)
+      return buildFetchResponse(responseEntry.def, input)
     }
 
     // No match found — build error

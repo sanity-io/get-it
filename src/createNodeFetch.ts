@@ -93,6 +93,8 @@ interface FetchResponseLike {
   status: number
   statusText: string
   headers: Headers
+  url: string
+  redirected: boolean
   body: ReadableStream<Uint8Array> | null
   text(): Promise<string>
   arrayBuffer(): Promise<ArrayBuffer>
@@ -107,6 +109,8 @@ function adaptResponse(response: FetchResponseLike): FetchResponse {
     status: response.status,
     statusText: response.statusText,
     headers: response.headers,
+    url: response.url,
+    redirected: response.redirected,
     body: response.body,
     text: () => response.text(),
     arrayBuffer: () => response.arrayBuffer(),
