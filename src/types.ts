@@ -34,6 +34,11 @@ export interface RequestOptions {
    * Some frameworks have special behavior for `fetch` when an `AbortSignal` is used, and may want to disable it unless userland specifically opts-in.
    */
   useAbortSignal?: boolean
+  /**
+   * A pre-captured stack trace from the call site that initiated this request.
+   * When provided, this will be appended to error stack traces instead of the stack captured internally.
+   */
+  callSiteStack?: string
 }
 
 /**

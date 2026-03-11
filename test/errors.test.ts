@@ -90,6 +90,15 @@ describe('errors', () => {
     ])
   })
 
+  it('should include call-site stack trace in errors', async () => {
+    const request = getIt([baseUrl, httpErrors()])
+    const req = request({url: '/status?code=400'})
+    const err: any = await new Promise((resolve) => req.error.subscribe(resolve))
+    expect(err).to.be.an.instanceOf(Error)
+    // The call-site stack should include this test file
+    expect(err.stack).to.include('errors.test.ts')
+  })
+
   it.runIf(adapter === 'node')('error object contains remote address when serialized', async () => {
     const request = getIt([baseUrl, httpErrors()])
     const req = request({url: '/status?code=400'})
