@@ -14,6 +14,7 @@ import {getProxyOptions, rewriteUriForProxy} from './node/proxy'
 import {concat} from './node/simpleConcat'
 import {timedOut} from './node/timedOut'
 import * as tunneling from './node/tunnel'
+import {NodeRequestError} from './node-request-error'
 
 /**
  * Taken from:
@@ -24,17 +25,6 @@ const isStream = (stream: any): stream is Stream =>
 
 /** @public */
 export const adapter: RequestAdapter = 'node'
-
-export class NodeRequestError extends Error {
-  request: http.ClientRequest
-  code?: string | undefined
-
-  constructor(err: NodeJS.ErrnoException, req: any) {
-    super(err.message)
-    this.request = req
-    this.code = err.code
-  }
-}
 
 // Reduce a fully fledged node-style response object to
 // something that works in both browser and node environment
