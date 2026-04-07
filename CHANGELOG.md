@@ -5,6 +5,13 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.7.1](https://github.com/sanity-io/get-it/compare/v8.7.0...v8.7.1) (2026-04-07)
+
+### Bug Fixes
+
+- **deps:** Update dependency follow-redirects to ^1.15.11 ([#568](https://github.com/sanity-io/get-it/issues/568)) ([45a7cd6](https://github.com/sanity-io/get-it/commit/45a7cd6de7482124d7d2edf58f134a65e1b59f49))
+- drain empty response streams to release socket ([#563](https://github.com/sanity-io/get-it/issues/563)) ([c95135a](https://github.com/sanity-io/get-it/commit/c95135a9778a98e530d8ad8e6fd6a59470e6602b))
+
 ## [8.7.0](https://github.com/sanity-io/get-it/compare/v8.6.10...v8.7.0) (2025-12-04)
 
 ### Features
