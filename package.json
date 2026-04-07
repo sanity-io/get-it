@@ -104,7 +104,7 @@
   "dependencies": {
     "@types/follow-redirects": "^1.14.4",
     "decompress-response": "^7.0.0",
-    "follow-redirects": "^1.15.9",
+    "follow-redirects": "^1.15.11",
     "is-retry-allowed": "^2.2.0",
     "through2": "^4.0.2",
     "tunnel-agent": "^0.6.0"
