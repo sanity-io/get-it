@@ -102,9 +102,7 @@
   "browserslist": "extends @sanity/browserslist-config",
   "prettier": "@sanity/prettier-config",
   "dependencies": {
-    "@types/follow-redirects": "^1.14.4",
     "decompress-response": "^7.0.0",
-    "follow-redirects": "^1.15.11",
     "is-retry-allowed": "^2.2.0",
     "through2": "^4.0.2",
     "tunnel-agent": "^0.6.0"
@@ -116,6 +114,7 @@
     "@sanity/semantic-release-preset": "^5.0.0",
     "@types/bun": "^1.2.17",
     "@types/debug": "^4.1.12",
+    "@types/follow-redirects": "^1.14.4",
     "@types/node": "^20.8.8",
     "@types/through2": "^2.0.41",
     "@types/zen-observable": "^0.8.7",
@@ -127,6 +126,7 @@
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-prettier": "^5.5.1",
     "eslint-plugin-simple-import-sort": "^12.1.1",
+    "follow-redirects": "1.15.11",
     "get-uri": "^6.0.4",
     "happy-dom": "^18.0.1",
     "ls-engines": "^0.9.3",
