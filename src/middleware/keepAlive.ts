@@ -1,7 +1,7 @@
 import type {Middleware} from 'get-it'
 import type {AgentOptions} from 'http'
 
-import {NodeRequestError} from '../request/node-request'
+import {NodeRequestError} from '../request/node-request-error'
 
 type KeepAliveOptions = {
   ms?: number
