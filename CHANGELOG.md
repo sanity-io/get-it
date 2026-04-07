@@ -5,6 +5,13 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.7.2](https://github.com/sanity-io/get-it/compare/v8.7.1...v8.7.2) (2026-04-07)
+
+### Bug Fixes
+
+- inline `follow-redirects` ([#570](https://github.com/sanity-io/get-it/issues/570)) ([6e38867](https://github.com/sanity-io/get-it/commit/6e388672c08e89cbadac0601ad5f7e412df18aa8))
+- move NodeRequestError to own module to avoid heavy transitive imports ([#571](https://github.com/sanity-io/get-it/issues/571)) ([f1c2ca1](https://github.com/sanity-io/get-it/commit/f1c2ca1ce6c1b7bba51d683c50e6d0bd8bbb5131))
+
 ## [8.7.1](https://github.com/sanity-io/get-it/compare/v8.7.0...v8.7.1) (2026-04-07)
 
 ### Bug Fixes
