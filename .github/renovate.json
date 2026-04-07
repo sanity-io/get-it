@@ -8,7 +8,8 @@
       "rangeStrategy": "bump"
     },
     {
-      "matchPackageNames": ["debug", "parse-headers"],
+      "description": "Inlined dependencies, to avoid various ESM/CJS issues as well as package manager peer dependency edge cases",
+      "matchPackageNames": ["debug", "follow-redirects", "parse-headers"],
       "rangeStrategy": "bump",
       "semanticCommitType": "fix"
     }
