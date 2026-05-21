@@ -206,10 +206,10 @@ const mock = createMockFetch()
 const request = createRequester({fetch: mock.fetch, base: 'https://api.example.com'})
 
 // Register handlers — responses are one-shot by default
-mock.on('GET', '/api/docs', {query: {limit: '10'}})
-  .respond({status: 200, body: {results: []}})
+mock.on('GET', '/api/docs', {query: {limit: '10'}}).respond({status: 200, body: {results: []}})
 
-mock.on('POST', '/api/docs', {body: objectContaining({_type: 'post'})})
+mock
+  .on('POST', '/api/docs', {body: objectContaining({_type: 'post'})})
   .respond({status: 201, body: {id: 'abc'}})
 
 const res = await request({url: '/api/docs', query: {limit: 10}, as: 'json'})
@@ -223,9 +223,11 @@ Requests are matched strictly by default — method, URL path, query parameters,
 ```ts
 import {objectContaining, arrayContaining, stringMatching, anyValue} from 'get-it/mock'
 
-mock.on('POST', '/api/docs', {
-  body: objectContaining({_type: 'post', title: stringMatching(/^Hello/)}),
-}).respond({status: 201, body: {id: 'abc'}})
+mock
+  .on('POST', '/api/docs', {
+    body: objectContaining({_type: 'post', title: stringMatching(/^Hello/)}),
+  })
+  .respond({status: 201, body: {id: 'abc'}})
 ```
 
 These implement the `asymmetricMatch` protocol, so vitest's `expect.objectContaining()` and friends work too.
@@ -242,7 +244,8 @@ mock.on('GET', (url) => url.startsWith('/api/')).respond({status: 200, body: 'ok
 Chain `.respond()` for ordered sequences (useful for testing retries):
 
 ```ts
-mock.on('GET', '/api/flaky')
+mock
+  .on('GET', '/api/flaky')
   .respond({status: 500, body: 'error'})
   .respond({status: 200, body: 'ok'})
 
@@ -302,9 +305,9 @@ Every request is recorded for later inspection:
 await request({url: '/api/docs', body: {title: 'Hello'}, method: 'POST'})
 
 const reqs = mock.getRequests()
-reqs[0].method  // 'POST'
-reqs[0].url     // '/api/docs'
-reqs[0].body    // {title: 'Hello'}
+reqs[0].method // 'POST'
+reqs[0].url // '/api/docs'
+reqs[0].body // {title: 'Hello'}
 reqs[0].headers // Headers
 ```
 

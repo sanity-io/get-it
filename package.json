@@ -1,6 +1,6 @@
 {
   "name": "get-it",
-  "version": "9.0.0-alpha.8",
+  "version": "9.0.0-alpha.10",
   "description": "Generic HTTP request library for node, browsers and workers",
   "keywords": [
     "request",
@@ -98,14 +98,6 @@
   "dependencies": {
     "undici": "^7.22.0"
   },
-  "peerDependencies": {
-    "vitest": ">=2.0.0"
-  },
-  "peerDependenciesMeta": {
-    "vitest": {
-      "optional": true
-    }
-  },
   "devDependencies": {
     "@edge-runtime/vm": "^5.0.0",
     "@eslint/js": "^10.0.1",
@@ -126,12 +118,21 @@
     "ls-engines": "^0.10.0",
     "playwright": "^1.58.2",
     "prettier": "^3.8.1",
+    "prettier-plugin-packagejson": "^3.0.2",
     "semantic-release": "^25.0.3",
     "typescript": "5.9.3",
     "typescript-eslint": "^8.56.1",
     "vitest": "^4.0.18"
   },
-  "packageManager": "pnpm@10.12.1",
+  "peerDependencies": {
+    "vitest": ">=2.0.0"
+  },
+  "peerDependenciesMeta": {
+    "vitest": {
+      "optional": true
+    }
+  },
+  "packageManager": "pnpm@11.2.1",
   "engines": {
     "node": ">=20.19.0"
   },
