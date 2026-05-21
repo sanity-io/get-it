@@ -6,6 +6,7 @@ export default defineConfig({
     {
       source: './src/_exports/index.node.ts',
       import: './dist/index.node.js',
+      runtime: 'node',
     },
     {
       source: './src/_exports/vitest.ts',
