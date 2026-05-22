@@ -48,7 +48,9 @@
     },
     "./node": {
       "source": "./src/_exports/node.ts",
-      "import": "./dist/node.js",
+      "node": {
+        "import": "./dist/node.js"
+      },
       "default": "./dist/node.js"
     },
     "./mock": {
@@ -101,7 +103,7 @@
   "devDependencies": {
     "@edge-runtime/vm": "^5.0.0",
     "@eslint/js": "^10.0.1",
-    "@sanity/pkg-utils": "^10.4.18",
+    "@sanity/pkg-utils": "^10.5.0",
     "@sanity/prettier-config": "^3.0.0",
     "@sanity/semantic-release-preset": "^6.0.0",
     "@sanity/tsconfig": "^2.1.0",
@@ -160,7 +162,9 @@
         "default": "./dist/middleware.js"
       },
       "./node": {
-        "import": "./dist/node.js",
+        "node": {
+          "import": "./dist/node.js"
+        },
         "default": "./dist/node.js"
       },
       "./mock": {
