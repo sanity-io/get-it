@@ -159,7 +159,7 @@ describe('basics', {timeout: 15000}, () => {
     const req = request({url: 'https://api.sanity.io/v1/ping'})
     const res = await promiseRequest(req)
     expect(res).toHaveProperty('body')
-    expect(res.body).toContain('PONG')
+    expect(JSON.parse(res.body as string)).toHaveProperty('release')
   })
 
   it('should handle cross-protocol redirects without issues', async () => {
@@ -167,7 +167,7 @@ describe('basics', {timeout: 15000}, () => {
     const req = request({url: `http://api.sanity.io/v1/ping?cb=${Date.now()}`})
     const res = await promiseRequest(req)
     expect(res).toHaveProperty('body')
-    expect(res.body).toMatch('PONG')
+    expect(JSON.parse(res.body as string)).toHaveProperty('release')
   })
 
   it('should not allow base middleware to add prefix on absolute urls', async () => {
