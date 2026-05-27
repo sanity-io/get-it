@@ -35,10 +35,10 @@ export interface RequestOptions {
    */
   useAbortSignal?: boolean
   /**
-   * A pre-captured stack trace from the call site that initiated this request.
+   * A pre-captured Error instance from the call site that initiated this request.
    * When provided, this will be appended to error stack traces instead of the stack captured internally.
    */
-  callSiteStack?: string
+  callSiteStack?: Pick<Error, 'stack'>
 }
 
 /**
