@@ -4,7 +4,6 @@ import {describe, expect, it} from 'vitest'
 const baseUrl = 'http://localhost:9980/req-test'
 
 describe('built-in behaviors', () => {
-  // 4a: Base URL
   describe('base URL', () => {
     it('prepends base URL to relative paths', async () => {
       const request = createRequester({base: baseUrl})
@@ -85,7 +84,6 @@ describe('built-in behaviors', () => {
     })
   })
 
-  // 4b: Default Headers
   describe('default headers', () => {
     it('sends default headers on every request', async () => {
       const request = createRequester({base: baseUrl, headers: {'X-Custom': 'hello'}})
@@ -164,7 +162,6 @@ describe('built-in behaviors', () => {
     })
   })
 
-  // 4c: Implicit POST
   describe('implicit POST when body is present', () => {
     it('defaults to POST when body is provided and no method is set', async () => {
       let calledInit: RequestInit | undefined
@@ -217,7 +214,6 @@ describe('built-in behaviors', () => {
     })
   })
 
-  // 4d: JSON Request Body
   describe('JSON request body', () => {
     it('auto-serializes plain object body as JSON', async () => {
       const request = createRequester({base: baseUrl})
@@ -348,7 +344,6 @@ describe('built-in behaviors', () => {
     })
   })
 
-  // 4d: URLSearchParams request body
   describe('URLSearchParams request body', () => {
     it('sends URLSearchParams body as form-urlencoded', async () => {
       const request = createRequester({base: baseUrl})
@@ -375,7 +370,6 @@ describe('built-in behaviors', () => {
     })
   })
 
-  // 4d: Query String
   describe('query string', () => {
     it('appends query parameters to URL', async () => {
       const request = createRequester({base: baseUrl})
@@ -445,7 +439,6 @@ describe('built-in behaviors', () => {
     })
   })
 
-  // 4e: HTTP Errors
   describe('HTTP errors', () => {
     it('throws HttpError on 4xx status by default', async () => {
       const request = createRequester({base: baseUrl})
@@ -583,7 +576,6 @@ describe('built-in behaviors', () => {
     })
   })
 
-  // 4f: Timeout
   describe('timeout', () => {
     it('applies a default timeout when none is configured', async () => {
       let receivedSignal: AbortSignal | undefined
@@ -625,7 +617,6 @@ describe('built-in behaviors', () => {
     })
   })
 
-  // 4g: Signal passthrough
   describe('signal passthrough', () => {
     // happy-dom's fetch does not properly support AbortController on network requests
     it.skipIf('happyDOM' in globalThis)('aborts request when signal is aborted', async () => {
@@ -668,7 +659,6 @@ describe('built-in behaviors', () => {
     })
   })
 
-  // 4h: Credentials
   describe('credentials', () => {
     // Credentials are only set in browser-like environments (where `window` exists)
     // to avoid crashes in runtimes like Cloudflare Workers.
@@ -746,7 +736,6 @@ describe('built-in behaviors', () => {
     })
   })
 
-  // 4i: Redirect
   describe('redirect', () => {
     it('passes per-request redirect option to fetch', async () => {
       let calledInit: RequestInit | undefined
