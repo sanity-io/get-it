@@ -4,6 +4,14 @@ get-it v9 is a ground-up rewrite. It replaces the pub/sub channel system and Nod
 
 This guide covers every breaking change and shows how to update your code.
 
+## Migrating with an AI agent
+
+This guide also works as a playbook for a coding agent. Point yours at it and have it work through the whole document, not just the quick reference. A reliable approach:
+
+1. Search the codebase for every v8 pattern: `getIt(`, `from 'get-it'`, `require('get-it')`, `.use(`, `.clone()`, `statusCode`, `statusMessage`, bracket-notation header access, `.body`, `CancelToken` / `cancelToken` / `isCancel`, `withCredentials`, `requestId`, `stream: true`, `rawBody`, `onlyBody`, `compress`, and the removed middleware (`promise`, `jsonRequest`, `jsonResponse`, `httpErrors`, `base`, `headers`, `observable`, `progress`, `keepAlive`, `agent`, `proxy`, `urlEncoded`).
+2. Apply the mappings from the sections below to each match.
+3. Verify: run `tsc --noEmit`, run the test suite, then re-check for leftover `statusCode`, bracket-notation header access, `CancelToken` remnants, and custom request properties that need moving to `meta`.
+
 ## Quick reference
 
 | v8                              | v9                                                 |

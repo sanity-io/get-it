@@ -358,7 +358,7 @@ expect(req).toHaveUrl('/api/docs')
 
 ## Migrating from v8
 
-See [docs/MIGRATION-v9.md](docs/MIGRATION-v9.md) for a comprehensive migration guide.
+See [docs/MIGRATION-v9.md](docs/MIGRATION-v9.md) for a comprehensive migration guide. It doubles as a playbook for AI agents: point yours at the guide and ask it to migrate the codebase.
 
 ## License
 
