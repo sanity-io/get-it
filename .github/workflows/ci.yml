@@ -111,7 +111,7 @@ jobs:
           node-version: lts/*
       - run: npm ci
       - run: npm run build
-      - uses: denoland/setup-deno@v1
+      - uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282 # v2.0.4
         with:
           deno-version: vx.x.x
       - run: npm run test:esm:deno
