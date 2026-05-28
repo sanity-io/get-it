@@ -49,22 +49,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Run the testing suite on each major OS with the latest LTS release of Node.js
-        os: [macos-latest, ubuntu-latest, windows-latest]
-        node: [lts/*]
-        # It makes sense to also test the oldest, and latest, versions of Node.js, on ubuntu-only since it's the fastest CI runner
+        # Run the testing suite on every supported Node.js version, on ubuntu since it's the fastest CI runner:
+        #   22.19.0 - the minimum supported version (must match the `engines` field in package.json)
+        #   24      - the active LTS release
+        #   26      - the latest/current release
+        os: [ubuntu-latest]
+        node: ['22.19.0', '24', '26']
+        # Additionally verify the active LTS release on the other major operating systems
         include:
-          - os: ubuntu-latest
-            # Test the oldest LTS release of Node that's still receiving bugfixes and security patches, versions older than that have reached End-of-Life
-            node: lts/-1
-          - os: ubuntu-latest
-            # Test the actively developed version that will become the latest LTS release next October
-            node: current
-        # The `build` job already runs the testing suite in ubuntu and lts/*
-        exclude:
-          - os: ubuntu-latest
-            # Test the oldest LTS release of Node that's still receiving bugfixes and security patches, versions older than that have reached End-of-Life
-            node: lts/*
+          - os: macos-latest
+            node: '24'
+          - os: windows-latest
+            node: '24'
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
