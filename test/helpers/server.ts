@@ -183,8 +183,11 @@ function getResponseHandler(proto = 'http') {
       case '/req-test/stall-after-initial': {
         // Need a bit of data before browsers will usually accept it as "open"
         res.writeHead(200, {'Content-Type': 'text/plain'})
-        res.write(new Array(2048).join('.'))
-        const stallTimer = setTimeout(() => res.end(new Array(1024).join('.')), 1000)
+        res.write(Array.from({length: 2048}, () => '.').join(''))
+        const stallTimer = setTimeout(
+          () => res.end(Array.from({length: 1024}, () => '.').join('.')),
+          1000,
+        )
         req.on('close', () => clearTimeout(stallTimer))
         break
       }

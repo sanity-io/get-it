@@ -6,7 +6,6 @@ expect.extend(mockMatchers)
 
 // Augment vitest's Assertion interface
 declare module 'vitest' {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface Assertion<T> {
     toHaveReceivedRequest(
       method: string,
