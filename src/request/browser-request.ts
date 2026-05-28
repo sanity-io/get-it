@@ -56,7 +56,7 @@ export const httpRequester: HttpRequest = (context, callback) => {
       onError(
         event instanceof Error
           ? event
-          : new Error(`Request error while attempting to reach is ${options.url}`, {cause: event}),
+          : new Error(`Request error while attempting to reach ${options.url}`, {cause: event}),
       )
     } else {
       onError(
