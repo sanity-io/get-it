@@ -1,10 +1,9 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
-  "entry": [
-    "package.config.ts",
-    "vitest.browser.config.ts",
-    "vitest.edge.config.ts",
-    "vitest.react-server.config.ts"
-  ],
-  "ignoreDependencies": ["@sanity/semantic-release-preset", "@vitest/coverage-v8"]
+  "entry": ["package.config.ts"],
+  "vitest": {
+    "config": ["vitest.config.ts", "vitest.*.config.ts"]
+  },
+  "ignoreBinaries": ["scripts/report-size.sh"],
+  "ignoreDependencies": ["@sanity/semantic-release-preset"]
 }
