@@ -27,7 +27,11 @@ export interface NodeFetchOptions {
   proxy?: string | boolean
   /** Maximum number of connections per origin */
   connections?: number
-  /** Enable HTTP/2 support */
+  /**
+   * Enable HTTP/2 support. Defaults to `false` (HTTP/1.1 only). Note that
+   * undici@8 negotiates HTTP/2 by default; we opt out unless explicitly
+   * enabled so the transport stays predictable across undici versions.
+   */
   allowH2?: boolean
   /** TLS options for mutual TLS (client certificates) */
   tls?: TlsOptions
@@ -48,24 +52,27 @@ export function createNodeFetch(options?: NodeFetchOptions): FetchFunction {
   let dispatcher: Dispatcher
 
   const tls = options?.tls
+  // undici@8 negotiates HTTP/2 by default; opt out unless explicitly enabled
+  // to preserve the HTTP/1.1-only behavior from earlier undici versions.
+  const allowH2 = options?.allowH2 ?? false
 
   if (proxyOption === true) {
     dispatcher = new EnvHttpProxyAgent({
       connections: options?.connections,
-      allowH2: options?.allowH2,
+      allowH2,
       requestTls: tls ? {cert: tls.cert, key: tls.key, ca: tls.ca} : undefined,
     })
   } else if (typeof proxyOption === 'string') {
     dispatcher = new ProxyAgent({
       uri: proxyOption,
       connections: options?.connections,
-      allowH2: options?.allowH2,
+      allowH2,
       requestTls: tls ? {cert: tls.cert, key: tls.key, ca: tls.ca} : undefined,
     })
   } else {
     dispatcher = new Agent({
       connections: options?.connections,
-      allowH2: options?.allowH2,
+      allowH2,
       connect: tls ? {cert: tls.cert, key: tls.key, ca: tls.ca} : undefined,
     })
   }
