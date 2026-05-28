@@ -18,7 +18,7 @@ npx terser dist/index.js \
   --output dist/index.min.js
 
 cp dist/index.min.js dist/index.min.pretty.js
-npx prettier --ignore-path /dev/null --write dist/index.min.pretty.js --log-level silent
+npx oxfmt --ignore-path /dev/null dist/index.min.pretty.js
 
 kb() { echo "scale=2; $1 / 1024" | bc; }
 

@@ -3,22 +3,28 @@
   "version": "9.0.0-alpha.10",
   "description": "Generic HTTP request library for node, browsers and workers",
   "keywords": [
-    "request",
+    "fetch",
     "http",
-    "fetch"
+    "request"
   ],
   "homepage": "https://github.com/sanity-io/get-it#readme",
   "bugs": {
     "url": "https://github.com/sanity-io/get-it/issues"
   },
+  "license": "MIT",
+  "author": "Sanity.io <hello@sanity.io>",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/sanity-io/get-it.git"
   },
-  "license": "MIT",
-  "author": "Sanity.io <hello@sanity.io>",
-  "sideEffects": false,
+  "files": [
+    "dist",
+    "!dist/*.min.*",
+    "src"
+  ],
   "type": "module",
+  "sideEffects": false,
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "source": "./src/_exports/index.ts",
@@ -65,76 +71,7 @@
     },
     "./package.json": "./package.json"
   },
-  "types": "./dist/index.d.ts",
-  "files": [
-    "dist",
-    "!dist/*.min.*",
-    "src"
-  ],
-  "scripts": {
-    "build": "pkg build --strict --check --clean",
-    "check": "pnpm run format && pnpm run lint:fix && pnpm run knip && pnpm run typecheck",
-    "coverage": "vitest run --coverage",
-    "format": "prettier --ignore-path .gitignore --cache --write .",
-    "knip": "knip",
-    "lint": "oxlint .",
-    "lint:fix": "oxlint . --fix",
-    "prepublishOnly": "pnpm run build",
-    "report-size": "scripts/report-size.sh",
-    "test": "vitest run",
-    "test:all": "pnpm run test && pnpm run test:happy-dom && pnpm run test:bun && pnpm run test:edge-runtime && pnpm run test:react-server",
-    "test:browser": "pnpm test --config ./vitest.browser.config.ts",
-    "test:bun": "bun run vitest run",
-    "test:edge-runtime": "pnpm test --config ./vitest.edge.config.ts",
-    "test:happy-dom": "pnpm test --config ./vitest.happy-dom.config.ts --dom",
-    "test:react-server": "pnpm test --config ./vitest.react-server.config.ts",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.check-node.json"
-  },
-  "browserslist": [
-    "node >= 22.19.0",
-    "> 0.27%",
-    "not dead",
-    "not op_mini all"
-  ],
-  "prettier": "@sanity/prettier-config",
-  "dependencies": {
-    "undici": "^8.3.0"
-  },
-  "devDependencies": {
-    "@edge-runtime/vm": "^5.0.0",
-    "@sanity/pkg-utils": "^10.5.1",
-    "@sanity/prettier-config": "^3.0.0",
-    "@sanity/semantic-release-preset": "^6.0.0",
-    "@sanity/tsconfig": "^2.1.0",
-    "@types/node": "^22.12.0",
-    "@vitest/browser": "^4.1.7",
-    "@vitest/browser-playwright": "^4.1.7",
-    "@vitest/coverage-v8": "^4.1.7",
-    "happy-dom": "^20.9.0",
-    "knip": "^6.14.2",
-    "ls-engines": "^0.10.0",
-    "oxlint": "^1.67.0",
-    "playwright": "^1.60.0",
-    "prettier": "^3.8.3",
-    "prettier-plugin-packagejson": "^3.0.2",
-    "semantic-release": "^25.0.3",
-    "typescript": "6.0.3",
-    "vitest": "^4.1.7"
-  },
-  "peerDependencies": {
-    "vitest": ">=2.0.0"
-  },
-  "peerDependenciesMeta": {
-    "vitest": {
-      "optional": true
-    }
-  },
-  "packageManager": "pnpm@11.2.1",
-  "engines": {
-    "node": ">=22.19.0"
-  },
   "publishConfig": {
-    "access": "public",
     "exports": {
       ".": {
         "react-server": {
@@ -171,6 +108,66 @@
         "default": "./dist/vitest.js"
       },
       "./package.json": "./package.json"
+    },
+    "access": "public"
+  },
+  "scripts": {
+    "build": "pkg build --strict --check --clean",
+    "check": "pnpm run format && pnpm run lint:fix && pnpm run knip && pnpm run typecheck",
+    "coverage": "vitest run --coverage",
+    "format": "oxfmt",
+    "knip": "knip",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint . --fix",
+    "prepublishOnly": "pnpm run build",
+    "report-size": "scripts/report-size.sh",
+    "test": "vitest run",
+    "test:all": "pnpm run test && pnpm run test:happy-dom && pnpm run test:bun && pnpm run test:edge-runtime && pnpm run test:react-server",
+    "test:browser": "pnpm test --config ./vitest.browser.config.ts",
+    "test:bun": "bun run vitest run",
+    "test:edge-runtime": "pnpm test --config ./vitest.edge.config.ts",
+    "test:happy-dom": "pnpm test --config ./vitest.happy-dom.config.ts --dom",
+    "test:react-server": "pnpm test --config ./vitest.react-server.config.ts",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.check-node.json"
+  },
+  "dependencies": {
+    "undici": "^8.3.0"
+  },
+  "devDependencies": {
+    "@edge-runtime/vm": "^5.0.0",
+    "@sanity/pkg-utils": "^10.5.1",
+    "@sanity/semantic-release-preset": "^6.0.0",
+    "@sanity/tsconfig": "^2.1.0",
+    "@types/node": "^22.12.0",
+    "@vitest/browser": "^4.1.7",
+    "@vitest/browser-playwright": "^4.1.7",
+    "@vitest/coverage-v8": "^4.1.7",
+    "happy-dom": "^20.9.0",
+    "knip": "^6.14.2",
+    "ls-engines": "^0.10.0",
+    "oxfmt": "^0.52.0",
+    "oxlint": "^1.67.0",
+    "playwright": "^1.60.0",
+    "semantic-release": "^25.0.3",
+    "typescript": "6.0.3",
+    "vitest": "^4.1.7"
+  },
+  "peerDependencies": {
+    "vitest": ">=2.0.0"
+  },
+  "peerDependenciesMeta": {
+    "vitest": {
+      "optional": true
     }
-  }
+  },
+  "browserslist": [
+    "node >= 22.19.0",
+    "> 0.27%",
+    "not dead",
+    "not op_mini all"
+  ],
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "packageManager": "pnpm@11.2.1"
 }
