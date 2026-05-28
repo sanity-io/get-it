@@ -5,7 +5,7 @@
 [![gzip size][gzip-badge]][bundlephobia]
 [![size][size-badge]][bundlephobia]
 
-Generic HTTP request library for node.js (>= 20.19), browsers, and edge runtimes. Built on `fetch()`.
+Generic HTTP request library for node.js (>= 22.19), browsers, and edge runtimes. Built on `fetch()`.
 
 ## Features
 
