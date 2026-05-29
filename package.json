@@ -128,7 +128,7 @@
     "test:edge-runtime": "pnpm test --config ./vitest.edge.config.ts",
     "test:happy-dom": "pnpm test --config ./vitest.happy-dom.config.ts --dom",
     "test:react-server": "pnpm test --config ./vitest.react-server.config.ts",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.check-node.json"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.check.json && tsc --noEmit -p tsconfig.check-node.json"
   },
   "dependencies": {
     "undici": "^8.3.0"
