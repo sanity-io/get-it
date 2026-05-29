@@ -99,6 +99,15 @@ describe('errors', () => {
     expect(err.stack).to.include('errors.test.ts')
   })
 
+  it('should use provided callSiteStack in errors instead of the internal stack', async () => {
+    const request = getIt([baseUrl, httpErrors()])
+    const callSiteStack = {stack: 'Error\n    at myCustomCallSite (custom-call-site.ts:42:13)'}
+    const req = request({url: '/status?code=400', callSiteStack})
+    const err: any = await new Promise((resolve) => req.error.subscribe(resolve))
+    expect(err).to.be.an.instanceOf(Error)
+    expect(err.stack).to.include('myCustomCallSite (custom-call-site.ts:42:13)')
+  })
+
   it.runIf(adapter === 'node')('error object contains remote address when serialized', async () => {
     const request = getIt([baseUrl, httpErrors()])
     const req = request({url: '/status?code=400'})
