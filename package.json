@@ -23,7 +23,10 @@
     "src"
   ],
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/vitest.js",
+    "./src/_exports/vitest.ts"
+  ],
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
