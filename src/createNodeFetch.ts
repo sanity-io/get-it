@@ -77,6 +77,11 @@ export function createNodeFetch(options?: NodeFetchOptions): FetchFunction {
     })
   }
 
+  // Streamed request bodies require `duplex: 'half'` in undici/Node —
+  // omitting it throws "duplex option is required when sending a body".
+  // Typed explicitly so the literal isn't widened to `string`.
+  const halfDuplex: {duplex: 'half'} = {duplex: 'half'}
+
   return async function nodeFetch(input: string, reqInit?: FetchInit): Promise<FetchResponse> {
     const {body, ...rest} = reqInit ?? {}
     const init = {
@@ -85,6 +90,7 @@ export function createNodeFetch(options?: NodeFetchOptions): FetchFunction {
       // Only set body when it's defined — fetch _can_ throw on
       // `body: undefined` for some request methods in strict mode.
       ...(body === undefined ? {} : {body}),
+      ...(body instanceof ReadableStream ? halfDuplex : {}),
     }
     const response = await undiciFetch(input, init)
     return adaptResponse(response)
