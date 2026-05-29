@@ -210,9 +210,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * Type guard for values that are valid fetch body types.
- * Needed because TS 5.9+ narrows `instanceof Uint8Array` to
- * `Uint8Array<ArrayBufferLike>` which isn't assignable to `FetchBody`.
+ * Type guard narrowing an `unknown` request body to a binary `FetchBody`.
  */
 function isBinaryBody(value: unknown): value is FetchBody {
   return (

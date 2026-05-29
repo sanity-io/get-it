@@ -5,9 +5,23 @@
 /**
  * Valid body types for fetch requests.
  *
+ * Includes `Uint8Array` since the standard `fetch` accepts typed-array
+ * request bodies. It is pinned to `Uint8Array<ArrayBuffer>` (rather than the
+ * abstract `ArrayBufferView` or the default `Uint8Array<ArrayBufferLike>`) to
+ * stay assignable to the platform `BodyInit` across the DOM and Node lib
+ * definitions, which keeps `FetchFunction` compatible with the runtime
+ * `fetch`. Widening further breaks that compatibility.
+ *
  * @public
  */
-export type FetchBody = string | ArrayBuffer | Blob | FormData | URLSearchParams | ReadableStream
+export type FetchBody =
+  | string
+  | ArrayBuffer
+  | Uint8Array<ArrayBuffer>
+  | Blob
+  | FormData
+  | URLSearchParams
+  | ReadableStream
 
 /**
  * Accepted header formats — tuple pairs, a plain record, or a `Headers` instance.
