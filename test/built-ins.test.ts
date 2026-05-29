@@ -437,6 +437,18 @@ describe('built-in behaviors', () => {
       await request({url: '/relative/path', query: {foo: 'bar'}})
       expect(capturedUrl).toBe('/relative/path?foo=bar')
     })
+
+    it('preserves URL fragments when appending query parameters', async () => {
+      let capturedUrl = ''
+      const request = createRequester({
+        fetch: (url) => {
+          capturedUrl = url
+          return Promise.resolve(new Response('ok'))
+        },
+      })
+      await request({url: '/relative/path#frag', query: {foo: 'bar'}})
+      expect(capturedUrl).toBe('/relative/path?foo=bar#frag')
+    })
   })
 
   describe('HTTP errors', () => {

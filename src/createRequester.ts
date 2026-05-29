@@ -282,7 +282,10 @@ function buildFetchArgs(
     }
     const qs = params.toString()
     if (qs) {
-      url += (url.includes('?') ? '&' : '?') + qs
+      const fragmentStart = url.indexOf('#')
+      const urlWithoutFragment = fragmentStart === -1 ? url : url.slice(0, fragmentStart)
+      const fragment = fragmentStart === -1 ? '' : url.slice(fragmentStart)
+      url = `${urlWithoutFragment}${urlWithoutFragment.includes('?') ? '&' : '?'}${qs}${fragment}`
     }
   }
 
