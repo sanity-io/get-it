@@ -1,6 +1,6 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
-  "entry": ["package.config.ts"],
+  "entry": ["package.config.ts", "test/deno/smoke.ts"],
   "vitest": {
     "config": ["vitest.config.ts", "vitest.*.config.ts"]
   },

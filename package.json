@@ -35,15 +35,15 @@
         "source": "./src/_exports/index.ts",
         "import": "./dist/index.js"
       },
+      "deno": {
+        "source": "./src/_exports/index.ts",
+        "import": "./dist/index.js"
+      },
       "node": {
         "source": "./src/_exports/index.node.ts",
         "import": "./dist/index.node.js"
       },
       "bun": {
-        "source": "./src/_exports/index.node.ts",
-        "import": "./dist/index.node.js"
-      },
-      "deno": {
         "source": "./src/_exports/index.node.ts",
         "import": "./dist/index.node.js"
       },
@@ -80,13 +80,13 @@
         "react-server": {
           "import": "./dist/index.js"
         },
+        "deno": {
+          "import": "./dist/index.js"
+        },
         "node": {
           "import": "./dist/index.node.js"
         },
         "bun": {
-          "import": "./dist/index.node.js"
-        },
-        "deno": {
           "import": "./dist/index.node.js"
         },
         "import": "./dist/index.js",
@@ -125,9 +125,10 @@
     "prepublishOnly": "pnpm run build",
     "report-size": "scripts/report-size.sh",
     "test": "vitest run",
-    "test:all": "pnpm run test && pnpm run test:happy-dom && pnpm run test:bun && pnpm run test:edge-runtime && pnpm run test:react-server",
+    "test:all": "pnpm run test && pnpm run test:happy-dom && pnpm run test:bun && pnpm run test:deno && pnpm run test:edge-runtime && pnpm run test:react-server",
     "test:browser": "pnpm test --config ./vitest.browser.config.ts",
     "test:bun": "bun run vitest run",
+    "test:deno": "pnpm run build && deno test --no-lock test/deno/smoke.ts",
     "test:edge-runtime": "pnpm test --config ./vitest.edge.config.ts",
     "test:happy-dom": "pnpm test --config ./vitest.happy-dom.config.ts --dom",
     "test:react-server": "pnpm test --config ./vitest.react-server.config.ts",

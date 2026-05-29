@@ -648,7 +648,9 @@ request({url: '/users', meta: {requestId: 'abc-123'}})
 
 v8 had `agent()` and `proxy()` middleware that configured Node's `http.Agent`.
 
-v9 uses conditional exports: when running in Node/Bun/Deno, `createRequester` automatically uses `createNodeFetch()` which reads proxy configuration from environment variables (`HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY`).
+v9 uses conditional exports: when running in Node or Bun, `createRequester` automatically uses `createNodeFetch()` which reads proxy configuration from environment variables (`HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY`).
+
+In Deno, `createRequester` uses the built-in `fetch`, which also reads `HTTP_PROXY`, `HTTPS_PROXY`, and `NO_PROXY`.
 
 For custom proxy or connection pool settings:
 
@@ -662,6 +664,19 @@ const request = createRequester({
     connections: 30, // max connections per origin
     allowH2: true, // enable HTTP/2
   }),
+})
+```
+
+For explicit per-client proxy settings, CA certificates, or HTTP/2 in Deno, inject a fetch that passes a Deno `HttpClient`:
+
+```ts
+const client = Deno.createHttpClient({
+  proxy: {url: 'http://proxy:8080'},
+  http2: true,
+})
+
+const request = createRequester({
+  fetch: (url, init) => fetch(url, {...init, client}),
 })
 ```
 
@@ -712,11 +727,11 @@ Use **lowercase header names** in middleware — since all keys are normalized t
 
 ## Entry points
 
-| Import              | Purpose                                                                               |
-| ------------------- | ------------------------------------------------------------------------------------- |
-| `get-it`            | Core. In Node/Bun/Deno, automatically includes proxy support via conditional exports. |
-| `get-it/middleware` | `retry`, `debug`                                                                      |
-| `get-it/node`       | `createNodeFetch()` for custom undici dispatcher configuration                        |
+| Import              | Purpose                                                          |
+| ------------------- | ---------------------------------------------------------------- |
+| `get-it`            | Core. Includes environment proxy support in Node, Bun, and Deno. |
+| `get-it/middleware` | `retry`, `debug`                                                 |
+| `get-it/node`       | `createNodeFetch()` for custom undici dispatcher configuration   |
 
 ## TypeScript
 

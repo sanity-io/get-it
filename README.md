@@ -15,7 +15,7 @@ Generic HTTP request library for node.js (>= 22.19), browsers, and edge runtimes
 - HTTP error throwing (on by default)
 - Timeout via `AbortSignal.timeout()`
 - Cancellation via standard `AbortController`
-- Proxy support in Node.js (reads `HTTP_PROXY`/`HTTPS_PROXY` from environment)
+- Proxy support in Node.js, Bun, and Deno (reads `HTTP_PROXY`/`HTTPS_PROXY` from environment)
 - Middleware system for retry, debug logging, and custom logic
 - Injectable `fetch` for testing and custom transports
 - Built-in mock fetch with request matching, recording, and vitest matchers
@@ -175,9 +175,11 @@ const request = createRequester({
 })
 ```
 
-## Node.js proxy support
+## Runtime proxy support
 
-In Node.js, Bun, and Deno, `createRequester` automatically uses an undici-based fetch that reads proxy configuration from environment variables.
+In Node.js and Bun, `createRequester` automatically uses an undici-based fetch that reads proxy configuration from environment variables.
+
+In Deno, `createRequester` uses Deno's built-in `fetch`, which also reads `HTTP_PROXY`, `HTTPS_PROXY`, and `NO_PROXY`.
 
 For custom proxy or connection pool settings:
 
@@ -191,6 +193,19 @@ const request = createRequester({
     connections: 30,
     allowH2: true,
   }),
+})
+```
+
+For explicit per-client proxy settings, custom CA certificates, or HTTP/2 settings in Deno, create a Deno `HttpClient` and inject a custom fetch:
+
+```ts
+const client = Deno.createHttpClient({
+  proxy: {url: 'http://proxy:8080'},
+  http2: true,
+})
+
+const request = createRequester({
+  fetch: (url, init) => fetch(url, {...init, client}),
 })
 ```
 
