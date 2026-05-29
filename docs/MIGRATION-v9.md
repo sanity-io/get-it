@@ -213,7 +213,7 @@ The mapping:
 | `withCredentials: false` | `credentials: 'omit'`                          |
 | _(not set)_              | `credentials: 'same-origin'` (browser default) |
 
-Note: `credentials` is only relevant in browser environments. Some runtimes (e.g. Cloudflare Workers) will throw if `credentials` is set on a fetch init — get-it only forwards it when `window` is present in the global scope.
+Note: `credentials` follows the fetch API and is forwarded whenever you set it, including in browser workers and edge runtimes.
 
 ### `fetch` option changed meaning
 
