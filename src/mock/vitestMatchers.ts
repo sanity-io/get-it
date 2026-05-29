@@ -46,6 +46,11 @@ interface MatcherResult {
   message: () => string
 }
 
+function requestOriginMatches(expectedOrigin: string, request: RecordedRequest): boolean {
+  if (expectedOrigin === '') return true
+  return parseUrl(request.fullUrl).origin === expectedOrigin
+}
+
 // ---------------------------------------------------------------------------
 // MockFetch matchers
 // ---------------------------------------------------------------------------
@@ -64,12 +69,14 @@ function toHaveReceivedRequest(
   }
 
   const parsed = parseUrl(url)
+  const expectedOrigin = parsed.origin
   const expectedPath = parsed.path
   const expectedQuery = parsed.query
 
   const requests = received.getRequests()
   const found = requests.some((req) => {
     if (req.method !== method) return false
+    if (!requestOriginMatches(expectedOrigin, req)) return false
     if (!matchUrl(expectedPath, req.url)) return false
     if (Object.keys(expectedQuery).length > 0 && !deepMatch(expectedQuery, req.query)) return false
     if (options?.query !== undefined && !deepMatch(options.query, req.query)) return false
@@ -102,6 +109,7 @@ function toHaveReceivedRequestTimes(
   }
 
   const parsed = parseUrl(url)
+  const expectedOrigin = parsed.origin
   const expectedPath = parsed.path
   const expectedQuery = parsed.query
 
@@ -109,6 +117,7 @@ function toHaveReceivedRequestTimes(
   let count = 0
   for (const req of requests) {
     if (req.method !== method) continue
+    if (!requestOriginMatches(expectedOrigin, req)) continue
     if (!matchUrl(expectedPath, req.url)) continue
     if (Object.keys(expectedQuery).length > 0 && !deepMatch(expectedQuery, req.query)) continue
     count++

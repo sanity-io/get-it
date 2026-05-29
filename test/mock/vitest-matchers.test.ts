@@ -56,6 +56,23 @@ describe('vitest custom matchers', () => {
           body: objectContaining({title: 'Hello'}),
         })
       })
+
+      it('does not match full expected URLs with a different origin', async () => {
+        const mock = createMockFetch()
+        mock.on('GET', 'https://wrong.example/api/docs').respond({status: 200, body: {}})
+
+        const request = createRequester({
+          base: 'https://wrong.example',
+          fetch: mock.fetch,
+          httpErrors: false,
+        })
+
+        await request({url: '/api/docs', as: 'json'})
+
+        expect(() => {
+          expect(mock).toHaveReceivedRequest('GET', 'https://right.example/api/docs')
+        }).toThrow('Expected MockFetch to have received GET https://right.example/api/docs')
+      })
     })
 
     describe('toHaveReceivedRequestTimes', () => {
@@ -91,6 +108,21 @@ describe('vitest custom matchers', () => {
         expect(() => {
           expect(mock).toHaveReceivedRequestTimes('GET', '/api/docs', 2)
         }).toThrow('received 1 time(s)')
+      })
+
+      it('does not count full expected URLs with a different origin', async () => {
+        const mock = createMockFetch()
+        mock.on('GET', 'https://wrong.example/api/docs').respond({status: 200, body: {}})
+
+        const request = createRequester({
+          base: 'https://wrong.example',
+          fetch: mock.fetch,
+          httpErrors: false,
+        })
+
+        await request({url: '/api/docs', as: 'json'})
+
+        expect(mock).toHaveReceivedRequestTimes('GET', 'https://right.example/api/docs', 0)
       })
     })
 
