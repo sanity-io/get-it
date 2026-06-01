@@ -51,6 +51,12 @@ export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRe
   )
 
   function request(opts: RequestOptions | string) {
+    // Or pass in an external error (ex. from @sanity/client) to use its stack instead of ours
+    const externalCallSiteError =
+      typeof opts === 'object' && opts.callSiteStack ? opts.callSiteStack : undefined
+    // Capture an error now before async operations happen, but defer stack formatting until an error is actually thrown
+    const ownError = externalCallSiteError ? undefined : new Error()
+
     const onResponse = (reqErr: Error | null, res: MiddlewareResponse, ctx: HttpContext) => {
       let error = reqErr
       let response: MiddlewareResponse | null = res
@@ -72,6 +78,19 @@ export function createRequester(initMiddleware: Middlewares, httpRequest: HttpRe
 
       // Figure out if we should publish on error/response channels
       if (error) {
+        if (error instanceof Error) {
+          // Append the call-site frames so errors can be traced back to the code that initiated the request, not just the internal pipeline.
+          // Prefer an externally provided stack (ex. @sanity/client) over the one captured here inside get-it's request() function.
+          const stack = externalCallSiteError?.stack || ownError?.stack
+          if (typeof stack === 'string') {
+            // External stacks come from the actual user call site, so only drop the "Error" header.
+            // Internal stacks also include this request() frame, so drop that as well.
+            const callSiteLines = stack.split('\n').slice(externalCallSiteError ? 1 : 2)
+            if (callSiteLines.length > 0) {
+              error.stack += '\n' + callSiteLines.join('\n')
+            }
+          }
+        }
         channels.error.publish(error)
       } else if (response) {
         channels.response.publish(response)
