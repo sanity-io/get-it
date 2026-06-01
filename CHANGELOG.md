@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.7.3](https://github.com/sanity-io/get-it/compare/v8.7.2...v8.7.3) (2026-06-01)
+
+### Bug Fixes
+
+- remove extra "is" in error message ([#574](https://github.com/sanity-io/get-it/issues/574)) ([3e4272b](https://github.com/sanity-io/get-it/commit/3e4272bc04f1bb48ba5cd99a787b70c627978ce0))
+
 ## [8.7.2](https://github.com/sanity-io/get-it/compare/v8.7.1...v8.7.2) (2026-04-07)
 
 ### Bug Fixes
