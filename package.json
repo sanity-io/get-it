@@ -104,7 +104,7 @@
   "dependencies": {
     "decompress-response": "^7.0.0",
     "is-retry-allowed": "^2.2.0",
-    "through2": "^4.0.2",
+    "through2": "^5.0.1",
     "tunnel-agent": "^0.6.0"
   },
   "devDependencies": {
