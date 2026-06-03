@@ -28,9 +28,9 @@ export interface NodeFetchOptions {
   /** Maximum number of connections per origin */
   connections?: number
   /**
-   * Enable HTTP/2 support. Defaults to `false` (HTTP/1.1 only). Note that
-   * undici@8 negotiates HTTP/2 by default; we opt out unless explicitly
-   * enabled so the transport stays predictable across undici versions.
+   * Enable HTTP/2 support. Defaults to `false` (HTTP/1.1 only). We opt out
+   * unless explicitly enabled so the transport stays predictable across
+   * undici versions regardless of their default negotiation behavior.
    */
   allowH2?: boolean
   /** TLS options for mutual TLS (client certificates) */
@@ -52,8 +52,8 @@ export function createNodeFetch(options?: NodeFetchOptions): FetchFunction {
   let dispatcher: Dispatcher
 
   const tls = options?.tls
-  // undici@8 negotiates HTTP/2 by default; opt out unless explicitly enabled
-  // to preserve the HTTP/1.1-only behavior from earlier undici versions.
+  // Default to HTTP/1.1-only; opt into HTTP/2 only when explicitly enabled so
+  // the transport stays predictable regardless of undici's default negotiation.
   const allowH2 = options?.allowH2 ?? false
 
   if (proxyOption === true) {
@@ -99,7 +99,8 @@ export function createNodeFetch(options?: NodeFetchOptions): FetchFunction {
 
 /**
  * The subset of Response properties we actually use. Typed structurally to
- * avoid the undici@7 / undici-types@6.21 version conflict in @types/node.
+ * avoid coupling to undici's `Response` type and any version skew between
+ * undici and the `undici-types` bundled by @types/node.
  */
 interface FetchResponseLike {
   ok: boolean

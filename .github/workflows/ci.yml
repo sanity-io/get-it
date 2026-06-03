@@ -50,11 +50,11 @@ jobs:
       fail-fast: false
       matrix:
         # Run the testing suite on every supported Node.js version, on ubuntu since it's the fastest CI runner:
-        #   22.19.0 - the minimum supported version (must match the `engines` field in package.json)
+        #   22.12.0 - the minimum supported version (must match the `engines` field in package.json)
         #   24      - the active LTS release
         #   26      - the latest/current release
         os: [ubuntu-latest]
-        node: ['22.19.0', '24', '26']
+        node: ['22.12.0', '24', '26']
         # Additionally verify the active LTS release on the other major operating systems
         include:
           - os: macos-latest

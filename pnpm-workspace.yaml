@@ -1,11 +1,11 @@
 allowBuilds:
   esbuild: true
 overrides:
-  # @types/node bundles undici-types@6, but we depend on undici@8 whose fetch
-  # types require the newer (helper-bearing) FormData/Headers. Align the global
-  # web types with our undici major so they don't clash. Dev-only: the published
-  # types expose only our own FetchFunction, so consumers are unaffected.
-  undici-types: ^8.3.0
+  # @types/node bundles undici-types@6, but we depend on undici@7 whose fetch
+  # types use the newer (iterator-helper-bearing) FormData/Headers. Align the
+  # global web types with our undici major so they don't clash. Dev-only: the
+  # published types expose only our own FetchFunction, so consumers are unaffected.
+  undici-types: ^7.22.0
 minimumReleaseAgeExclude:
   # Security updates, can be released as soon as they are beyond release age
   - '@sanity/pkg-utils@10.5.0'
