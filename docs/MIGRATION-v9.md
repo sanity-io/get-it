@@ -30,7 +30,7 @@ This guide also works as a playbook for a coding agent. Point yours at it and ha
 | `httpErrors()` middleware       | built-in, on by default                            |
 | `headers({...})` middleware     | `createRequester({ headers: {...} })`              |
 | `base(url)` middleware          | `createRequester({ base: url })`                   |
-| `observable()` middleware       | wrap with `from(promise)` in consumer              |
+| `observable()` middleware       | wrap with `defer(() => promise)` in consumer       |
 | `progress()` middleware         | removed, no replacement                            |
 | `keepAlive()` middleware        | built into fetch                                   |
 | `agent(opts)` middleware        | `createNodeFetch(opts)` or injectable `fetch`      |
@@ -585,7 +585,7 @@ The `meta` field is passed through to all middleware (both transform and wrappin
 | `httpErrors()`     | Built in, on by default                                                         |
 | `base(url)`        | Use `createRequester({ base: url })`                                            |
 | `headers(obj)`     | Use `createRequester({ headers: obj })`                                         |
-| `observable()`     | Wrap with RxJS `from(promise)` or similar                                       |
+| `observable()`     | Wrap with RxJS `defer(() => promise)` (cold) or `from(promise)` (eager)         |
 | `progress()`       | Removed — no replacement in fetch-based architecture                            |
 | `keepAlive()`      | Built into fetch connection pooling                                             |
 | `injectResponse()` | Removed — use injectable `fetch` for testing                                    |
@@ -825,8 +825,10 @@ const response = await request<User[]>({url: '/users', as: 'json'})
 const users = response.body
 
 // Observable — wrap the promise yourself
-import {from} from 'rxjs'
-const obs$ = from(request('/users'))
+// Use `defer` so the request fires on subscribe (cold), matching v8's
+// `observable()`. Plain `from(request('/users'))` would fire eagerly.
+import {defer} from 'rxjs'
+const obs$ = defer(() => request('/users'))
 
 // Cancellation
 const controller = new AbortController()
