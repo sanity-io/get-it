@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.8.0](https://github.com/sanity-io/get-it/compare/v8.7.3...v8.8.0) (2026-06-08)
+
+### Features
+
+- improve stacktraces in errors and add RequestOptions.callSiteStack ([#556](https://github.com/sanity-io/get-it/issues/556)) ([1e00bb0](https://github.com/sanity-io/get-it/commit/1e00bb0134abf307371bbcc398b877cb98e5cfeb))
+
 ## [8.7.3](https://github.com/sanity-io/get-it/compare/v8.7.2...v8.7.3) (2026-06-01)
 
 ### Bug Fixes
