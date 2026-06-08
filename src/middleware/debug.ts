@@ -1,103 +1,141 @@
-import debugIt from 'debug'
-import type {Middleware} from 'get-it'
+import type {BufferedResponse, FetchHeaders, RequestOptions, WrappingMiddleware} from '../types'
 
-const SENSITIVE_HEADERS = ['cookie', 'authorization']
+type LogFunction = (message: string, ...args: unknown[]) => void
 
-const hasOwn = Object.prototype.hasOwnProperty
-const redactKeys = (source: any, redacted: any) => {
-  const target: any = {}
-  for (const key in source) {
-    if (hasOwn.call(source, key)) {
-      target[key] = redacted.indexOf(key.toLowerCase()) > -1 ? '<redacted>' : source[key]
+const DEFAULT_REDACT_HEADERS = ['cookie', 'authorization']
+
+interface DebugOptions {
+  log?: LogFunction
+  redactHeaders?: string[]
+  verbose?: boolean
+}
+
+let requestId = 0
+
+/**
+ * Creates a `WrappingMiddleware` that logs request, response, and error details.
+ *
+ * Does nothing if no `log` function is provided.
+ *
+ * By default, redacts `cookie` and `authorization` headers. Pass
+ * `redactHeaders: []` to disable redaction, or provide your own list.
+ *
+ * @param opts - Debug options: `log` is the log function (e.g. `console.log`),
+ *   `redactHeaders` lists header names to replace with `"REDACTED"` (defaults
+ *   to `['cookie', 'authorization']`), and `verbose` (default `false`) enables
+ *   header and body logging. Each request is tagged with an auto-incrementing
+ *   ID, or you can pass `meta: { requestId: 'my-id' }` on the request to use
+ *   a custom identifier.
+ * @returns A wrapping middleware that logs before/after each request and on errors.
+ *
+ * @example
+ * ```ts
+ * const request = createRequester({
+ *   middleware: [debug({log: console.log, redactHeaders: ['authorization']})],
+ * })
+ * ```
+ *
+ * @public
+ */
+export function debug(opts?: DebugOptions): WrappingMiddleware {
+  const log = opts?.log
+  const redactSet = new Set(
+    (opts?.redactHeaders ?? DEFAULT_REDACT_HEADERS).map((h) => h.toLowerCase()),
+  )
+  const verbose = opts?.verbose ?? false
+
+  if (!log) return noopMiddleware
+
+  return async function debugMiddleware(
+    options: RequestOptions,
+    next: (reqOpts: RequestOptions) => Promise<BufferedResponse>,
+  ): Promise<BufferedResponse> {
+    const metaId = options.meta?.requestId
+    const id = typeof metaId === 'string' || typeof metaId === 'number' ? metaId : ++requestId
+    const method = (options.method ?? 'GET').toUpperCase()
+    log('[%s] %s %s', id, method, options.url)
+
+    if (verbose && options.headers) {
+      log('[%s] request headers %o', id, headersToObject(options.headers, redactSet))
+    }
+
+    if (verbose && options.body !== undefined && options.body !== null) {
+      log('[%s] request body %s', id, summarizeBody(options.body))
+    }
+
+    try {
+      const response = await next(options)
+
+      log('[%s] %d %s', id, response.status, response.statusText)
+
+      if (verbose) {
+        log('[%s] response headers %o', id, headersToObject(response.headers, redactSet))
+        log('[%s] response body %s', id, summarizeBody(response.text()))
+      }
+
+      return response
+    } catch (error: unknown) {
+      log('[%s] error %s', id, error instanceof Error ? error.message : String(error))
+      throw error
     }
   }
-  return target
 }
 
-/** @public */
-export function debug(opts: any = {}) {
-  const verbose = opts.verbose
-  const namespace = opts.namespace || 'get-it'
-  const defaultLogger = debugIt(namespace)
-  const log = opts.log || defaultLogger
-  const shortCircuit = log === defaultLogger && !debugIt.enabled(namespace)
-  let requestId = 0
-
-  return {
-    processOptions: (options) => {
-      options.debug = log
-      options.requestId = options.requestId || ++requestId
-      return options
-    },
-
-    onRequest: (event) => {
-      // Short-circuit if not enabled, to save some CPU cycles with formatting stuff
-      if (shortCircuit || !event) {
-        return event
-      }
-
-      const options = event.options
-
-      log('[%s] HTTP %s %s', options.requestId, options.method, options.url)
-
-      if (verbose && options.body && typeof options.body === 'string') {
-        log('[%s] Request body: %s', options.requestId, options.body)
-      }
-
-      if (verbose && options.headers) {
-        const headers =
-          opts.redactSensitiveHeaders === false
-            ? options.headers
-            : redactKeys(options.headers, SENSITIVE_HEADERS)
-
-        log('[%s] Request headers: %s', options.requestId, JSON.stringify(headers, null, 2))
-      }
-
-      return event
-    },
-
-    onResponse: (res, context) => {
-      // Short-circuit if not enabled, to save some CPU cycles with formatting stuff
-      if (shortCircuit || !res) {
-        return res
-      }
-
-      const reqId = context.options.requestId
-
-      log('[%s] Response code: %s %s', reqId, res.statusCode, res.statusMessage)
-
-      if (verbose && res.body) {
-        log('[%s] Response body: %s', reqId, stringifyBody(res))
-      }
-
-      return res
-    },
-
-    onError: (err, context) => {
-      const reqId = context.options.requestId
-      if (!err) {
-        log('[%s] Error encountered, but handled by an earlier middleware', reqId)
-        return err
-      }
-
-      log('[%s] ERROR: %s', reqId, err.message)
-      return err
-    },
-  } satisfies Middleware
+async function noopMiddleware(
+  options: RequestOptions,
+  next: (reqOpts: RequestOptions) => Promise<BufferedResponse>,
+): Promise<BufferedResponse> {
+  return next(options)
 }
 
-function stringifyBody(res: any) {
-  const contentType = (res.headers['content-type'] || '').toLowerCase()
-  const isJson = contentType.indexOf('application/json') !== -1
-  return isJson ? tryFormat(res.body) : res.body
-}
-
-// Attempt pretty-formatting JSON
-function tryFormat(body: any) {
-  try {
-    const parsed = typeof body === 'string' ? JSON.parse(body) : body
-    return JSON.stringify(parsed, null, 2)
-  } catch {
-    return body
+/**
+ * Summarize a body value for logging. Truncates long strings to avoid
+ * flooding logs with large payloads.
+ */
+function summarizeBody(body: unknown): string {
+  if (typeof body === 'string') {
+    return truncate(body, 16384)
   }
+
+  if (isPlainObject(body) || Array.isArray(body)) {
+    return truncate(JSON.stringify(body), 16384)
+  }
+
+  if (body instanceof ReadableStream) {
+    return '[ReadableStream]'
+  }
+
+  if (body instanceof FormData) {
+    return '[FormData]'
+  }
+
+  if (body instanceof URLSearchParams) {
+    return truncate(body.toString(), 16384)
+  }
+
+  if (body instanceof ArrayBuffer || ArrayBuffer.isView(body)) {
+    const byteLength = body instanceof ArrayBuffer ? body.byteLength : body.byteLength
+    return `[binary ${byteLength} bytes]`
+  }
+
+  return String(body)
+}
+
+function truncate(str: string, max: number): string {
+  if (str.length <= max) return str
+  return str.slice(0, max) + `… (${str.length - max} more characters)`
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  if (typeof value !== 'object' || value === null) return false
+  const proto = Object.getPrototypeOf(value) as unknown
+  return proto === Object.prototype || proto === null
+}
+
+function headersToObject(headers: FetchHeaders, redactSet: Set<string>): Record<string, string> {
+  const result: Record<string, string> = {}
+  new Headers(headers).forEach((value, key) => {
+    result[key] = redactSet.has(key.toLowerCase()) ? 'REDACTED' : value
+  })
+  return result
 }

@@ -1,17 +1,23 @@
 {
-  "extends": "@sanity/pkg-utils/tsconfig/strictest.json",
+  "extends": "@sanity/tsconfig/strictest",
   "compilerOptions": {
-    "paths": {
-      "get-it": ["./src"],
-      "get-it/middleware": ["./src/middleware"]
-    },
+    // Only ES — no DOM, no node. Each check config adds its own
+    // platform types (DOM or @types/node) so we can verify the
+    // library compiles cleanly in both environments.
+    "lib": ["ES2022"],
 
     "outDir": "./dist",
     "rootDir": ".",
 
     "noUncheckedIndexedAccess": false,
     "exactOptionalPropertyTypes": false,
-    "useUnknownInCatchVariables": true,
-    "erasableSyntaxOnly": true
+
+    "paths": {
+      "get-it": ["./src/_exports/index.ts"],
+      "get-it/middleware": ["./src/_exports/middleware.ts"],
+      "get-it/node": ["./src/_exports/node.ts"],
+      "get-it/mock": ["./src/_exports/mock.ts"],
+      "get-it/vitest": ["./src/_exports/vitest.ts"]
+    }
   }
 }

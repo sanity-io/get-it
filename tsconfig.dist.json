@@ -1,6 +1,9 @@
 {
+  // Build config — emits .d.ts declaration files only.
+  // Skips type-checking (noCheck) since that's handled by
+  // tsconfig.check.json and tsconfig.check-node.json.
   "extends": "./tsconfig.settings",
-  "include": ["./src", "./modules.d.ts"],
+  "include": ["./src"],
   "compilerOptions": {
     "noCheck": true
   }

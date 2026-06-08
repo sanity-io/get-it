@@ -1,0 +1,17 @@
+allowBuilds:
+  esbuild: true
+overrides:
+  # @types/node bundles undici-types@6, but we depend on undici@7 whose fetch
+  # types use the newer (iterator-helper-bearing) FormData/Headers. Align the
+  # global web types with our undici major so they don't clash. Dev-only: the
+  # published types expose only our own FetchFunction, so consumers are unaffected.
+  undici-types: ^7.22.0
+minimumReleaseAgeExclude:
+  # Security updates, can be released as soon as they are beyond release age
+  - '@sanity/pkg-utils@10.5.0'
+  - tar@7.5.11
+  - handlebars@4.7.9
+  - lodash-es@4.17.24
+  - lodash@4.17.24
+  - vite@7.3.2
+  - ip-address@10.1.1

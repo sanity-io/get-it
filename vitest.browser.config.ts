@@ -1,21 +1,23 @@
-// Simulates a browser environment until `@vitest/browser` is ready for production and
-// we can run the tests in a real browser
+import {playwright} from '@vitest/browser-playwright'
+import {configDefaults, defineConfig} from 'vitest/config'
 
-import {defineConfig} from 'vitest/config'
+import {sharedConfig} from './vitest.config'
 
-import pkg from './package.json'
-import {sharedConfig} from './vite.config'
+const {globalSetup, ...browserSharedConfig} = sharedConfig
 
 export default defineConfig({
   test: {
-    ...sharedConfig,
-    alias: {
-      'get-it/middleware': new URL(pkg.exports['./middleware'].browser.source, import.meta.url)
-        .pathname,
-      'get-it': new URL(pkg.exports['.'].browser.source, import.meta.url).pathname,
+    ...browserSharedConfig,
+    exclude: [...configDefaults.exclude, 'test/*.node.test.ts'],
+    globalSetup,
+    browser: {
+      enabled: true,
+      provider: playwright(),
+      instances: [
+        {browser: 'chromium', headless: true},
+        {browser: 'firefox', headless: true},
+        {browser: 'webkit', headless: true},
+      ],
     },
-  },
-  resolve: {
-    conditions: ['browser', 'module', 'import'],
   },
 })

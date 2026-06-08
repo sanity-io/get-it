@@ -1,0 +1,12 @@
+{
+  // Verifies the core library compiles in a browser/edge environment.
+  // Uses DOM for web platform types (Headers, ReadableStream, etc.)
+  // and types:[] to ensure no accidental dependency on @types/node.
+  "extends": "./tsconfig.settings",
+  "include": ["./src"],
+  "exclude": ["./src/createNodeFetch.ts", "./src/_exports/index.node.ts", "./src/_exports/node.ts"],
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": []
+  }
+}

@@ -21,3 +21,9 @@ build/Release
 
 # Dependencies
 node_modules
+
+# Bundle stats
+.bundle-stats
+
+# Local pnpm store
+.pnpm-store/

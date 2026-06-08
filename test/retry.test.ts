@@ -1,77 +1,260 @@
-import fs from 'node:fs'
-
-import {environment, getIt} from 'get-it'
-import {httpErrors, retry} from 'get-it/middleware'
+import {createRequester, type RequestOptions} from 'get-it'
+import {retry} from 'get-it/middleware'
 import {describe, expect, it} from 'vitest'
 
-import {baseUrl, debugRequest, expectRequest} from './helpers'
+import {getRetryDelay, isRetryableRequest} from '../src/middleware/retry'
+
+const baseUrl = 'http://localhost:9980/req-test'
+
+/**
+ * Tests that rely on `res.destroy()` producing application-visible network errors
+ * only work outside browsers. Browsers transparently retry TCP resets per the
+ * Fetch spec (the network stack retries before our code sees an error), making
+ * retry-middleware behavior untestable for server-initiated connection closures.
+ */
+const canTestNetworkErrors = !('document' in globalThis)
 
 describe('retry middleware', {timeout: 15000}, () => {
-  const retry5xx = (err: any) => err.response.statusCode >= 500
-
-  it('exposes default "shouldRetry" function', () => {
-    expect(retry.shouldRetry).to.be.a('function')
-  })
-
-  it('should handle retries when retry middleware is used', () => {
-    const request = getIt([baseUrl, debugRequest, retry()])
-    const req = request({url: `/fail?uuid=${Math.random()}&n=4`})
-
-    return expectRequest(req).resolves.toMatchObject({
-      statusCode: 200,
-      body: 'Success after failure',
+  it.runIf(canTestNetworkErrors)('retries on network error and succeeds', async () => {
+    const request = createRequester({
+      base: baseUrl,
+      httpErrors: false,
+      middleware: [retry({retryDelay: () => 50})],
     })
+    const res = await request(`/fail?uuid=${Math.random()}&n=2`)
+    expect(res.status).toBe(200)
   })
 
-  it('should be able to set max retries', {timeout: 400}, () => {
-    const request = getIt([baseUrl, httpErrors(), retry({maxRetries: 1, shouldRetry: retry5xx})])
-    const req = request({url: '/status?code=500'})
-    return expectRequest(req).rejects.toThrow(/HTTP 500/i)
+  it.runIf(canTestNetworkErrors)('respects maxRetries', async () => {
+    const request = createRequester({
+      base: baseUrl,
+      httpErrors: false,
+      middleware: [retry({maxRetries: 1, retryDelay: () => 10})],
+    })
+    await expect(request('/permafail')).rejects.toThrow()
   })
 
-  it.runIf(environment === 'node')('should not retry if body is a stream', {timeout: 400}, () => {
-    const request = getIt([baseUrl, httpErrors(), retry({maxRetries: 5, shouldRetry: retry5xx})])
-    const req = request({url: '/status?code=500', body: fs.createReadStream(__filename)})
-    return expectRequest(req).rejects.toThrow(/HTTP 500/i)
+  it('does not retry HTTP errors by default', async () => {
+    let attempts = 0
+    const request = createRequester({
+      base: baseUrl,
+      middleware: [
+        async (opts, next) => {
+          attempts++
+          return next(opts)
+        },
+        retry({retryDelay: () => 10}),
+      ],
+    })
+    await expect(request('/status?code=500')).rejects.toThrow()
+    expect(attempts).toBe(1)
   })
 
-  it('should be able to set max retries on a per-request basis', {timeout: 400}, () => {
-    const request = getIt([baseUrl, httpErrors(), retry({maxRetries: 5, shouldRetry: retry5xx})])
-    const req = request({url: '/status?code=500', maxRetries: 1})
-    return expectRequest(req).rejects.toThrow(/HTTP 500/i)
+  it.runIf(canTestNetworkErrors)('custom shouldRetry', async () => {
+    let attemptsSeen = 0
+    const request = createRequester({
+      base: baseUrl,
+      httpErrors: false,
+      middleware: [
+        retry({
+          retryDelay: () => 10,
+          shouldRetry: (_error, attemptNumber) => {
+            attemptsSeen = attemptNumber + 1
+            return attemptNumber < 1
+          },
+        }),
+      ],
+    })
+    await expect(request('/permafail')).rejects.toThrow()
+    expect(attemptsSeen).toBe(2)
   })
 
-  it('should be able to set a custom function on whether or not we should retry', () => {
-    const shouldRetry = (_error: any, retryCount: any) => retryCount !== 1
-    const request = getIt([baseUrl, debugRequest, httpErrors(), retry({shouldRetry})])
-    const req = request({url: '/status?code=503'})
-    return expectRequest(req).rejects.toThrow(/HTTP 503/)
+  it.runIf(canTestNetworkErrors)('exponential backoff timing', async () => {
+    const delays: number[] = []
+    const request = createRequester({
+      base: baseUrl,
+      httpErrors: false,
+      middleware: [
+        retry({
+          retryDelay: (attempt) => {
+            const delay = 50 * (attempt + 1)
+            delays.push(delay)
+            return delay
+          },
+        }),
+      ],
+    })
+    const start = Date.now()
+    const res = await request(`/fail?uuid=${Math.random()}&n=4`)
+    const elapsed = Date.now() - start
+    expect(res.status).toBe(200)
+    expect(delays).toHaveLength(3)
+    // 50 + 100 + 150 = 300ms minimum
+    expect(elapsed).toBeGreaterThanOrEqual(250)
   })
 
-  it('should be able to set a custom function on whether or not we should retry (per-request basis)', () => {
-    const shouldRetry = (_error: any, retryCount: any) => retryCount !== 1
-    const request = getIt([baseUrl, debugRequest, httpErrors(), retry()])
-    const req = request({url: '/status?code=503', shouldRetry})
-    return expectRequest(req).rejects.toThrow(/HTTP 503/)
+  it.runIf(canTestNetworkErrors)('aborts during retry sleep when signal is aborted', async () => {
+    const controller = new AbortController()
+    let attempts = 0
+    const request = createRequester({
+      base: baseUrl,
+      httpErrors: false,
+      middleware: [
+        async (opts, next) => {
+          attempts++
+          return next(opts)
+        },
+        retry({retryDelay: () => 5000}),
+      ],
+    })
+
+    const promise = request({url: '/permafail', signal: controller.signal})
+    // Wait long enough for first attempt to fail and retry sleep to start
+    await new Promise((r) => setTimeout(r, 200))
+    controller.abort()
+
+    await expect(promise).rejects.toThrow()
+    // Should have made only 1 attempt — abort during sleep prevents second attempt
+    expect(attempts).toBe(1)
   })
 
-  it.skipIf(environment === 'browser')('should not retry non-GET-requests by default', () => {
-    // Browsers have a weird thing where they might auto-retry on network errors
-    const request = getIt([baseUrl, debugRequest, retry()])
-    const req = request({url: `/fail?uuid=${Math.random()}&n=2`, method: 'POST', body: 'Heisann'})
-    return expectRequest(req).rejects.toThrow(Error)
+  it('getRetryDelay returns exponential backoff with jitter', () => {
+    const delay0 = getRetryDelay(0)
+    expect(delay0).toBeGreaterThanOrEqual(100)
+    expect(delay0).toBeLessThan(200)
+
+    const delay2 = getRetryDelay(2)
+    expect(delay2).toBeGreaterThanOrEqual(400)
+    expect(delay2).toBeLessThan(500)
   })
 
-  // @todo Browsers are really flaky with retries, revisit later
-  it.skipIf(environment === 'browser')('should handle retries with a delay function ', () => {
-    const retryDelay = () => 375
-    const request = getIt([baseUrl, retry({retryDelay})])
+  it.runIf(canTestNetworkErrors)('uses default retryDelay when none is provided', async () => {
+    const request = createRequester({
+      base: baseUrl,
+      httpErrors: false,
+      middleware: [retry({maxRetries: 1})],
+    })
+    const res = await request(`/fail?uuid=${Math.random()}&n=1`)
+    expect(res.status).toBe(200)
+  })
 
-    const startTime = Date.now()
-    const req = request({url: `/fail?uuid=${Math.random()}&n=4`})
-    return expectRequest(req).resolves.toSatisfy(() => {
-      const timeUsed = Date.now() - startTime
-      return timeUsed > 1000 && timeUsed < 1750
-    }, 'respects the retry delay (roughly)')
+  it.runIf(canTestNetworkErrors)('rejects immediately when signal is already aborted', async () => {
+    const controller = new AbortController()
+    controller.abort('cancelled')
+    const request = createRequester({
+      base: baseUrl,
+      httpErrors: false,
+      middleware: [retry({retryDelay: () => 5000})],
+    })
+    await expect(request({url: '/permafail', signal: controller.signal})).rejects.toThrow()
+  })
+
+  it.runIf(canTestNetworkErrors)('does not retry POST by default', async () => {
+    const request = createRequester({
+      base: baseUrl,
+      httpErrors: false,
+      middleware: [retry({retryDelay: () => 10})],
+    })
+    await expect(
+      request({url: `/fail?uuid=${Math.random()}&n=2`, method: 'POST', body: 'hello'}),
+    ).rejects.toThrow()
+  })
+
+  it.runIf(canTestNetworkErrors)('retries HEAD requests on network error', async () => {
+    let attempts = 0
+    const request = createRequester({
+      base: baseUrl,
+      httpErrors: false,
+      middleware: [
+        retry({retryDelay: () => 50}),
+        async (opts, next) => {
+          attempts++
+          return next(opts)
+        },
+      ],
+    })
+    const res = await request({url: `/fail?uuid=${Math.random()}&n=2`, method: 'HEAD'})
+    expect(res.status).toBe(200)
+    expect(attempts).toBeGreaterThan(1)
+  })
+
+  it.runIf(canTestNetworkErrors)('retries when method is lowercase "get"', async () => {
+    let attempts = 0
+    const request = createRequester({
+      base: baseUrl,
+      httpErrors: false,
+      middleware: [
+        retry({retryDelay: () => 50}),
+        async (opts, next) => {
+          attempts++
+          return next(opts)
+        },
+      ],
+    })
+    const res = await request({url: `/fail?uuid=${Math.random()}&n=2`, method: 'get'})
+    expect(res.status).toBe(200)
+    expect(attempts).toBeGreaterThan(1)
+  })
+
+  it.runIf(canTestNetworkErrors)('does not retry lowercase "post"', async () => {
+    let attempts = 0
+    const request = createRequester({
+      base: baseUrl,
+      httpErrors: false,
+      middleware: [
+        retry({retryDelay: () => 10}),
+        async (opts, next) => {
+          attempts++
+          return next(opts)
+        },
+      ],
+    })
+    await expect(
+      request({url: `/fail?uuid=${Math.random()}&n=2`, method: 'post', body: 'x'}),
+    ).rejects.toThrow()
+    expect(attempts).toBe(1)
+  })
+
+  describe('isRetryableRequest error filtering', () => {
+    const getOpts = {url: 'http://example.com', method: 'GET'} satisfies RequestOptions
+
+    it('retries transient network error codes', () => {
+      for (const code of ['ECONNRESET', 'ECONNREFUSED', 'ETIMEDOUT', 'EPIPE', 'ENOTFOUND']) {
+        const err = Object.assign(new TypeError('fetch failed'), {
+          cause: Object.assign(new Error('connect failed'), {code}),
+        })
+        expect(isRetryableRequest(err, 0, getOpts)).toBe(true)
+      }
+    })
+
+    it('does not retry non-transient error codes', () => {
+      for (const code of ['EACCES', 'EPERM', 'ENOENT', 'ERR_TLS_CERT_ALTNAME_INVALID']) {
+        const err = Object.assign(new TypeError('fetch failed'), {
+          cause: Object.assign(new Error('connect failed'), {code}),
+        })
+        expect(isRetryableRequest(err, 0, getOpts)).toBe(false)
+      }
+    })
+
+    it('retries plain TypeError (browser network error)', () => {
+      expect(isRetryableRequest(new TypeError('Failed to fetch'), 0, getOpts)).toBe(true)
+    })
+
+    it('does not retry HttpError', () => {
+      const err = new Error('HTTP 500')
+      err.name = 'HttpError'
+      expect(isRetryableRequest(err, 0, getOpts)).toBe(false)
+    })
+
+    it('does not retry non-GET/HEAD methods', () => {
+      const err = new TypeError('Failed to fetch')
+      expect(isRetryableRequest(err, 0, {url: 'http://example.com', method: 'POST'})).toBe(false)
+      expect(isRetryableRequest(err, 0, {url: 'http://example.com', method: 'PUT'})).toBe(false)
+    })
+
+    it('retries error with code directly on error object', () => {
+      const err = Object.assign(new TypeError('fetch failed'), {code: 'ECONNRESET'})
+      expect(isRetryableRequest(err, 0, getOpts)).toBe(true)
+    })
   })
 })
