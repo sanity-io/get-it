@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  undici-types: ^7.27.1
+  undici-types: ^7.27.2
 
 importers:
 
