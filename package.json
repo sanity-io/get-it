@@ -115,7 +115,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "pkg build --strict --check --clean",
+    "build": "tsdown",
     "check": "pnpm run format && pnpm run lint:fix && pnpm run knip && pnpm run typecheck",
     "coverage": "vitest run --coverage",
     "format": "oxfmt",
@@ -135,26 +135,27 @@
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.check.json && tsc --noEmit -p tsconfig.check-node.json"
   },
   "dependencies": {
-    "undici": "^7.22.0"
+    "undici": "^7.27.2"
   },
   "devDependencies": {
     "@edge-runtime/vm": "^5.0.0",
-    "@sanity/pkg-utils": "^10.5.1",
     "@sanity/semantic-release-preset": "^6.0.0",
     "@sanity/tsconfig": "^2.1.0",
-    "@types/node": "^22.12.0",
-    "@vitest/browser": "^4.1.7",
-    "@vitest/browser-playwright": "^4.1.7",
-    "@vitest/coverage-v8": "^4.1.7",
-    "happy-dom": "^20.9.0",
-    "knip": "^6.14.2",
+    "@types/node": "^22.19.20",
+    "@vitest/browser": "^4.1.8",
+    "@vitest/browser-playwright": "^4.1.8",
+    "@vitest/coverage-v8": "^4.1.8",
+    "happy-dom": "^20.10.2",
+    "knip": "^6.16.1",
     "ls-engines": "^0.10.0",
-    "oxfmt": "^0.52.0",
-    "oxlint": "^1.67.0",
+    "oxfmt": "^0.54.0",
+    "oxlint": "^1.69.0",
     "playwright": "^1.60.0",
     "semantic-release": "^25.0.3",
+    "tsdown": "^0.22.2",
     "typescript": "6.0.3",
-    "vitest": "^4.1.7"
+    "unrun": "^0.3.1",
+    "vitest": "^4.1.8"
   },
   "peerDependencies": {
     "vitest": ">=2.0.0"
@@ -164,12 +165,6 @@
       "optional": true
     }
   },
-  "browserslist": [
-    "node >= 22.12.0",
-    "> 0.27%",
-    "not dead",
-    "not op_mini all"
-  ],
   "engines": {
     "node": ">=22.12.0"
   },
