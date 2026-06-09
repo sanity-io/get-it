@@ -125,19 +125,21 @@
     "prepublishOnly": "pnpm run build",
     "report-size": "scripts/report-size.sh",
     "test": "vitest run",
-    "test:all": "pnpm run test && pnpm run test:happy-dom && pnpm run test:bun && pnpm run test:deno && pnpm run test:edge-runtime && pnpm run test:react-server",
+    "test:all": "pnpm run test && pnpm run test:happy-dom && pnpm run test:bun && pnpm run test:deno && pnpm run test:vercel-edge && pnpm run test:react-server && pnpm run test:workerd",
     "test:browser": "pnpm test --config ./vitest.browser.config.ts",
     "test:bun": "bun run vitest run",
     "test:deno": "pnpm run build && deno test --no-lock test/deno/smoke.ts",
-    "test:edge-runtime": "pnpm test --config ./vitest.edge.config.ts",
     "test:happy-dom": "pnpm test --config ./vitest.happy-dom.config.ts --dom",
     "test:react-server": "pnpm test --config ./vitest.react-server.config.ts",
+    "test:vercel-edge": "pnpm test --config ./vitest.vercel-edge.config.ts",
+    "test:workerd": "pnpm test --config ./vitest.workerd.config.ts",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.check.json && tsc --noEmit -p tsconfig.check-node.json"
   },
   "dependencies": {
     "undici": "^7.22.0"
   },
   "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.16.14",
     "@edge-runtime/vm": "^5.0.0",
     "@sanity/pkg-utils": "^10.5.1",
     "@sanity/semantic-release-preset": "^6.0.0",
