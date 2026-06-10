@@ -116,7 +116,9 @@ const RETRYABLE_CODES = new Set([
  * Determine if an error is retryable. In Node.js (undici), fetch throws
  * `TypeError: fetch failed` with a `.cause` containing the original error
  * and its `.code`. In browsers, fetch throws a `TypeError` with no `.cause`
- * — those are always network errors and are retryable.
+ * — those are always network errors and are retryable. In Cloudflare Workers
+ * (workerd), fetch throws a plain `Error` with no code, but tags transient
+ * failures with a `retryable: true` property.
  */
 function isRetryableError(error: unknown): boolean {
   if (!(error instanceof Error)) return false
@@ -124,6 +126,12 @@ function isRetryableError(error: unknown): boolean {
   // Walk the cause chain to find an error code
   const code = getErrorCode(error) ?? getErrorCode(error.cause)
   if (code) return RETRYABLE_CODES.has(code)
+
+  // Cloudflare Workers (workerd) tags network failures with a `retryable`
+  // flag instead of an error code.
+  if ('retryable' in error && typeof error.retryable === 'boolean') {
+    return error.retryable
+  }
 
   // No error code — browser fetch network errors are plain TypeError
   // with no cause or code, and are always retryable.

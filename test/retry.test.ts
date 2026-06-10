@@ -256,5 +256,18 @@ describe('retry middleware', {timeout: 15000}, () => {
       const err = Object.assign(new TypeError('fetch failed'), {code: 'ECONNRESET'})
       expect(isRetryableRequest(err, 0, getOpts)).toBe(true)
     })
+
+    it('retries error flagged as retryable (Cloudflare Workers network error)', () => {
+      const err = Object.assign(new Error('Network connection lost.'), {
+        retryable: true,
+        remote: true,
+      })
+      expect(isRetryableRequest(err, 0, getOpts)).toBe(true)
+    })
+
+    it('does not retry error flagged as non-retryable', () => {
+      const err = Object.assign(new Error('internal error'), {retryable: false, remote: true})
+      expect(isRetryableRequest(err, 0, getOpts)).toBe(false)
+    })
   })
 })
