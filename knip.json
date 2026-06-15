@@ -4,6 +4,5 @@
   "vitest": {
     "config": ["vitest.config.ts", "vitest.*.config.ts"]
   },
-  "ignoreBinaries": ["scripts/report-size.sh"],
-  "ignoreDependencies": ["@sanity/semantic-release-preset"]
+  "ignoreBinaries": ["scripts/report-size.sh"]
 }
