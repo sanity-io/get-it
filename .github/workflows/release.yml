@@ -16,4 +16,9 @@ jobs:
     permissions:
       contents: read # for checkout
       id-token: write # to enable use of OIDC for npm provenance
+    with:
+      # Conventional-commit title/commit so the Version Packages PR stays
+      # green against the validate-pr-title check.
+      versionPrTitle: 'chore: version packages'
+      versionCommitMessage: 'chore: version packages'
     secrets: inherit
