@@ -1,5 +1,17 @@
 # get-it
 
+## 9.0.0
+
+### Major Changes
+
+- completely new fetch-based API, require node 22.12 or higher ([#576](https://github.com/sanity-io/get-it/pull/576)) ([a7754f0](https://github.com/sanity-io/get-it/commit/a7754f0ede72d4186f665464956fe52bc463b7ba))
+  See the [v9 migration guide](https://github.com/sanity-io/get-it/blob/main/docs/MIGRATION-v9.md) for details.
+
+### Patch Changes
+
+- **build:** exclude Safari/iOS < 14.1 from browserslist targets ([#585](https://github.com/sanity-io/get-it/pull/585)) ([a7754f0](https://github.com/sanity-io/get-it/commit/a7754f0ede72d4186f665464956fe52bc463b7ba))
+- cloudflare workers retry behavior ([#589](https://github.com/sanity-io/get-it/pull/589)) ([a7754f0](https://github.com/sanity-io/get-it/commit/a7754f0ede72d4186f665464956fe52bc463b7ba))
+
 <!-- markdownlint-disable --><!-- textlint-disable -->
 
 All notable changes to this project will be documented in this file. Entries up to and
