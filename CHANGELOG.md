@@ -1,5 +1,11 @@
 # get-it
 
+## 9.0.1
+
+### Patch Changes
+
+- import condition for worker(d) ([#594](https://github.com/sanity-io/get-it/pull/594)) ([ea32486](https://github.com/sanity-io/get-it/commit/ea32486652dddf23508e54253fc0dbfac70d2d95))
+
 ## 9.0.0
 
 ### Major Changes
