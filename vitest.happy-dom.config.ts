@@ -1,11 +1,11 @@
-import {configDefaults, defineConfig} from 'vitest/config'
+import {defineConfig} from 'vitest/config'
 
-import {sharedConfig} from './vitest.config'
+import {nonNodeExclude, sharedConfig} from './vitest.config'
 
 export default defineConfig({
   test: {
     ...sharedConfig,
-    exclude: [...configDefaults.exclude, 'test/*.node.test.ts'],
+    exclude: nonNodeExclude,
     environment: 'happy-dom',
     setupFiles: ['./test/helpers/suppress-noise.ts'],
   },

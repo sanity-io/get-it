@@ -80,6 +80,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium firefox webkit
       - run: pnpm run test:browser -- --coverage
+      - run: pnpm run build
+      - run: pnpm run test:smoke:browser
 
   test-bun:
     name: Test Bun
@@ -95,6 +97,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - uses: oven-sh/setup-bun@v2
       - run: pnpm run test:bun
+      - run: pnpm run build
+      - run: pnpm run test:smoke:bun
 
   test-deno:
     name: Test Deno
@@ -126,6 +130,8 @@ jobs:
           node-version: lts/*
       - run: pnpm install --frozen-lockfile
       - run: pnpm run test:happy-dom
+      - run: pnpm run build
+      - run: pnpm run test:smoke:happy-dom
 
   test-react-server:
     name: Test React Server
@@ -140,6 +146,8 @@ jobs:
           node-version: lts/*
       - run: pnpm install --frozen-lockfile
       - run: pnpm run test:react-server
+      - run: pnpm run build
+      - run: pnpm run test:smoke:react-server
 
   test-vercel-edge:
     name: Test Vercel Edge Runtime
@@ -154,6 +162,8 @@ jobs:
           node-version: lts/*
       - run: pnpm install --frozen-lockfile
       - run: pnpm run test:vercel-edge -- --coverage
+      - run: pnpm run build
+      - run: pnpm run test:smoke:vercel-edge
 
   test-workerd:
     name: Test workerd (Cloudflare Workers)
@@ -168,3 +178,5 @@ jobs:
           node-version: lts/*
       - run: pnpm install --frozen-lockfile
       - run: pnpm run test:workerd
+      - run: pnpm run build
+      - run: pnpm run test:smoke:workerd

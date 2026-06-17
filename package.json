@@ -39,6 +39,14 @@
         "source": "./src/_exports/index.ts",
         "import": "./dist/index.js"
       },
+      "workerd": {
+        "source": "./src/_exports/index.ts",
+        "import": "./dist/index.js"
+      },
+      "worker": {
+        "source": "./src/_exports/index.ts",
+        "import": "./dist/index.js"
+      },
       "node": {
         "source": "./src/_exports/index.node.ts",
         "import": "./dist/index.node.js"
@@ -81,6 +89,12 @@
           "import": "./dist/index.js"
         },
         "deno": {
+          "import": "./dist/index.js"
+        },
+        "workerd": {
+          "import": "./dist/index.js"
+        },
+        "worker": {
           "import": "./dist/index.js"
         },
         "node": {
@@ -126,12 +140,19 @@
     "release": "changeset publish",
     "report-size": "scripts/report-size.sh",
     "test": "vitest run",
-    "test:all": "pnpm run test && pnpm run test:happy-dom && pnpm run test:bun && pnpm run test:deno && pnpm run test:vercel-edge && pnpm run test:react-server && pnpm run test:workerd",
+    "test:all": "pnpm run test && pnpm run test:happy-dom && pnpm run test:bun && pnpm run test:deno && pnpm run test:vercel-edge && pnpm run test:react-server && pnpm run test:workerd && pnpm run test:smoke",
     "test:browser": "pnpm test --config ./vitest.browser.config.ts",
     "test:bun": "bun run vitest run",
     "test:deno": "pnpm run build && deno test --no-lock test/deno/smoke.ts",
     "test:happy-dom": "pnpm test --config ./vitest.happy-dom.config.ts --dom",
     "test:react-server": "pnpm test --config ./vitest.react-server.config.ts",
+    "test:smoke": "pnpm run build && pnpm run test:smoke:workerd && pnpm run test:smoke:vercel-edge && pnpm run test:smoke:react-server && pnpm run test:smoke:happy-dom && pnpm run test:smoke:browser && pnpm run test:smoke:bun",
+    "test:smoke:browser": "pnpm test --config ./vitest.browser.smoke.config.ts",
+    "test:smoke:bun": "bun run vitest run --config ./vitest.bun.smoke.config.ts",
+    "test:smoke:happy-dom": "pnpm test --config ./vitest.happy-dom.smoke.config.ts",
+    "test:smoke:react-server": "pnpm test --config ./vitest.react-server.smoke.config.ts",
+    "test:smoke:vercel-edge": "pnpm test --config ./vitest.vercel-edge.smoke.config.ts",
+    "test:smoke:workerd": "pnpm test --config ./vitest.workerd.smoke.config.ts",
     "test:vercel-edge": "pnpm test --config ./vitest.vercel-edge.config.ts",
     "test:workerd": "pnpm test --config ./vitest.workerd.config.ts",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.check.json && tsc --noEmit -p tsconfig.check-node.json"
