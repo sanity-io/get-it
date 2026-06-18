@@ -1080,5 +1080,24 @@ describe('createMockFetch', () => {
       expect(Date.now() - start).toBeLessThan(40)
       expect(error).toBe(reason)
     })
+
+    it('surfaces a timeout error when the get-it timeout is shorter than the delay', async () => {
+      const mock = createMockFetch()
+      mock.on('GET', '/slow').respondPersist({status: 200, body: {ok: true}, delay: 1000})
+
+      const request = createRequester({
+        base: 'https://api.example.com',
+        fetch: mock.fetch,
+        httpErrors: false,
+      })
+
+      let error: unknown
+      try {
+        await request({url: '/slow', timeout: 50, as: 'json'})
+      } catch (err) {
+        error = err
+      }
+      expect(error).toBeInstanceOf(Error)
+    })
   })
 })
