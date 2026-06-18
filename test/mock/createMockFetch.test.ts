@@ -1,4 +1,5 @@
 import {createRequester} from 'get-it'
+import {retry} from 'get-it/middleware'
 import {describe, expect, it} from 'vitest'
 
 import {createMockFetch} from '../../src/mock/createMockFetch'
@@ -937,6 +938,54 @@ describe('createMockFetch', () => {
         error = err
       }
       expect(error).toBeInstanceOf(TypeError)
+    })
+  })
+
+  describe('respondWithError + retry middleware', () => {
+    it('retries a mocked network error, then succeeds', async () => {
+      const mock = createMockFetch()
+      mock
+        .on('GET', '/flaky')
+        .respondWithError(new TypeError('fetch failed', {cause: {code: 'ECONNRESET'}}))
+        .respond({status: 200, body: {ok: true}})
+
+      const request = createRequester({
+        base: 'https://api.example.com',
+        fetch: mock.fetch,
+        httpErrors: false,
+        middleware: [retry({retryDelay: () => 0})],
+      })
+
+      const res = await request({url: '/flaky', as: 'json'})
+
+      expect(res.body).toEqual({ok: true})
+      expect(mock.getRequests()).toHaveLength(2)
+      mock.assertAllConsumed()
+    })
+
+    it('exhausts retries and rejects with the network error', async () => {
+      const mock = createMockFetch()
+      mock
+        .onAny('/permafail')
+        .respondWithErrorPersist(new TypeError('fetch failed', {cause: {code: 'ECONNRESET'}}))
+
+      const request = createRequester({
+        base: 'https://api.example.com',
+        fetch: mock.fetch,
+        httpErrors: false,
+        middleware: [retry({maxRetries: 2, retryDelay: () => 0})],
+      })
+
+      let error: unknown
+      try {
+        await request({url: '/permafail'})
+      } catch (err: unknown) {
+        error = err
+      }
+
+      expect(error).toBeInstanceOf(TypeError)
+      // initial attempt + 2 retries
+      expect(mock.getRequests()).toHaveLength(3)
     })
   })
 })
