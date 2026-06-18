@@ -794,4 +794,85 @@ describe('createMockFetch', () => {
       }
     })
   })
+
+  describe('respondWithError', () => {
+    it('rejects with the provided error instance, preserving name/message/cause', async () => {
+      const mock = createMockFetch()
+      const cause = {code: 'ECONNRESET'}
+      const boom = new TypeError('fetch failed', {cause})
+      mock.on('GET', '/x').respondWithError(boom)
+
+      let error: unknown
+      try {
+        await mock.fetch('https://api.example.com/x')
+      } catch (err: unknown) {
+        error = err
+      }
+
+      expect(error).toBeInstanceOf(TypeError)
+      expect(error).toBe(boom)
+      if (!(error instanceof Error)) throw new Error('expected an Error')
+      expect(error.name).toBe('TypeError')
+      expect(error.message).toBe('fetch failed')
+      expect(error.cause).toBe(cause)
+    })
+
+    it('invokes a factory once per consumption, yielding fresh instances', async () => {
+      const mock = createMockFetch()
+      let calls = 0
+      mock.onAny('/x').respondWithErrorPersist(() => new TypeError(`attempt ${++calls}`))
+
+      let first: unknown
+      let second: unknown
+      try {
+        await mock.fetch('https://h/x')
+      } catch (err: unknown) {
+        first = err
+      }
+      try {
+        await mock.fetch('https://h/x')
+      } catch (err: unknown) {
+        second = err
+      }
+
+      if (!(first instanceof Error) || !(second instanceof Error)) {
+        throw new Error('expected two Errors')
+      }
+      expect(first).not.toBe(second)
+      expect(first.message).toBe('attempt 1')
+      expect(second.message).toBe('attempt 2')
+    })
+
+    it('records the request even when it rejects', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/x').respondWithError(new TypeError('boom'))
+
+      let threw = false
+      try {
+        await mock.fetch('https://h/x', {method: 'POST'})
+      } catch {
+        threw = true
+      }
+
+      expect(threw).toBe(true)
+      const requests = mock.getRequests()
+      expect(requests).toHaveLength(1)
+      expect(requests[0].method).toBe('POST')
+    })
+
+    it('respondWithErrorPersist rejects on every matching request', async () => {
+      const mock = createMockFetch()
+      mock.onAny('/x').respondWithErrorPersist(new TypeError('down'))
+
+      for (let i = 0; i < 3; i++) {
+        let error: unknown
+        try {
+          await mock.fetch('https://h/x')
+        } catch (err: unknown) {
+          error = err
+        }
+        expect(error).toBeInstanceOf(TypeError)
+      }
+    })
+  })
 })

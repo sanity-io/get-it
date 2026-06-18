@@ -51,6 +51,16 @@ export interface RecordedRequest {
 export interface MockHandler {
   respond(def: MockResponseDef): MockHandler
   respondPersist(def: MockResponseDef): MockHandler
+  /**
+   * Reject the matched request with a transport-level error (mirrors how a real
+   * `fetch()` rejects on a failed connection), instead of resolving to a
+   * `Response`. Accepts an `Error` instance, or a factory invoked once per
+   * consumption so each rejection gets a fresh instance. The value is thrown
+   * unmodified, preserving `name`/`message`/`cause`.
+   */
+  respondWithError(error: Error | (() => Error)): MockHandler
+  /** Like {@link respondWithError}, but rejects on every matching request. */
+  respondWithErrorPersist(error: Error | (() => Error)): MockHandler
 }
 
 /**
@@ -90,11 +100,9 @@ export interface MockFetch {
 // Internal types
 // ---------------------------------------------------------------------------
 
-interface ResponseEntry {
-  def: MockResponseDef
-  persistent: boolean
-  consumed: boolean
-}
+type ResponseEntry =
+  | {kind: 'response'; def: MockResponseDef; persistent: boolean; consumed: boolean}
+  | {kind: 'error'; error: Error | (() => Error); persistent: boolean; consumed: boolean}
 
 interface InternalHandler {
   method: string | null // null = any method
@@ -135,6 +143,16 @@ function tryParseJson(value: string): {parsed: unknown} | undefined {
   } catch {
     return undefined
   }
+}
+
+/**
+ * Resolve an error entry to the error to throw. A factory function is invoked
+ * once per consumption so each rejection gets a fresh instance; the resulting
+ * value is thrown unmodified.
+ * @internal
+ */
+function resolveError(error: Error | (() => Error)): Error {
+  return typeof error === 'function' ? error() : error
 }
 
 /**
@@ -521,6 +539,10 @@ export function createMockFetch(): MockFetch {
         responseEntry.consumed = true
       }
 
+      if (responseEntry.kind === 'error') {
+        throw resolveError(responseEntry.error)
+      }
+
       return buildFetchResponse(responseEntry.def, input)
     }
 
@@ -586,11 +608,19 @@ export function createMockFetch(): MockFetch {
 
     const mockHandler: MockHandler = {
       respond(def: MockResponseDef): MockHandler {
-        handler.responses.push({def, persistent: false, consumed: false})
+        handler.responses.push({kind: 'response', def, persistent: false, consumed: false})
         return mockHandler
       },
       respondPersist(def: MockResponseDef): MockHandler {
-        handler.responses.push({def, persistent: true, consumed: false})
+        handler.responses.push({kind: 'response', def, persistent: true, consumed: false})
+        return mockHandler
+      },
+      respondWithError(error: Error | (() => Error)): MockHandler {
+        handler.responses.push({kind: 'error', error, persistent: false, consumed: false})
+        return mockHandler
+      },
+      respondWithErrorPersist(error: Error | (() => Error)): MockHandler {
+        handler.responses.push({kind: 'error', error, persistent: true, consumed: false})
         return mockHandler
       },
     }
