@@ -874,5 +874,69 @@ describe('createMockFetch', () => {
         expect(error).toBeInstanceOf(TypeError)
       }
     })
+
+    it('assertAllConsumed throws while an error response is unconsumed', () => {
+      const mock = createMockFetch()
+      mock.on('GET', '/x').respondWithError(new TypeError('boom'))
+      expect(() => mock.assertAllConsumed()).toThrow(/unconsumed/)
+    })
+
+    it('assertAllConsumed passes once the error response is consumed', async () => {
+      const mock = createMockFetch()
+      mock.on('GET', '/x').respondWithError(new TypeError('boom'))
+      try {
+        await mock.fetch('https://h/x')
+      } catch {
+        // expected rejection
+      }
+      expect(() => mock.assertAllConsumed()).not.toThrow()
+    })
+
+    it('respondWithErrorPersist leaves nothing unconsumed', async () => {
+      const mock = createMockFetch()
+      mock.onAny('/x').respondWithErrorPersist(new TypeError('down'))
+      try {
+        await mock.fetch('https://h/x')
+      } catch {
+        // expected rejection
+      }
+      expect(() => mock.assertAllConsumed()).not.toThrow()
+    })
+
+    it('queues an error then a success in order (retry-recovery shape)', async () => {
+      const mock = createMockFetch()
+      mock
+        .on('GET', '/x')
+        .respondWithError(new TypeError('transient'))
+        .respond({status: 200, body: {ok: true}})
+
+      let error: unknown
+      try {
+        await mock.fetch('https://h/x')
+      } catch (err: unknown) {
+        error = err
+      }
+      expect(error).toBeInstanceOf(TypeError)
+
+      const res = await mock.fetch('https://h/x')
+      expect(res.status).toBe(200)
+      mock.assertAllConsumed()
+    })
+
+    it('rejects through scope()', async () => {
+      const mock = createMockFetch()
+      mock
+        .scope('https://api.example.com')
+        .on('GET', '/x')
+        .respondWithError(new TypeError('scoped boom'))
+
+      let error: unknown
+      try {
+        await mock.fetch('https://api.example.com/x')
+      } catch (err: unknown) {
+        error = err
+      }
+      expect(error).toBeInstanceOf(TypeError)
+    })
   })
 })
