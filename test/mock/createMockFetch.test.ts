@@ -1091,13 +1091,22 @@ describe('createMockFetch', () => {
         httpErrors: false,
       })
 
+      const start = Date.now()
       let error: unknown
       try {
         await request({url: '/slow', timeout: 50, as: 'json'})
       } catch (err) {
         error = err
       }
+      const elapsed = Date.now() - start
+
+      // Should reject well before the 1000ms delay completes
+      expect(elapsed).toBeLessThan(500)
+
+      // AbortSignal.timeout() produces a DOMException with name 'TimeoutError'
       expect(error).toBeInstanceOf(Error)
+      if (!(error instanceof Error)) throw error
+      expect(error.name).toBe('TimeoutError')
     })
   })
 })
