@@ -988,4 +988,32 @@ describe('createMockFetch', () => {
       expect(mock.getRequests()).toHaveLength(3)
     })
   })
+
+  describe('delay', () => {
+    it('resolves the response after the configured delay', async () => {
+      const mock = createMockFetch()
+      mock.on('GET', '/slow').respond({status: 200, body: {ok: true}, delay: 50})
+
+      const start = Date.now()
+      const res = await mock.fetch('https://api.example.com/slow', {method: 'GET'})
+      const elapsed = Date.now() - start
+
+      expect(elapsed).toBeGreaterThanOrEqual(45)
+      expect(res.status).toBe(200)
+      expect(await res.text()).toBe(JSON.stringify({ok: true}))
+    })
+
+    it('resolves immediately when delay is 0 or omitted', async () => {
+      const mock = createMockFetch()
+      mock.on('GET', '/zero').respond({status: 200, body: {a: 1}, delay: 0})
+      mock.on('GET', '/none').respond({status: 200, body: {b: 2}})
+
+      const start = Date.now()
+      await mock.fetch('https://api.example.com/zero', {method: 'GET'})
+      await mock.fetch('https://api.example.com/none', {method: 'GET'})
+      const elapsed = Date.now() - start
+
+      expect(elapsed).toBeLessThan(40)
+    })
+  })
 })

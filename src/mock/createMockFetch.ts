@@ -29,6 +29,12 @@ export interface MockResponseDef {
   statusText?: string
   body?: unknown
   headers?: Record<string, string>
+  /**
+   * Delay in milliseconds before the response resolves, simulating server
+   * response time. The request is treated as sent immediately; this is how
+   * long the "server" takes to respond. Values <= 0 resolve immediately.
+   */
+  delay?: number
 }
 
 /**
@@ -543,7 +549,12 @@ export function createMockFetch(): MockFetch {
         throw resolveError(responseEntry.error)
       }
 
-      return buildFetchResponse(responseEntry.def, input)
+      const {def} = responseEntry
+      if (def.delay !== undefined && def.delay > 0) {
+        const ms = def.delay
+        await new Promise<void>((resolve) => setTimeout(resolve, ms))
+      }
+      return buildFetchResponse(def, input)
     }
 
     // No match found — build error
