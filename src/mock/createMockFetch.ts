@@ -162,6 +162,30 @@ function resolveError(error: Error | (() => Error)): Error {
 }
 
 /**
+ * Wait `ms` milliseconds, rejecting with the signal's reason if it aborts
+ * first. Clears the timer on abort so it cannot resolve a request that should
+ * already have rejected.
+ * @internal
+ */
+function delayWithAbort(ms: number, signal: AbortSignal | undefined): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(signal.reason)
+      return
+    }
+    const onAbort = () => {
+      clearTimeout(timer)
+      reject(signal?.reason)
+    }
+    const timer = setTimeout(() => {
+      signal?.removeEventListener('abort', onAbort)
+      resolve()
+    }, ms)
+    signal?.addEventListener('abort', onAbort, {once: true})
+  })
+}
+
+/**
  * Build a FetchResponse-compatible object from a MockResponseDef.
  * @internal
  */
@@ -551,8 +575,7 @@ export function createMockFetch(): MockFetch {
 
       const {def} = responseEntry
       if (def.delay !== undefined && def.delay > 0) {
-        const ms = def.delay
-        await new Promise<void>((resolve) => setTimeout(resolve, ms))
+        await delayWithAbort(def.delay, init?.signal)
       }
       return buildFetchResponse(def, input)
     }
