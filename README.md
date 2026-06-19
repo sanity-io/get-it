@@ -269,6 +269,16 @@ mock
 
 Use `.respondPersist()` for handlers that should match indefinitely.
 
+### Delayed responses
+
+Use the `delay` option to simulate server response time (in milliseconds):
+
+```ts
+mock.on('GET', '/slow').respond({status: 200, body: {ok: true}, delay: 100})
+```
+
+The request is treated as sent immediately; the response resolves after `delay` ms. If the request is aborted before the delay elapses - via an `AbortController` signal or a get-it `timeout` - it rejects with the signal's reason and the pending timer is cleared.
+
 ### Scoped mocks
 
 When your code talks to multiple hosts, use `mock.scope()` to assert the right requests go to the right place:
