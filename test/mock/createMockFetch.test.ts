@@ -1,4 +1,5 @@
 import {createRequester} from 'get-it'
+import {retry} from 'get-it/middleware'
 import {describe, expect, it} from 'vitest'
 
 import {createMockFetch} from '../../src/mock/createMockFetch'
@@ -792,6 +793,199 @@ describe('createMockFetch', () => {
         if (!(err instanceof Error)) throw err
         expect(err.message).toContain('scope() requires a full URL with origin')
       }
+    })
+  })
+
+  describe('respondWithError', () => {
+    it('rejects with the provided error instance, preserving name/message/cause', async () => {
+      const mock = createMockFetch()
+      const cause = {code: 'ECONNRESET'}
+      const boom = new TypeError('fetch failed', {cause})
+      mock.on('GET', '/x').respondWithError(boom)
+
+      let error: unknown
+      try {
+        await mock.fetch('https://api.example.com/x')
+      } catch (err: unknown) {
+        error = err
+      }
+
+      expect(error).toBeInstanceOf(TypeError)
+      expect(error).toBe(boom)
+      if (!(error instanceof Error)) throw new Error('expected an Error')
+      expect(error.name).toBe('TypeError')
+      expect(error.message).toBe('fetch failed')
+      expect(error.cause).toBe(cause)
+    })
+
+    it('invokes a factory once per consumption, yielding fresh instances', async () => {
+      const mock = createMockFetch()
+      let calls = 0
+      mock.onAny('/x').respondWithErrorPersist(() => new TypeError(`attempt ${++calls}`))
+
+      let first: unknown
+      let second: unknown
+      try {
+        await mock.fetch('https://h/x')
+      } catch (err: unknown) {
+        first = err
+      }
+      try {
+        await mock.fetch('https://h/x')
+      } catch (err: unknown) {
+        second = err
+      }
+
+      if (!(first instanceof Error) || !(second instanceof Error)) {
+        throw new Error('expected two Errors')
+      }
+      expect(first).not.toBe(second)
+      expect(first.message).toBe('attempt 1')
+      expect(second.message).toBe('attempt 2')
+    })
+
+    it('records the request even when it rejects', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/x').respondWithError(new TypeError('boom'))
+
+      let threw = false
+      try {
+        await mock.fetch('https://h/x', {method: 'POST'})
+      } catch {
+        threw = true
+      }
+
+      expect(threw).toBe(true)
+      const requests = mock.getRequests()
+      expect(requests).toHaveLength(1)
+      expect(requests[0].method).toBe('POST')
+    })
+
+    it('respondWithErrorPersist rejects on every matching request', async () => {
+      const mock = createMockFetch()
+      mock.onAny('/x').respondWithErrorPersist(new TypeError('down'))
+
+      for (let i = 0; i < 3; i++) {
+        let error: unknown
+        try {
+          await mock.fetch('https://h/x')
+        } catch (err: unknown) {
+          error = err
+        }
+        expect(error).toBeInstanceOf(TypeError)
+      }
+    })
+
+    it('assertAllConsumed throws while an error response is unconsumed', () => {
+      const mock = createMockFetch()
+      mock.on('GET', '/x').respondWithError(new TypeError('boom'))
+      expect(() => mock.assertAllConsumed()).toThrow(/unconsumed/)
+    })
+
+    it('assertAllConsumed passes once the error response is consumed', async () => {
+      const mock = createMockFetch()
+      mock.on('GET', '/x').respondWithError(new TypeError('boom'))
+      try {
+        await mock.fetch('https://h/x')
+      } catch {
+        // expected rejection
+      }
+      expect(() => mock.assertAllConsumed()).not.toThrow()
+    })
+
+    it('respondWithErrorPersist leaves nothing unconsumed', async () => {
+      const mock = createMockFetch()
+      mock.onAny('/x').respondWithErrorPersist(new TypeError('down'))
+      try {
+        await mock.fetch('https://h/x')
+      } catch {
+        // expected rejection
+      }
+      expect(() => mock.assertAllConsumed()).not.toThrow()
+    })
+
+    it('queues an error then a success in order (retry-recovery shape)', async () => {
+      const mock = createMockFetch()
+      mock
+        .on('GET', '/x')
+        .respondWithError(new TypeError('transient'))
+        .respond({status: 200, body: {ok: true}})
+
+      let error: unknown
+      try {
+        await mock.fetch('https://h/x')
+      } catch (err: unknown) {
+        error = err
+      }
+      expect(error).toBeInstanceOf(TypeError)
+
+      const res = await mock.fetch('https://h/x')
+      expect(res.status).toBe(200)
+      mock.assertAllConsumed()
+    })
+
+    it('rejects through scope()', async () => {
+      const mock = createMockFetch()
+      mock
+        .scope('https://api.example.com')
+        .on('GET', '/x')
+        .respondWithError(new TypeError('scoped boom'))
+
+      let error: unknown
+      try {
+        await mock.fetch('https://api.example.com/x')
+      } catch (err: unknown) {
+        error = err
+      }
+      expect(error).toBeInstanceOf(TypeError)
+    })
+  })
+
+  describe('respondWithError + retry middleware', () => {
+    it('retries a mocked network error, then succeeds', async () => {
+      const mock = createMockFetch()
+      mock
+        .on('GET', '/flaky')
+        .respondWithError(new TypeError('fetch failed', {cause: {code: 'ECONNRESET'}}))
+        .respond({status: 200, body: {ok: true}})
+
+      const request = createRequester({
+        base: 'https://api.example.com',
+        fetch: mock.fetch,
+        httpErrors: false,
+        middleware: [retry({retryDelay: () => 0})],
+      })
+
+      const res = await request({url: '/flaky', as: 'json'})
+
+      expect(res.body).toEqual({ok: true})
+      expect(mock.getRequests()).toHaveLength(2)
+      mock.assertAllConsumed()
+    })
+
+    it('exhausts retries and rejects with the network error', async () => {
+      const mock = createMockFetch()
+      mock
+        .onAny('/permafail')
+        .respondWithErrorPersist(new TypeError('fetch failed', {cause: {code: 'ECONNRESET'}}))
+
+      const request = createRequester({
+        base: 'https://api.example.com',
+        fetch: mock.fetch,
+        httpErrors: false,
+        middleware: [retry({maxRetries: 2, retryDelay: () => 0})],
+      })
+
+      let error: unknown
+      try {
+        await request({url: '/permafail'})
+      } catch (err: unknown) {
+        error = err
+      }
+
+      expect(error).toBeInstanceOf(TypeError)
+      // initial attempt + 2 retries
+      expect(mock.getRequests()).toHaveLength(3)
     })
   })
 })
