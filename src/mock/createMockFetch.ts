@@ -301,10 +301,7 @@ function describeHandler(handler: InternalHandler): string {
     }
     if (isRecord(handler.matchOptions.query)) {
       for (const key of Object.keys(handler.matchOptions.query)) {
-        const val = handler.matchOptions.query[key]
-        if (typeof val === 'string') {
-          mergedQuery[key] = val
-        }
+        mergedQuery[key] = String(handler.matchOptions.query[key])
       }
     }
     const queryStr = new URLSearchParams(mergedQuery).toString()

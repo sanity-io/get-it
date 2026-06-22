@@ -236,7 +236,7 @@ const res = await request({url: '/api/docs', query: {limit: 10}, as: 'json'})
 Requests are matched strictly by default — method, URL path, query parameters, and body must all match exactly. For looser matching, use the built-in matchers:
 
 ```ts
-import {objectContaining, arrayContaining, stringMatching, anyValue} from 'get-it/mock'
+import {objectContaining, arrayContaining, stringMatching, anyValue, queryContaining} from 'get-it/mock'
 
 mock
   .on('POST', '/api/docs', {
@@ -244,6 +244,12 @@ mock
   })
   .respond({status: 201, body: {id: 'abc'}})
 ```
+
+- `objectContaining(subset)` - matches an object that contains at least the given keys/values
+- `arrayContaining(items)` - matches an array that contains at least the given items
+- `stringMatching(pattern)` - matches a string against a regex or substring
+- `anyValue()` - matches any value
+- `queryContaining(subset)` - matches a query object partially, coercing expected number/boolean values to strings (since query params are always strings)
 
 These implement the `asymmetricMatch` protocol, so vitest's `expect.objectContaining()` and friends work too.
 

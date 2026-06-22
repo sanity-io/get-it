@@ -109,6 +109,10 @@ describe('objectContaining', () => {
     expect(matcher.asymmetricMatch({nested: {a: 1}, extra: true})).toBe(true)
     expect(matcher.asymmetricMatch({nested: {a: 2}})).toBe(false)
   })
+
+  it('does not coerce number vs string (stays strict)', () => {
+    expect(objectContaining({a: 1}).asymmetricMatch({a: '1'})).toBe(false)
+  })
 })
 
 describe('stringMatching', () => {
