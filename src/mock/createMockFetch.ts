@@ -16,7 +16,7 @@ import {matchUrl, parseUrl} from './urlMatch'
  * @public
  */
 export interface MockMatchOptions {
-  query?: Record<string, string> | AsymmetricMatcher
+  query?: Record<string, string | number | boolean> | AsymmetricMatcher
   body?: unknown
 }
 
@@ -397,25 +397,20 @@ function scoreMatch(
  */
 function mergeQueryMatchers(
   patternQuery: Record<string, string>,
-  optionsQuery: Record<string, string> | AsymmetricMatcher | undefined,
+  optionsQuery: Record<string, string | number | boolean> | AsymmetricMatcher | undefined,
 ): Record<string, string> | AsymmetricMatcher {
+  // Combining a URL-pattern query with an asymmetric matcher is rejected at
+  // registration time, so here an asymmetric matcher always implies an empty
+  // patternQuery and can be returned directly.
   if (isAsymmetricMatcher(optionsQuery)) {
-    // If options query is an asymmetric matcher, use it directly
-    // But if there are also pattern query params, we need to handle both
-    if (Object.keys(patternQuery).length === 0) {
-      return optionsQuery
-    }
-    // Pattern query params exist along with asymmetric matcher — not a common case,
-    // but we handle it by returning the asymmetric matcher (it takes precedence)
     return optionsQuery
   }
   const merged: Record<string, string> = {...patternQuery}
   if (isRecord(optionsQuery)) {
     for (const key of Object.keys(optionsQuery)) {
-      const val = optionsQuery[key]
-      if (typeof val === 'string') {
-        merged[key] = val
-      }
+      // Query params are always strings; coerce author-supplied numbers/booleans
+      // so {limit: 10} matches "10".
+      merged[key] = String(optionsQuery[key])
     }
   }
   return merged

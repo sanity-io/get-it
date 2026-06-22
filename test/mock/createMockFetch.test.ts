@@ -1109,4 +1109,27 @@ describe('createMockFetch', () => {
       expect(error.name).toBe('TimeoutError')
     })
   })
+
+  describe('query coercion', () => {
+    it('matches numeric and boolean query option values against string request query', async () => {
+      const mock = createMockFetch()
+      mock.on('GET', '/playback-info', {query: {thumbnailWidth: 640, includeDrafts: true}}).respond({
+        status: 200,
+        body: {ok: true},
+      })
+
+      const request = createRequester({
+        base: 'https://api.example.com',
+        fetch: mock.fetch,
+        httpErrors: false,
+      })
+
+      const res = await request({
+        url: '/playback-info',
+        query: {thumbnailWidth: '640', includeDrafts: 'true'},
+        as: 'json',
+      })
+      expect(res.body).toEqual({ok: true})
+    })
+  })
 })
