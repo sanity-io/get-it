@@ -488,6 +488,29 @@ describe('createMockFetch', () => {
       }
     })
 
+    it('does not serialize asymmetric query matcher internals in error output', async () => {
+      const mock = createMockFetch()
+      mock.on('GET', '/api/docs', {query: queryContaining({limit: 20})}).respond({
+        status: 200,
+        body: {items: []},
+      })
+
+      const request = createRequester({
+        base: 'https://api.example.com',
+        fetch: mock.fetch,
+        httpErrors: false,
+      })
+
+      try {
+        await request({url: '/api/docs', as: 'json'})
+        expect.fail('Expected MockFetchError to be thrown')
+      } catch (err: unknown) {
+        if (!(err instanceof MockFetchError)) throw err
+        expect(err.message).not.toContain('asymmetricMatch')
+        expect(err.message).toContain('<asymmetric query matcher>')
+      }
+    })
+
     it('shows exhausted mocks in error', async () => {
       const mock = createMockFetch()
       mock.on('GET', '/api/docs').respond({status: 200, body: {items: []}})

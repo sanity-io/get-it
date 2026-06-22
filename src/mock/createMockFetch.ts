@@ -289,24 +289,32 @@ function describeHandler(handler: InternalHandler): string {
     urlPart =
       handler.origin !== '' ? `${handler.origin}${handler.urlPatternPath}` : handler.urlPatternPath
   }
-  const queryKeys = Object.keys(handler.patternQuery)
-  const optionQueryKeys = isRecord(handler.matchOptions.query)
-    ? Object.keys(handler.matchOptions.query)
-    : []
-  const allQueryKeys = [...new Set([...queryKeys, ...optionQueryKeys])]
-  if (allQueryKeys.length > 0) {
-    const mergedQuery: Record<string, string> = {}
-    for (const key of queryKeys) {
-      mergedQuery[key] = handler.patternQuery[key]
-    }
-    if (isRecord(handler.matchOptions.query)) {
-      for (const key of Object.keys(handler.matchOptions.query)) {
-        mergedQuery[key] = String(handler.matchOptions.query[key])
+  // Asymmetric matchers are plain objects too, so they can't be serialized as a
+  // key/value query string — render a placeholder instead. A URL-pattern query
+  // string cannot be combined with an asymmetric matcher (rejected at
+  // registration time), so `patternQuery` is empty here.
+  if (isAsymmetricMatcher(handler.matchOptions.query)) {
+    urlPart += `?<asymmetric query matcher>`
+  } else {
+    const queryKeys = Object.keys(handler.patternQuery)
+    const optionQueryKeys = isRecord(handler.matchOptions.query)
+      ? Object.keys(handler.matchOptions.query)
+      : []
+    const allQueryKeys = [...new Set([...queryKeys, ...optionQueryKeys])]
+    if (allQueryKeys.length > 0) {
+      const mergedQuery: Record<string, string> = {}
+      for (const key of queryKeys) {
+        mergedQuery[key] = handler.patternQuery[key]
       }
-    }
-    const queryStr = new URLSearchParams(mergedQuery).toString()
-    if (queryStr) {
-      urlPart += `?${queryStr}`
+      if (isRecord(handler.matchOptions.query)) {
+        for (const key of Object.keys(handler.matchOptions.query)) {
+          mergedQuery[key] = String(handler.matchOptions.query[key])
+        }
+      }
+      const queryStr = new URLSearchParams(mergedQuery).toString()
+      if (queryStr) {
+        urlPart += `?${queryStr}`
+      }
     }
   }
   return `${method} ${urlPart}`
