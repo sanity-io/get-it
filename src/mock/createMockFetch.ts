@@ -624,6 +624,12 @@ export function createMockFetch(): MockFetch {
       urlPatternPath = url
     }
 
+    if (Object.keys(patternQuery).length > 0 && isAsymmetricMatcher(options?.query)) {
+      throw new Error(
+        `Cannot combine a query string in the URL pattern ('${typeof url === 'string' ? url : ''}') with an asymmetric \`query\` matcher. Use one form or the other.`,
+      )
+    }
+
     const handler: InternalHandler = {
       method,
       origin,

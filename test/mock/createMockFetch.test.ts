@@ -4,7 +4,7 @@ import {describe, expect, it} from 'vitest'
 
 import {createMockFetch} from '../../src/mock/createMockFetch'
 import {MockFetchError} from '../../src/mock/errors'
-import {anyValue, arrayContaining, objectContaining, stringMatching} from '../../src/mock/matchers'
+import {anyValue, arrayContaining, objectContaining, queryContaining, stringMatching} from '../../src/mock/matchers'
 
 describe('createMockFetch', () => {
   describe('basic matching', () => {
@@ -1130,6 +1130,20 @@ describe('createMockFetch', () => {
         as: 'json',
       })
       expect(res.body).toEqual({ok: true})
+    })
+
+    it('throws when combining a URL-pattern query with an asymmetric query matcher', () => {
+      const mock = createMockFetch()
+      let error: unknown
+      try {
+        mock.on('GET', '/x?a=1', {query: queryContaining({b: 2})})
+      } catch (err) {
+        error = err
+      }
+      expect(error).toBeInstanceOf(Error)
+      expect(error instanceof Error ? error.message : '').toContain(
+        'Cannot combine a query string in the URL pattern',
+      )
     })
   })
 })
