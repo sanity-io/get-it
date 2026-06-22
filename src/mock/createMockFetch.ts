@@ -29,6 +29,12 @@ export interface MockResponseDef {
   statusText?: string
   body?: unknown
   headers?: Record<string, string>
+  /**
+   * Delay in milliseconds before the response resolves, simulating server
+   * response time. The request is treated as sent immediately; this is how
+   * long the "server" takes to respond. Values <= 0 resolve immediately.
+   */
+  delay?: number
 }
 
 /**
@@ -153,6 +159,30 @@ function tryParseJson(value: string): {parsed: unknown} | undefined {
  */
 function resolveError(error: Error | (() => Error)): Error {
   return typeof error === 'function' ? error() : error
+}
+
+/**
+ * Wait `ms` milliseconds, rejecting with the signal's reason if it aborts
+ * first. Clears the timer on abort so it cannot resolve a request that should
+ * already have rejected.
+ * @internal
+ */
+function delayWithAbort(ms: number, signal: AbortSignal | undefined): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(signal.reason)
+      return
+    }
+    const onAbort = () => {
+      clearTimeout(timer)
+      reject(signal?.reason)
+    }
+    const timer = setTimeout(() => {
+      signal?.removeEventListener('abort', onAbort)
+      resolve()
+    }, ms)
+    signal?.addEventListener('abort', onAbort, {once: true})
+  })
 }
 
 /**
@@ -543,7 +573,11 @@ export function createMockFetch(): MockFetch {
         throw resolveError(responseEntry.error)
       }
 
-      return buildFetchResponse(responseEntry.def, input)
+      const {def} = responseEntry
+      if (def.delay !== undefined && def.delay > 0) {
+        await delayWithAbort(def.delay, init?.signal)
+      }
+      return buildFetchResponse(def, input)
     }
 
     // No match found — build error

@@ -988,4 +988,125 @@ describe('createMockFetch', () => {
       expect(mock.getRequests()).toHaveLength(3)
     })
   })
+
+  describe('delay', () => {
+    it('resolves the response after the configured delay', async () => {
+      const mock = createMockFetch()
+      mock.on('GET', '/slow').respond({status: 200, body: {ok: true}, delay: 50})
+
+      const start = Date.now()
+      const res = await mock.fetch('https://api.example.com/slow', {method: 'GET'})
+      const elapsed = Date.now() - start
+
+      expect(elapsed).toBeGreaterThanOrEqual(45)
+      expect(res.status).toBe(200)
+      expect(await res.text()).toBe(JSON.stringify({ok: true}))
+    })
+
+    it('resolves immediately when delay is 0 or omitted', async () => {
+      const mock = createMockFetch()
+      mock.on('GET', '/zero').respond({status: 200, body: {a: 1}, delay: 0})
+      mock.on('GET', '/none').respond({status: 200, body: {b: 2}})
+
+      const start = Date.now()
+      await mock.fetch('https://api.example.com/zero', {method: 'GET'})
+      await mock.fetch('https://api.example.com/none', {method: 'GET'})
+      const elapsed = Date.now() - start
+
+      expect(elapsed).toBeLessThan(40)
+    })
+
+    it('rejects with the signal reason when aborted during the delay', async () => {
+      const mock = createMockFetch()
+      mock.on('GET', '/slow').respond({status: 200, body: {ok: true}, delay: 1000})
+
+      const controller = new AbortController()
+      const promise = mock.fetch('https://api.example.com/slow', {
+        method: 'GET',
+        signal: controller.signal,
+      })
+      controller.abort()
+
+      let error: unknown
+      try {
+        await promise
+      } catch (err) {
+        error = err
+      }
+      expect(error).toBeInstanceOf(DOMException)
+      if (!(error instanceof DOMException)) throw new Error('expected a DOMException')
+      expect(error.name).toBe('AbortError')
+    })
+
+    it('propagates a custom abort reason', async () => {
+      const mock = createMockFetch()
+      mock.on('GET', '/slow').respond({status: 200, body: {ok: true}, delay: 1000})
+
+      const reason = new Error('boom')
+      const controller = new AbortController()
+      const promise = mock.fetch('https://api.example.com/slow', {
+        method: 'GET',
+        signal: controller.signal,
+      })
+      controller.abort(reason)
+
+      let error: unknown
+      try {
+        await promise
+      } catch (err) {
+        error = err
+      }
+      expect(error).toBe(reason)
+    })
+
+    it('rejects immediately when the signal is already aborted', async () => {
+      const mock = createMockFetch()
+      mock.on('GET', '/slow').respond({status: 200, body: {ok: true}, delay: 1000})
+
+      const reason = new Error('already gone')
+      const controller = new AbortController()
+      controller.abort(reason)
+
+      const start = Date.now()
+      let error: unknown
+      try {
+        await mock.fetch('https://api.example.com/slow', {
+          method: 'GET',
+          signal: controller.signal,
+        })
+      } catch (err) {
+        error = err
+      }
+      expect(Date.now() - start).toBeLessThan(40)
+      expect(error).toBe(reason)
+    })
+
+    it('surfaces a timeout error when the get-it timeout is shorter than the delay', async () => {
+      const mock = createMockFetch()
+      mock.on('GET', '/slow').respondPersist({status: 200, body: {ok: true}, delay: 1000})
+
+      const request = createRequester({
+        base: 'https://api.example.com',
+        fetch: mock.fetch,
+        httpErrors: false,
+      })
+
+      const start = Date.now()
+      let error: unknown
+      try {
+        await request({url: '/slow', timeout: 50, as: 'json'})
+      } catch (err) {
+        error = err
+      }
+      const elapsed = Date.now() - start
+
+      // Should reject well before the 1000ms delay completes
+      expect(elapsed).toBeLessThan(500)
+
+      // AbortSignal.timeout() produces a DOMException with name 'TimeoutError'
+      expect(error).toBeInstanceOf(Error)
+      if (!(error instanceof Error)) throw error
+      expect(error.name).toBe('TimeoutError')
+    })
+  })
 })
