@@ -16,7 +16,7 @@ import {matchUrl, parseUrl} from './urlMatch'
  * @public
  */
 export interface MockMatchOptions {
-  query?: Record<string, string> | AsymmetricMatcher
+  query?: Record<string, string | number | boolean> | AsymmetricMatcher
   body?: unknown
 }
 
@@ -289,27 +289,32 @@ function describeHandler(handler: InternalHandler): string {
     urlPart =
       handler.origin !== '' ? `${handler.origin}${handler.urlPatternPath}` : handler.urlPatternPath
   }
-  const queryKeys = Object.keys(handler.patternQuery)
-  const optionQueryKeys = isRecord(handler.matchOptions.query)
-    ? Object.keys(handler.matchOptions.query)
-    : []
-  const allQueryKeys = [...new Set([...queryKeys, ...optionQueryKeys])]
-  if (allQueryKeys.length > 0) {
-    const mergedQuery: Record<string, string> = {}
-    for (const key of queryKeys) {
-      mergedQuery[key] = handler.patternQuery[key]
-    }
-    if (isRecord(handler.matchOptions.query)) {
-      for (const key of Object.keys(handler.matchOptions.query)) {
-        const val = handler.matchOptions.query[key]
-        if (typeof val === 'string') {
-          mergedQuery[key] = val
+  // Asymmetric matchers are plain objects too, so they can't be serialized as a
+  // key/value query string — render a placeholder instead. A URL-pattern query
+  // string cannot be combined with an asymmetric matcher (rejected at
+  // registration time), so `patternQuery` is empty here.
+  if (isAsymmetricMatcher(handler.matchOptions.query)) {
+    urlPart += `?<asymmetric query matcher>`
+  } else {
+    const queryKeys = Object.keys(handler.patternQuery)
+    const optionQueryKeys = isRecord(handler.matchOptions.query)
+      ? Object.keys(handler.matchOptions.query)
+      : []
+    const allQueryKeys = [...new Set([...queryKeys, ...optionQueryKeys])]
+    if (allQueryKeys.length > 0) {
+      const mergedQuery: Record<string, string> = {}
+      for (const key of queryKeys) {
+        mergedQuery[key] = handler.patternQuery[key]
+      }
+      if (isRecord(handler.matchOptions.query)) {
+        for (const key of Object.keys(handler.matchOptions.query)) {
+          mergedQuery[key] = String(handler.matchOptions.query[key])
         }
       }
-    }
-    const queryStr = new URLSearchParams(mergedQuery).toString()
-    if (queryStr) {
-      urlPart += `?${queryStr}`
+      const queryStr = new URLSearchParams(mergedQuery).toString()
+      if (queryStr) {
+        urlPart += `?${queryStr}`
+      }
     }
   }
   return `${method} ${urlPart}`
@@ -397,25 +402,20 @@ function scoreMatch(
  */
 function mergeQueryMatchers(
   patternQuery: Record<string, string>,
-  optionsQuery: Record<string, string> | AsymmetricMatcher | undefined,
+  optionsQuery: Record<string, string | number | boolean> | AsymmetricMatcher | undefined,
 ): Record<string, string> | AsymmetricMatcher {
+  // Combining a URL-pattern query with an asymmetric matcher is rejected at
+  // registration time, so here an asymmetric matcher always implies an empty
+  // patternQuery and can be returned directly.
   if (isAsymmetricMatcher(optionsQuery)) {
-    // If options query is an asymmetric matcher, use it directly
-    // But if there are also pattern query params, we need to handle both
-    if (Object.keys(patternQuery).length === 0) {
-      return optionsQuery
-    }
-    // Pattern query params exist along with asymmetric matcher — not a common case,
-    // but we handle it by returning the asymmetric matcher (it takes precedence)
     return optionsQuery
   }
   const merged: Record<string, string> = {...patternQuery}
   if (isRecord(optionsQuery)) {
     for (const key of Object.keys(optionsQuery)) {
-      const val = optionsQuery[key]
-      if (typeof val === 'string') {
-        merged[key] = val
-      }
+      // Query params are always strings; coerce author-supplied numbers/booleans
+      // so {limit: 10} matches "10".
+      merged[key] = String(optionsQuery[key])
     }
   }
   return merged
@@ -627,6 +627,12 @@ export function createMockFetch(): MockFetch {
       patternQuery = parsed.query
     } else {
       urlPatternPath = url
+    }
+
+    if (Object.keys(patternQuery).length > 0 && isAsymmetricMatcher(options?.query)) {
+      throw new Error(
+        `Cannot combine a query string in the URL pattern ('${typeof url === 'string' ? url : ''}') with an asymmetric \`query\` matcher. Use one form or the other.`,
+      )
     }
 
     const handler: InternalHandler = {

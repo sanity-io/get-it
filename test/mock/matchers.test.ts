@@ -6,6 +6,7 @@ import {
   deepMatch,
   isAsymmetricMatcher,
   objectContaining,
+  queryContaining,
   stringMatching,
 } from '../../src/mock/matchers'
 
@@ -108,6 +109,10 @@ describe('objectContaining', () => {
     expect(matcher.asymmetricMatch({nested: {a: 1}, extra: true})).toBe(true)
     expect(matcher.asymmetricMatch({nested: {a: 2}})).toBe(false)
   })
+
+  it('does not coerce number vs string (stays strict)', () => {
+    expect(objectContaining({a: 1}).asymmetricMatch({a: '1'})).toBe(false)
+  })
 })
 
 describe('stringMatching', () => {
@@ -149,5 +154,34 @@ describe('arrayContaining', () => {
   it('does not match non-arrays', () => {
     const matcher = arrayContaining([1])
     expect(matcher.asymmetricMatch('not an array')).toBe(false)
+  })
+})
+
+describe('queryContaining', () => {
+  it('coerces number and boolean expected values to strings', () => {
+    const matcher = queryContaining({thumbnailWidth: 640, includeDrafts: true})
+    expect(matcher.asymmetricMatch({thumbnailWidth: '640', includeDrafts: 'true'})).toBe(true)
+  })
+
+  it('matches partially, ignoring extra params', () => {
+    const matcher = queryContaining({a: 1})
+    expect(matcher.asymmetricMatch({a: '1', b: '2'})).toBe(true)
+  })
+
+  it('matches plain string expected values', () => {
+    expect(queryContaining({a: 'x'}).asymmetricMatch({a: 'x'})).toBe(true)
+  })
+
+  it('rejects when an expected key is missing', () => {
+    expect(queryContaining({a: 1}).asymmetricMatch({b: '1'})).toBe(false)
+  })
+
+  it('rejects when a value does not match after coercion', () => {
+    expect(queryContaining({a: 1}).asymmetricMatch({a: '2'})).toBe(false)
+  })
+
+  it('rejects non-record input', () => {
+    expect(queryContaining({a: 1}).asymmetricMatch(null)).toBe(false)
+    expect(queryContaining({a: 1}).asymmetricMatch('a=1')).toBe(false)
   })
 })

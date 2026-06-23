@@ -93,6 +93,23 @@ export function objectContaining(expected: Record<string, unknown>): AsymmetricM
 }
 
 /**
+ * Matches a query object that contains at least the specified keys with matching
+ * values. Expected values are coerced to strings before comparison, since query
+ * parameters are always strings. Extra keys on the actual value are ignored.
+ * @public
+ */
+export function queryContaining(
+  expected: Record<string, string | number | boolean>,
+): AsymmetricMatcher {
+  return {
+    asymmetricMatch(actual: unknown): boolean {
+      if (!isRecord(actual)) return false
+      return Object.keys(expected).every((key) => actual[key] === String(expected[key]))
+    },
+  }
+}
+
+/**
  * Matches a string against a regex or substring.
  * @public
  */

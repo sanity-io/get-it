@@ -4,7 +4,7 @@ import {describe, expect, it} from 'vitest'
 
 import {createMockFetch} from '../../src/mock/createMockFetch'
 import {MockFetchError} from '../../src/mock/errors'
-import {anyValue, arrayContaining, objectContaining, stringMatching} from '../../src/mock/matchers'
+import {anyValue, arrayContaining, objectContaining, queryContaining, stringMatching} from '../../src/mock/matchers'
 
 describe('createMockFetch', () => {
   describe('basic matching', () => {
@@ -485,6 +485,29 @@ describe('createMockFetch', () => {
         expect(err.url).toBe('/api/docs')
         expect(err.message).toContain('Closest mock')
         expect(err.message).toContain('Differences')
+      }
+    })
+
+    it('does not serialize asymmetric query matcher internals in error output', async () => {
+      const mock = createMockFetch()
+      mock.on('GET', '/api/docs', {query: queryContaining({limit: 20})}).respond({
+        status: 200,
+        body: {items: []},
+      })
+
+      const request = createRequester({
+        base: 'https://api.example.com',
+        fetch: mock.fetch,
+        httpErrors: false,
+      })
+
+      try {
+        await request({url: '/api/docs', as: 'json'})
+        expect.fail('Expected MockFetchError to be thrown')
+      } catch (err: unknown) {
+        if (!(err instanceof MockFetchError)) throw err
+        expect(err.message).not.toContain('asymmetricMatch')
+        expect(err.message).toContain('<asymmetric query matcher>')
       }
     })
 
@@ -1107,6 +1130,57 @@ describe('createMockFetch', () => {
       expect(error).toBeInstanceOf(Error)
       if (!(error instanceof Error)) throw error
       expect(error.name).toBe('TimeoutError')
+    })
+  })
+
+  describe('query coercion', () => {
+    it('matches numeric and boolean query option values against string request query', async () => {
+      const mock = createMockFetch()
+      mock.on('GET', '/playback-info', {query: {thumbnailWidth: 640, includeDrafts: true}}).respond({
+        status: 200,
+        body: {ok: true},
+      })
+
+      const request = createRequester({
+        base: 'https://api.example.com',
+        fetch: mock.fetch,
+        httpErrors: false,
+      })
+
+      const res = await request({
+        url: '/playback-info',
+        query: {thumbnailWidth: '640', includeDrafts: 'true'},
+        as: 'json',
+      })
+      expect(res.body).toEqual({ok: true})
+    })
+
+    it('merges a URL-pattern query with a plain-record query option without throwing', async () => {
+      const mock = createMockFetch()
+      mock.on('GET', '/x?a=1', {query: {b: 2}}).respond({status: 200, body: {ok: true}})
+
+      const request = createRequester({
+        base: 'https://api.example.com',
+        fetch: mock.fetch,
+        httpErrors: false,
+      })
+
+      const res = await request({url: '/x', query: {a: '1', b: '2'}, as: 'json'})
+      expect(res.body).toEqual({ok: true})
+    })
+
+    it('throws when combining a URL-pattern query with an asymmetric query matcher', () => {
+      const mock = createMockFetch()
+      let error: unknown
+      try {
+        mock.on('GET', '/x?a=1', {query: queryContaining({b: 2})})
+      } catch (err) {
+        error = err
+      }
+      expect(error).toBeInstanceOf(Error)
+      expect(error instanceof Error ? error.message : '').toContain(
+        'Cannot combine a query string in the URL pattern',
+      )
     })
   })
 })
