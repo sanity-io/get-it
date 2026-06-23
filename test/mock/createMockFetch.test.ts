@@ -4,7 +4,13 @@ import {describe, expect, it} from 'vitest'
 
 import {createMockFetch} from '../../src/mock/createMockFetch'
 import {MockFetchError} from '../../src/mock/errors'
-import {anyValue, arrayContaining, objectContaining, queryContaining, stringMatching} from '../../src/mock/matchers'
+import {
+  anyValue,
+  arrayContaining,
+  objectContaining,
+  queryContaining,
+  stringMatching,
+} from '../../src/mock/matchers'
 
 describe('createMockFetch', () => {
   describe('basic matching', () => {
@@ -1136,10 +1142,12 @@ describe('createMockFetch', () => {
   describe('query coercion', () => {
     it('matches numeric and boolean query option values against string request query', async () => {
       const mock = createMockFetch()
-      mock.on('GET', '/playback-info', {query: {thumbnailWidth: 640, includeDrafts: true}}).respond({
-        status: 200,
-        body: {ok: true},
-      })
+      mock
+        .on('GET', '/playback-info', {query: {thumbnailWidth: 640, includeDrafts: true}})
+        .respond({
+          status: 200,
+          body: {ok: true},
+        })
 
       const request = createRequester({
         base: 'https://api.example.com',
