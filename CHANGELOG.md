@@ -1,5 +1,13 @@
 # get-it
 
+## 9.1.0
+
+### Minor Changes
+
+- **mock:** allow responding with errors ([#598](https://github.com/sanity-io/get-it/pull/598)) ([b7fbb2f](https://github.com/sanity-io/get-it/commit/b7fbb2f1d3930d8f3aed23da7475ca93b2606ccc))
+- **mock:** delay response ([#602](https://github.com/sanity-io/get-it/pull/602)) ([904ffe2](https://github.com/sanity-io/get-it/commit/904ffe2c5091beea2ce963e06e3689b5cda8a13a))
+- **mock:** coerce query-param values to strings when matching ([#605](https://github.com/sanity-io/get-it/pull/605)) ([aad9201](https://github.com/sanity-io/get-it/commit/aad9201303e7f7036e8089a51648e9aa4b7b374f))
+
 ## 9.0.1
 
 ### Patch Changes
