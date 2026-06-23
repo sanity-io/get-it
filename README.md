@@ -236,7 +236,13 @@ const res = await request({url: '/api/docs', query: {limit: 10}, as: 'json'})
 Requests are matched strictly by default — method, URL path, query parameters, and body must all match exactly. For looser matching, use the built-in matchers:
 
 ```ts
-import {objectContaining, arrayContaining, stringMatching, anyValue, queryContaining} from 'get-it/mock'
+import {
+  objectContaining,
+  arrayContaining,
+  stringMatching,
+  anyValue,
+  queryContaining,
+} from 'get-it/mock'
 
 mock
   .on('POST', '/api/docs', {
