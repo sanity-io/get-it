@@ -13,6 +13,7 @@ export type {AsymmetricMatcher} from '../mock/matchers'
 export {
   anyValue,
   arrayContaining,
+  bodyBytes,
   objectContaining,
   queryContaining,
   stringMatching,

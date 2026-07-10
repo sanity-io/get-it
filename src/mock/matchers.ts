@@ -1,3 +1,5 @@
+import {bytesEqual, toBytes} from './bytes'
+
 /**
  * Protocol interface for asymmetric matching, compatible with vitest/Jest.
  * @public
@@ -136,4 +138,25 @@ export function arrayContaining(expected: unknown[]): AsymmetricMatcher {
       )
     },
   }
+}
+
+/**
+ * Matches a request body against exact bytes. The actual value must be a
+ * `Uint8Array` (which is how the mock records binary and streamed bodies) with
+ * identical bytes. Accepts a `Uint8Array` or `ArrayBuffer` as the expected value.
+ * @public
+ */
+export function bodyBytes(expected: Uint8Array | ArrayBuffer): AsymmetricMatcher {
+  const expectedBytes = toBytes(expected)
+  // Assigned to a variable (not returned as a literal) so the extra `toString`
+  // member doesn't trip TypeScript's excess-property check against AsymmetricMatcher.
+  const matcher = {
+    asymmetricMatch(actual: unknown): boolean {
+      return actual instanceof Uint8Array && bytesEqual(expectedBytes, actual)
+    },
+    toString(): string {
+      return `bodyBytes(${expectedBytes.byteLength} bytes)`
+    },
+  }
+  return matcher
 }

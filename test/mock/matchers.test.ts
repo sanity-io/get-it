@@ -3,6 +3,7 @@ import {describe, expect, it} from 'vitest'
 import {
   anyValue,
   arrayContaining,
+  bodyBytes,
   deepMatch,
   isAsymmetricMatcher,
   objectContaining,
@@ -183,5 +184,33 @@ describe('queryContaining', () => {
   it('rejects non-record input', () => {
     expect(queryContaining({a: 1}).asymmetricMatch(null)).toBe(false)
     expect(queryContaining({a: 1}).asymmetricMatch('a=1')).toBe(false)
+  })
+})
+
+describe('bodyBytes', () => {
+  it('matches a Uint8Array with equal bytes', () => {
+    expect(bodyBytes(new Uint8Array([1, 2, 3])).asymmetricMatch(new Uint8Array([1, 2, 3]))).toBe(
+      true,
+    )
+  })
+
+  it('rejects differing bytes', () => {
+    expect(bodyBytes(new Uint8Array([1, 2, 3])).asymmetricMatch(new Uint8Array([1, 9, 3]))).toBe(
+      false,
+    )
+  })
+
+  it('rejects a non-Uint8Array actual', () => {
+    expect(bodyBytes(new Uint8Array([1, 2, 3])).asymmetricMatch('123')).toBe(false)
+    expect(bodyBytes(new Uint8Array([1, 2, 3])).asymmetricMatch(new ArrayBuffer(3))).toBe(false)
+  })
+
+  it('accepts an ArrayBuffer as the expected value', () => {
+    const buffer = new Uint8Array([7, 8, 9]).buffer
+    expect(bodyBytes(buffer).asymmetricMatch(new Uint8Array([7, 8, 9]))).toBe(true)
+  })
+
+  it('has a readable toString', () => {
+    expect(String(bodyBytes(new Uint8Array([1, 2, 3])))).toBe('bodyBytes(3 bytes)')
   })
 })
