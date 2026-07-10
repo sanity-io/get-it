@@ -162,7 +162,7 @@
   },
   "devDependencies": {
     "@changesets/cli": "^2.31.0",
-    "@cloudflare/vitest-pool-workers": "^0.16.14",
+    "@cloudflare/vitest-pool-workers": "^0.18.4",
     "@edge-runtime/vm": "^5.0.0",
     "@sanity/pkg-utils": "^10.5.1",
     "@sanity/tsconfig": "^2.1.0",
