@@ -1,4 +1,5 @@
 import type {FetchFunction, FetchResponse} from '../types'
+import {bytesEqual, isBinaryBody, toBytes} from './bytes'
 import type {Diff} from './diff'
 import {diffValues} from './diff'
 import type {MockDescription} from './errors'
@@ -149,6 +150,49 @@ function tryParseJson(value: string): {parsed: unknown} | undefined {
   } catch {
     return undefined
   }
+}
+
+/**
+ * Drain a readable stream fully into a single `Uint8Array`. Only the mock's
+ * async `fetch` can safely consume a request-body stream once.
+ * @internal
+ */
+async function drainStream(stream: ReadableStream): Promise<Uint8Array> {
+  const reader = stream.getReader()
+  const chunks: Uint8Array[] = []
+  let total = 0
+  for (let chunk = await reader.read(); !chunk.done; chunk = await reader.read()) {
+    const value: unknown = chunk.value
+    if (value instanceof Uint8Array) {
+      chunks.push(value)
+      total += value.byteLength
+    } else if (value instanceof ArrayBuffer) {
+      const bytes = new Uint8Array(value)
+      chunks.push(bytes)
+      total += bytes.byteLength
+    }
+  }
+  const out = new Uint8Array(total)
+  let offset = 0
+  for (const chunk of chunks) {
+    out.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+  return out
+}
+
+/**
+ * Match a request body against a handler's expected body. Raw binary
+ * (`Uint8Array` / `ArrayBuffer`) is compared byte-for-byte; everything else
+ * (including the `bodyBytes()` and other asymmetric matchers) falls through to
+ * structural `deepMatch`.
+ * @internal
+ */
+function matchBody(expected: unknown, actual: unknown): boolean {
+  if (isBinaryBody(expected)) {
+    return actual instanceof Uint8Array && bytesEqual(toBytes(expected), actual)
+  }
+  return deepMatch(expected, actual)
 }
 
 /**
@@ -389,7 +433,7 @@ function scoreMatch(
   }
 
   // Body match
-  if (handler.matchOptions.body === undefined || deepMatch(handler.matchOptions.body, body)) {
+  if (handler.matchOptions.body === undefined || matchBody(handler.matchOptions.body, body)) {
     score += 1
   }
 
@@ -463,7 +507,7 @@ function buildDiffs(
   }
 
   // Body diff
-  if (handler.matchOptions.body !== undefined && !deepMatch(handler.matchOptions.body, body)) {
+  if (handler.matchOptions.body !== undefined && !matchBody(handler.matchOptions.body, body)) {
     if (isRecord(handler.matchOptions.body) || Array.isArray(handler.matchOptions.body)) {
       diffs.push(...diffValues('body', handler.matchOptions.body, body))
     } else {
@@ -515,20 +559,30 @@ export function createMockFetch(): MockFetch {
       ? new Headers(init.headers)
       : new Headers(init?.headers ?? undefined)
 
-    // Parse body if content-type is JSON
+    // Parse / normalize the request body for recording and matching.
     let body: unknown = undefined
-    if (init?.body !== undefined && init.body !== null && typeof init.body === 'string') {
-      const ct = getContentType(normalizedHeaders)
-      if (ct !== null && ct.includes('application/json')) {
-        const result = tryParseJson(init.body)
-        if (result !== undefined) {
-          body = result.parsed
+    const rawBody = init?.body
+    if (rawBody !== undefined && rawBody !== null) {
+      if (typeof rawBody === 'string') {
+        const ct = getContentType(normalizedHeaders)
+        if (ct !== null && ct.includes('application/json')) {
+          const result = tryParseJson(rawBody)
+          body = result !== undefined ? result.parsed : rawBody
         } else {
-          body = init.body
+          body = rawBody
         }
-      } else {
-        body = init.body
+      } else if (rawBody instanceof Uint8Array || rawBody instanceof ArrayBuffer) {
+        // Store a defensive copy so the recorded body is a stable snapshot.
+        // Note: a plain `new Uint8Array(...)` copy is used rather than
+        // `toBytes(rawBody).slice()` because `Buffer` (a `Uint8Array`
+        // subclass) overrides `slice()` to return another `Buffer`, which
+        // `toEqual` treats as unequal to a plain `Uint8Array` snapshot.
+        body = new Uint8Array(toBytes(rawBody))
+      } else if (rawBody instanceof ReadableStream) {
+        body = await drainStream(rawBody)
       }
+      // Blob / FormData / URLSearchParams bodies are not yet normalized and
+      // remain unrecorded (body stays undefined).
     }
 
     // Record the request
@@ -556,7 +610,7 @@ export function createMockFetch(): MockFetch {
       if (!queryMatches(handler, query)) continue
 
       // Check body
-      if (handler.matchOptions.body !== undefined && !deepMatch(handler.matchOptions.body, body)) {
+      if (handler.matchOptions.body !== undefined && !matchBody(handler.matchOptions.body, body)) {
         continue
       }
 

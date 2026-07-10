@@ -7,6 +7,7 @@ import {MockFetchError} from '../../src/mock/errors'
 import {
   anyValue,
   arrayContaining,
+  bodyBytes,
   objectContaining,
   queryContaining,
   stringMatching,
@@ -1189,6 +1190,89 @@ describe('createMockFetch', () => {
       expect(error instanceof Error ? error.message : '').toContain(
         'Cannot combine a query string in the URL pattern',
       )
+    })
+  })
+
+  describe('binary request bodies', () => {
+    it('records and matches a Uint8Array body', async () => {
+      const mock = createMockFetch()
+      const bytes = new Uint8Array([1, 2, 3, 4])
+      mock.on('POST', '/upload', {body: bytes}).respond({status: 201})
+
+      const res = await mock.fetch('https://api.example.com/upload', {
+        method: 'POST',
+        body: new Uint8Array([1, 2, 3, 4]),
+      })
+
+      expect(res.status).toBe(201)
+      expect(mock.getRequests()[0].body).toEqual(new Uint8Array([1, 2, 3, 4]))
+    })
+
+    it('records and matches an ArrayBuffer body', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/upload', {body: new Uint8Array([9, 8, 7]).buffer}).respond({status: 201})
+
+      const res = await mock.fetch('https://api.example.com/upload', {
+        method: 'POST',
+        body: new Uint8Array([9, 8, 7]).buffer,
+      })
+
+      expect(res.status).toBe(201)
+      expect(mock.getRequests()[0].body).toEqual(new Uint8Array([9, 8, 7]))
+    })
+
+    it('records and matches a ReadableStream body', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/upload', {body: new Uint8Array([1, 2, 3, 4, 5])}).respond({status: 201})
+
+      const stream = new ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.enqueue(new Uint8Array([1, 2, 3]))
+          controller.enqueue(new Uint8Array([4, 5]))
+          controller.close()
+        },
+      })
+
+      const res = await mock.fetch('https://api.example.com/upload', {method: 'POST', body: stream})
+
+      expect(res.status).toBe(201)
+      expect(mock.getRequests()[0].body).toEqual(new Uint8Array([1, 2, 3, 4, 5]))
+    })
+
+    it('records and matches a Buffer body', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/upload', {body: new Uint8Array([10, 20])}).respond({status: 201})
+
+      const res = await mock.fetch('https://api.example.com/upload', {
+        method: 'POST',
+        body: Buffer.from([10, 20]),
+      })
+
+      expect(res.status).toBe(201)
+      expect(mock.getRequests()[0].body).toEqual(new Uint8Array([10, 20]))
+    })
+
+    it('matches with the bodyBytes matcher', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/upload', {body: bodyBytes(new Uint8Array([1, 2, 3]))}).respond({status: 201})
+
+      const res = await mock.fetch('https://api.example.com/upload', {
+        method: 'POST',
+        body: new Uint8Array([1, 2, 3]),
+      })
+
+      expect(res.status).toBe(201)
+    })
+
+    it('records a stable snapshot that later mutation cannot change', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/upload').respond({status: 201})
+
+      const source = new Uint8Array([1, 2, 3])
+      await mock.fetch('https://api.example.com/upload', {method: 'POST', body: source})
+      source[0] = 99
+
+      expect(mock.getRequests()[0].body).toEqual(new Uint8Array([1, 2, 3]))
     })
   })
 })
