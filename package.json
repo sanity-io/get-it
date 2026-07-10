@@ -172,7 +172,7 @@
     "@vitest/coverage-v8": "^4.1.7",
     "happy-dom": "^20.9.0",
     "knip": "^6.14.2",
-    "ls-engines": "^0.10.0",
+    "ls-engines": "^0.10.1",
     "oxfmt": "^0.52.0",
     "oxlint": "^1.67.0",
     "playwright": "^1.60.0",
