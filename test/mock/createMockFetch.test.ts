@@ -1254,7 +1254,9 @@ describe('createMockFetch', () => {
 
     it('matches with the bodyBytes matcher', async () => {
       const mock = createMockFetch()
-      mock.on('POST', '/upload', {body: bodyBytes(new Uint8Array([1, 2, 3]))}).respond({status: 201})
+      mock
+        .on('POST', '/upload', {body: bodyBytes(new Uint8Array([1, 2, 3]))})
+        .respond({status: 201})
 
       const res = await mock.fetch('https://api.example.com/upload', {
         method: 'POST',
@@ -1291,7 +1293,46 @@ describe('createMockFetch', () => {
 
       expect(error).toBeInstanceOf(Error)
       if (!(error instanceof Error)) throw new Error('expected an error')
-      expect(error.message).toContain('body: expected Uint8Array(3 bytes), received Uint8Array(4 bytes)')
+      expect(error.message).toContain(
+        'body: expected Uint8Array(3 bytes), received Uint8Array(4 bytes)',
+      )
+    })
+
+    it('renders a readable error when an ArrayBuffer body differs', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/upload', {body: new Uint8Array([1, 2, 3]).buffer}).respond({status: 201})
+
+      let error: unknown
+      try {
+        await mock.fetch('https://api.example.com/upload', {
+          method: 'POST',
+          body: new Uint8Array([9, 9, 9, 9]),
+        })
+      } catch (err) {
+        error = err
+      }
+
+      expect(error).toBeInstanceOf(Error)
+      if (!(error instanceof Error)) throw new Error('expected an error')
+      expect(error.message).toContain(
+        'body: expected ArrayBuffer(3 bytes), received Uint8Array(4 bytes)',
+      )
+    })
+
+    it('records an empty ReadableStream body as an empty Uint8Array', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/upload').respond({status: 201})
+
+      const stream = new ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.close()
+        },
+      })
+
+      const res = await mock.fetch('https://api.example.com/upload', {method: 'POST', body: stream})
+
+      expect(res.status).toBe(201)
+      expect(mock.getRequests()[0].body).toEqual(new Uint8Array(0))
     })
   })
 })

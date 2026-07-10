@@ -163,6 +163,7 @@ async function drainStream(stream: ReadableStream): Promise<Uint8Array> {
   let total = 0
   for (let chunk = await reader.read(); !chunk.done; chunk = await reader.read()) {
     const value: unknown = chunk.value
+    // Request-body streams yield binary chunks; anything else is ignored.
     if (value instanceof Uint8Array) {
       chunks.push(value)
       total += value.byteLength
