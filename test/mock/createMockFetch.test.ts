@@ -1274,5 +1274,24 @@ describe('createMockFetch', () => {
 
       expect(mock.getRequests()[0].body).toEqual(new Uint8Array([1, 2, 3]))
     })
+
+    it('renders a readable error when binary bodies differ', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/upload', {body: new Uint8Array([1, 2, 3])}).respond({status: 201})
+
+      let error: unknown
+      try {
+        await mock.fetch('https://api.example.com/upload', {
+          method: 'POST',
+          body: new Uint8Array([9, 9, 9, 9]),
+        })
+      } catch (err) {
+        error = err
+      }
+
+      expect(error).toBeInstanceOf(Error)
+      if (!(error instanceof Error)) throw new Error('expected an error')
+      expect(error.message).toContain('body: expected Uint8Array(3 bytes), received Uint8Array(4 bytes)')
+    })
   })
 })

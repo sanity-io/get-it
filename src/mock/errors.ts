@@ -16,6 +16,7 @@ export interface MockDescription {
 function formatValue(value: unknown): string {
   if (value === undefined) return 'undefined'
   if (typeof value === 'string') return `"${value}"`
+  if (value instanceof Uint8Array) return `Uint8Array(${value.byteLength} bytes)`
   return String(value)
 }
 

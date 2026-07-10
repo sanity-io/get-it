@@ -508,10 +508,15 @@ function buildDiffs(
 
   // Body diff
   if (handler.matchOptions.body !== undefined && !matchBody(handler.matchOptions.body, body)) {
-    if (isRecord(handler.matchOptions.body) || Array.isArray(handler.matchOptions.body)) {
-      diffs.push(...diffValues('body', handler.matchOptions.body, body))
+    const expectedBody = handler.matchOptions.body
+    const useStructuralDiff =
+      (isRecord(expectedBody) || Array.isArray(expectedBody)) &&
+      !isBinaryBody(expectedBody) &&
+      !isBinaryBody(body)
+    if (useStructuralDiff) {
+      diffs.push(...diffValues('body', expectedBody, body))
     } else {
-      diffs.push({path: 'body', expected: handler.matchOptions.body, actual: body})
+      diffs.push({path: 'body', expected: expectedBody, actual: body})
     }
   }
 
