@@ -1404,6 +1404,60 @@ describe('createMockFetch', () => {
     })
   })
 
+  describe('URLSearchParams bodies', () => {
+    it('records as a record and matches a plain object', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/form', {body: {a: '1', b: '2'}}).respond({status: 200})
+
+      const res = await mock.fetch('https://api.example.com/form', {
+        method: 'POST',
+        body: new URLSearchParams({a: '1', b: '2'}),
+      })
+
+      expect(res.status).toBe(200)
+      expect(mock.getRequests()[0].body).toEqual({a: '1', b: '2'})
+    })
+
+    it('matches by passing a URLSearchParams', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/form', {body: new URLSearchParams({a: '1'})}).respond({status: 200})
+
+      const res = await mock.fetch('https://api.example.com/form', {
+        method: 'POST',
+        body: new URLSearchParams({a: '1'}),
+      })
+
+      expect(res.status).toBe(200)
+    })
+
+    it('preserves multi-value params as arrays and matches queryContaining', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/form', {body: queryContaining({tag: ['x', 'y']})}).respond({status: 200})
+
+      const res = await mock.fetch('https://api.example.com/form', {
+        method: 'POST',
+        body: new URLSearchParams('tag=x&tag=y&other=1'),
+      })
+
+      expect(res.status).toBe(200)
+      expect(mock.getRequests()[0].body).toEqual({tag: ['x', 'y'], other: '1'})
+    })
+
+    it('synthesizes the form-urlencoded content-type', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/form').respond({status: 200})
+
+      await mock.fetch('https://api.example.com/form', {
+        method: 'POST',
+        body: new URLSearchParams({a: '1'}),
+      })
+
+      expect(mock.getRequests()[0].headers.get('content-type')).toBe(
+        'application/x-www-form-urlencoded;charset=UTF-8',
+      )
+    })
+  })
+
   describe('headers matching', () => {
     it('matches a header by plain record, case-insensitively', async () => {
       const mock = createMockFetch()

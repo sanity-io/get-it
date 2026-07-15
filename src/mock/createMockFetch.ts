@@ -1,5 +1,5 @@
 import type {FetchFunction, FetchResponse} from '../types'
-import {blobToBytes, contentTypeFor, normalizeExpectedBody} from './body'
+import {blobToBytes, contentTypeFor, normalizeExpectedBody, normalizeUrlSearchParams} from './body'
 import {bytesEqual, isBinaryBody, toBytes} from './bytes'
 import type {Diff} from './diff'
 import {diffValues} from './diff'
@@ -658,6 +658,8 @@ export function createMockFetch(): MockFetch {
       } else if (rawBody instanceof Blob) {
         // File extends Blob; a bare blob/file body sends only bytes on the wire.
         body = await blobToBytes(rawBody)
+      } else if (rawBody instanceof URLSearchParams) {
+        body = normalizeUrlSearchParams(rawBody)
       }
     }
 
