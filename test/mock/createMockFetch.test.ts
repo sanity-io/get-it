@@ -1337,6 +1337,73 @@ describe('createMockFetch', () => {
     })
   })
 
+  describe('Blob and File bodies', () => {
+    it('records a Blob body as bytes and matches with bodyBytes', async () => {
+      const mock = createMockFetch()
+      mock
+        .on('POST', '/upload', {body: bodyBytes(new Uint8Array([1, 2, 3]))})
+        .respond({status: 201})
+
+      const res = await mock.fetch('https://api.example.com/upload', {
+        method: 'POST',
+        body: new Blob([new Uint8Array([1, 2, 3])]),
+      })
+
+      expect(res.status).toBe(201)
+      expect(mock.getRequests()[0].body).toEqual(new Uint8Array([1, 2, 3]))
+    })
+
+    it('synthesizes content-type from blob.type, assertable via headers', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/upload', {headers: {'content-type': 'image/png'}}).respond({status: 201})
+
+      const res = await mock.fetch('https://api.example.com/upload', {
+        method: 'POST',
+        body: new Blob([new Uint8Array([1])], {type: 'image/png'}),
+      })
+
+      expect(res.status).toBe(201)
+      expect(mock.getRequests()[0].headers.get('content-type')).toBe('image/png')
+    })
+
+    it('does not synthesize content-type for a typeless Blob', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/upload').respond({status: 201})
+
+      await mock.fetch('https://api.example.com/upload', {
+        method: 'POST',
+        body: new Blob([new Uint8Array([1])]),
+      })
+
+      expect(mock.getRequests()[0].headers.get('content-type')).toBe(null)
+    })
+
+    it('records a File body as bytes (name not recorded)', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/upload').respond({status: 201})
+
+      await mock.fetch('https://api.example.com/upload', {
+        method: 'POST',
+        body: new File([new Uint8Array([7, 8])], 'a.bin', {type: 'application/octet-stream'}),
+      })
+
+      expect(mock.getRequests()[0].body).toEqual(new Uint8Array([7, 8]))
+    })
+
+    it('does not override an explicit content-type', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/upload').respond({status: 201})
+
+      await mock.fetch('https://api.example.com/upload', {
+        method: 'POST',
+        headers: {'content-type': 'application/custom'},
+        body: new Blob([new Uint8Array([1])], {type: 'image/png'}),
+      })
+
+      expect(mock.getRequests()[0].headers.get('content-type')).toBe('application/custom')
+    })
+  })
+
   describe('headers matching', () => {
     it('matches a header by plain record, case-insensitively', async () => {
       const mock = createMockFetch()

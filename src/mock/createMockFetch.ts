@@ -1,4 +1,5 @@
 import type {FetchFunction, FetchResponse} from '../types'
+import {blobToBytes, contentTypeFor, normalizeExpectedBody} from './body'
 import {bytesEqual, isBinaryBody, toBytes} from './bytes'
 import type {Diff} from './diff'
 import {diffValues} from './diff'
@@ -119,6 +120,7 @@ interface InternalHandler {
   patternQuery: Record<string, string> // query parsed from the url pattern
   matchOptions: MockMatchOptions
   responses: ResponseEntry[]
+  normalizedBody?: {value: unknown}
 }
 
 // ---------------------------------------------------------------------------
@@ -231,6 +233,14 @@ function matchBody(expected: unknown, actual: unknown): boolean {
     return actual instanceof Uint8Array && bytesEqual(toBytes(expected), actual)
   }
   return deepMatch(expected, actual)
+}
+
+/**
+ * The handler's expected body, normalized if it was a native body type.
+ * @internal
+ */
+function expectedBodyOf(handler: InternalHandler): unknown {
+  return handler.normalizedBody ? handler.normalizedBody.value : handler.matchOptions.body
 }
 
 /**
@@ -472,7 +482,7 @@ function scoreMatch(
   }
 
   // Body match
-  if (handler.matchOptions.body === undefined || matchBody(handler.matchOptions.body, body)) {
+  if (handler.matchOptions.body === undefined || matchBody(expectedBodyOf(handler), body)) {
     score += 1
   }
 
@@ -552,8 +562,8 @@ function buildDiffs(
   }
 
   // Body diff
-  if (handler.matchOptions.body !== undefined && !matchBody(handler.matchOptions.body, body)) {
-    const expectedBody = handler.matchOptions.body
+  if (handler.matchOptions.body !== undefined && !matchBody(expectedBodyOf(handler), body)) {
+    const expectedBody = expectedBodyOf(handler)
     const useStructuralDiff =
       (isRecord(expectedBody) || Array.isArray(expectedBody)) &&
       !isBinaryBody(expectedBody) &&
@@ -623,7 +633,6 @@ export function createMockFetch(): MockFetch {
     const normalizedHeaders = isHeaders(init?.headers)
       ? new Headers(init.headers)
       : new Headers(init?.headers ?? undefined)
-    const headerRecord = toHeaderRecord(normalizedHeaders)
 
     // Parse / normalize the request body for recording and matching.
     let body: unknown = undefined
@@ -646,10 +655,20 @@ export function createMockFetch(): MockFetch {
         body = new Uint8Array(toBytes(rawBody))
       } else if (rawBody instanceof ReadableStream) {
         body = await drainStream(rawBody)
+      } else if (rawBody instanceof Blob) {
+        // File extends Blob; a bare blob/file body sends only bytes on the wire.
+        body = await blobToBytes(rawBody)
       }
-      // Blob / FormData / URLSearchParams bodies are not yet normalized and
-      // remain unrecorded (body stays undefined).
     }
+
+    // Mirror platform fetch: set the default content-type for this body type
+    // when the caller did not set one, so it is recorded and matchable.
+    const synthesizedContentType = contentTypeFor(rawBody)
+    if (synthesizedContentType !== null && !normalizedHeaders.has('content-type')) {
+      normalizedHeaders.set('content-type', synthesizedContentType)
+    }
+
+    const headerRecord = toHeaderRecord(normalizedHeaders)
 
     // Record the request
     recordedRequests.push({
@@ -660,6 +679,13 @@ export function createMockFetch(): MockFetch {
       headers: normalizedHeaders,
       body,
     })
+
+    // Normalize native-type expected bodies once (async for Blob/FormData), cached per handler.
+    for (const handler of handlers) {
+      if (handler.matchOptions.body !== undefined && handler.normalizedBody === undefined) {
+        handler.normalizedBody = {value: await normalizeExpectedBody(handler.matchOptions.body)}
+      }
+    }
 
     // Find matching handler
     for (const handler of handlers) {
@@ -676,7 +702,7 @@ export function createMockFetch(): MockFetch {
       if (!queryMatches(handler, query)) continue
 
       // Check body
-      if (handler.matchOptions.body !== undefined && !matchBody(handler.matchOptions.body, body)) {
+      if (handler.matchOptions.body !== undefined && !matchBody(expectedBodyOf(handler), body)) {
         continue
       }
 
