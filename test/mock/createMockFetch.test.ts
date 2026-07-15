@@ -1239,7 +1239,8 @@ describe('createMockFetch', () => {
       expect(mock.getRequests()[0].body).toEqual(new Uint8Array([1, 2, 3, 4, 5]))
     })
 
-    it('records and matches a Buffer body', async () => {
+    // `Buffer` is Node-only; skip where it is undefined (browser/edge/worker).
+    it.skipIf(typeof Buffer === 'undefined')('records and matches a Buffer body', async () => {
       const mock = createMockFetch()
       mock.on('POST', '/upload', {body: new Uint8Array([10, 20])}).respond({status: 201})
 

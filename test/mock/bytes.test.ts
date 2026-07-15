@@ -7,6 +7,11 @@ describe('bytes helpers', () => {
     it('is true for Uint8Array and ArrayBuffer', () => {
       expect(isBinaryBody(new Uint8Array([1, 2]))).toBe(true)
       expect(isBinaryBody(new ArrayBuffer(2))).toBe(true)
+    })
+
+    // `Buffer` is Node-only; skip in browser/edge/worker environments where it
+    // is undefined. It is a `Uint8Array` subclass, so it takes the same path.
+    it.skipIf(typeof Buffer === 'undefined')('is true for a Node Buffer', () => {
       expect(isBinaryBody(Buffer.from([1, 2]))).toBe(true)
     })
 
