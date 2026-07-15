@@ -19,6 +19,7 @@ import {matchUrl, parseUrl} from './urlMatch'
 export interface MockMatchOptions {
   query?: Record<string, string | number | boolean> | AsymmetricMatcher
   body?: unknown
+  headers?: Record<string, string | AsymmetricMatcher> | AsymmetricMatcher
 }
 
 /**
@@ -138,6 +139,42 @@ function isHeaders(value: unknown): value is Headers {
  */
 function getContentType(headers: Headers): string | null {
   return headers.get('content-type')
+}
+
+/**
+ * Build a lowercased-key record of a request's headers for matching.
+ * `Headers.forEach` already yields lowercased names.
+ * @internal
+ */
+function toHeaderRecord(headers: Headers): Record<string, string> {
+  const record: Record<string, string> = {}
+  headers.forEach((value, key) => {
+    record[key] = value
+  })
+  return record
+}
+
+/**
+ * Whether a handler constrains request headers.
+ * @internal
+ */
+function hasHeadersConstraint(handler: InternalHandler): boolean {
+  return handler.matchOptions.headers !== undefined
+}
+
+/**
+ * Match a handler's `headers` constraint against a request's headers.
+ * Containing semantics; keys are case-insensitive (compared lowercased).
+ * @internal
+ */
+function headersMatch(handler: InternalHandler, headerRecord: Record<string, string>): boolean {
+  const expected = handler.matchOptions.headers
+  if (expected === undefined) return true
+  if (isAsymmetricMatcher(expected)) return expected.asymmetricMatch(headerRecord)
+  return Object.keys(expected).every((key) => {
+    const lower = key.toLowerCase()
+    return lower in headerRecord && deepMatch(expected[key], headerRecord[lower])
+  })
 }
 
 /**
@@ -410,6 +447,7 @@ function scoreMatch(
   path: string,
   query: Record<string, string>,
   body: unknown,
+  headerRecord: Record<string, string>,
 ): number {
   let score = 0
 
@@ -435,6 +473,11 @@ function scoreMatch(
 
   // Body match
   if (handler.matchOptions.body === undefined || matchBody(handler.matchOptions.body, body)) {
+    score += 1
+  }
+
+  // Headers match
+  if (!hasHeadersConstraint(handler) || headersMatch(handler, headerRecord)) {
     score += 1
   }
 
@@ -477,6 +520,7 @@ function buildDiffs(
   path: string,
   query: Record<string, string>,
   body: unknown,
+  headerRecord: Record<string, string>,
 ): Diff[] {
   const diffs: Diff[] = []
 
@@ -518,6 +562,21 @@ function buildDiffs(
       diffs.push(...diffValues('body', expectedBody, body))
     } else {
       diffs.push({path: 'body', expected: expectedBody, actual: body})
+    }
+  }
+
+  // Headers diff
+  if (hasHeadersConstraint(handler) && !headersMatch(handler, headerRecord)) {
+    const expected = handler.matchOptions.headers
+    if (expected === undefined || isAsymmetricMatcher(expected)) {
+      diffs.push({path: 'headers', expected, actual: headerRecord})
+    } else {
+      for (const key of Object.keys(expected)) {
+        const lower = key.toLowerCase()
+        if (!(lower in headerRecord) || !deepMatch(expected[key], headerRecord[lower])) {
+          diffs.push({path: `headers.${key}`, expected: expected[key], actual: headerRecord[lower]})
+        }
+      }
     }
   }
 
@@ -564,6 +623,7 @@ export function createMockFetch(): MockFetch {
     const normalizedHeaders = isHeaders(init?.headers)
       ? new Headers(init.headers)
       : new Headers(init?.headers ?? undefined)
+    const headerRecord = toHeaderRecord(normalizedHeaders)
 
     // Parse / normalize the request body for recording and matching.
     let body: unknown = undefined
@@ -620,6 +680,9 @@ export function createMockFetch(): MockFetch {
         continue
       }
 
+      // Check headers
+      if (hasHeadersConstraint(handler) && !headersMatch(handler, headerRecord)) continue
+
       // Find first unconsumed response
       const responseEntry = findAvailableResponse(handler)
       if (responseEntry === undefined) continue
@@ -650,7 +713,7 @@ export function createMockFetch(): MockFetch {
     let closestHandler: InternalHandler | undefined
     let closestScore = -1
     for (const handler of handlers) {
-      const score = scoreMatch(handler, method, requestOrigin, path, query, body)
+      const score = scoreMatch(handler, method, requestOrigin, path, query, body, headerRecord)
       if (score > closestScore) {
         closestScore = score
         closestHandler = handler
@@ -661,7 +724,7 @@ export function createMockFetch(): MockFetch {
     let closestDescription: string | undefined
     if (closestHandler !== undefined) {
       closestDescription = describeHandler(closestHandler)
-      diffs = buildDiffs(closestHandler, method, requestOrigin, path, query, body)
+      diffs = buildDiffs(closestHandler, method, requestOrigin, path, query, body, headerRecord)
     }
 
     throw new MockFetchError(method, path, query, body, diffs, allMocks, closestDescription)

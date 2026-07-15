@@ -1336,4 +1336,67 @@ describe('createMockFetch', () => {
       expect(mock.getRequests()[0].body).toEqual(new Uint8Array(0))
     })
   })
+
+  describe('headers matching', () => {
+    it('matches a header by plain record, case-insensitively', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/x', {headers: {'Content-Type': 'text/plain'}}).respond({status: 200})
+
+      const res = await mock.fetch('https://api.example.com/x', {
+        method: 'POST',
+        headers: {'content-type': 'text/plain'},
+        body: 'hi',
+      })
+
+      expect(res.status).toBe(200)
+    })
+
+    it('matches with objectContaining + stringMatching', async () => {
+      const mock = createMockFetch()
+      mock
+        .on('POST', '/x', {headers: objectContaining({'content-type': stringMatching(/^text\//)})})
+        .respond({status: 200})
+
+      const res = await mock.fetch('https://api.example.com/x', {
+        method: 'POST',
+        headers: {'content-type': 'text/plain'},
+        body: 'hi',
+      })
+
+      expect(res.status).toBe(200)
+    })
+
+    it('ignores unlisted headers (containing)', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/x', {headers: {'x-a': '1'}}).respond({status: 200})
+
+      const res = await mock.fetch('https://api.example.com/x', {
+        method: 'POST',
+        headers: {'x-a': '1', 'x-b': '2'},
+        body: 'hi',
+      })
+
+      expect(res.status).toBe(200)
+    })
+
+    it('reports a headers diff on mismatch', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/x', {headers: {'x-a': '1'}}).respond({status: 200})
+
+      let error: unknown
+      try {
+        await mock.fetch('https://api.example.com/x', {
+          method: 'POST',
+          headers: {'x-a': '2'},
+          body: 'hi',
+        })
+      } catch (err) {
+        error = err
+      }
+
+      expect(error).toBeInstanceOf(Error)
+      if (!(error instanceof Error)) throw new Error('expected an error')
+      expect(error.message).toContain('headers.x-a: expected "1", received "2"')
+    })
+  })
 })
