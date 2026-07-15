@@ -1458,6 +1458,103 @@ describe('createMockFetch', () => {
     })
   })
 
+  describe('FormData bodies', () => {
+    function buildForm() {
+      const form = new FormData()
+      form.append('title', 'Hi')
+      form.append('file', new File([new Uint8Array([1, 2])], 'a.png', {type: 'image/png'}))
+      return form
+    }
+
+    it('records a normalized field record', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/u').respond({status: 200})
+
+      await mock.fetch('https://api.example.com/u', {method: 'POST', body: buildForm()})
+
+      expect(mock.getRequests()[0].body).toEqual({
+        title: 'Hi',
+        file: {name: 'a.png', type: 'image/png', size: 2, bytes: new Uint8Array([1, 2])},
+      })
+    })
+
+    it('matches exactly by passing a FormData', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/u', {body: buildForm()}).respond({status: 200})
+
+      const res = await mock.fetch('https://api.example.com/u', {method: 'POST', body: buildForm()})
+      expect(res.status).toBe(200)
+    })
+
+    it('fails an exact match when an extra field is present', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/u', {body: buildForm()}).respond({status: 200})
+
+      const extra = buildForm()
+      extra.append('surprise', 'x')
+
+      let error: unknown
+      try {
+        await mock.fetch('https://api.example.com/u', {method: 'POST', body: extra})
+      } catch (err) {
+        error = err
+      }
+      expect(error).toBeInstanceOf(Error)
+      if (!(error instanceof Error)) throw new Error('expected an error')
+      expect(error.message).toContain('No mock matched')
+    })
+
+    it('matches partially with objectContaining', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/u', {body: objectContaining({title: 'Hi'})}).respond({status: 200})
+
+      const res = await mock.fetch('https://api.example.com/u', {method: 'POST', body: buildForm()})
+      expect(res.status).toBe(200)
+    })
+
+    it('matches a file part by name/type and bytes', async () => {
+      const mock = createMockFetch()
+      mock
+        .on('POST', '/u', {
+          body: objectContaining({
+            file: objectContaining({
+              name: 'a.png',
+              type: 'image/png',
+              bytes: bodyBytes(new Uint8Array([1, 2])),
+            }),
+          }),
+        })
+        .respond({status: 200})
+
+      const res = await mock.fetch('https://api.example.com/u', {method: 'POST', body: buildForm()})
+      expect(res.status).toBe(200)
+    })
+
+    it('preserves multi-value fields as arrays', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/u').respond({status: 200})
+
+      const form = new FormData()
+      form.append('tag', 'x')
+      form.append('tag', 'y')
+      await mock.fetch('https://api.example.com/u', {method: 'POST', body: form})
+
+      expect(mock.getRequests()[0].body).toEqual({tag: ['x', 'y']})
+    })
+
+    it('synthesizes a multipart content-type with a boundary', async () => {
+      const mock = createMockFetch()
+      mock
+        .on('POST', '/u', {
+          headers: {'content-type': stringMatching(/^multipart\/form-data; boundary=/)},
+        })
+        .respond({status: 200})
+
+      const res = await mock.fetch('https://api.example.com/u', {method: 'POST', body: buildForm()})
+      expect(res.status).toBe(200)
+    })
+  })
+
   describe('headers matching', () => {
     it('matches a header by plain record, case-insensitively', async () => {
       const mock = createMockFetch()

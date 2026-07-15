@@ -1,5 +1,11 @@
 import type {FetchFunction, FetchResponse} from '../types'
-import {blobToBytes, contentTypeFor, normalizeExpectedBody, normalizeUrlSearchParams} from './body'
+import {
+  blobToBytes,
+  contentTypeFor,
+  normalizeExpectedBody,
+  normalizeFormData,
+  normalizeUrlSearchParams,
+} from './body'
 import {bytesEqual, isBinaryBody, toBytes} from './bytes'
 import type {Diff} from './diff'
 import {diffValues} from './diff'
@@ -660,6 +666,8 @@ export function createMockFetch(): MockFetch {
         body = await blobToBytes(rawBody)
       } else if (rawBody instanceof URLSearchParams) {
         body = normalizeUrlSearchParams(rawBody)
+      } else if (rawBody instanceof FormData) {
+        body = await normalizeFormData(rawBody)
       }
     }
 
