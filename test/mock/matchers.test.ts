@@ -185,6 +185,26 @@ describe('queryContaining', () => {
     expect(queryContaining({a: 1}).asymmetricMatch(null)).toBe(false)
     expect(queryContaining({a: 1}).asymmetricMatch('a=1')).toBe(false)
   })
+
+  it('matches an array-valued param (containing)', () => {
+    expect(queryContaining({tags: ['a', 'b']}).asymmetricMatch({tags: ['a', 'b', 'c']})).toBe(true)
+  })
+
+  it('rejects an array param when a value is missing', () => {
+    expect(queryContaining({tags: ['a', 'z']}).asymmetricMatch({tags: ['a', 'b']})).toBe(false)
+  })
+
+  it('rejects an array expected against a scalar actual', () => {
+    expect(queryContaining({tags: ['a']}).asymmetricMatch({tags: 'a'})).toBe(false)
+  })
+
+  it('coerces array element types', () => {
+    expect(queryContaining({ids: [1, 2]}).asymmetricMatch({ids: ['1', '2']})).toBe(true)
+  })
+
+  it('still matches scalar params (unchanged)', () => {
+    expect(queryContaining({limit: 10}).asymmetricMatch({limit: '10'})).toBe(true)
+  })
 })
 
 describe('bodyBytes', () => {

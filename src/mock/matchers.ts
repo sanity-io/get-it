@@ -101,16 +101,26 @@ export function objectContaining(expected: Record<string, unknown>): AsymmetricM
 /**
  * Matches a query object that contains at least the specified keys with matching
  * values. Expected values are coerced to strings before comparison, since query
- * parameters are always strings. Extra keys on the actual value are ignored.
+ * parameters are always strings. An array expected value matches a multi-value
+ * param (an array actual) that contains each expected value. Extra keys on the
+ * actual value are ignored.
  * @public
  */
 export function queryContaining(
-  expected: Record<string, string | number | boolean>,
+  expected: Record<string, string | number | boolean | Array<string | number | boolean>>,
 ): AsymmetricMatcher {
   return {
     asymmetricMatch(actual: unknown): boolean {
       if (!isRecord(actual)) return false
-      return Object.keys(expected).every((key) => actual[key] === String(expected[key]))
+      return Object.keys(expected).every((key) => {
+        const expectedValue = expected[key]
+        const actualValue = actual[key]
+        if (Array.isArray(expectedValue)) {
+          if (!Array.isArray(actualValue)) return false
+          return expectedValue.every((item) => actualValue.includes(String(item)))
+        }
+        return actualValue === String(expectedValue)
+      })
     },
   }
 }
