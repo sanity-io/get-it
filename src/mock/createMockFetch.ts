@@ -453,7 +453,8 @@ function queryMatches(handler: InternalHandler, query: Record<string, string>): 
 
 /**
  * Score how well a handler matches a request. Higher is better.
- * Returns 0-5 based on which dimensions match.
+ * Returns 0-6 based on which dimensions match (origin, method, URL, query,
+ * body, headers).
  * @internal
  */
 function scoreMatch(

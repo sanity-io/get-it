@@ -74,8 +74,8 @@ function randomBoundary(): string {
 
 /**
  * The `Content-Type` the platform `fetch` would set for a given body, or null
- * when the body type has no default. Order matters: `File` extends `Blob`, and
- * `FormData`/`URLSearchParams` are not `Blob`s.
+ * when the body type has no default. `File` is handled by the `Blob` branch
+ * (it extends `Blob`); `FormData`/`URLSearchParams` are not `Blob`s.
  * @internal
  */
 export function contentTypeFor(rawBody: unknown): string | null {
