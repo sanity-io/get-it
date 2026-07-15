@@ -47,6 +47,10 @@ export function deepMatch(expected: unknown, actual: unknown): boolean {
 
   if (expected === actual) return true
 
+  if (expected instanceof Uint8Array || actual instanceof Uint8Array) {
+    return expected instanceof Uint8Array && actual instanceof Uint8Array && bytesEqual(expected, actual)
+  }
+
   if (typeof expected !== typeof actual) return false
   if (expected === null || actual === null) return false
 

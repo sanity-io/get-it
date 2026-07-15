@@ -214,3 +214,28 @@ describe('bodyBytes', () => {
     expect(String(bodyBytes(new Uint8Array([1, 2, 3])))).toBe('bodyBytes(3 bytes)')
   })
 })
+
+describe('deepMatch with Uint8Array', () => {
+  it('matches equal byte arrays', () => {
+    expect(deepMatch(new Uint8Array([1, 2, 3]), new Uint8Array([1, 2, 3]))).toBe(true)
+  })
+
+  it('rejects differing byte arrays', () => {
+    expect(deepMatch(new Uint8Array([1, 2, 3]), new Uint8Array([1, 9, 3]))).toBe(false)
+    expect(deepMatch(new Uint8Array([1, 2]), new Uint8Array([1, 2, 3]))).toBe(false)
+  })
+
+  it('rejects a Uint8Array against a non-Uint8Array', () => {
+    expect(deepMatch(new Uint8Array([1]), {0: 1})).toBe(false)
+    expect(deepMatch({0: 1}, new Uint8Array([1]))).toBe(false)
+  })
+
+  it('matches nested bytes inside an object', () => {
+    expect(
+      deepMatch({name: 'a', bytes: new Uint8Array([1, 2])}, {name: 'a', bytes: new Uint8Array([1, 2])}),
+    ).toBe(true)
+    expect(
+      deepMatch({name: 'a', bytes: new Uint8Array([1, 2])}, {name: 'a', bytes: new Uint8Array([9, 9])}),
+    ).toBe(false)
+  })
+})

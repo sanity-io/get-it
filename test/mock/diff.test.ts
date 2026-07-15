@@ -42,3 +42,16 @@ describe('diffValues', () => {
     expect(diffs).toEqual([{path: 'query.limit', expected: '10', actual: '20'}])
   })
 })
+
+describe('diffValues with Uint8Array', () => {
+  it('returns no diff for equal bytes', () => {
+    expect(diffValues('body', new Uint8Array([1, 2]), new Uint8Array([1, 2]))).toEqual([])
+  })
+
+  it('returns a single diff for differing bytes', () => {
+    const diffs = diffValues('body', new Uint8Array([1, 2]), new Uint8Array([1, 2, 3]))
+    expect(diffs).toEqual([
+      {path: 'body', expected: new Uint8Array([1, 2]), actual: new Uint8Array([1, 2, 3])},
+    ])
+  })
+})
