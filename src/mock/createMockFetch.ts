@@ -13,7 +13,7 @@ import type {MockDescription} from './errors'
 import {MockFetchError} from './errors'
 import type {AsymmetricMatcher} from './matchers'
 import {deepMatch, isAsymmetricMatcher, isRecord} from './matchers'
-import {delayWithAbort} from './streamBody'
+import {delayWithAbort, drainScript, StreamBody, streamFromScript} from './streamBody'
 import {matchUrl, parseUrl} from './urlMatch'
 
 // ---------------------------------------------------------------------------
@@ -264,11 +264,41 @@ function resolveError(error: Error | (() => Error)): Error {
  * Build a FetchResponse-compatible object from a MockResponseDef.
  * @internal
  */
-function buildFetchResponse(def: MockResponseDef, url: string): FetchResponse {
+function buildFetchResponse(
+  def: MockResponseDef,
+  url: string,
+  signal: AbortSignal | undefined,
+): FetchResponse {
   const status = def.status ?? 200
   const ok = status >= 200 && status < 300
   const statusText = def.statusText ?? statusTextForCode(status)
   const responseHeaders = new Headers(def.headers)
+
+  if (def.body instanceof StreamBody) {
+    const scripted = def.body
+    return {
+      ok,
+      status,
+      statusText,
+      headers: responseHeaders,
+      url,
+      redirected: false,
+      body: streamFromScript(scripted, signal),
+      async text(): Promise<string> {
+        return new TextDecoder().decode(await drainScript(scripted, signal))
+      },
+      async arrayBuffer(): Promise<ArrayBuffer> {
+        const bytes = await drainScript(scripted, signal)
+        // `drainScript`'s return type is `Uint8Array` (default `ArrayBufferLike`
+        // type param), so `.buffer` alone would be `ArrayBuffer | SharedArrayBuffer`.
+        // Copying into a fresh `Uint8Array(length)` gets a concretely
+        // `ArrayBuffer`-backed buffer, matching `FetchResponse.arrayBuffer()`.
+        const copy = new Uint8Array(bytes.byteLength)
+        copy.set(bytes)
+        return copy.buffer
+      },
+    }
+  }
 
   let bodyString: string
   if (def.body === undefined || def.body === null) {
@@ -714,7 +744,7 @@ export function createMockFetch(): MockFetch {
       if (def.delay !== undefined && def.delay > 0) {
         await delayWithAbort(def.delay, init?.signal)
       }
-      return buildFetchResponse(def, input)
+      return buildFetchResponse(def, input, init?.signal)
     }
 
     // No match found — build error
