@@ -7,6 +7,7 @@ import {MockFetchError} from '../../src/mock/errors'
 import {
   anyValue,
   arrayContaining,
+  bodyBytes,
   objectContaining,
   queryContaining,
   stringMatching,
@@ -1189,6 +1190,431 @@ describe('createMockFetch', () => {
       expect(error instanceof Error ? error.message : '').toContain(
         'Cannot combine a query string in the URL pattern',
       )
+    })
+  })
+
+  describe('binary request bodies', () => {
+    it('records and matches a Uint8Array body', async () => {
+      const mock = createMockFetch()
+      const bytes = new Uint8Array([1, 2, 3, 4])
+      mock.on('POST', '/upload', {body: bytes}).respond({status: 201})
+
+      const res = await mock.fetch('https://api.example.com/upload', {
+        method: 'POST',
+        body: new Uint8Array([1, 2, 3, 4]),
+      })
+
+      expect(res.status).toBe(201)
+      expect(mock.getRequests()[0].body).toEqual(new Uint8Array([1, 2, 3, 4]))
+    })
+
+    it('records and matches an ArrayBuffer body', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/upload', {body: new Uint8Array([9, 8, 7]).buffer}).respond({status: 201})
+
+      const res = await mock.fetch('https://api.example.com/upload', {
+        method: 'POST',
+        body: new Uint8Array([9, 8, 7]).buffer,
+      })
+
+      expect(res.status).toBe(201)
+      expect(mock.getRequests()[0].body).toEqual(new Uint8Array([9, 8, 7]))
+    })
+
+    it('records and matches a ReadableStream body', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/upload', {body: new Uint8Array([1, 2, 3, 4, 5])}).respond({status: 201})
+
+      const stream = new ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.enqueue(new Uint8Array([1, 2, 3]))
+          controller.enqueue(new Uint8Array([4, 5]))
+          controller.close()
+        },
+      })
+
+      const res = await mock.fetch('https://api.example.com/upload', {method: 'POST', body: stream})
+
+      expect(res.status).toBe(201)
+      expect(mock.getRequests()[0].body).toEqual(new Uint8Array([1, 2, 3, 4, 5]))
+    })
+
+    // `Buffer` is Node-only; skip where it is undefined (browser/edge/worker).
+    it.skipIf(typeof Buffer === 'undefined')('records and matches a Buffer body', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/upload', {body: new Uint8Array([10, 20])}).respond({status: 201})
+
+      const res = await mock.fetch('https://api.example.com/upload', {
+        method: 'POST',
+        body: Buffer.from([10, 20]),
+      })
+
+      expect(res.status).toBe(201)
+      expect(mock.getRequests()[0].body).toEqual(new Uint8Array([10, 20]))
+    })
+
+    it('matches with the bodyBytes matcher', async () => {
+      const mock = createMockFetch()
+      mock
+        .on('POST', '/upload', {body: bodyBytes(new Uint8Array([1, 2, 3]))})
+        .respond({status: 201})
+
+      const res = await mock.fetch('https://api.example.com/upload', {
+        method: 'POST',
+        body: new Uint8Array([1, 2, 3]),
+      })
+
+      expect(res.status).toBe(201)
+    })
+
+    it('records a stable snapshot that later mutation cannot change', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/upload').respond({status: 201})
+
+      const source = new Uint8Array([1, 2, 3])
+      await mock.fetch('https://api.example.com/upload', {method: 'POST', body: source})
+      source[0] = 99
+
+      expect(mock.getRequests()[0].body).toEqual(new Uint8Array([1, 2, 3]))
+    })
+
+    it('renders a readable error when binary bodies differ', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/upload', {body: new Uint8Array([1, 2, 3])}).respond({status: 201})
+
+      let error: unknown
+      try {
+        await mock.fetch('https://api.example.com/upload', {
+          method: 'POST',
+          body: new Uint8Array([9, 9, 9, 9]),
+        })
+      } catch (err) {
+        error = err
+      }
+
+      expect(error).toBeInstanceOf(Error)
+      if (!(error instanceof Error)) throw new Error('expected an error')
+      expect(error.message).toContain(
+        'body: expected Uint8Array(3 bytes), received Uint8Array(4 bytes)',
+      )
+    })
+
+    it('renders a readable error when an ArrayBuffer body differs', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/upload', {body: new Uint8Array([1, 2, 3]).buffer}).respond({status: 201})
+
+      let error: unknown
+      try {
+        await mock.fetch('https://api.example.com/upload', {
+          method: 'POST',
+          body: new Uint8Array([9, 9, 9, 9]),
+        })
+      } catch (err) {
+        error = err
+      }
+
+      expect(error).toBeInstanceOf(Error)
+      if (!(error instanceof Error)) throw new Error('expected an error')
+      expect(error.message).toContain(
+        'body: expected ArrayBuffer(3 bytes), received Uint8Array(4 bytes)',
+      )
+    })
+
+    it('records an empty ReadableStream body as an empty Uint8Array', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/upload').respond({status: 201})
+
+      const stream = new ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.close()
+        },
+      })
+
+      const res = await mock.fetch('https://api.example.com/upload', {method: 'POST', body: stream})
+
+      expect(res.status).toBe(201)
+      expect(mock.getRequests()[0].body).toEqual(new Uint8Array(0))
+    })
+  })
+
+  describe('Blob and File bodies', () => {
+    it('records a Blob body as bytes and matches with bodyBytes', async () => {
+      const mock = createMockFetch()
+      mock
+        .on('POST', '/upload', {body: bodyBytes(new Uint8Array([1, 2, 3]))})
+        .respond({status: 201})
+
+      const res = await mock.fetch('https://api.example.com/upload', {
+        method: 'POST',
+        body: new Blob([new Uint8Array([1, 2, 3])]),
+      })
+
+      expect(res.status).toBe(201)
+      expect(mock.getRequests()[0].body).toEqual(new Uint8Array([1, 2, 3]))
+    })
+
+    it('synthesizes content-type from blob.type, assertable via headers', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/upload', {headers: {'content-type': 'image/png'}}).respond({status: 201})
+
+      const res = await mock.fetch('https://api.example.com/upload', {
+        method: 'POST',
+        body: new Blob([new Uint8Array([1])], {type: 'image/png'}),
+      })
+
+      expect(res.status).toBe(201)
+      expect(mock.getRequests()[0].headers.get('content-type')).toBe('image/png')
+    })
+
+    it('does not synthesize content-type for a typeless Blob', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/upload').respond({status: 201})
+
+      await mock.fetch('https://api.example.com/upload', {
+        method: 'POST',
+        body: new Blob([new Uint8Array([1])]),
+      })
+
+      expect(mock.getRequests()[0].headers.get('content-type')).toBe(null)
+    })
+
+    it('records a File body as bytes (name not recorded)', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/upload').respond({status: 201})
+
+      await mock.fetch('https://api.example.com/upload', {
+        method: 'POST',
+        body: new File([new Uint8Array([7, 8])], 'a.bin', {type: 'application/octet-stream'}),
+      })
+
+      expect(mock.getRequests()[0].body).toEqual(new Uint8Array([7, 8]))
+    })
+
+    it('does not override an explicit content-type', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/upload').respond({status: 201})
+
+      await mock.fetch('https://api.example.com/upload', {
+        method: 'POST',
+        headers: {'content-type': 'application/custom'},
+        body: new Blob([new Uint8Array([1])], {type: 'image/png'}),
+      })
+
+      expect(mock.getRequests()[0].headers.get('content-type')).toBe('application/custom')
+    })
+  })
+
+  describe('URLSearchParams bodies', () => {
+    it('records as a record and matches a plain object', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/form', {body: {a: '1', b: '2'}}).respond({status: 200})
+
+      const res = await mock.fetch('https://api.example.com/form', {
+        method: 'POST',
+        body: new URLSearchParams({a: '1', b: '2'}),
+      })
+
+      expect(res.status).toBe(200)
+      expect(mock.getRequests()[0].body).toEqual({a: '1', b: '2'})
+    })
+
+    it('matches by passing a URLSearchParams', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/form', {body: new URLSearchParams({a: '1'})}).respond({status: 200})
+
+      const res = await mock.fetch('https://api.example.com/form', {
+        method: 'POST',
+        body: new URLSearchParams({a: '1'}),
+      })
+
+      expect(res.status).toBe(200)
+    })
+
+    it('preserves multi-value params as arrays and matches queryContaining', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/form', {body: queryContaining({tag: ['x', 'y']})}).respond({status: 200})
+
+      const res = await mock.fetch('https://api.example.com/form', {
+        method: 'POST',
+        body: new URLSearchParams('tag=x&tag=y&other=1'),
+      })
+
+      expect(res.status).toBe(200)
+      expect(mock.getRequests()[0].body).toEqual({tag: ['x', 'y'], other: '1'})
+    })
+
+    it('synthesizes the form-urlencoded content-type', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/form').respond({status: 200})
+
+      await mock.fetch('https://api.example.com/form', {
+        method: 'POST',
+        body: new URLSearchParams({a: '1'}),
+      })
+
+      expect(mock.getRequests()[0].headers.get('content-type')).toBe(
+        'application/x-www-form-urlencoded;charset=UTF-8',
+      )
+    })
+  })
+
+  describe('FormData bodies', () => {
+    function buildForm() {
+      const form = new FormData()
+      form.append('title', 'Hi')
+      form.append('file', new File([new Uint8Array([1, 2])], 'a.png', {type: 'image/png'}))
+      return form
+    }
+
+    it('records a normalized field record', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/u').respond({status: 200})
+
+      await mock.fetch('https://api.example.com/u', {method: 'POST', body: buildForm()})
+
+      expect(mock.getRequests()[0].body).toEqual({
+        title: 'Hi',
+        file: {name: 'a.png', type: 'image/png', size: 2, bytes: new Uint8Array([1, 2])},
+      })
+    })
+
+    it('matches exactly by passing a FormData', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/u', {body: buildForm()}).respond({status: 200})
+
+      const res = await mock.fetch('https://api.example.com/u', {method: 'POST', body: buildForm()})
+      expect(res.status).toBe(200)
+    })
+
+    it('fails an exact match when an extra field is present', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/u', {body: buildForm()}).respond({status: 200})
+
+      const extra = buildForm()
+      extra.append('surprise', 'x')
+
+      let error: unknown
+      try {
+        await mock.fetch('https://api.example.com/u', {method: 'POST', body: extra})
+      } catch (err) {
+        error = err
+      }
+      expect(error).toBeInstanceOf(Error)
+      if (!(error instanceof Error)) throw new Error('expected an error')
+      expect(error.message).toContain('No mock matched')
+    })
+
+    it('matches partially with objectContaining', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/u', {body: objectContaining({title: 'Hi'})}).respond({status: 200})
+
+      const res = await mock.fetch('https://api.example.com/u', {method: 'POST', body: buildForm()})
+      expect(res.status).toBe(200)
+    })
+
+    it('matches a file part by name/type and bytes', async () => {
+      const mock = createMockFetch()
+      mock
+        .on('POST', '/u', {
+          body: objectContaining({
+            file: objectContaining({
+              name: 'a.png',
+              type: 'image/png',
+              bytes: bodyBytes(new Uint8Array([1, 2])),
+            }),
+          }),
+        })
+        .respond({status: 200})
+
+      const res = await mock.fetch('https://api.example.com/u', {method: 'POST', body: buildForm()})
+      expect(res.status).toBe(200)
+    })
+
+    it('preserves multi-value fields as arrays', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/u').respond({status: 200})
+
+      const form = new FormData()
+      form.append('tag', 'x')
+      form.append('tag', 'y')
+      await mock.fetch('https://api.example.com/u', {method: 'POST', body: form})
+
+      expect(mock.getRequests()[0].body).toEqual({tag: ['x', 'y']})
+    })
+
+    it('synthesizes a multipart content-type with a boundary', async () => {
+      const mock = createMockFetch()
+      mock
+        .on('POST', '/u', {
+          headers: {'content-type': stringMatching(/^multipart\/form-data; boundary=/)},
+        })
+        .respond({status: 200})
+
+      const res = await mock.fetch('https://api.example.com/u', {method: 'POST', body: buildForm()})
+      expect(res.status).toBe(200)
+    })
+  })
+
+  describe('headers matching', () => {
+    it('matches a header by plain record, case-insensitively', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/x', {headers: {'Content-Type': 'text/plain'}}).respond({status: 200})
+
+      const res = await mock.fetch('https://api.example.com/x', {
+        method: 'POST',
+        headers: {'content-type': 'text/plain'},
+        body: 'hi',
+      })
+
+      expect(res.status).toBe(200)
+    })
+
+    it('matches with objectContaining + stringMatching', async () => {
+      const mock = createMockFetch()
+      mock
+        .on('POST', '/x', {headers: objectContaining({'content-type': stringMatching(/^text\//)})})
+        .respond({status: 200})
+
+      const res = await mock.fetch('https://api.example.com/x', {
+        method: 'POST',
+        headers: {'content-type': 'text/plain'},
+        body: 'hi',
+      })
+
+      expect(res.status).toBe(200)
+    })
+
+    it('ignores unlisted headers (containing)', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/x', {headers: {'x-a': '1'}}).respond({status: 200})
+
+      const res = await mock.fetch('https://api.example.com/x', {
+        method: 'POST',
+        headers: {'x-a': '1', 'x-b': '2'},
+        body: 'hi',
+      })
+
+      expect(res.status).toBe(200)
+    })
+
+    it('reports a headers diff on mismatch', async () => {
+      const mock = createMockFetch()
+      mock.on('POST', '/x', {headers: {'x-a': '1'}}).respond({status: 200})
+
+      let error: unknown
+      try {
+        await mock.fetch('https://api.example.com/x', {
+          method: 'POST',
+          headers: {'x-a': '2'},
+          body: 'hi',
+        })
+      } catch (err) {
+        error = err
+      }
+
+      expect(error).toBeInstanceOf(Error)
+      if (!(error instanceof Error)) throw new Error('expected an error')
+      expect(error.message).toContain('headers.x-a: expected "1", received "2"')
     })
   })
 })

@@ -1,3 +1,5 @@
+import {bytesEqual, toBytes} from './bytes'
+
 /**
  * Protocol interface for asymmetric matching, compatible with vitest/Jest.
  * @public
@@ -44,6 +46,10 @@ export function deepMatch(expected: unknown, actual: unknown): boolean {
   }
 
   if (expected === actual) return true
+
+  if (expected instanceof Uint8Array || actual instanceof Uint8Array) {
+    return expected instanceof Uint8Array && actual instanceof Uint8Array && bytesEqual(expected, actual)
+  }
 
   if (typeof expected !== typeof actual) return false
   if (expected === null || actual === null) return false
@@ -95,16 +101,26 @@ export function objectContaining(expected: Record<string, unknown>): AsymmetricM
 /**
  * Matches a query object that contains at least the specified keys with matching
  * values. Expected values are coerced to strings before comparison, since query
- * parameters are always strings. Extra keys on the actual value are ignored.
+ * parameters are always strings. An array expected value matches a multi-value
+ * param (an array actual) that contains each expected value. Extra keys on the
+ * actual value are ignored.
  * @public
  */
 export function queryContaining(
-  expected: Record<string, string | number | boolean>,
+  expected: Record<string, string | number | boolean | Array<string | number | boolean>>,
 ): AsymmetricMatcher {
   return {
     asymmetricMatch(actual: unknown): boolean {
       if (!isRecord(actual)) return false
-      return Object.keys(expected).every((key) => actual[key] === String(expected[key]))
+      return Object.keys(expected).every((key) => {
+        const expectedValue = expected[key]
+        const actualValue = actual[key]
+        if (Array.isArray(expectedValue)) {
+          if (!Array.isArray(actualValue)) return false
+          return expectedValue.every((item) => actualValue.includes(String(item)))
+        }
+        return actualValue === String(expectedValue)
+      })
     },
   }
 }
@@ -136,4 +152,25 @@ export function arrayContaining(expected: unknown[]): AsymmetricMatcher {
       )
     },
   }
+}
+
+/**
+ * Matches a request body against exact bytes. The actual value must be a
+ * `Uint8Array` (which is how the mock records binary and streamed bodies) with
+ * identical bytes. Accepts a `Uint8Array` or `ArrayBuffer` as the expected value.
+ * @public
+ */
+export function bodyBytes(expected: Uint8Array | ArrayBuffer): AsymmetricMatcher {
+  const expectedBytes = toBytes(expected)
+  // Assigned to a variable (not returned as a literal) so the extra `toString`
+  // member doesn't trip TypeScript's excess-property check against AsymmetricMatcher.
+  const matcher = {
+    asymmetricMatch(actual: unknown): boolean {
+      return actual instanceof Uint8Array && bytesEqual(expectedBytes, actual)
+    },
+    toString(): string {
+      return `bodyBytes(${expectedBytes.byteLength} bytes)`
+    },
+  }
+  return matcher
 }

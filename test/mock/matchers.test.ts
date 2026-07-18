@@ -3,6 +3,7 @@ import {describe, expect, it} from 'vitest'
 import {
   anyValue,
   arrayContaining,
+  bodyBytes,
   deepMatch,
   isAsymmetricMatcher,
   objectContaining,
@@ -183,5 +184,78 @@ describe('queryContaining', () => {
   it('rejects non-record input', () => {
     expect(queryContaining({a: 1}).asymmetricMatch(null)).toBe(false)
     expect(queryContaining({a: 1}).asymmetricMatch('a=1')).toBe(false)
+  })
+
+  it('matches an array-valued param (containing)', () => {
+    expect(queryContaining({tags: ['a', 'b']}).asymmetricMatch({tags: ['a', 'b', 'c']})).toBe(true)
+  })
+
+  it('rejects an array param when a value is missing', () => {
+    expect(queryContaining({tags: ['a', 'z']}).asymmetricMatch({tags: ['a', 'b']})).toBe(false)
+  })
+
+  it('rejects an array expected against a scalar actual', () => {
+    expect(queryContaining({tags: ['a']}).asymmetricMatch({tags: 'a'})).toBe(false)
+  })
+
+  it('coerces array element types', () => {
+    expect(queryContaining({ids: [1, 2]}).asymmetricMatch({ids: ['1', '2']})).toBe(true)
+  })
+
+  it('still matches scalar params (unchanged)', () => {
+    expect(queryContaining({limit: 10}).asymmetricMatch({limit: '10'})).toBe(true)
+  })
+})
+
+describe('bodyBytes', () => {
+  it('matches a Uint8Array with equal bytes', () => {
+    expect(bodyBytes(new Uint8Array([1, 2, 3])).asymmetricMatch(new Uint8Array([1, 2, 3]))).toBe(
+      true,
+    )
+  })
+
+  it('rejects differing bytes', () => {
+    expect(bodyBytes(new Uint8Array([1, 2, 3])).asymmetricMatch(new Uint8Array([1, 9, 3]))).toBe(
+      false,
+    )
+  })
+
+  it('rejects a non-Uint8Array actual', () => {
+    expect(bodyBytes(new Uint8Array([1, 2, 3])).asymmetricMatch('123')).toBe(false)
+    expect(bodyBytes(new Uint8Array([1, 2, 3])).asymmetricMatch(new ArrayBuffer(3))).toBe(false)
+  })
+
+  it('accepts an ArrayBuffer as the expected value', () => {
+    const buffer = new Uint8Array([7, 8, 9]).buffer
+    expect(bodyBytes(buffer).asymmetricMatch(new Uint8Array([7, 8, 9]))).toBe(true)
+  })
+
+  it('has a readable toString', () => {
+    expect(String(bodyBytes(new Uint8Array([1, 2, 3])))).toBe('bodyBytes(3 bytes)')
+  })
+})
+
+describe('deepMatch with Uint8Array', () => {
+  it('matches equal byte arrays', () => {
+    expect(deepMatch(new Uint8Array([1, 2, 3]), new Uint8Array([1, 2, 3]))).toBe(true)
+  })
+
+  it('rejects differing byte arrays', () => {
+    expect(deepMatch(new Uint8Array([1, 2, 3]), new Uint8Array([1, 9, 3]))).toBe(false)
+    expect(deepMatch(new Uint8Array([1, 2]), new Uint8Array([1, 2, 3]))).toBe(false)
+  })
+
+  it('rejects a Uint8Array against a non-Uint8Array', () => {
+    expect(deepMatch(new Uint8Array([1]), {0: 1})).toBe(false)
+    expect(deepMatch({0: 1}, new Uint8Array([1]))).toBe(false)
+  })
+
+  it('matches nested bytes inside an object', () => {
+    expect(
+      deepMatch({name: 'a', bytes: new Uint8Array([1, 2])}, {name: 'a', bytes: new Uint8Array([1, 2])}),
+    ).toBe(true)
+    expect(
+      deepMatch({name: 'a', bytes: new Uint8Array([1, 2])}, {name: 'a', bytes: new Uint8Array([9, 9])}),
+    ).toBe(false)
   })
 })

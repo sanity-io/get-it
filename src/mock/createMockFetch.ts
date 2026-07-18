@@ -1,4 +1,12 @@
 import type {FetchFunction, FetchResponse} from '../types'
+import {
+  blobToBytes,
+  contentTypeFor,
+  normalizeExpectedBody,
+  normalizeFormData,
+  normalizeUrlSearchParams,
+} from './body'
+import {bytesEqual, isBinaryBody, toBytes} from './bytes'
 import type {Diff} from './diff'
 import {diffValues} from './diff'
 import type {MockDescription} from './errors'
@@ -18,6 +26,7 @@ import {matchUrl, parseUrl} from './urlMatch'
 export interface MockMatchOptions {
   query?: Record<string, string | number | boolean> | AsymmetricMatcher
   body?: unknown
+  headers?: Record<string, string | AsymmetricMatcher> | AsymmetricMatcher
 }
 
 /**
@@ -117,6 +126,7 @@ interface InternalHandler {
   patternQuery: Record<string, string> // query parsed from the url pattern
   matchOptions: MockMatchOptions
   responses: ResponseEntry[]
+  normalizedBody?: {value: unknown}
 }
 
 // ---------------------------------------------------------------------------
@@ -140,6 +150,42 @@ function getContentType(headers: Headers): string | null {
 }
 
 /**
+ * Build a lowercased-key record of a request's headers for matching.
+ * `Headers.forEach` already yields lowercased names.
+ * @internal
+ */
+function toHeaderRecord(headers: Headers): Record<string, string> {
+  const record: Record<string, string> = {}
+  headers.forEach((value, key) => {
+    record[key] = value
+  })
+  return record
+}
+
+/**
+ * Whether a handler constrains request headers.
+ * @internal
+ */
+function hasHeadersConstraint(handler: InternalHandler): boolean {
+  return handler.matchOptions.headers !== undefined
+}
+
+/**
+ * Match a handler's `headers` constraint against a request's headers.
+ * Containing semantics; keys are case-insensitive (compared lowercased).
+ * @internal
+ */
+function headersMatch(handler: InternalHandler, headerRecord: Record<string, string>): boolean {
+  const expected = handler.matchOptions.headers
+  if (expected === undefined) return true
+  if (isAsymmetricMatcher(expected)) return expected.asymmetricMatch(headerRecord)
+  return Object.keys(expected).every((key) => {
+    const lower = key.toLowerCase()
+    return lower in headerRecord && deepMatch(expected[key], headerRecord[lower])
+  })
+}
+
+/**
  * Try to parse a JSON string. Returns the parsed value on success, or undefined on failure.
  * @internal
  */
@@ -149,6 +195,58 @@ function tryParseJson(value: string): {parsed: unknown} | undefined {
   } catch {
     return undefined
   }
+}
+
+/**
+ * Drain a readable stream fully into a single `Uint8Array`. Only the mock's
+ * async `fetch` can safely consume a request-body stream once.
+ * @internal
+ */
+async function drainStream(stream: ReadableStream): Promise<Uint8Array> {
+  const reader = stream.getReader()
+  const chunks: Uint8Array[] = []
+  let total = 0
+  for (let chunk = await reader.read(); !chunk.done; chunk = await reader.read()) {
+    const value: unknown = chunk.value
+    // Request-body streams yield binary chunks; anything else is ignored.
+    if (value instanceof Uint8Array) {
+      chunks.push(value)
+      total += value.byteLength
+    } else if (value instanceof ArrayBuffer) {
+      const bytes = new Uint8Array(value)
+      chunks.push(bytes)
+      total += bytes.byteLength
+    }
+  }
+  const out = new Uint8Array(total)
+  let offset = 0
+  for (const chunk of chunks) {
+    out.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+  return out
+}
+
+/**
+ * Match a request body against a handler's expected body. Raw binary
+ * (`Uint8Array` / `ArrayBuffer`) is compared byte-for-byte; everything else
+ * (including the `bodyBytes()` and other asymmetric matchers) falls through to
+ * structural `deepMatch`.
+ * @internal
+ */
+function matchBody(expected: unknown, actual: unknown): boolean {
+  if (isBinaryBody(expected)) {
+    return actual instanceof Uint8Array && bytesEqual(toBytes(expected), actual)
+  }
+  return deepMatch(expected, actual)
+}
+
+/**
+ * The handler's expected body, normalized if it was a native body type.
+ * @internal
+ */
+function expectedBodyOf(handler: InternalHandler): unknown {
+  return handler.normalizedBody ? handler.normalizedBody.value : handler.matchOptions.body
 }
 
 /**
@@ -355,7 +453,8 @@ function queryMatches(handler: InternalHandler, query: Record<string, string>): 
 
 /**
  * Score how well a handler matches a request. Higher is better.
- * Returns 0-5 based on which dimensions match.
+ * Returns 0-6 based on which dimensions match (origin, method, URL, query,
+ * body, headers).
  * @internal
  */
 function scoreMatch(
@@ -365,6 +464,7 @@ function scoreMatch(
   path: string,
   query: Record<string, string>,
   body: unknown,
+  headerRecord: Record<string, string>,
 ): number {
   let score = 0
 
@@ -389,7 +489,12 @@ function scoreMatch(
   }
 
   // Body match
-  if (handler.matchOptions.body === undefined || deepMatch(handler.matchOptions.body, body)) {
+  if (handler.matchOptions.body === undefined || matchBody(expectedBodyOf(handler), body)) {
+    score += 1
+  }
+
+  // Headers match
+  if (!hasHeadersConstraint(handler) || headersMatch(handler, headerRecord)) {
     score += 1
   }
 
@@ -432,6 +537,7 @@ function buildDiffs(
   path: string,
   query: Record<string, string>,
   body: unknown,
+  headerRecord: Record<string, string>,
 ): Diff[] {
   const diffs: Diff[] = []
 
@@ -463,11 +569,31 @@ function buildDiffs(
   }
 
   // Body diff
-  if (handler.matchOptions.body !== undefined && !deepMatch(handler.matchOptions.body, body)) {
-    if (isRecord(handler.matchOptions.body) || Array.isArray(handler.matchOptions.body)) {
-      diffs.push(...diffValues('body', handler.matchOptions.body, body))
+  if (handler.matchOptions.body !== undefined && !matchBody(expectedBodyOf(handler), body)) {
+    const expectedBody = expectedBodyOf(handler)
+    const useStructuralDiff =
+      (isRecord(expectedBody) || Array.isArray(expectedBody)) &&
+      !isBinaryBody(expectedBody) &&
+      !isBinaryBody(body)
+    if (useStructuralDiff) {
+      diffs.push(...diffValues('body', expectedBody, body))
     } else {
-      diffs.push({path: 'body', expected: handler.matchOptions.body, actual: body})
+      diffs.push({path: 'body', expected: expectedBody, actual: body})
+    }
+  }
+
+  // Headers diff
+  if (hasHeadersConstraint(handler) && !headersMatch(handler, headerRecord)) {
+    const expected = handler.matchOptions.headers
+    if (expected === undefined || isAsymmetricMatcher(expected)) {
+      diffs.push({path: 'headers', expected, actual: headerRecord})
+    } else {
+      for (const key of Object.keys(expected)) {
+        const lower = key.toLowerCase()
+        if (!(lower in headerRecord) || !deepMatch(expected[key], headerRecord[lower])) {
+          diffs.push({path: `headers.${key}`, expected: expected[key], actual: headerRecord[lower]})
+        }
+      }
     }
   }
 
@@ -515,21 +641,45 @@ export function createMockFetch(): MockFetch {
       ? new Headers(init.headers)
       : new Headers(init?.headers ?? undefined)
 
-    // Parse body if content-type is JSON
+    // Parse / normalize the request body for recording and matching.
     let body: unknown = undefined
-    if (init?.body !== undefined && init.body !== null && typeof init.body === 'string') {
-      const ct = getContentType(normalizedHeaders)
-      if (ct !== null && ct.includes('application/json')) {
-        const result = tryParseJson(init.body)
-        if (result !== undefined) {
-          body = result.parsed
+    const rawBody = init?.body
+    if (rawBody !== undefined && rawBody !== null) {
+      if (typeof rawBody === 'string') {
+        const ct = getContentType(normalizedHeaders)
+        if (ct !== null && ct.includes('application/json')) {
+          const result = tryParseJson(rawBody)
+          body = result !== undefined ? result.parsed : rawBody
         } else {
-          body = init.body
+          body = rawBody
         }
-      } else {
-        body = init.body
+      } else if (rawBody instanceof Uint8Array || rawBody instanceof ArrayBuffer) {
+        // Store a defensive copy so the recorded body is a stable snapshot.
+        // Note: a plain `new Uint8Array(...)` copy is used rather than
+        // `toBytes(rawBody).slice()` because `Buffer` (a `Uint8Array`
+        // subclass) overrides `slice()` to return another `Buffer`, which
+        // `toEqual` treats as unequal to a plain `Uint8Array` snapshot.
+        body = new Uint8Array(toBytes(rawBody))
+      } else if (rawBody instanceof ReadableStream) {
+        body = await drainStream(rawBody)
+      } else if (rawBody instanceof Blob) {
+        // File extends Blob; a bare blob/file body sends only bytes on the wire.
+        body = await blobToBytes(rawBody)
+      } else if (rawBody instanceof URLSearchParams) {
+        body = normalizeUrlSearchParams(rawBody)
+      } else if (rawBody instanceof FormData) {
+        body = await normalizeFormData(rawBody)
       }
     }
+
+    // Mirror platform fetch: set the default content-type for this body type
+    // when the caller did not set one, so it is recorded and matchable.
+    const synthesizedContentType = contentTypeFor(rawBody)
+    if (synthesizedContentType !== null && !normalizedHeaders.has('content-type')) {
+      normalizedHeaders.set('content-type', synthesizedContentType)
+    }
+
+    const headerRecord = toHeaderRecord(normalizedHeaders)
 
     // Record the request
     recordedRequests.push({
@@ -540,6 +690,13 @@ export function createMockFetch(): MockFetch {
       headers: normalizedHeaders,
       body,
     })
+
+    // Normalize native-type expected bodies once (async for Blob/FormData), cached per handler.
+    for (const handler of handlers) {
+      if (handler.matchOptions.body !== undefined && handler.normalizedBody === undefined) {
+        handler.normalizedBody = {value: await normalizeExpectedBody(handler.matchOptions.body)}
+      }
+    }
 
     // Find matching handler
     for (const handler of handlers) {
@@ -556,9 +713,12 @@ export function createMockFetch(): MockFetch {
       if (!queryMatches(handler, query)) continue
 
       // Check body
-      if (handler.matchOptions.body !== undefined && !deepMatch(handler.matchOptions.body, body)) {
+      if (handler.matchOptions.body !== undefined && !matchBody(expectedBodyOf(handler), body)) {
         continue
       }
+
+      // Check headers
+      if (hasHeadersConstraint(handler) && !headersMatch(handler, headerRecord)) continue
 
       // Find first unconsumed response
       const responseEntry = findAvailableResponse(handler)
@@ -590,7 +750,7 @@ export function createMockFetch(): MockFetch {
     let closestHandler: InternalHandler | undefined
     let closestScore = -1
     for (const handler of handlers) {
-      const score = scoreMatch(handler, method, requestOrigin, path, query, body)
+      const score = scoreMatch(handler, method, requestOrigin, path, query, body, headerRecord)
       if (score > closestScore) {
         closestScore = score
         closestHandler = handler
@@ -601,7 +761,7 @@ export function createMockFetch(): MockFetch {
     let closestDescription: string | undefined
     if (closestHandler !== undefined) {
       closestDescription = describeHandler(closestHandler)
-      diffs = buildDiffs(closestHandler, method, requestOrigin, path, query, body)
+      diffs = buildDiffs(closestHandler, method, requestOrigin, path, query, body, headerRecord)
     }
 
     throw new MockFetchError(method, path, query, body, diffs, allMocks, closestDescription)
