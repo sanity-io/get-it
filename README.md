@@ -85,14 +85,14 @@ res.body // ReadableStream<Uint8Array>
 
 ### Instance options (`createRequester`)
 
-| Option       | Type              | Default            | Description                                |
-| ------------ | ----------------- | ------------------ | ------------------------------------------ |
-| `base`       | `string`          | —                  | Base URL prepended to relative paths       |
-| `headers`    | `FetchHeaders`    | —                  | Default headers for all requests           |
-| `httpErrors` | `boolean`         | `true`             | Throw `HttpError` on status >= 400         |
-| `timeout`    | `number \| false` | —                  | Timeout in ms (uses `AbortSignal.timeout`) |
-| `fetch`      | `FetchFunction`   | `globalThis.fetch` | Custom fetch implementation                |
-| `middleware` | `Array`           | `[]`               | Transform and wrapping middleware          |
+| Option       | Type                                | Default            | Description                                                      |
+| ------------ | ----------------------------------- | ------------------ | ---------------------------------------------------------------- |
+| `base`       | `string`                            | —                  | Base URL prepended to relative paths                             |
+| `headers`    | `FetchHeaders`                      | —                  | Default headers for all requests                                 |
+| `httpErrors` | `boolean`                           | `true`             | Throw `HttpError` on status >= 400                               |
+| `timeout`    | `number \| false \| TimeoutOptions` | —                  | Timeout in ms, or `{total, headers}` — see [Timeouts](#timeouts) |
+| `fetch`      | `FetchFunction`                     | `globalThis.fetch` | Custom fetch implementation                                      |
+| `middleware` | `Array`                             | `[]`               | Transform and wrapping middleware                                |
 
 ### Per-request options
 
@@ -106,12 +106,41 @@ res.body // ReadableStream<Uint8Array>
 | `as`          | `'json' \| 'text' \| 'stream'`                             | Response body type                                              |
 | `signal`      | `AbortSignal`                                              | Cancellation signal                                             |
 | `httpErrors`  | `boolean`                                                  | Override instance setting                                       |
-| `timeout`     | `number \| false`                                          | Override instance timeout                                       |
+| `timeout`     | `number \| false \| TimeoutOptions`                        | Override instance timeout (replaces it wholesale)               |
 | `fetch`       | `FetchFunction`                                            | Override instance fetch                                         |
 | `redirect`    | `'error' \| 'follow' \| 'manual'`                          | Redirect strategy (`'manual'` is opaque in browsers - see note) |
 | `credentials` | `'include' \| 'omit' \| 'same-origin'`                     | Credentials mode (browser-only)                                 |
 
 > **Note on `redirect: 'manual'`:** In browsers this yields an opaque-redirect response (status `0`, empty headers) per the Fetch spec, so the 3xx status and headers (e.g. `location`) are unreadable. Reading them neither throws nor warns - `headers.get()` returns `null` and iteration is empty - so detect the case via `status === 0`. Non-browser runtimes (Node.js, Bun, Deno, edge runtimes, workers) return the real 3xx response, so its status and headers are readable.
+
+## Timeouts
+
+`timeout` accepts a total deadline in milliseconds, `false` to disable, or a structured object:
+
+```ts
+const request = createRequester({
+  timeout: {
+    total: 120_000, // total deadline, request start through body (default 120 000)
+    headers: 15_000, // max time to receive response headers, per attempt (disabled by default)
+  },
+})
+```
+
+- `total` — the existing deadline, implemented via `AbortSignal.timeout()`. Covers everything, including the body stream in `as: 'stream'` mode. Rejects with the platform's `TimeoutError` DOMException.
+- `headers` — time to receive response headers for one fetch attempt. Does not cover body download. Rejects with get-it's `TimeoutError` (`code: 'ETIMEDOUT'`, `phase: 'headers'`), which the default `retry()` middleware retries on GET/HEAD. Because the timer lives inside the middleware chain, each retry attempt gets a fresh timer — no middleware ordering requirements.
+
+For long-running streaming downloads, disable the total deadline and keep a headers timeout:
+
+```ts
+import {createRequester} from 'get-it'
+import {retry} from 'get-it/middleware'
+
+const request = createRequester({
+  middleware: [retry()],
+  timeout: {headers: 15_000, total: false},
+})
+const res = await request({url: 'https://example.com/big-file', as: 'stream'})
+```
 
 ## Error handling
 
