@@ -1,4 +1,4 @@
-import {createRequester, type RequestOptions} from 'get-it'
+import {createRequester, type FetchFunction, type RequestOptions, TimeoutError} from 'get-it'
 import {retry} from 'get-it/middleware'
 import {describe, expect, it} from 'vitest'
 
@@ -212,6 +212,38 @@ describe('retry middleware', {timeout: 15000}, () => {
     await expect(
       request({url: `/fail?uuid=${Math.random()}&n=2`, method: 'post', body: 'x'}),
     ).rejects.toThrow()
+    expect(attempts).toBe(1)
+  })
+
+  it('retries headers timeouts with a fresh timer per attempt', async () => {
+    let attempts = 0
+    const neverRespond: FetchFunction = (_url, init) =>
+      new Promise((_resolve, reject) => {
+        attempts++
+        init?.signal?.addEventListener('abort', () => reject(init.signal?.reason), {once: true})
+      })
+    const request = createRequester({
+      fetch: neverRespond,
+      timeout: {headers: 50, total: false},
+      middleware: [retry({maxRetries: 2, retryDelay: () => 10})],
+    })
+    await expect(request('http://localhost:9999/never')).rejects.toBeInstanceOf(TimeoutError)
+    expect(attempts).toBe(3)
+  })
+
+  it('does not retry total-deadline timeouts', async () => {
+    let attempts = 0
+    const neverRespond: FetchFunction = (_url, init) =>
+      new Promise((_resolve, reject) => {
+        attempts++
+        init?.signal?.addEventListener('abort', () => reject(init.signal?.reason), {once: true})
+      })
+    const request = createRequester({
+      fetch: neverRespond,
+      timeout: {total: 50},
+      middleware: [retry({maxRetries: 2, retryDelay: () => 10})],
+    })
+    await expect(request('http://localhost:9999/never')).rejects.toThrow()
     expect(attempts).toBe(1)
   })
 
