@@ -25,7 +25,11 @@ export function diffValues(prefix: string, expected: unknown, actual: unknown): 
   if (expected === actual) return []
 
   if (expected instanceof Uint8Array || actual instanceof Uint8Array) {
-    if (expected instanceof Uint8Array && actual instanceof Uint8Array && bytesEqual(expected, actual)) {
+    if (
+      expected instanceof Uint8Array &&
+      actual instanceof Uint8Array &&
+      bytesEqual(expected, actual)
+    ) {
       return []
     }
     return [{path: prefix, expected, actual}]

@@ -11,7 +11,9 @@ import {
 describe('body normalization', () => {
   describe('blobToBytes', () => {
     it('reads a Blob into a Uint8Array', async () => {
-      expect(await blobToBytes(new Blob([new Uint8Array([1, 2, 3])]))).toEqual(new Uint8Array([1, 2, 3]))
+      expect(await blobToBytes(new Blob([new Uint8Array([1, 2, 3])]))).toEqual(
+        new Uint8Array([1, 2, 3]),
+      )
     })
   })
 
@@ -56,7 +58,9 @@ describe('body normalization', () => {
   describe('normalizeExpectedBody', () => {
     it('normalizes native body types and passes others through', async () => {
       expect(await normalizeExpectedBody(new URLSearchParams('a=1'))).toEqual({a: '1'})
-      expect(await normalizeExpectedBody(new Blob([new Uint8Array([9])]))).toEqual(new Uint8Array([9]))
+      expect(await normalizeExpectedBody(new Blob([new Uint8Array([9])]))).toEqual(
+        new Uint8Array([9]),
+      )
       const passthrough = {title: 'Hi'}
       expect(await normalizeExpectedBody(passthrough)).toBe(passthrough)
     })

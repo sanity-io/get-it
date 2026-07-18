@@ -252,10 +252,16 @@ describe('deepMatch with Uint8Array', () => {
 
   it('matches nested bytes inside an object', () => {
     expect(
-      deepMatch({name: 'a', bytes: new Uint8Array([1, 2])}, {name: 'a', bytes: new Uint8Array([1, 2])}),
+      deepMatch(
+        {name: 'a', bytes: new Uint8Array([1, 2])},
+        {name: 'a', bytes: new Uint8Array([1, 2])},
+      ),
     ).toBe(true)
     expect(
-      deepMatch({name: 'a', bytes: new Uint8Array([1, 2])}, {name: 'a', bytes: new Uint8Array([9, 9])}),
+      deepMatch(
+        {name: 'a', bytes: new Uint8Array([1, 2])},
+        {name: 'a', bytes: new Uint8Array([9, 9])},
+      ),
     ).toBe(false)
   })
 })

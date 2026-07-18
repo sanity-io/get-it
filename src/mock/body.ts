@@ -25,7 +25,9 @@ export async function blobToBytes(blob: Blob): Promise<Uint8Array> {
  * duplicate keys collapse to an array (preserving multi-value params).
  * @internal
  */
-export function normalizeUrlSearchParams(params: URLSearchParams): Record<string, string | string[]> {
+export function normalizeUrlSearchParams(
+  params: URLSearchParams,
+): Record<string, string | string[]> {
   const out: Record<string, string | string[]> = {}
   for (const key of new Set(params.keys())) {
     const all = params.getAll(key)
