@@ -48,8 +48,8 @@ export class HttpError extends Error {
  * An error thrown when a request exceeds a configured timeout phase.
  *
  * Currently only produced for the `headers` phase (time-to-response-headers,
- * see {@link TimeoutOptions.headers}). Total-deadline timeouts reject with the
- * platform's `TimeoutError` DOMException, which shares the same `name` —
+ * see {@link TimeoutOptions.headers}). Total-deadline timeouts reject with a
+ * `TimeoutError` DOMException, which shares the same `name` —
  * `err.name === 'TimeoutError'` catches both.
  *
  * The `code` is the string `'ETIMEDOUT'`, which the default `retry()`

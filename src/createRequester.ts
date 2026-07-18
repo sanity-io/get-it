@@ -283,6 +283,21 @@ function enabledMs(value: number | false | undefined): number | undefined {
   return value
 }
 
+/**
+ * Prevents a pending deadline timer from holding the Node.js event loop open
+ * for the full timeout window; no-op on platforms without timer.unref().
+ */
+function unrefTimer(timer: unknown): void {
+  if (
+    typeof timer === 'object' &&
+    timer !== null &&
+    'unref' in timer &&
+    typeof timer.unref === 'function'
+  ) {
+    timer.unref()
+  }
+}
+
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   if (typeof value !== 'object' || value === null) return false
   if (Array.isArray(value)) return false
@@ -403,12 +418,21 @@ function buildFetchArgs(
   // Signal — build the final abort signal (totalMs already resolved by resolveTimeout)
   let signal: AbortSignal | undefined = opts.signal
   if (totalMs !== undefined) {
-    const timeoutSignal = AbortSignal.timeout(totalMs)
-    if (signal) {
-      signal = AbortSignal.any([signal, timeoutSignal])
-    } else {
-      signal = timeoutSignal
-    }
+    // Own the deadline timer instead of using AbortSignal.timeout(): WebKit
+    // can garbage-collect an otherwise-unreferenced timeout signal behind
+    // AbortSignal.any(), silently disarming the deadline. The timer callback
+    // closure keeps this controller (and thus the abort chain) alive.
+    const totalController = new AbortController()
+    unrefTimer(
+      setTimeout(
+        () =>
+          totalController.abort(
+            new DOMException('The operation was aborted due to timeout', 'TimeoutError'),
+          ),
+        totalMs,
+      ),
+    )
+    signal = signal ? AbortSignal.any([signal, totalController.signal]) : totalController.signal
   }
   if (signal) init.signal = signal
 

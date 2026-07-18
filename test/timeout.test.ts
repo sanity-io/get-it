@@ -123,8 +123,11 @@ describe('structured timeout behavior', () => {
   })
 
   it('headers timeout does not fire once headers have arrived, even with a slow body', async () => {
-    const request = createRequester({base: baseUrl, timeout: {headers: 250, total: false}})
-    const res = await request('/slow-body?delay=1000')
+    // Body delay must exceed the headers timeout so an uncleared timer would
+    // still fire; the timeout is generous so headers reliably arrive within
+    // it even on a loaded CI machine.
+    const request = createRequester({base: baseUrl, timeout: {headers: 1000, total: false}})
+    const res = await request('/slow-body?delay=2000')
     expect(res.text()).toBe('partial…done')
   })
 
@@ -134,8 +137,8 @@ describe('structured timeout behavior', () => {
   })
 
   it('{headers, total: false} lets a slow stream complete', async () => {
-    const request = createRequester({base: baseUrl, timeout: {headers: 250, total: false}})
-    const res = await request({url: '/slow-body?delay=1000', as: 'stream'})
+    const request = createRequester({base: baseUrl, timeout: {headers: 1000, total: false}})
+    const res = await request({url: '/slow-body?delay=2000', as: 'stream'})
     expect(res.status).toBe(200)
     const chunks: Uint8Array[] = []
     const reader = res.body.getReader()
