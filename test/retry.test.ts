@@ -289,6 +289,19 @@ describe('retry middleware', {timeout: 15000}, () => {
       expect(isRetryableRequest(err, 0, getOpts)).toBe(true)
     })
 
+    it('does not retry platform timeout/abort errors, even when flagged retryable', () => {
+      // workerd tags its AbortSignal.timeout() DOMException with `retryable: true`
+      const timeoutErr = Object.assign(new Error('The operation was aborted due to timeout'), {
+        retryable: true,
+      })
+      timeoutErr.name = 'TimeoutError'
+      expect(isRetryableRequest(timeoutErr, 0, getOpts)).toBe(false)
+
+      const abortErr = new Error('The operation was aborted')
+      abortErr.name = 'AbortError'
+      expect(isRetryableRequest(abortErr, 0, getOpts)).toBe(false)
+    })
+
     it('retries error flagged as retryable (Cloudflare Workers network error)', () => {
       const err = Object.assign(new Error('Network connection lost.'), {
         retryable: true,

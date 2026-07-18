@@ -85,15 +85,26 @@ export function createRequester(
     // rather than an empty timer-callback stack.
     const timeoutError = new TimeoutError({url, method, timeoutMs: headersMs, phase: 'headers'})
     const controller = new AbortController()
-    const timer: ReturnType<typeof setTimeout> = setTimeout(
-      () => controller.abort(timeoutError),
-      headersMs,
-    )
+    // Reject via Promise.race rather than relying on fetch to reject with the
+    // abort reason: workerd's fetch reconstructs the reason (losing its
+    // prototype, so `instanceof TimeoutError` breaks), and WebKit has dropped
+    // the reason — or ignored `AbortSignal.any`-derived aborts entirely.
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const timedOut = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => {
+        reject(timeoutError)
+        controller.abort(timeoutError)
+      }, headersMs)
+    })
     const signal = init.signal
       ? AbortSignal.any([init.signal, controller.signal])
       : controller.signal
     try {
-      return {response: await fetchFn(url, {...init, signal}), url, method}
+      const fetching = Promise.resolve(fetchFn(url, {...init, signal}))
+      // If the timeout wins the race, the aborted fetch's later rejection
+      // must not become an unhandled rejection.
+      fetching.catch(() => {})
+      return {response: await Promise.race([fetching, timedOut]), url, method}
     } finally {
       clearTimeout(timer)
     }
