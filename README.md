@@ -126,7 +126,7 @@ const request = createRequester({
 })
 ```
 
-- `total` — the existing deadline, implemented via `AbortSignal.timeout()`. Covers everything, including the body stream in `as: 'stream'` mode. Rejects with the platform's `TimeoutError` DOMException.
+- `total` — the existing deadline, implemented via `AbortSignal.timeout()`. Covers everything, including the body stream in `as: 'stream'` mode. Rejects with the platform's `TimeoutError` DOMException. When combined with the retry() middleware, the deadline applies per attempt - each retry gets a fresh total timer.
 - `headers` — time to receive response headers for one fetch attempt. Does not cover body download. Rejects with get-it's `TimeoutError` (`code: 'ETIMEDOUT'`, `phase: 'headers'`), which the default `retry()` middleware retries on GET/HEAD. Because the timer lives inside the middleware chain, each retry attempt gets a fresh timer — no middleware ordering requirements.
 
 For long-running streaming downloads, disable the total deadline and keep a headers timeout:

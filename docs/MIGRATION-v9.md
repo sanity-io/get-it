@@ -475,10 +475,10 @@ Since v9.2, `timeout` also accepts a structured object for finer control:
 await request({url: '/slow', timeout: {headers: 5000}})
 ```
 
-| v8                   | v9                                                                                                      |
-| -------------------- | ------------------------------------------------------------------------------------------------------- |
-| `timeout: {connect}` | `timeout: {headers}` — per-attempt time to response headers, throws a retryable `TimeoutError`          |
-| `timeout: {socket}`  | No direct equivalent (no idle/stall detection). Use `total` as a blunt substitute, or watch the stream. |
+| v8                   | v9                                                                                                                                                             |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `timeout: {connect}` | `timeout: {headers}` — per-attempt time to response headers, throws a retryable `TimeoutError`                                                                 |
+| `timeout: {socket}`  | No direct equivalent (no idle/stall detection). Use `total` as a blunt substitute (note: per retry attempt when combined with `retry()`), or watch the stream. |
 
 For streaming downloads that should never hit a total deadline but fail fast on unresponsive servers:
 

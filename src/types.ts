@@ -124,6 +124,7 @@ export interface TimeoutOptions {
    * In stream mode the deadline continues to govern the body stream — use
    * `total: false` for long-running downloads. `false` or `0` disables.
    * Defaults to 120 000 when omitted.
+   * Applies per fetch attempt - with the retry() middleware, each attempt gets a fresh deadline.
    */
   total?: number | false
   /**
@@ -149,7 +150,7 @@ export interface RequesterOptions {
   /** When `true` (default), throws {@link HttpError} for 4xx/5xx responses. */
   httpErrors?: boolean
   /**
-   * Default request timeout: total milliseconds, `false` to disable, or a
+   * Default request timeout: total milliseconds, `false` or `0` to disable, or a
    * structured {@link TimeoutOptions} (`{total, headers}`). Defaults to a
    * 120 000 ms total.
    */
