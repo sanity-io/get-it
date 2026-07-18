@@ -13,6 +13,7 @@ import type {MockDescription} from './errors'
 import {MockFetchError} from './errors'
 import type {AsymmetricMatcher} from './matchers'
 import {deepMatch, isAsymmetricMatcher, isRecord} from './matchers'
+import {delayWithAbort} from './streamBody'
 import {matchUrl, parseUrl} from './urlMatch'
 
 // ---------------------------------------------------------------------------
@@ -257,30 +258,6 @@ function expectedBodyOf(handler: InternalHandler): unknown {
  */
 function resolveError(error: Error | (() => Error)): Error {
   return typeof error === 'function' ? error() : error
-}
-
-/**
- * Wait `ms` milliseconds, rejecting with the signal's reason if it aborts
- * first. Clears the timer on abort so it cannot resolve a request that should
- * already have rejected.
- * @internal
- */
-function delayWithAbort(ms: number, signal: AbortSignal | undefined): Promise<void> {
-  return new Promise<void>((resolve, reject) => {
-    if (signal?.aborted) {
-      reject(signal.reason)
-      return
-    }
-    const onAbort = () => {
-      clearTimeout(timer)
-      reject(signal?.reason)
-    }
-    const timer = setTimeout(() => {
-      signal?.removeEventListener('abort', onAbort)
-      resolve()
-    }, ms)
-    signal?.addEventListener('abort', onAbort, {once: true})
-  })
 }
 
 /**
