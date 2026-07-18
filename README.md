@@ -291,6 +291,40 @@ mock.on('GET', '/slow').respond({status: 200, body: {ok: true}, delay: 100})
 
 The request is treated as sent immediately; the response resolves after `delay` ms. If the request is aborted before the delay elapses - via an `AbortController` signal or a get-it `timeout` - it rejects with the signal's reason and the pending timer is cleared.
 
+### Streaming response bodies
+
+`streamBody()` declares a body delivered in chunks, with optional pauses, a
+stall, or a mid-download error. A fresh stream is built per consumption, so it
+works with `respondPersist`. `delay` still controls time-to-headers; the
+script controls the body after that.
+
+```ts
+import {createMockFetch, streamBody, streamDelay, streamStall} from 'get-it/mock'
+
+const mock = createMockFetch()
+mock.on('GET', '/backup').respond({
+  status: 200,
+  body: streamBody('partial', streamDelay(1000), 'done'),
+})
+
+// A download that stalls forever after the first chunk:
+const stalled = streamBody('partial', streamStall())
+mock.on('GET', '/stuck').respond({body: stalled})
+
+// ...after the consumer cancels the body (e.g. its read timeout fired):
+expect(stalled).toHaveBeenCancelled() // matcher from 'get-it/vitest'
+```
+
+- `streamDelay(ms)` pauses between chunks; `streamStall()` never closes the
+  body (ends only via consumer cancel or signal abort); `streamError(err)`
+  errors the stream mid-download.
+- Aborting the request signal errors the body with the abort reason, matching
+  real fetch behavior.
+- Buffered reads (no `as`, or `text()`/`arrayBuffer()`) drain the script with
+  the same timing, so total-deadline timeout behavior is testable too.
+- The `streamBody()` return value is the observability handle: `cancelCount`
+  and `lastCancelReason`, or assert with `expect(body).toHaveBeenCancelled()`.
+
 ### Scoped mocks
 
 When your code talks to multiple hosts, use `mock.scope()` to assert the right requests go to the right place:

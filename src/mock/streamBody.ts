@@ -39,9 +39,7 @@ export class StreamBody {
   constructor(parts: ReadonlyArray<StreamPart>) {
     parts.forEach(assertValidPart)
     // Copy Uint8Array parts to protect against external mutations
-    const copiedParts = parts.map(part =>
-      part instanceof Uint8Array ? part.slice() : part,
-    )
+    const copiedParts = parts.map((part) => (part instanceof Uint8Array ? part.slice() : part))
     this.script = copiedParts
   }
 }
@@ -55,7 +53,9 @@ function assertValidPart(part: StreamPart, index: number, parts: ReadonlyArray<S
     return
   }
   if (index !== parts.length - 1) {
-    throw new TypeError(`streamBody(): ${part.kind}() must be the last part (found at index ${index})`)
+    throw new TypeError(
+      `streamBody(): ${part.kind}() must be the last part (found at index ${index})`,
+    )
   }
 }
 
