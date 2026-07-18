@@ -38,7 +38,11 @@ export class StreamBody {
   /** Use {@link streamBody} instead of constructing directly. @internal */
   constructor(parts: ReadonlyArray<StreamPart>) {
     parts.forEach(assertValidPart)
-    this.script = parts
+    // Copy Uint8Array parts to protect against external mutations
+    const copiedParts = parts.map(part =>
+      part instanceof Uint8Array ? part.slice() : part,
+    )
+    this.script = copiedParts
   }
 }
 
@@ -126,4 +130,126 @@ export function delayWithAbort(ms: number, signal: AbortSignal | undefined): Pro
     }, ms)
     signal?.addEventListener('abort', onAbort, {once: true})
   })
+}
+
+// ---------------------------------------------------------------------------
+// Interpreter
+// ---------------------------------------------------------------------------
+
+const encoder = new TextEncoder()
+
+/**
+ * Returns a promise that rejects with the signal's reason when it aborts,
+ * and never settles otherwise — the waiting state of a stalled body.
+ * @internal
+ */
+function stallUntilAborted(signal: AbortSignal | undefined): Promise<never> {
+  return new Promise<never>((_resolve, reject) => {
+    if (!signal) return
+    if (signal.aborted) {
+      reject(signal.reason)
+      return
+    }
+    signal.addEventListener('abort', () => reject(signal.reason), {once: true})
+  })
+}
+
+/**
+ * Build a fresh `ReadableStream` that plays back a {@link StreamBody} script.
+ * Each call produces an independent stream (persist-safe). Aborting `signal`
+ * errors the stream with the signal's reason, mirroring real fetch behavior;
+ * consumer cancellation is recorded on the handle.
+ * @internal
+ */
+export function streamFromScript(
+  body: StreamBody,
+  signal: AbortSignal | undefined,
+): ReadableStream<Uint8Array> {
+  const parts = body.script
+  let index = 0
+  let onAbort: (() => void) | undefined
+
+  const removeAbortListener = () => {
+    if (onAbort) {
+      signal?.removeEventListener('abort', onAbort)
+      onAbort = undefined
+    }
+  }
+
+  return new ReadableStream<Uint8Array>({
+    start(controller) {
+      if (!signal) return
+      if (signal.aborted) {
+        controller.error(signal.reason)
+        return
+      }
+      // Erroring an already-errored/closed stream is a spec-level no-op, so
+      // this listener is safe even when pull() also rejects on the same abort.
+      onAbort = () => {
+        removeAbortListener()
+        controller.error(signal.reason)
+      }
+      signal.addEventListener('abort', onAbort, {once: true})
+    },
+    async pull(controller) {
+      while (index < parts.length) {
+        const part = parts[index++]
+        if (typeof part === 'string') {
+          controller.enqueue(encoder.encode(part))
+          return
+        }
+        if (part instanceof Uint8Array) {
+          controller.enqueue(part.slice())
+          return
+        }
+        if (part.kind === 'delay') {
+          await delayWithAbort(part.ms, signal)
+          continue
+        }
+        if (part.kind === 'stall') {
+          await stallUntilAborted(signal)
+          return
+        }
+        removeAbortListener()
+        controller.error(part.error)
+        return
+      }
+      removeAbortListener()
+      controller.close()
+    },
+    cancel(reason) {
+      removeAbortListener()
+      body.cancelCount++
+      body.lastCancelReason = reason
+    },
+  })
+}
+
+/**
+ * Independently walk a {@link StreamBody} script to completion, honoring
+ * delays, and return the concatenated bytes. Used by the mock response's
+ * `text()`/`arrayBuffer()` accessors so buffered reads stay faithful to the
+ * script's timing.
+ * @internal
+ */
+export async function drainScript(
+  body: StreamBody,
+  signal: AbortSignal | undefined,
+): Promise<Uint8Array> {
+  const reader = streamFromScript(body, signal).getReader()
+  const chunks: Uint8Array[] = []
+  let total = 0
+  for (;;) {
+    const {done, value} = await reader.read()
+    if (done) break
+    chunks.push(value)
+    total += value.byteLength
+  }
+  const out = new Uint8Array(total)
+  let offset = 0
+  for (const chunk of chunks) {
+    out.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+  return out
 }
