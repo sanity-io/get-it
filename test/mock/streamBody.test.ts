@@ -10,6 +10,8 @@ import {
   drainScript,
   streamFromScript,
 } from '../../src/mock/streamBody'
+import {mockMatchers} from '../../src/mock/vitestMatchers'
+import '../../src/_exports/vitest'
 
 describe('streamBody()', () => {
   it('builds a StreamBody with the script and zeroed counters', () => {
@@ -188,5 +190,39 @@ describe('drainScript', () => {
     const body = streamBody('same')
     expect(new TextDecoder().decode(await drainScript(body, undefined))).toBe('same')
     expect(new TextDecoder().decode(await drainScript(body, undefined))).toBe('same')
+  })
+})
+
+describe('toHaveBeenCancelled matcher', () => {
+  it('registers via the get-it/vitest entry, including negation', async () => {
+    const fresh = streamBody('x')
+    expect(fresh).not.toHaveBeenCancelled()
+
+    const body = streamBody('x', streamStall())
+    const reader = streamFromScript(body, undefined).getReader()
+    await reader.read()
+    await reader.cancel('done')
+    expect(body).toHaveBeenCancelled()
+  })
+
+  it('fails for non-StreamBody values', () => {
+    const result = mockMatchers.toHaveBeenCancelled({})
+    expect(result.pass).toBe(false)
+    expect(result.message()).toContain('streamBody()')
+  })
+
+  it('reports pass/fail based on cancelCount, with reason in the message', async () => {
+    const body = streamBody('x', streamStall())
+    expect(mockMatchers.toHaveBeenCancelled(body).pass).toBe(false)
+    expect(mockMatchers.toHaveBeenCancelled(body).message()).toContain('never')
+
+    const reader = streamFromScript(body, undefined).getReader()
+    await reader.read()
+    await reader.cancel(new Error('bail'))
+
+    const result = mockMatchers.toHaveBeenCancelled(body)
+    expect(result.pass).toBe(true)
+    expect(result.message()).toContain('1 time(s)')
+    expect(result.message()).toContain('bail')
   })
 })

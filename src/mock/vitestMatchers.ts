@@ -1,6 +1,7 @@
 import type {MockFetch, MockMatchOptions, RecordedRequest} from './createMockFetch'
 import {deepMatch} from './matchers'
 import {matchUrl, parseUrl} from './urlMatch'
+import {StreamBody} from './streamBody'
 
 // ---------------------------------------------------------------------------
 // Type guards
@@ -256,6 +257,29 @@ function toHaveUrl(received: unknown, expected: string): MatcherResult {
 }
 
 // ---------------------------------------------------------------------------
+// StreamBody matchers
+// ---------------------------------------------------------------------------
+
+function toHaveBeenCancelled(received: unknown): MatcherResult {
+  if (!(received instanceof StreamBody)) {
+    return {
+      pass: false,
+      message: () => 'Expected value to be a streamBody() instance',
+    }
+  }
+
+  const pass = received.cancelCount > 0
+
+  return {
+    pass,
+    message: pass
+      ? () =>
+          `Expected stream body not to have been cancelled, but it was cancelled ${received.cancelCount} time(s) (last reason: ${String(received.lastCancelReason)})`
+      : () => 'Expected stream body to have been cancelled, but it never was',
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Exported matcher map
 // ---------------------------------------------------------------------------
 
@@ -272,4 +296,5 @@ export const mockMatchers = {
   toHaveQuery,
   toHaveMethod,
   toHaveUrl,
+  toHaveBeenCancelled,
 }
