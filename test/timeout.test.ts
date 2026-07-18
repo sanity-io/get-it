@@ -94,10 +94,13 @@ describe('structured timeout behavior', () => {
     },
   )
 
-  it.skipIf('happyDOM' in globalThis)('object form {total: n} behaves like plain number', async () => {
-    const request = createRequester({base: baseUrl, timeout: {total: 200}})
-    await expect(request('/delay?delay=2000')).rejects.toThrow()
-  })
+  it.skipIf('happyDOM' in globalThis)(
+    'object form {total: n} behaves like plain number',
+    async () => {
+      const request = createRequester({base: baseUrl, timeout: {total: 200}})
+      await expect(request('/delay?delay=2000')).rejects.toThrow()
+    },
+  )
 
   it('object form {total: false} disables the total deadline', async () => {
     const request = createRequester({base: baseUrl, timeout: {total: false}})
