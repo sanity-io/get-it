@@ -1,4 +1,4 @@
-import {HttpError} from './errors'
+import {HttpError, TimeoutError} from './errors'
 import {createBufferedResponse} from './response'
 import type {
   BufferedResponse,
@@ -63,15 +63,51 @@ export function createRequester(
   }
 
   /**
+   * Builds fetch args, applies the headers-phase timeout when configured,
+   * and performs the fetch. Lives inside the wrapping-middleware chain, so
+   * each retry() attempt gets a fresh headers timer.
+   */
+  async function performFetch(
+    fetchFn: FetchFunction,
+    opts: RequestOptions,
+  ): Promise<{response: FetchResponse; url: string; method: string}> {
+    const {totalMs, headersMs} = resolveTimeout(
+      opts.timeout !== undefined ? opts.timeout : instanceTimeout,
+    )
+    const {url, init} = buildFetchArgs(opts, totalMs, instanceCredentials)
+    const method = init.method ?? 'GET'
+
+    if (headersMs === undefined) {
+      return {response: await fetchFn(url, init), url, method}
+    }
+
+    // Created eagerly so the stack trace points at the request call site
+    // rather than an empty timer-callback stack.
+    const timeoutError = new TimeoutError({url, method, timeoutMs: headersMs, phase: 'headers'})
+    const controller = new AbortController()
+    const timer: ReturnType<typeof setTimeout> = setTimeout(
+      () => controller.abort(timeoutError),
+      headersMs,
+    )
+    const signal = init.signal
+      ? AbortSignal.any([init.signal, controller.signal])
+      : controller.signal
+    try {
+      return {response: await fetchFn(url, {...init, signal}), url, method}
+    } finally {
+      clearTimeout(timer)
+    }
+  }
+
+  /**
    * Core fetch + buffer function. This is the innermost layer
    * that wrapping middlewares eventually call.
    */
   async function getItBuffered(opts: RequestOptions): Promise<BufferedResponse> {
     const fetchFn: FetchFunction = opts.fetch ?? instanceFetch ?? globalThis.fetch
-    const {url, init} = buildFetchArgs(opts, instanceTimeout, instanceCredentials)
-    const response = await fetchFn(url, init)
+    const {response, url, method} = await performFetch(fetchFn, opts)
     const httpErrors = opts.httpErrors ?? instanceHttpErrors ?? true
-    return bufferAndCheck(response, httpErrors, url, init.method ?? 'GET')
+    return bufferAndCheck(response, httpErrors, url, method)
   }
 
   // Compose wrapping middlewares around the core fetch
@@ -115,12 +151,11 @@ export function createRequester(
 
     async function getItStreamed(reqOpts: RequestOptions): Promise<BufferedResponse> {
       const fetchFn: FetchFunction = reqOpts.fetch ?? instanceFetch ?? globalThis.fetch
-      const {url, init} = buildFetchArgs(reqOpts, instanceTimeout, instanceCredentials)
-      const response = await fetchFn(url, init)
+      const {response, url, method} = await performFetch(fetchFn, reqOpts)
       const httpErrors = reqOpts.httpErrors ?? instanceHttpErrors ?? true
 
       if (httpErrors && response.status >= 400) {
-        return bufferAndCheck(response, httpErrors, url, init.method ?? 'GET')
+        return bufferAndCheck(response, httpErrors, url, method)
       }
 
       capturedResponse = response
@@ -194,6 +229,7 @@ export function createRequester(
     }
   }
 
+  defineFnName(performFetch, 'performFetch')
   defineFnName(getItBuffered, 'getItBuffered')
   defineFnName(requestStream, 'requestStream')
   defineFnName(requestJson, 'requestJson')
@@ -300,7 +336,7 @@ function mergeHeaders(
  */
 function buildFetchArgs(
   opts: RequestOptions,
-  instanceTimeout: number | false | TimeoutOptions | undefined,
+  totalMs: number | undefined,
   instanceCredentials: 'include' | 'omit' | 'same-origin' | undefined,
 ): {url: string; init: FetchInit} {
   let url = opts.url
@@ -353,13 +389,10 @@ function buildFetchArgs(
 
   init.headers = headers
 
-  // Timeout — resolve timeout value (per-request wins over instance, default 120s)
-  const timeoutValue = opts.timeout !== undefined ? opts.timeout : (instanceTimeout ?? 120_000)
-
-  // Signal — build the final abort signal
+  // Signal — build the final abort signal (totalMs already resolved by resolveTimeout)
   let signal: AbortSignal | undefined = opts.signal
-  if (typeof timeoutValue === 'number' && timeoutValue > 0) {
-    const timeoutSignal = AbortSignal.timeout(timeoutValue)
+  if (totalMs !== undefined) {
+    const timeoutSignal = AbortSignal.timeout(totalMs)
     if (signal) {
       signal = AbortSignal.any([signal, timeoutSignal])
     } else {

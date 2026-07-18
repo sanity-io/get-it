@@ -1,4 +1,4 @@
-import {TimeoutError} from 'get-it'
+import {createRequester, TimeoutError} from 'get-it'
 import {describe, expect, it} from 'vitest'
 import {resolveTimeout} from '../src/createRequester'
 
@@ -69,5 +69,53 @@ describe('resolveTimeout', () => {
       totalMs: undefined,
       headersMs: undefined,
     })
+  })
+})
+
+const baseUrl = 'http://localhost:9980/req-test'
+
+describe('structured timeout behavior', () => {
+  // happy-dom's fetch does not properly support AbortController on network requests
+  it.skipIf('happyDOM' in globalThis)(
+    'headers timeout fires with a TimeoutError when headers are delayed',
+    async () => {
+      const request = createRequester({base: baseUrl, timeout: {headers: 250}})
+      const err = await request('/delay?delay=5000').then(
+        () => null,
+        (reason: unknown) => reason,
+      )
+      expect(err).toBeInstanceOf(TimeoutError)
+      if (!(err instanceof TimeoutError)) throw new Error('expected TimeoutError')
+      expect(err.phase).toBe('headers')
+      expect(err.code).toBe('ETIMEDOUT')
+      expect(err.timeoutMs).toBe(250)
+      expect(err.method).toBe('GET')
+      expect(err.url).toContain('/delay')
+    },
+  )
+
+  it.skipIf('happyDOM' in globalThis)('object form {total: n} behaves like plain number', async () => {
+    const request = createRequester({base: baseUrl, timeout: {total: 200}})
+    await expect(request('/delay?delay=2000')).rejects.toThrow()
+  })
+
+  it('object form {total: false} disables the total deadline', async () => {
+    const request = createRequester({base: baseUrl, timeout: {total: false}})
+    const res = await request('/delay?delay=200')
+    expect(res.status).toBe(200)
+  })
+
+  it.skipIf('happyDOM' in globalThis)(
+    'per-request object timeout replaces instance value wholesale',
+    async () => {
+      const request = createRequester({base: baseUrl, timeout: {total: false}})
+      await expect(request({url: '/delay?delay=2000', timeout: {total: 200}})).rejects.toThrow()
+    },
+  )
+
+  it('headers timeout does not fire when the response is fast', async () => {
+    const request = createRequester({base: baseUrl, timeout: {headers: 5000}})
+    const res = await request('/plain-text')
+    expect(res.text()).toBe('Just some plain text for you to consume')
   })
 })
