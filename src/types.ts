@@ -112,6 +112,31 @@ export type FetchFunction = (input: string, init?: FetchInit) => Promise<FetchRe
 // ---------------------------------------------------------------------------
 
 /**
+ * Structured timeout configuration. See also the shorthand forms:
+ * a plain `number` is equivalent to `{total: number}`, `false` to
+ * `{total: false}`.
+ *
+ * @public
+ */
+export interface TimeoutOptions {
+  /**
+   * Total deadline in milliseconds, from request start through body download.
+   * In stream mode the deadline continues to govern the body stream — use
+   * `total: false` for long-running downloads. `false` or `0` disables.
+   * Defaults to 120 000 when omitted.
+   */
+  total?: number | false
+  /**
+   * Maximum time in milliseconds to receive response headers, per fetch
+   * attempt — each `retry()` attempt gets a fresh timer. Covers connection
+   * setup, TLS, request-body upload, and server think time, but not body
+   * download. Fires a {@link TimeoutError}. `false` or `0` disables.
+   * Disabled when omitted.
+   */
+  headers?: number | false
+}
+
+/**
  * Configuration options for `createRequester`.
  *
  * @public
@@ -123,8 +148,12 @@ export interface RequesterOptions {
   headers?: FetchHeaders
   /** When `true` (default), throws {@link HttpError} for 4xx/5xx responses. */
   httpErrors?: boolean
-  /** Default request timeout in milliseconds. Set to `false` to disable. Defaults to 120 000 ms. */
-  timeout?: number | false
+  /**
+   * Default request timeout: total milliseconds, `false` to disable, or a
+   * structured {@link TimeoutOptions} (`{total, headers}`). Defaults to a
+   * 120 000 ms total.
+   */
+  timeout?: number | false | TimeoutOptions
   /** Custom fetch implementation. In Node.js, defaults to an undici-backed fetch. */
   fetch?: FetchFunction
   /** Credentials mode forwarded to fetch (browser-only). */
@@ -157,8 +186,11 @@ export interface RequestOptions {
   signal?: AbortSignal
   /** Override the instance-level `httpErrors` setting for this request. */
   httpErrors?: boolean
-  /** Override the instance-level `timeout` for this request. */
-  timeout?: number | false
+  /**
+   * Override the instance-level `timeout` for this request. Replaces the
+   * instance value wholesale — fields are not merged.
+   */
+  timeout?: number | false | TimeoutOptions
   /** Override the instance-level `fetch` for this request. */
   fetch?: FetchFunction
   /** Credentials mode forwarded to fetch (browser-only). */

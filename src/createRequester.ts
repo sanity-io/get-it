@@ -13,6 +13,7 @@ import type {
   RequestOptions,
   StreamResponse,
   TextResponse,
+  TimeoutOptions,
   TransformMiddleware,
   WrappingMiddleware,
 } from './types'
@@ -202,6 +203,39 @@ export function createRequester(
   return request
 }
 
+/**
+ * Resolved per-request timeout configuration. `undefined` means the phase
+ * is disabled.
+ * @internal
+ */
+export interface ResolvedTimeout {
+  totalMs: number | undefined
+  headersMs: number | undefined
+}
+
+/**
+ * Normalizes a `timeout` option value into per-phase millisecond values.
+ * `false` and values <= 0 disable a phase; an omitted `total` falls back to
+ * the 120 000 ms default. A plain number or `false` is total-only shorthand.
+ * @internal
+ */
+export function resolveTimeout(
+  value: number | false | TimeoutOptions | undefined,
+): ResolvedTimeout {
+  if (typeof value === 'number' || value === false) {
+    return {totalMs: enabledMs(value), headersMs: undefined}
+  }
+  return {
+    totalMs: value?.total === undefined ? 120_000 : enabledMs(value.total),
+    headersMs: enabledMs(value?.headers),
+  }
+}
+
+function enabledMs(value: number | false | undefined): number | undefined {
+  if (value === undefined || value === false || value <= 0) return undefined
+  return value
+}
+
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   if (typeof value !== 'object' || value === null) return false
   if (Array.isArray(value)) return false
@@ -266,7 +300,7 @@ function mergeHeaders(
  */
 function buildFetchArgs(
   opts: RequestOptions,
-  instanceTimeout: number | false | undefined,
+  instanceTimeout: number | false | TimeoutOptions | undefined,
   instanceCredentials: 'include' | 'omit' | 'same-origin' | undefined,
 ): {url: string; init: FetchInit} {
   let url = opts.url
@@ -324,7 +358,7 @@ function buildFetchArgs(
 
   // Signal — build the final abort signal
   let signal: AbortSignal | undefined = opts.signal
-  if (timeoutValue) {
+  if (typeof timeoutValue === 'number' && timeoutValue > 0) {
     const timeoutSignal = AbortSignal.timeout(timeoutValue)
     if (signal) {
       signal = AbortSignal.any([signal, timeoutSignal])

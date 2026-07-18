@@ -56,6 +56,7 @@ export type {
   RequestOptions,
   StreamResponse,
   TextResponse,
+  TimeoutOptions,
   TransformMiddleware,
   WrappingMiddleware,
 } from '../types'
