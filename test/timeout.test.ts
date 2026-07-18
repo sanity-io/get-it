@@ -118,4 +118,37 @@ describe('structured timeout behavior', () => {
     const res = await request('/plain-text')
     expect(res.text()).toBe('Just some plain text for you to consume')
   })
+
+  it('headers timeout does not fire once headers have arrived, even with a slow body', async () => {
+    const request = createRequester({base: baseUrl, timeout: {headers: 250, total: false}})
+    const res = await request('/slow-body?delay=1000')
+    expect(res.text()).toBe('partial…done')
+  })
+
+  it.skipIf('happyDOM' in globalThis)('total covers slow bodies in buffered mode', async () => {
+    const request = createRequester({base: baseUrl, timeout: {total: 250}})
+    await expect(request('/slow-body?delay=5000')).rejects.toThrow()
+  })
+
+  it('{headers, total: false} lets a slow stream complete', async () => {
+    const request = createRequester({base: baseUrl, timeout: {headers: 250, total: false}})
+    const res = await request({url: '/slow-body?delay=1000', as: 'stream'})
+    expect(res.status).toBe(200)
+    const chunks: Uint8Array[] = []
+    const reader = res.body.getReader()
+    for (;;) {
+      const {done, value} = await reader.read()
+      if (done) break
+      chunks.push(value)
+    }
+    const text = new TextDecoder().decode(
+      chunks.reduce((acc, chunk) => {
+        const merged = new Uint8Array(acc.length + chunk.length)
+        merged.set(acc)
+        merged.set(chunk, acc.length)
+        return merged
+      }, new Uint8Array(0)),
+    )
+    expect(text).toBe('partial…done')
+  })
 })
