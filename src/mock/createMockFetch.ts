@@ -276,6 +276,13 @@ function buildFetchResponse(
 
   if (def.body instanceof StreamBody) {
     const scripted = def.body
+    // Constructed lazily (and memoized) rather than eagerly: `body` is only
+    // needed for `as: 'stream'` consumption, but buffered reads (text()/
+    // arrayBuffer()) drain the script independently via `drainScript()`.
+    // Building it eagerly would register its abort listener on `signal` even
+    // for buffered requests, and with `respondPersist` sharing one signal
+    // across many requests, those listeners would accumulate.
+    let lazyBody: ReadableStream<Uint8Array> | undefined
     return {
       ok,
       status,
@@ -283,7 +290,10 @@ function buildFetchResponse(
       headers: responseHeaders,
       url,
       redirected: false,
-      body: streamFromScript(scripted, signal),
+      get body(): ReadableStream<Uint8Array> {
+        lazyBody ??= streamFromScript(scripted, signal)
+        return lazyBody
+      },
       async text(): Promise<string> {
         return new TextDecoder().decode(await drainScript(scripted, signal))
       },

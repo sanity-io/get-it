@@ -38,8 +38,14 @@ export class StreamBody {
   /** Use {@link streamBody} instead of constructing directly. @internal */
   constructor(parts: ReadonlyArray<StreamPart>) {
     parts.forEach(assertValidPart)
-    // Copy Uint8Array parts to protect against external mutations
-    const copiedParts = parts.map((part) => (part instanceof Uint8Array ? part.slice() : part))
+    // Copy Uint8Array parts to protect against external mutations. `new
+    // Uint8Array(part)` (rather than `part.slice()`) also protects against
+    // `Buffer` inputs: `Buffer` (a `Uint8Array` subclass) overrides `slice()`
+    // to return a view sharing the same backing memory, which would leave
+    // the snapshot unprotected against later mutation of the source buffer.
+    const copiedParts = parts.map((part) =>
+      part instanceof Uint8Array ? new Uint8Array(part) : part,
+    )
     this.script = copiedParts
   }
 }
@@ -169,6 +175,12 @@ export function streamFromScript(
   let index = 0
   let onAbort: (() => void) | undefined
 
+  // Internal controller so a consumer cancel() can interrupt an in-flight
+  // delayWithAbort/stallUntilAborted wait immediately, instead of leaving its
+  // timer/listener alive until the script would otherwise have continued.
+  const done = new AbortController()
+  const waitSignal = signal ? AbortSignal.any([signal, done.signal]) : done.signal
+
   const removeAbortListener = () => {
     if (onAbort) {
       signal?.removeEventListener('abort', onAbort)
@@ -183,6 +195,9 @@ export function streamFromScript(
         controller.error(signal.reason)
         return
       }
+      // Listens on the external signal directly (not `waitSignal`) so the
+      // stream always errors with the original abort reason, regardless of
+      // the internal controller used for cancel()-interruption.
       // Erroring an already-errored/closed stream is a spec-level no-op, so
       // this listener is safe even when pull() also rejects on the same abort.
       onAbort = () => {
@@ -199,15 +214,15 @@ export function streamFromScript(
           return
         }
         if (part instanceof Uint8Array) {
-          controller.enqueue(part.slice())
+          controller.enqueue(new Uint8Array(part))
           return
         }
         if (part.kind === 'delay') {
-          await delayWithAbort(part.ms, signal)
+          await delayWithAbort(part.ms, waitSignal)
           continue
         }
         if (part.kind === 'stall') {
-          await stallUntilAborted(signal)
+          await stallUntilAborted(waitSignal)
           return
         }
         removeAbortListener()
@@ -221,6 +236,9 @@ export function streamFromScript(
       removeAbortListener()
       body.cancelCount++
       body.lastCancelReason = reason
+      // Interrupts any pending delayWithAbort/stallUntilAborted wait so its
+      // timer/listener does not linger for the rest of the script's delay.
+      done.abort()
     },
   })
 }

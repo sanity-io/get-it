@@ -99,6 +99,19 @@ describe('streamFromScript', () => {
     expect(Array.from(value)).toEqual([1, 2, 3])
   })
 
+  it.runIf(typeof Buffer !== 'undefined')(
+    'copies Buffer input so later mutation of the buffer does not leak in',
+    async () => {
+      const buf = Buffer.from([1, 2, 3])
+      const body = streamBody(buf)
+      const reader = streamFromScript(body, undefined).getReader()
+      buf[0] = 9
+      const {value} = await reader.read()
+      if (value === undefined) throw new Error('expected a chunk')
+      expect(Array.from(value)).toEqual([1, 2, 3])
+    },
+  )
+
   it('waits for streamDelay between chunks', async () => {
     const body = streamBody('a', streamDelay(60), 'b')
     const start = Date.now()
@@ -129,6 +142,19 @@ describe('streamFromScript', () => {
     await reader.cancel(reason)
     expect(body.cancelCount).toBe(1)
     expect(body.lastCancelReason).toBe(reason)
+  })
+
+  it('cancel() interrupts a pending delay wait so it settles promptly', async () => {
+    const body = streamBody('a', streamDelay(60_000), 'b')
+    const reader = streamFromScript(body, undefined).getReader()
+    const start = Date.now()
+    const first = await reader.read()
+    expect(new TextDecoder().decode(first.value)).toBe('a')
+
+    await reader.cancel('bail')
+
+    expect(Date.now() - start).toBeLessThan(1000)
+    expect(body.cancelCount).toBe(1)
   })
 
   it('errors with the signal reason when aborted mid-delay', async () => {

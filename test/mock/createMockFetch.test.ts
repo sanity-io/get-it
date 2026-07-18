@@ -1681,6 +1681,20 @@ describe('createMockFetch', () => {
       expect(second.text()).toBe('again')
     })
 
+    it('handles many buffered requests against a respondPersist stream body sharing one AbortController', async () => {
+      const mock = createMockFetch()
+      mock.onAny('/repeat').respondPersist({body: streamBody('x')})
+      const request = createRequester({base: 'https://api.example.com', fetch: mock.fetch})
+      const controller = new AbortController()
+
+      const responses = await Promise.all(
+        Array.from({length: 15}, () => request({url: '/repeat', signal: controller.signal})),
+      )
+      for (const res of responses) {
+        expect(res.text()).toBe('x')
+      }
+    })
+
     it('supports the stall + cancel download scenario (sanity-io/cli#1534 shape)', async () => {
       const body = streamBody('partial', streamStall())
       const mock = createMockFetch()

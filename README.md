@@ -408,6 +408,9 @@ expect(mock).toHaveReceivedRequest('POST', '/api/docs', {
 expect(mock).toHaveReceivedRequestTimes('GET', '/api/docs', 2)
 expect(mock).toHaveConsumedAllMocks()
 
+// Assert a streamBody() response body was cancelled by the consumer
+expect(scriptedBody).toHaveBeenCancelled()
+
 // Assert on individual recorded requests
 const req = mock.getRequests()[0]
 expect(req).toHaveHeader('authorization', 'Bearer token123')
