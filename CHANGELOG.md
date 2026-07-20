@@ -1,5 +1,12 @@
 # get-it
 
+## 9.2.0
+
+### Minor Changes
+
+- record and match binary (`Uint8Array` / `ArrayBuffer`) and `ReadableStream` request bodies as bytes, and add a `bodyBytes()` matcher ([#611](https://github.com/sanity-io/get-it/pull/611)) ([b4098ff](https://github.com/sanity-io/get-it/commit/b4098fffd43dde3aaa2bef9b21b160a269d70826))
+- record and match the remaining request body types - `Blob`/`File`, `FormData`, and `URLSearchParams` - add a `headers` match option, and support array values in `queryContaining` ([#611](https://github.com/sanity-io/get-it/pull/611)) ([b4098ff](https://github.com/sanity-io/get-it/commit/b4098fffd43dde3aaa2bef9b21b160a269d70826))
+
 ## 9.1.0
 
 ### Minor Changes
