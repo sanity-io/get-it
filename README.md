@@ -96,18 +96,22 @@ res.body // ReadableStream<Uint8Array>
 
 ### Per-request options
 
-| Option       | Type                                                       | Description                                    |
-| ------------ | ---------------------------------------------------------- | ---------------------------------------------- |
-| `url`        | `string`                                                   | Request URL (required)                         |
-| `method`     | `string`                                                   | HTTP method                                    |
-| `body`       | `unknown`                                                  | Request body (objects auto-serialized as JSON) |
-| `headers`    | `FetchHeaders`                                             | Merged with instance headers                   |
-| `query`      | `Record<string, string \| number \| boolean \| undefined>` | URL query parameters                           |
-| `as`         | `'json' \| 'text' \| 'stream'`                             | Response body type                             |
-| `signal`     | `AbortSignal`                                              | Cancellation signal                            |
-| `httpErrors` | `boolean`                                                  | Override instance setting                      |
-| `timeout`    | `number \| false`                                          | Override instance timeout                      |
-| `fetch`      | `FetchFunction`                                            | Override instance fetch                        |
+| Option        | Type                                                       | Description                                                     |
+| ------------- | ---------------------------------------------------------- | --------------------------------------------------------------- |
+| `url`         | `string`                                                   | Request URL (required)                                          |
+| `method`      | `string`                                                   | HTTP method                                                     |
+| `body`        | `unknown`                                                  | Request body (objects auto-serialized as JSON)                  |
+| `headers`     | `FetchHeaders`                                             | Merged with instance headers                                    |
+| `query`       | `Record<string, string \| number \| boolean \| undefined>` | URL query parameters                                            |
+| `as`          | `'json' \| 'text' \| 'stream'`                             | Response body type                                              |
+| `signal`      | `AbortSignal`                                              | Cancellation signal                                             |
+| `httpErrors`  | `boolean`                                                  | Override instance setting                                       |
+| `timeout`     | `number \| false`                                          | Override instance timeout                                       |
+| `fetch`       | `FetchFunction`                                            | Override instance fetch                                         |
+| `redirect`    | `'error' \| 'follow' \| 'manual'`                          | Redirect strategy (`'manual'` is opaque in browsers - see note) |
+| `credentials` | `'include' \| 'omit' \| 'same-origin'`                     | Credentials mode (browser-only)                                 |
+
+> **Note on `redirect: 'manual'`:** In browsers this yields an opaque-redirect response (status `0`, empty headers) per the Fetch spec, so the 3xx status and headers (e.g. `location`) are unreadable. Reading them neither throws nor warns - `headers.get()` returns `null` and iteration is empty - so detect the case via `status === 0`. Non-browser runtimes (Node.js, Bun, Deno, edge runtimes, workers) return the real 3xx response, so its status and headers are readable.
 
 ## Error handling
 

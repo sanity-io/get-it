@@ -51,7 +51,16 @@ export interface FetchInit {
   body?: FetchBody | null
   /** Abort signal for cancellation. */
   signal?: AbortSignal
-  /** Redirect handling strategy. */
+  /**
+   * Redirect handling strategy.
+   *
+   * ⚠️ In browsers, `'manual'` yields an opaque-redirect response (status `0`,
+   * empty headers) per the Fetch spec — you cannot read the status or headers
+   * (e.g. `location`) of the 3xx response. Reading them throws nothing and warns
+   * nothing: `headers.get()` returns `null` and iteration is empty. Detect it via
+   * `status === 0`. Non-browser runtimes (Node.js, Bun, Deno, edge runtimes,
+   * workers) return the real 3xx response, so its status and headers are readable.
+   */
   redirect?: 'error' | 'follow' | 'manual'
   /** Credentials mode (browser-only — some runtimes crash if set). */
   credentials?: 'include' | 'omit' | 'same-origin'
@@ -154,7 +163,16 @@ export interface RequestOptions {
   fetch?: FetchFunction
   /** Credentials mode forwarded to fetch (browser-only). */
   credentials?: 'include' | 'omit' | 'same-origin'
-  /** Redirect handling strategy. */
+  /**
+   * Redirect handling strategy.
+   *
+   * ⚠️ In browsers, `'manual'` yields an opaque-redirect response (status `0`,
+   * empty headers) per the Fetch spec — you cannot read the status or headers
+   * (e.g. `location`) of the 3xx response. Reading them throws nothing and warns
+   * nothing: `headers.get()` returns `null` and iteration is empty. Detect it via
+   * `status === 0`. Non-browser runtimes (Node.js, Bun, Deno, edge runtimes,
+   * workers) return the real 3xx response, so its status and headers are readable.
+   */
   redirect?: 'error' | 'follow' | 'manual'
   /** Arbitrary metadata — not used by get-it, but available to middleware. */
   meta?: {
