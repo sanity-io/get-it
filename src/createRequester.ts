@@ -138,17 +138,21 @@ export function createRequester(
       controller && init.signal
         ? AbortSignal.any([init.signal, controller.signal])
         : (controller?.signal ?? init.signal)
-    const fetching = Promise.resolve(
-      controller ? fetchFn(url, {...init, signal}) : fetchFn(url, init),
-    )
+    // fetchFn is invoked inside the try so a synchronous throw still clears
+    // the headers timer — otherwise the orphaned deadline would later reject
+    // with nothing subscribed to it.
+    let fetching: Promise<FetchResponse> | undefined
     try {
+      fetching = Promise.resolve(
+        controller ? fetchFn(url, {...init, signal}) : fetchFn(url, init),
+      )
       return {response: await Promise.race([fetching, ...deadlines]), url, method, totalDeadline}
     } catch (reason) {
       // A deadline won the race (or the fetch itself failed): the fetch's
       // later settlement must not become an unhandled rejection. In
       // rejection-only mode the fetch was not aborted, so a late response
       // arrives with a dangling body — cancel it to release the connection.
-      fetching.then((response) => response.body?.cancel()).catch(() => {})
+      fetching?.then((response) => response.body?.cancel()).catch(() => {})
       throw reason
     } finally {
       clearTimeout(timer)

@@ -296,6 +296,27 @@ describe('structured timeout behavior', () => {
     await new Promise((resolve) => setTimeout(resolve, 400))
   })
 
+  it('a synchronously-throwing fetch still clears the headers deadline', async () => {
+    const request = createRequester({
+      base: baseUrl,
+      timeout: {headers: 250},
+      fetch: () => {
+        throw new Error('sync throw from custom fetch')
+      },
+    })
+    const err = await request('/plain-text').then(
+      () => null,
+      (reason: unknown) => reason,
+    )
+    expect(err).toBeInstanceOf(Error)
+    if (!(err instanceof Error)) throw new Error('expected Error')
+    expect(err.message).toBe('sync throw from custom fetch')
+    // Wait past the headers deadline: a leaked timer would fire and reject a
+    // promise nothing subscribes to (vitest fails the test on unhandled
+    // rejections).
+    await new Promise((resolve) => setTimeout(resolve, 400))
+  })
+
   it('{headers, total: false} lets a slow stream complete', async () => {
     const request = createRequester({base: baseUrl, timeout: {headers: 1000, total: false}})
     const res = await request({url: '/slow-body?delay=2000', as: 'stream'})
