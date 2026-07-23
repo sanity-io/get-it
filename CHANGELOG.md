@@ -1,5 +1,16 @@
 # get-it
 
+## 9.3.0
+
+### Minor Changes
+
+- **mock:** streaming response bodies via streamBody() ([#617](https://github.com/sanity-io/get-it/pull/617)) ([c2621a7](https://github.com/sanity-io/get-it/commit/c2621a7b95b02b8de2a66c469ebcb55dce0a0c8b))
+- structured timeout support ({total, headers}) ([#616](https://github.com/sanity-io/get-it/pull/616)) ([7d00e59](https://github.com/sanity-io/get-it/commit/7d00e59d0c00758610ba05620749ed06683bfdde))
+
+### Patch Changes
+
+- `require('get-it')` on Node now resolves the Node (undici) entry instead of falling through to the fetch build ([#619](https://github.com/sanity-io/get-it/pull/619)) ([749e43c](https://github.com/sanity-io/get-it/commit/749e43c32df220cd47e26e12c5a2323729ca094a))
+
 ## 9.2.0
 
 ### Minor Changes
