@@ -170,7 +170,7 @@
     "@edge-runtime/vm": "^5.0.0",
     "@sanity/pkg-utils": "^10.5.1",
     "@sanity/tsconfig": "^2.1.0",
-    "@types/node": "^24.13.2",
+    "@types/node": "^24.13.3",
     "@vitest/browser": "^4.1.7",
     "@vitest/browser-playwright": "^4.1.7",
     "@vitest/coverage-v8": "^4.1.7",
