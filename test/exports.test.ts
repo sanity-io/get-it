@@ -39,10 +39,15 @@ function resolveExports(node: ExportsNode, conditions: Set<string>): string | nu
   return null
 }
 
-const exportsMap: ExportsNode = pkg.exports
+// Both maps must resolve identically: the top-level `exports` is what dev-time and
+// linked consumers resolve against, `publishConfig.exports` is what ships to npm.
+const exportsMaps: Record<string, ExportsNode> = {
+  'exports': pkg.exports,
+  'publishConfig.exports': pkg.publishConfig.exports,
+}
 
-function resolve(subpath: string, conditions: string[]): string | null {
-  const entry = isConditions(exportsMap) ? exportsMap[subpath] : null
+function resolveIn(map: ExportsNode, subpath: string, conditions: string[]): string | null {
+  const entry = isConditions(map) ? map[subpath] : null
   if (entry === undefined || entry === null) return null
   // The `source` condition points at TypeScript and is only used by bundlers consuming
   // from source; published runtime resolution must never select it.
@@ -52,48 +57,58 @@ function resolve(subpath: string, conditions: string[]): string | null {
 const FETCH_ENTRY = './dist/index.js'
 const NODE_ENTRY = './dist/index.node.js'
 
-describe('package exports resolution', () => {
-  // The runtimes that must NOT pull in the undici-backed Node entry. Each array is the
-  // exclusive set of conditions that runtime's resolver activates in production.
-  const fetchRuntimes: Record<string, string[]> = {
-    'wrangler + nodejs_compat': ['workerd', 'worker', 'browser', 'module', 'import', 'node'],
-    'wrangler (no nodejs_compat)': ['workerd', 'worker', 'browser', 'module', 'import'],
-    'vitest-pool-workers': ['workerd', 'worker', 'module', 'browser', 'import'],
-    'vercel edge-light': ['edge-light', 'worker', 'browser', 'module', 'import'],
-    'react-server (RSC)': ['react-server', 'browser', 'module', 'import'],
-    'deno': ['deno', 'import'],
-    'browser': ['browser', 'module', 'import'],
-  }
+describe.each(Object.entries(exportsMaps))(
+  'package exports resolution (%s)',
+  (_mapName, exportsMap) => {
+    const resolve = (subpath: string, conditions: string[]) =>
+      resolveIn(exportsMap, subpath, conditions)
+    // The runtimes that must NOT pull in the undici-backed Node entry. Each array is the
+    // exclusive set of conditions that runtime's resolver activates in production.
+    const fetchRuntimes: Record<string, string[]> = {
+      'wrangler + nodejs_compat': ['workerd', 'worker', 'browser', 'module', 'import', 'node'],
+      'wrangler (no nodejs_compat)': ['workerd', 'worker', 'browser', 'module', 'import'],
+      'vitest-pool-workers': ['workerd', 'worker', 'module', 'browser', 'import'],
+      'vercel edge-light': ['edge-light', 'worker', 'browser', 'module', 'import'],
+      'react-server (RSC)': ['react-server', 'browser', 'module', 'import'],
+      'deno': ['deno', 'import'],
+      'browser': ['browser', 'module', 'import'],
+    }
 
-  for (const [name, conditions] of Object.entries(fetchRuntimes)) {
-    test(`"." resolves to the fetch entry on ${name}`, () => {
-      expect(resolve('.', conditions)).toBe(FETCH_ENTRY)
+    for (const [name, conditions] of Object.entries(fetchRuntimes)) {
+      test(`"." resolves to the fetch entry on ${name}`, () => {
+        expect(resolve('.', conditions)).toBe(FETCH_ENTRY)
+      })
+    }
+
+    // The runtimes that intentionally use the undici-backed Node entry. CJS consumers
+    // activate `require` instead of `import` - Node >= 22.12 can `require()` the ESM
+    // build directly, so both module systems must land on the same Node entry.
+    const nodeRuntimes: Record<string, string[]> = {
+      'node (ESM import)': ['node', 'import'],
+      'node (CJS require)': ['node', 'require'],
+      'bun (ESM import)': ['bun', 'import', 'node'],
+      'bun (CJS require)': ['bun', 'require', 'node'],
+    }
+
+    for (const [name, conditions] of Object.entries(nodeRuntimes)) {
+      test(`"." resolves to the Node entry on ${name}`, () => {
+        expect(resolve('.', conditions)).toBe(NODE_ENTRY)
+      })
+    }
+
+    test('the "node" condition is ordered before the fetch fallback', () => {
+      // Regression guard for the original bug: a worker-like runtime that also activates the
+      // `node` condition (wrangler + nodejs_compat) must still land on the fetch entry, which is
+      // only true while a `workerd`/`worker` condition precedes `node` in the exports map.
+      const dot = isConditions(exportsMap) ? exportsMap['.'] : null
+      if (dot === null || !isConditions(dot))
+        throw new Error('exports["."] must be a conditions map')
+      const keys = Object.keys(dot)
+      const workerIndex = Math.min(
+        keys.indexOf('workerd') === -1 ? Infinity : keys.indexOf('workerd'),
+        keys.indexOf('worker') === -1 ? Infinity : keys.indexOf('worker'),
+      )
+      expect(workerIndex).toBeLessThan(keys.indexOf('node'))
     })
-  }
-
-  // The runtimes that intentionally use the undici-backed Node entry.
-  const nodeRuntimes: Record<string, string[]> = {
-    node: ['node', 'import'],
-    bun: ['bun', 'import', 'node'],
-  }
-
-  for (const [name, conditions] of Object.entries(nodeRuntimes)) {
-    test(`"." resolves to the Node entry on ${name}`, () => {
-      expect(resolve('.', conditions)).toBe(NODE_ENTRY)
-    })
-  }
-
-  test('the "node" condition is ordered before the fetch fallback', () => {
-    // Regression guard for the original bug: a worker-like runtime that also activates the
-    // `node` condition (wrangler + nodejs_compat) must still land on the fetch entry, which is
-    // only true while a `workerd`/`worker` condition precedes `node` in the exports map.
-    const dot = isConditions(exportsMap) ? exportsMap['.'] : null
-    if (dot === null || !isConditions(dot)) throw new Error('exports["."] must be a conditions map')
-    const keys = Object.keys(dot)
-    const workerIndex = Math.min(
-      keys.indexOf('workerd') === -1 ? Infinity : keys.indexOf('workerd'),
-      keys.indexOf('worker') === -1 ? Infinity : keys.indexOf('worker'),
-    )
-    expect(workerIndex).toBeLessThan(keys.indexOf('node'))
-  })
-})
+  },
+)

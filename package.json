@@ -49,11 +49,13 @@
       },
       "node": {
         "source": "./src/_exports/index.node.ts",
-        "import": "./dist/index.node.js"
+        "import": "./dist/index.node.js",
+        "require": "./dist/index.node.js"
       },
       "bun": {
         "source": "./src/_exports/index.node.ts",
-        "import": "./dist/index.node.js"
+        "import": "./dist/index.node.js",
+        "require": "./dist/index.node.js"
       },
       "import": "./dist/index.js",
       "default": "./dist/index.js"
@@ -98,10 +100,12 @@
           "import": "./dist/index.js"
         },
         "node": {
-          "import": "./dist/index.node.js"
+          "import": "./dist/index.node.js",
+          "require": "./dist/index.node.js"
         },
         "bun": {
-          "import": "./dist/index.node.js"
+          "import": "./dist/index.node.js",
+          "require": "./dist/index.node.js"
         },
         "import": "./dist/index.js",
         "default": "./dist/index.js"
