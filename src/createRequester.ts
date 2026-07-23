@@ -1,4 +1,4 @@
-import {HttpError} from './errors'
+import {HttpError, TimeoutError} from './errors'
 import {createBufferedResponse} from './response'
 import type {
   BufferedResponse,
@@ -13,6 +13,7 @@ import type {
   RequestOptions,
   StreamResponse,
   TextResponse,
+  TimeoutOptions,
   TransformMiddleware,
   WrappingMiddleware,
 } from './types'
@@ -62,15 +63,62 @@ export function createRequester(
   }
 
   /**
+   * Builds fetch args, applies the headers-phase timeout when configured,
+   * and performs the fetch. Lives inside the wrapping-middleware chain, so
+   * each retry() attempt gets a fresh headers timer.
+   */
+  async function performFetch(
+    fetchFn: FetchFunction,
+    opts: RequestOptions,
+  ): Promise<{response: FetchResponse; url: string; method: string}> {
+    const {totalMs, headersMs} = resolveTimeout(
+      opts.timeout !== undefined ? opts.timeout : instanceTimeout,
+    )
+    const {url, init} = buildFetchArgs(opts, totalMs, instanceCredentials)
+    const method = init.method ?? 'GET'
+
+    if (headersMs === undefined) {
+      return {response: await fetchFn(url, init), url, method}
+    }
+
+    // Created eagerly so the stack trace points at the request call site
+    // rather than an empty timer-callback stack.
+    const timeoutError = new TimeoutError({url, method, timeoutMs: headersMs, phase: 'headers'})
+    const controller = new AbortController()
+    // Reject via Promise.race rather than relying on fetch to reject with the
+    // abort reason: workerd's fetch reconstructs the reason (losing its
+    // prototype, so `instanceof TimeoutError` breaks), and WebKit has dropped
+    // the reason — or ignored `AbortSignal.any`-derived aborts entirely.
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const timedOut = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => {
+        reject(timeoutError)
+        controller.abort(timeoutError)
+      }, headersMs)
+    })
+    const signal = init.signal
+      ? AbortSignal.any([init.signal, controller.signal])
+      : controller.signal
+    try {
+      const fetching = Promise.resolve(fetchFn(url, {...init, signal}))
+      // If the timeout wins the race, the aborted fetch's later rejection
+      // must not become an unhandled rejection.
+      fetching.catch(() => {})
+      return {response: await Promise.race([fetching, timedOut]), url, method}
+    } finally {
+      clearTimeout(timer)
+    }
+  }
+
+  /**
    * Core fetch + buffer function. This is the innermost layer
    * that wrapping middlewares eventually call.
    */
   async function getItBuffered(opts: RequestOptions): Promise<BufferedResponse> {
     const fetchFn: FetchFunction = opts.fetch ?? instanceFetch ?? globalThis.fetch
-    const {url, init} = buildFetchArgs(opts, instanceTimeout, instanceCredentials)
-    const response = await fetchFn(url, init)
+    const {response, url, method} = await performFetch(fetchFn, opts)
     const httpErrors = opts.httpErrors ?? instanceHttpErrors ?? true
-    return bufferAndCheck(response, httpErrors, url, init.method ?? 'GET')
+    return bufferAndCheck(response, httpErrors, url, method)
   }
 
   // Compose wrapping middlewares around the core fetch
@@ -114,12 +162,11 @@ export function createRequester(
 
     async function getItStreamed(reqOpts: RequestOptions): Promise<BufferedResponse> {
       const fetchFn: FetchFunction = reqOpts.fetch ?? instanceFetch ?? globalThis.fetch
-      const {url, init} = buildFetchArgs(reqOpts, instanceTimeout, instanceCredentials)
-      const response = await fetchFn(url, init)
+      const {response, url, method} = await performFetch(fetchFn, reqOpts)
       const httpErrors = reqOpts.httpErrors ?? instanceHttpErrors ?? true
 
       if (httpErrors && response.status >= 400) {
-        return bufferAndCheck(response, httpErrors, url, init.method ?? 'GET')
+        return bufferAndCheck(response, httpErrors, url, method)
       }
 
       capturedResponse = response
@@ -193,6 +240,7 @@ export function createRequester(
     }
   }
 
+  defineFnName(performFetch, 'performFetch')
   defineFnName(getItBuffered, 'getItBuffered')
   defineFnName(requestStream, 'requestStream')
   defineFnName(requestJson, 'requestJson')
@@ -200,6 +248,54 @@ export function createRequester(
   defineFnName(request, 'request')
 
   return request
+}
+
+/**
+ * Resolved per-request timeout configuration. `undefined` means the phase
+ * is disabled.
+ * @internal
+ */
+export interface ResolvedTimeout {
+  totalMs: number | undefined
+  headersMs: number | undefined
+}
+
+/**
+ * Normalizes a `timeout` option value into per-phase millisecond values.
+ * `false` and values <= 0 disable a phase; an omitted `total` falls back to
+ * the 120 000 ms default. A plain number or `false` is total-only shorthand.
+ * @internal
+ */
+export function resolveTimeout(
+  value: number | false | TimeoutOptions | undefined,
+): ResolvedTimeout {
+  if (typeof value === 'number' || value === false) {
+    return {totalMs: enabledMs(value), headersMs: undefined}
+  }
+  return {
+    totalMs: value?.total === undefined ? 120_000 : enabledMs(value.total),
+    headersMs: enabledMs(value?.headers),
+  }
+}
+
+function enabledMs(value: number | false | undefined): number | undefined {
+  if (value === undefined || value === false || value <= 0) return undefined
+  return value
+}
+
+/**
+ * Prevents a pending deadline timer from holding the Node.js event loop open
+ * for the full timeout window; no-op on platforms without timer.unref().
+ */
+function unrefTimer(timer: unknown): void {
+  if (
+    typeof timer === 'object' &&
+    timer !== null &&
+    'unref' in timer &&
+    typeof timer.unref === 'function'
+  ) {
+    timer.unref()
+  }
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -266,7 +362,7 @@ function mergeHeaders(
  */
 function buildFetchArgs(
   opts: RequestOptions,
-  instanceTimeout: number | false | undefined,
+  totalMs: number | undefined,
   instanceCredentials: 'include' | 'omit' | 'same-origin' | undefined,
 ): {url: string; init: FetchInit} {
   let url = opts.url
@@ -319,18 +415,24 @@ function buildFetchArgs(
 
   init.headers = headers
 
-  // Timeout — resolve timeout value (per-request wins over instance, default 120s)
-  const timeoutValue = opts.timeout !== undefined ? opts.timeout : (instanceTimeout ?? 120_000)
-
-  // Signal — build the final abort signal
+  // Signal — build the final abort signal (totalMs already resolved by resolveTimeout)
   let signal: AbortSignal | undefined = opts.signal
-  if (timeoutValue) {
-    const timeoutSignal = AbortSignal.timeout(timeoutValue)
-    if (signal) {
-      signal = AbortSignal.any([signal, timeoutSignal])
-    } else {
-      signal = timeoutSignal
-    }
+  if (totalMs !== undefined) {
+    // Own the deadline timer instead of using AbortSignal.timeout(): WebKit
+    // can garbage-collect an otherwise-unreferenced timeout signal behind
+    // AbortSignal.any(), silently disarming the deadline. The timer callback
+    // closure keeps this controller (and thus the abort chain) alive.
+    const totalController = new AbortController()
+    unrefTimer(
+      setTimeout(
+        () =>
+          totalController.abort(
+            new DOMException('The operation was aborted due to timeout', 'TimeoutError'),
+          ),
+        totalMs,
+      ),
+    )
+    signal = signal ? AbortSignal.any([signal, totalController.signal]) : totalController.signal
   }
   if (signal) init.signal = signal
 

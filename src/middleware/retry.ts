@@ -127,6 +127,16 @@ function isRetryableError(error: unknown): boolean {
   const code = getErrorCode(error) ?? getErrorCode(error.cause)
   if (code) return RETRYABLE_CODES.has(code)
 
+  // Total-deadline timeouts and user aborts surface as the platform's
+  // 'TimeoutError'/'AbortError' DOMException, which has no string code.
+  // Checked before the `retryable` flag below because workerd tags its
+  // timeout DOMException with `retryable: true`. (get-it's own headers-phase
+  // TimeoutError is retryable, but it carries `code: 'ETIMEDOUT'` and is
+  // handled by the code check above.)
+  if (error.name === 'TimeoutError' || error.name === 'AbortError') {
+    return false
+  }
+
   // Cloudflare Workers (workerd) tags network failures with a `retryable`
   // flag instead of an error code.
   if ('retryable' in error && typeof error.retryable === 'boolean') {

@@ -42,7 +42,7 @@ export function createRequester(
 }
 
 // Re-export everything from core
-export {HttpError} from '../errors'
+export {HttpError, TimeoutError} from '../errors'
 export type {
   BufferedResponse,
   DefaultResponse,
@@ -56,6 +56,7 @@ export type {
   RequestOptions,
   StreamResponse,
   TextResponse,
+  TimeoutOptions,
   TransformMiddleware,
   WrappingMiddleware,
 } from '../types'

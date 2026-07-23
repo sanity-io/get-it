@@ -208,6 +208,16 @@ function getResponseHandler(proto = 'http') {
         req.on('close', () => clearTimeout(delayTimer))
         break
       }
+      case '/req-test/slow-body': {
+        res.writeHead(200, {'Content-Type': 'text/plain'})
+        res.write('partial…')
+        const slowBodyTimer = setTimeout(
+          () => res.end('done'),
+          Number(parts.searchParams.get('delay') || 1000),
+        )
+        req.on('close', () => clearTimeout(slowBodyTimer))
+        break
+      }
       case '/req-test/empty':
         res.writeHead(200, {'Content-Type': 'text/plain'})
         res.end()

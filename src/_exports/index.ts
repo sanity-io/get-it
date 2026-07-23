@@ -1,5 +1,5 @@
 export {createRequester} from '../createRequester'
-export {HttpError} from '../errors'
+export {HttpError, TimeoutError} from '../errors'
 export type {
   BufferedResponse,
   DefaultResponse,
@@ -13,6 +13,7 @@ export type {
   RequestOptions,
   StreamResponse,
   TextResponse,
+  TimeoutOptions,
   TransformMiddleware,
   WrappingMiddleware,
 } from '../types'

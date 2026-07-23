@@ -467,6 +467,30 @@ await request({url: '/slow', timeout: 5000})
 await request({url: '/slow', timeout: false})
 ```
 
+Since v9.2, `timeout` also accepts a structured object for finer control:
+
+```ts
+// v8: timeout: {connect: 5000, socket: 30000}
+// v9 equivalent for the connect half:
+await request({url: '/slow', timeout: {headers: 5000}})
+```
+
+| v8                   | v9                                                                                                                                                             |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `timeout: {connect}` | `timeout: {headers}` — per-attempt time to response headers, throws a retryable `TimeoutError`                                                                 |
+| `timeout: {socket}`  | No direct equivalent (no idle/stall detection). Use `total` as a blunt substitute (note: per retry attempt when combined with `retry()`), or watch the stream. |
+
+For streaming downloads that should never hit a total deadline but fail fast on unresponsive servers:
+
+```ts
+import {retry} from 'get-it/middleware'
+
+const request = createRequester({
+  middleware: [retry()],
+  timeout: {headers: 15_000, total: false},
+})
+```
+
 The timeout signal is automatically combined with any user-provided `signal` using `AbortSignal.any()`.
 
 **React Native**: v8 detected React Native (`navigator.product === 'ReactNative'`) and used a 60s default timeout. v9 uses 120s everywhere. To restore the shorter timeout:
