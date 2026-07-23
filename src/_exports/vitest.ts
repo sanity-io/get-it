@@ -19,5 +19,6 @@ declare module 'vitest' {
     toHaveQuery(expected: unknown): void
     toHaveMethod(expected: string): void
     toHaveUrl(expected: string): void
+    toHaveBeenCancelled(): void
   }
 }

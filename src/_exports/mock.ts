@@ -18,3 +18,5 @@ export {
   queryContaining,
   stringMatching,
 } from '../mock/matchers'
+export type {StreamDirective, StreamPart} from '../mock/streamBody'
+export {StreamBody, streamBody, streamDelay, streamError, streamStall} from '../mock/streamBody'

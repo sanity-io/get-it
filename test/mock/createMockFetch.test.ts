@@ -12,6 +12,7 @@ import {
   queryContaining,
   stringMatching,
 } from '../../src/mock/matchers'
+import {streamBody, streamDelay, streamError, streamStall} from '../../src/mock/streamBody'
 
 describe('createMockFetch', () => {
   describe('basic matching', () => {
@@ -1615,6 +1616,153 @@ describe('createMockFetch', () => {
       expect(error).toBeInstanceOf(Error)
       if (!(error instanceof Error)) throw new Error('expected an error')
       expect(error.message).toContain('headers.x-a: expected "1", received "2"')
+    })
+  })
+
+  describe('streaming responses', () => {
+    it('streams a multi-chunk body through as: "stream"', async () => {
+      const mock = createMockFetch()
+      mock.on('GET', '/backup').respond({
+        status: 200,
+        body: streamBody('hello', streamDelay(20), ' world'),
+      })
+      const request = createRequester({base: 'https://api.example.com', fetch: mock.fetch})
+
+      const res = await request({url: '/backup', as: 'stream'})
+      expect(res.status).toBe(200)
+      const reader = res.body.getReader()
+      const received: string[] = []
+      const decoder = new TextDecoder()
+      for (;;) {
+        const {done, value} = await reader.read()
+        if (done) break
+        received.push(decoder.decode(value))
+      }
+      expect(received).toEqual(['hello', ' world'])
+    })
+
+    it('buffered mode drains the script honoring delays', async () => {
+      const mock = createMockFetch()
+      mock.on('GET', '/slow').respond({body: streamBody('slow', streamDelay(60), ' body')})
+      const request = createRequester({base: 'https://api.example.com', fetch: mock.fetch})
+
+      const start = Date.now()
+      const res = await request('/slow')
+      expect(res.text()).toBe('slow body')
+      expect(Date.now() - start).toBeGreaterThanOrEqual(50)
+    })
+
+    it('buffered mode rejects when the script errors mid-body', async () => {
+      const cut = new Error('connection cut')
+      const mock = createMockFetch()
+      mock.on('GET', '/cut').respond({body: streamBody('partial', streamError(cut))})
+      const request = createRequester({base: 'https://api.example.com', fetch: mock.fetch})
+
+      await expect(request('/cut')).rejects.toBe(cut)
+    })
+
+    it('does not auto-set a content-type for stream bodies', async () => {
+      const mock = createMockFetch()
+      mock.on('GET', '/raw').respond({body: streamBody('x')})
+      const request = createRequester({base: 'https://api.example.com', fetch: mock.fetch})
+
+      const res = await request({url: '/raw', as: 'stream'})
+      expect(res.headers.get('content-type')).toBeNull()
+    })
+
+    it('respondPersist rebuilds an independent stream per consumption', async () => {
+      const mock = createMockFetch()
+      mock.onAny('/repeat').respondPersist({body: streamBody('again')})
+      const request = createRequester({base: 'https://api.example.com', fetch: mock.fetch})
+
+      const first = await request('/repeat')
+      const second = await request('/repeat')
+      expect(first.text()).toBe('again')
+      expect(second.text()).toBe('again')
+    })
+
+    it('handles many buffered requests against a respondPersist stream body sharing one AbortController', async () => {
+      const mock = createMockFetch()
+      mock.onAny('/repeat').respondPersist({body: streamBody('x')})
+      const request = createRequester({base: 'https://api.example.com', fetch: mock.fetch})
+      const controller = new AbortController()
+
+      const responses = await Promise.all(
+        Array.from({length: 15}, () => request({url: '/repeat', signal: controller.signal})),
+      )
+      for (const res of responses) {
+        expect(res.text()).toBe('x')
+      }
+    })
+
+    it('supports the stall + cancel download scenario (sanity-io/cli#1534 shape)', async () => {
+      const body = streamBody('partial', streamStall())
+      const mock = createMockFetch()
+      mock.on('GET', '/backup').respond({status: 200, body})
+      const request = createRequester({
+        base: 'https://api.example.com',
+        fetch: mock.fetch,
+        timeout: false,
+      })
+
+      const res = await request({url: '/backup', as: 'stream'})
+      const reader = res.body.getReader()
+      const first = await reader.read()
+      expect(new TextDecoder().decode(first.value)).toBe('partial')
+
+      // Consumer-side read timeout fires: cancel the body like pipeline teardown would.
+      const timeoutError = new Error('no data received for 3 minutes')
+      await reader.cancel(timeoutError)
+
+      expect(body.cancelCount).toBe(1)
+      expect(body.lastCancelReason).toBe(timeoutError)
+    })
+
+    it('composes response-level delay (time-to-headers) with a stream script', async () => {
+      const mock = createMockFetch()
+      mock.on('GET', '/late').respond({
+        delay: 40,
+        body: streamBody('a', streamDelay(40), 'b'),
+      })
+      const request = createRequester({base: 'https://api.example.com', fetch: mock.fetch})
+
+      const start = Date.now()
+      const res = await request({url: '/late', as: 'stream'})
+      const headersAt = Date.now() - start
+      expect(headersAt).toBeGreaterThanOrEqual(30)
+
+      const reader = res.body.getReader()
+      const chunks: string[] = []
+      const decoder = new TextDecoder()
+      for (;;) {
+        const {done, value} = await reader.read()
+        if (done) break
+        chunks.push(decoder.decode(value))
+      }
+      expect(chunks).toEqual(['a', 'b'])
+      expect(Date.now() - start).toBeGreaterThanOrEqual(headersAt + 30)
+    })
+
+    it('errors the body when the request signal aborts mid-download', async () => {
+      const body = streamBody('partial', streamStall())
+      const mock = createMockFetch()
+      mock.on('GET', '/backup').respond({body})
+      const request = createRequester({
+        base: 'https://api.example.com',
+        fetch: mock.fetch,
+        timeout: false,
+      })
+
+      const controller = new AbortController()
+      const res = await request({url: '/backup', as: 'stream', signal: controller.signal})
+      const reader = res.body.getReader()
+      await reader.read()
+
+      const abortError = new Error('client gave up')
+      const pendingRead = reader.read()
+      controller.abort(abortError)
+      await expect(pendingRead).rejects.toBe(abortError)
+      expect(body.cancelCount).toBe(0)
     })
   })
 })

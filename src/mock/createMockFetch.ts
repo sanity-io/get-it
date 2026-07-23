@@ -13,6 +13,7 @@ import type {MockDescription} from './errors'
 import {MockFetchError} from './errors'
 import type {AsymmetricMatcher} from './matchers'
 import {deepMatch, isAsymmetricMatcher, isRecord} from './matchers'
+import {delayWithAbort, drainScript, StreamBody, streamFromScript} from './streamBody'
 import {matchUrl, parseUrl} from './urlMatch'
 
 // ---------------------------------------------------------------------------
@@ -260,38 +261,54 @@ function resolveError(error: Error | (() => Error)): Error {
 }
 
 /**
- * Wait `ms` milliseconds, rejecting with the signal's reason if it aborts
- * first. Clears the timer on abort so it cannot resolve a request that should
- * already have rejected.
- * @internal
- */
-function delayWithAbort(ms: number, signal: AbortSignal | undefined): Promise<void> {
-  return new Promise<void>((resolve, reject) => {
-    if (signal?.aborted) {
-      reject(signal.reason)
-      return
-    }
-    const onAbort = () => {
-      clearTimeout(timer)
-      reject(signal?.reason)
-    }
-    const timer = setTimeout(() => {
-      signal?.removeEventListener('abort', onAbort)
-      resolve()
-    }, ms)
-    signal?.addEventListener('abort', onAbort, {once: true})
-  })
-}
-
-/**
  * Build a FetchResponse-compatible object from a MockResponseDef.
  * @internal
  */
-function buildFetchResponse(def: MockResponseDef, url: string): FetchResponse {
+function buildFetchResponse(
+  def: MockResponseDef,
+  url: string,
+  signal: AbortSignal | undefined,
+): FetchResponse {
   const status = def.status ?? 200
   const ok = status >= 200 && status < 300
   const statusText = def.statusText ?? statusTextForCode(status)
   const responseHeaders = new Headers(def.headers)
+
+  if (def.body instanceof StreamBody) {
+    const scripted = def.body
+    // Constructed lazily (and memoized) rather than eagerly: `body` is only
+    // needed for `as: 'stream'` consumption, but buffered reads (text()/
+    // arrayBuffer()) drain the script independently via `drainScript()`.
+    // Building it eagerly would register its abort listener on `signal` even
+    // for buffered requests, and with `respondPersist` sharing one signal
+    // across many requests, those listeners would accumulate.
+    let lazyBody: ReadableStream<Uint8Array> | undefined
+    return {
+      ok,
+      status,
+      statusText,
+      headers: responseHeaders,
+      url,
+      redirected: false,
+      get body(): ReadableStream<Uint8Array> {
+        lazyBody ??= streamFromScript(scripted, signal)
+        return lazyBody
+      },
+      async text(): Promise<string> {
+        return new TextDecoder().decode(await drainScript(scripted, signal))
+      },
+      async arrayBuffer(): Promise<ArrayBuffer> {
+        const bytes = await drainScript(scripted, signal)
+        // `drainScript`'s return type is `Uint8Array` (default `ArrayBufferLike`
+        // type param), so `.buffer` alone would be `ArrayBuffer | SharedArrayBuffer`.
+        // Copying into a fresh `Uint8Array(length)` gets a concretely
+        // `ArrayBuffer`-backed buffer, matching `FetchResponse.arrayBuffer()`.
+        const copy = new Uint8Array(bytes.byteLength)
+        copy.set(bytes)
+        return copy.buffer
+      },
+    }
+  }
 
   let bodyString: string
   if (def.body === undefined || def.body === null) {
@@ -737,7 +754,7 @@ export function createMockFetch(): MockFetch {
       if (def.delay !== undefined && def.delay > 0) {
         await delayWithAbort(def.delay, init?.signal)
       }
-      return buildFetchResponse(def, input)
+      return buildFetchResponse(def, input, init?.signal)
     }
 
     // No match found — build error
