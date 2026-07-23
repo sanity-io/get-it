@@ -14,7 +14,17 @@ declare module 'vitest' {
     ): void
     toHaveReceivedRequestTimes(method: string, url: string, times: number): void
     toHaveConsumedAllMocks(): void
-    toHaveHeader(name: string, value: unknown): void
+    /**
+     * Assert that the request has a matching header.
+     *
+     * - `toHaveHeader(name)` asserts presence only (`.not` asserts absence)
+     * - `value` may be a string or an asymmetric matcher
+     * - `name` may be an asymmetric matcher, tested against lowercased header names
+     */
+    toHaveHeader(
+      name: string | import('../mock/matchers').AsymmetricMatcher,
+      value?: unknown,
+    ): void
     toHaveBody(expected: unknown): void
     toHaveQuery(expected: unknown): void
     toHaveMethod(expected: string): void

@@ -1,5 +1,5 @@
 import type {MockFetch, MockMatchOptions, RecordedRequest} from './createMockFetch'
-import {deepMatch} from './matchers'
+import {type AsymmetricMatcher, deepMatch, isAsymmetricMatcher} from './matchers'
 import {matchUrl, parseUrl} from './urlMatch'
 import {StreamBody} from './streamBody'
 
@@ -162,7 +162,11 @@ function toHaveConsumedAllMocks(received: unknown): MatcherResult {
 // RecordedRequest matchers
 // ---------------------------------------------------------------------------
 
-function toHaveHeader(received: unknown, name: string, value: unknown): MatcherResult {
+function toHaveHeader(
+  received: unknown,
+  name: string | AsymmetricMatcher,
+  value?: unknown,
+): MatcherResult {
   if (!isRecordedRequest(received)) {
     return {
       pass: false,
@@ -170,15 +174,53 @@ function toHaveHeader(received: unknown, name: string, value: unknown): MatcherR
     }
   }
 
-  const actual = received.headers.get(name)
-  const pass = deepMatch(value, actual)
+  // Omitting `value` asserts presence only. Header values can never be
+  // `undefined`, so an explicit `undefined` is treated the same way.
+  const checkValue = value !== undefined
+
+  if (typeof name === 'string') {
+    const actual = received.headers.get(name)
+    const pass = actual !== null && (!checkValue || deepMatch(value, actual))
+
+    return {
+      pass,
+      message: pass
+        ? () =>
+            checkValue
+              ? `Expected request not to have header "${name}" matching ${String(value)}, but it did`
+              : `Expected request not to have header "${name}", but it was set to ${JSON.stringify(actual)}`
+        : () =>
+            checkValue
+              ? `Expected request to have header "${name}" matching ${String(value)}, but got ${actual === null ? '(not set)' : JSON.stringify(actual)}`
+              : `Expected request to have header "${name}", but it was not set`,
+    }
+  }
+
+  if (!isAsymmetricMatcher(name)) {
+    return {
+      pass: false,
+      message: () => 'Expected header name to be a string or an asymmetric matcher',
+    }
+  }
+
+  // Asymmetric name matchers are tested against lowercased header names,
+  // since that is how `Headers` normalizes them.
+  const matched: string[] = []
+  received.headers.forEach((headerValue, headerName) => {
+    if (name.asymmetricMatch(headerName) && (!checkValue || deepMatch(value, headerValue))) {
+      matched.push(headerName)
+    }
+  })
+  const pass = matched.length > 0
+  const description = checkValue
+    ? `a header with name matching ${String(name)} and value matching ${String(value)}`
+    : `a header with name matching ${String(name)}`
 
   return {
     pass,
     message: pass
-      ? () => `Expected request not to have header "${name}" matching ${String(value)}, but it did`
-      : () =>
-          `Expected request to have header "${name}" matching ${String(value)}, but got ${actual === null ? '(not set)' : JSON.stringify(actual)}`,
+      ? () => `Expected request not to have ${description}, but found: ${matched.join(', ')}`
+      : () => `Expected request to have ${description}, but no header matched`,
   }
 }
 

@@ -73,13 +73,15 @@ export function deepMatch(expected: unknown, actual: unknown): boolean {
 }
 
 /**
- * Matches any value.
+ * Matches any value except `null` and `undefined`, mirroring the semantics of
+ * vitest's `expect.anything()`. In particular, this means a missing header,
+ * query parameter or body does not match.
  * @public
  */
 export function anyValue(): AsymmetricMatcher {
   return {
-    asymmetricMatch(): boolean {
-      return true
+    asymmetricMatch(actual: unknown): boolean {
+      return actual !== null && actual !== undefined
     },
   }
 }
