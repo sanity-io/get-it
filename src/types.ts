@@ -135,6 +135,26 @@ export interface TimeoutOptions {
    * Disabled when omitted.
    */
   headers?: number | false
+  /**
+   * Whether timeouts attach an abort signal to the underlying `fetch`
+   * (the default, `true`). Set to `false` for rejection-only timeouts: the
+   * request promise still rejects with the same errors when a deadline
+   * elapses, but the fetch is NOT aborted — it keeps running to completion
+   * in the background.
+   *
+   * This is an escape hatch for environments like Next.js RSC, where any
+   * `signal` on the fetch init opts the request out of React Request
+   * Memoization — prefer the default unless such an environment forces your
+   * hand. The trade-off: a timed-out request keeps consuming a connection
+   * until the server finishes on its own. A caller-provided
+   * {@link RequestOptions.signal} is unaffected — it is passed through
+   * untouched and still aborts.
+   *
+   * In `as: 'stream'` mode with `signal: false`, the `total` deadline only
+   * covers up to response headers — a stream that has already been handed to
+   * the caller cannot be retracted by a rejection.
+   */
+  signal?: boolean
 }
 
 /**
@@ -183,7 +203,11 @@ export interface RequestOptions {
   query?: Record<string, string | number | boolean | undefined> | URLSearchParams
   /** Response format — determines the return type. Defaults to buffered. */
   as?: 'json' | 'text' | 'stream'
-  /** Abort signal for cancellation. Combined with the timeout signal via `AbortSignal.any`. */
+  /**
+   * Abort signal for cancellation. Combined with the timeout signal via
+   * `AbortSignal.any` — or passed through untouched when the timeout is
+   * rejection-only (`timeout: {signal: false}`).
+   */
   signal?: AbortSignal
   /** Override the instance-level `httpErrors` setting for this request. */
   httpErrors?: boolean

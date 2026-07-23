@@ -129,6 +129,12 @@ const request = createRequester({
 - `total` — the existing deadline. Covers everything, including the body stream in `as: 'stream'` mode. Rejects with a `TimeoutError` DOMException, which the `retry()` middleware never retries. When combined with the retry() middleware, the deadline applies per attempt - each retry gets a fresh total timer.
 - `headers` — time to receive response headers for one fetch attempt. Does not cover body download. Rejects with get-it's `TimeoutError` (`code: 'ETIMEDOUT'`, `phase: 'headers'`), which the default `retry()` middleware retries on GET/HEAD. Because the timer lives inside the middleware chain, each retry attempt gets a fresh timer — no middleware ordering requirements.
 
+### Escape hatch: rejection-only timeouts (`signal: false`)
+
+By default, timeouts attach an abort signal to the fetch init - keep it that way unless an environment forces your hand. The known case: Next.js' patched fetch treats any signal-carrying request as opted out of React Request Memoization, so RSC consumers would otherwise have to choose between timeouts and memoization. For that situation, `timeout: {total: 30_000, signal: false}` keeps the timeouts (both `total` and `headers`) as pure rejections: the request promise still rejects with the same errors at the deadline, but nothing is attached to the fetch init.
+
+Understand what you are giving up: when a timeout wins, the underlying request is not torn down - it keeps running to completion in the background, holding its connection until the server finishes on its own. A caller-provided `signal` is passed through untouched and still aborts. In `as: 'stream'` mode, `total` only covers up to response headers (a stream already handed to you cannot be retracted).
+
 For long-running streaming downloads, disable the total deadline and keep a headers timeout:
 
 ```ts
@@ -168,7 +174,7 @@ const promise = request({url: '/slow', signal: controller.signal})
 controller.abort()
 ```
 
-Timeout and user-provided signals are combined automatically with `AbortSignal.any()`.
+Timeout and user-provided signals are combined automatically with `AbortSignal.any()` - unless the timeout is rejection-only (`timeout: {signal: false}`), in which case the user-provided signal is passed through as-is.
 
 ## Middleware
 
