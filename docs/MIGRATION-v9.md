@@ -104,16 +104,24 @@ const request = createRequester({
 })
 ```
 
-### No per-request retry overrides
+### Per-request retry overrides limited to `maxRetries`
 
-v8 allowed retry settings on individual requests:
+v8 allowed all retry settings on individual requests:
 
 ```ts
 // v8
 await request({url: '/critical', maxRetries: 10, shouldRetry: customPredicate})
 ```
 
-v9's retry configuration is set once when creating the middleware. To use different retry behavior for different requests, create separate request instances:
+v9 keeps per-request `maxRetries` — it overrides the middleware's configured value for that request, in both directions:
+
+```ts
+// v9
+await request({url: '/critical', maxRetries: 10})
+await request({url: '/no-retries', maxRetries: 0})
+```
+
+`retryDelay` and `shouldRetry` are set once when creating the middleware. To use different values for different requests, create separate request instances:
 
 ```ts
 // v9
