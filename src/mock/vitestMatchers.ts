@@ -203,12 +203,15 @@ function toHaveHeader(
     }
   }
 
-  // Asymmetric name matchers are tested against lowercased header names,
-  // since that is how `Headers` normalizes them.
+  // Asymmetric name matchers are tested against lowercased header names.
+  // Lowercased explicitly rather than relying on `Headers` normalization,
+  // since some implementations (e.g. happy-dom) preserve the original casing
+  // in iteration despite the fetch spec requiring lowercase.
   const matched: string[] = []
   received.headers.forEach((headerValue, headerName) => {
-    if (name.asymmetricMatch(headerName) && (!checkValue || deepMatch(value, headerValue))) {
-      matched.push(headerName)
+    const lowerName = headerName.toLowerCase()
+    if (name.asymmetricMatch(lowerName) && (!checkValue || deepMatch(value, headerValue))) {
+      matched.push(lowerName)
     }
   })
   const pass = matched.length > 0
