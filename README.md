@@ -264,194 +264,21 @@ const res = await request({url: '/api/docs', query: {limit: 10}, as: 'json'})
 // res.body → {results: []}
 ```
 
-### Request matching
-
-Requests are matched strictly by default — method, URL path, query parameters, and body must all match exactly. For looser matching, use the built-in matchers:
+Requests are matched on method, URL (exact, glob, or predicate), query, body, and headers, with loose matching via `objectContaining()` and friends. Every request is recorded for inspection, unmatched requests throw a `MockFetchError` with a diff against the closest mock, and `get-it/vitest` adds custom matchers to vitest's `expect`:
 
 ```ts
-import {
-  objectContaining,
-  arrayContaining,
-  stringMatching,
-  anyValue,
-  queryContaining,
-} from 'get-it/mock'
-
-mock
-  .on('POST', '/api/docs', {
-    body: objectContaining({_type: 'post', title: stringMatching(/^Hello/)}),
-  })
-  .respond({status: 201, body: {id: 'abc'}})
-```
-
-- `objectContaining(subset)` - matches an object that contains at least the given keys/values
-- `arrayContaining(items)` - matches an array that contains at least the given items
-- `stringMatching(pattern)` - matches a string against a regex or substring
-- `anyValue()` - matches any value
-- `queryContaining(subset)` - matches a query object partially, coercing expected number/boolean values to strings (since query params are always strings)
-
-These implement the `asymmetricMatch` protocol, so vitest's `expect.objectContaining()` and friends work too.
-
-URL matching supports exact strings, glob patterns (`/api/docs/*/revisions`), and function predicates:
-
-```ts
-mock.on('GET', '/api/docs/*/revisions').respond({status: 200, body: []})
-mock.on('GET', (url) => url.startsWith('/api/')).respond({status: 200, body: 'ok'})
-```
-
-### Response sequences
-
-Chain `.respond()` for ordered sequences (useful for testing retries):
-
-```ts
-mock
-  .on('GET', '/api/flaky')
-  .respond({status: 500, body: 'error'})
-  .respond({status: 200, body: 'ok'})
-
-// First call → 500, second call → 200, third call → throws
-```
-
-Use `.respondPersist()` for handlers that should match indefinitely.
-
-### Delayed responses
-
-Use the `delay` option to simulate server response time (in milliseconds):
-
-```ts
-mock.on('GET', '/slow').respond({status: 200, body: {ok: true}, delay: 100})
-```
-
-The request is treated as sent immediately; the response resolves after `delay` ms. If the request is aborted before the delay elapses - via an `AbortController` signal or a get-it `timeout` - it rejects with the signal's reason and the pending timer is cleared.
-
-### Streaming response bodies
-
-`streamBody()` declares a body delivered in chunks, with optional pauses, a
-stall, or a mid-download error. A fresh stream is built per consumption, so it
-works with `respondPersist`. `delay` still controls time-to-headers; the
-script controls the body after that.
-
-```ts
-import {createMockFetch, streamBody, streamDelay, streamStall} from 'get-it/mock'
-
-const mock = createMockFetch()
-mock.on('GET', '/backup').respond({
-  status: 200,
-  body: streamBody('partial', streamDelay(1000), 'done'),
-})
-
-// A download that stalls forever after the first chunk:
-const stalled = streamBody('partial', streamStall())
-mock.on('GET', '/stuck').respond({body: stalled})
-
-// ...after the consumer cancels the body (e.g. its read timeout fired):
-expect(stalled).toHaveBeenCancelled() // matcher from 'get-it/vitest'
-```
-
-- `streamDelay(ms)` pauses between chunks; `streamStall()` never closes the
-  body (ends only via consumer cancel or signal abort); `streamError(err)`
-  errors the stream mid-download.
-- Aborting the request signal errors the body with the abort reason, matching
-  real fetch behavior.
-- Buffered reads (no `as`, or `text()`/`arrayBuffer()`) drain the script with
-  the same timing, so total-deadline timeout behavior is testable too.
-- The `streamBody()` return value is the observability handle: `cancelCount`
-  and `lastCancelReason`, or assert with `expect(body).toHaveBeenCancelled()`.
-
-### Scoped mocks
-
-When your code talks to multiple hosts, use `mock.scope()` to assert the right requests go to the right place:
-
-```ts
-const mock = createMockFetch()
-const api = mock.scope('https://abc123.api.sanity.io')
-const cdn = mock.scope('https://abc123.apicdn.sanity.io')
-
-api.on('POST', '/v1/data/mutate/prod').respond({status: 200, body: {transactionId: 'tx1'}})
-cdn.on('GET', '/v1/data/query/prod').respond({status: 200, body: {result: []}})
-
-const request = createRequester({fetch: mock.fetch})
-await request({url: 'https://abc123.apicdn.sanity.io/v1/data/query/prod', as: 'json'})
-
-// Each scope only sees its own traffic
-cdn.getRequests() // 1 request
-api.getRequests() // 0 requests
-mock.getRequests() // all requests
-```
-
-You can also pass full URLs directly without scopes for one-offs:
-
-```ts
-mock.on('GET', 'https://api.sanity.io/v1/projects').respond({status: 200, body: []})
-```
-
-Handlers registered without an origin (plain paths like `/api/docs`) match requests to any host.
-
-### Unmatched requests
-
-Any request that doesn't match a registered handler throws a `MockFetchError` with the closest matching handler and a field-level diff:
-
-```
-MockFetchError: No mock matched POST /api/documents?limit=10
-
-  Closest mock:
-    POST /api/documents?limit=20
-
-  Differences:
-    query.limit: expected "20", received "10"
-```
-
-### Request inspection
-
-Every request is recorded for later inspection:
-
-```ts
-await request({url: '/api/docs', body: {title: 'Hello'}, method: 'POST'})
-
-const reqs = mock.getRequests()
-reqs[0].method // 'POST'
-reqs[0].url // '/api/docs'
-reqs[0].body // {title: 'Hello'}
-reqs[0].headers // Headers
-```
-
-### Lifecycle
-
-```ts
-afterEach(() => {
-  mock.assertAllConsumed() // fail if registered responses weren't used
-  mock.clear()
-})
-```
-
-### Vitest matchers
-
-`get-it/vitest` adds custom matchers to vitest's `expect`:
-
-```ts
-// In your test setup file or vitest.config setupFiles
+// In your test setup file (wired via vitest's setupFiles)
 import 'get-it/vitest'
 ```
 
 ```ts
-// Assert requests were made
 expect(mock).toHaveReceivedRequest('POST', '/api/docs', {
   body: objectContaining({_type: 'post'}),
 })
-expect(mock).toHaveReceivedRequestTimes('GET', '/api/docs', 2)
 expect(mock).toHaveConsumedAllMocks()
-
-// Assert a streamBody() response body was cancelled by the consumer
-expect(scriptedBody).toHaveBeenCancelled()
-
-// Assert on individual recorded requests
-const req = mock.getRequests()[0]
-expect(req).toHaveHeader('authorization', 'Bearer token123')
-expect(req).toHaveBody(objectContaining({_type: 'post'}))
-expect(req).toHaveQuery({limit: '10'})
-expect(req).toHaveMethod('POST')
-expect(req).toHaveUrl('/api/docs')
 ```
+
+See [docs/mock.md](docs/mock.md) for the full documentation: response sequences and persistent mocks, network errors, delayed and streaming response bodies (`streamBody()`), scoped mocks for multi-host code, request recording, value matchers, and the complete vitest matcher reference.
 
 ## Entry points
 
