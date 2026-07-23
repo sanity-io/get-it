@@ -70,41 +70,86 @@ export function createRequester(
   async function performFetch(
     fetchFn: FetchFunction,
     opts: RequestOptions,
-  ): Promise<{response: FetchResponse; url: string; method: string}> {
-    const {totalMs, headersMs} = resolveTimeout(
+  ): Promise<{
+    response: FetchResponse
+    url: string
+    method: string
+    totalDeadline: Promise<never> | undefined
+  }> {
+    const {totalMs, headersMs, attachSignal} = resolveTimeout(
       opts.timeout !== undefined ? opts.timeout : instanceTimeout,
     )
-    const {url, init} = buildFetchArgs(opts, totalMs, instanceCredentials)
+    // In rejection-only mode the total deadline must not become a fetch-init
+    // signal, so it is withheld from buildFetchArgs and raced below instead.
+    const {url, init} = buildFetchArgs(
+      opts,
+      attachSignal ? totalMs : undefined,
+      instanceCredentials,
+    )
     const method = init.method ?? 'GET'
 
-    if (headersMs === undefined) {
-      return {response: await fetchFn(url, init), url, method}
+    // Rejection-only mode (`timeout: {signal: false}`): enforce the total
+    // deadline by racing the request promise instead of aborting the fetch,
+    // rejecting with the same TimeoutError DOMException the abort-based path
+    // produces. The fetch itself keeps running to completion in the
+    // background — the caller opted out of teardown (e.g. so Next.js RSC
+    // request memoization stays enabled) — and its late settlement is
+    // swallowed in the catch block below.
+    const totalDeadline =
+      !attachSignal && totalMs !== undefined
+        ? rejectAfterTimeout(
+            totalMs,
+            new DOMException('The operation was aborted due to timeout', 'TimeoutError'),
+          )
+        : undefined
+
+    if (headersMs === undefined && totalDeadline === undefined) {
+      return {response: await fetchFn(url, init), url, method, totalDeadline}
     }
 
-    // Created eagerly so the stack trace points at the request call site
-    // rather than an empty timer-callback stack.
-    const timeoutError = new TimeoutError({url, method, timeoutMs: headersMs, phase: 'headers'})
-    const controller = new AbortController()
-    // Reject via Promise.race rather than relying on fetch to reject with the
-    // abort reason: workerd's fetch reconstructs the reason (losing its
-    // prototype, so `instanceof TimeoutError` breaks), and WebKit has dropped
-    // the reason — or ignored `AbortSignal.any`-derived aborts entirely.
+    // Deadlines competing with the fetch to settle the request promise.
+    const deadlines: Promise<never>[] = totalDeadline === undefined ? [] : [totalDeadline]
+
     let timer: ReturnType<typeof setTimeout> | undefined
-    const timedOut = new Promise<never>((_, reject) => {
-      timer = setTimeout(() => {
-        reject(timeoutError)
-        controller.abort(timeoutError)
-      }, headersMs)
-    })
-    const signal = init.signal
-      ? AbortSignal.any([init.signal, controller.signal])
-      : controller.signal
+    let controller: AbortController | undefined
+    if (headersMs !== undefined) {
+      // Created eagerly so the stack trace points at the request call site
+      // rather than an empty timer-callback stack.
+      const timeoutError = new TimeoutError({url, method, timeoutMs: headersMs, phase: 'headers'})
+      // Reject via Promise.race rather than relying on fetch to reject with the
+      // abort reason: workerd's fetch reconstructs the reason (losing its
+      // prototype, so `instanceof TimeoutError` breaks), and WebKit has dropped
+      // the reason — or ignored `AbortSignal.any`-derived aborts entirely.
+      // In rejection-only mode there is no controller — the race alone rejects.
+      controller = attachSignal ? new AbortController() : undefined
+      deadlines.push(
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(() => {
+            reject(timeoutError)
+            controller?.abort(timeoutError)
+          }, headersMs)
+        }),
+      )
+    }
+
+    // Without a controller (rejection-only mode) the init is passed through
+    // untouched, so a caller-provided signal reaches fetch as-is.
+    const signal =
+      controller && init.signal
+        ? AbortSignal.any([init.signal, controller.signal])
+        : (controller?.signal ?? init.signal)
+    const fetching = Promise.resolve(
+      controller ? fetchFn(url, {...init, signal}) : fetchFn(url, init),
+    )
     try {
-      const fetching = Promise.resolve(fetchFn(url, {...init, signal}))
-      // If the timeout wins the race, the aborted fetch's later rejection
-      // must not become an unhandled rejection.
-      fetching.catch(() => {})
-      return {response: await Promise.race([fetching, timedOut]), url, method}
+      return {response: await Promise.race([fetching, ...deadlines]), url, method, totalDeadline}
+    } catch (reason) {
+      // A deadline won the race (or the fetch itself failed): the fetch's
+      // later settlement must not become an unhandled rejection. In
+      // rejection-only mode the fetch was not aborted, so a late response
+      // arrives with a dangling body — cancel it to release the connection.
+      fetching.then((response) => response.body?.cancel()).catch(() => {})
+      throw reason
     } finally {
       clearTimeout(timer)
     }
@@ -116,9 +161,11 @@ export function createRequester(
    */
   async function getItBuffered(opts: RequestOptions): Promise<BufferedResponse> {
     const fetchFn: FetchFunction = opts.fetch ?? instanceFetch ?? globalThis.fetch
-    const {response, url, method} = await performFetch(fetchFn, opts)
+    const {response, url, method, totalDeadline} = await performFetch(fetchFn, opts)
     const httpErrors = opts.httpErrors ?? instanceHttpErrors ?? true
-    return bufferAndCheck(response, httpErrors, url, method)
+    // The rejection-only total deadline covers body download too, so keep
+    // racing it while buffering (abort mode covers this via the init signal).
+    return raceDeadline(bufferAndCheck(response, httpErrors, url, method), totalDeadline)
   }
 
   // Compose wrapping middlewares around the core fetch
@@ -162,13 +209,18 @@ export function createRequester(
 
     async function getItStreamed(reqOpts: RequestOptions): Promise<BufferedResponse> {
       const fetchFn: FetchFunction = reqOpts.fetch ?? instanceFetch ?? globalThis.fetch
-      const {response, url, method} = await performFetch(fetchFn, reqOpts)
+      const {response, url, method, totalDeadline} = await performFetch(fetchFn, reqOpts)
       const httpErrors = reqOpts.httpErrors ?? instanceHttpErrors ?? true
 
       if (httpErrors && response.status >= 400) {
-        return bufferAndCheck(response, httpErrors, url, method)
+        return raceDeadline(bufferAndCheck(response, httpErrors, url, method), totalDeadline)
       }
 
+      // A rejection-only total deadline cannot govern the stream from here on
+      // — a stream already handed to the caller cannot be retracted — so with
+      // `signal: false` it only covers up to response headers. The deadline
+      // promise is pre-armed with a catch handler, so its eventual rejection
+      // stays handled.
       capturedResponse = response
       return createBufferedResponse(
         response.status,
@@ -258,6 +310,12 @@ export function createRequester(
 export interface ResolvedTimeout {
   totalMs: number | undefined
   headersMs: number | undefined
+  /**
+   * When `false` (`timeout: {signal: false}`), timeouts are rejection-only:
+   * the request promise rejects at the deadline but no timeout-derived abort
+   * signal is attached to the fetch init.
+   */
+  attachSignal: boolean
 }
 
 /**
@@ -270,11 +328,12 @@ export function resolveTimeout(
   value: number | false | TimeoutOptions | undefined,
 ): ResolvedTimeout {
   if (typeof value === 'number' || value === false) {
-    return {totalMs: enabledMs(value), headersMs: undefined}
+    return {totalMs: enabledMs(value), headersMs: undefined, attachSignal: true}
   }
   return {
     totalMs: value?.total === undefined ? 120_000 : enabledMs(value.total),
     headersMs: enabledMs(value?.headers),
+    attachSignal: value?.signal !== false,
   }
 }
 
@@ -295,6 +354,37 @@ function unrefTimer(timer: unknown): void {
     typeof timer.unref === 'function'
   ) {
     timer.unref()
+  }
+}
+
+/**
+ * Creates the rejection-only (`timeout: {signal: false}`) total deadline: a
+ * promise that rejects with `reason` once `ms` elapses. Pre-armed with a
+ * no-op catch handler so the rejection never becomes "unhandled" when the
+ * guarded work settles first — like the abort-based total deadline, the timer
+ * is unref'd rather than cleared, and firing after the race is won is
+ * harmless.
+ */
+function rejectAfterTimeout(ms: number, reason: unknown): Promise<never> {
+  const deadline = new Promise<never>((_, reject) => {
+    unrefTimer(setTimeout(() => reject(reason), ms))
+  })
+  deadline.catch(() => {})
+  return deadline
+}
+
+/**
+ * Awaits `work` while a rejection-only total deadline keeps racing it. If the
+ * deadline wins, `work` continues in the background — its eventual settlement
+ * is swallowed so it cannot become an unhandled rejection.
+ */
+async function raceDeadline<T>(work: Promise<T>, deadline: Promise<never> | undefined): Promise<T> {
+  if (deadline === undefined) return work
+  try {
+    return await Promise.race([work, deadline])
+  } catch (reason) {
+    work.catch(() => {})
+    throw reason
   }
 }
 

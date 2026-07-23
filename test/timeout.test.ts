@@ -1,4 +1,4 @@
-import {createRequester, TimeoutError} from 'get-it'
+import {createRequester, type FetchInit, TimeoutError} from 'get-it'
 import {describe, expect, it} from 'vitest'
 import {resolveTimeout} from '../src/createRequester'
 
@@ -34,40 +34,86 @@ describe('TimeoutError', () => {
 
 describe('resolveTimeout', () => {
   it('treats a plain number as total', () => {
-    expect(resolveTimeout(5000)).toEqual({totalMs: 5000, headersMs: undefined})
+    expect(resolveTimeout(5000)).toEqual({totalMs: 5000, headersMs: undefined, attachSignal: true})
   })
 
   it('false and 0 disable total', () => {
-    expect(resolveTimeout(false)).toEqual({totalMs: undefined, headersMs: undefined})
-    expect(resolveTimeout(0)).toEqual({totalMs: undefined, headersMs: undefined})
+    expect(resolveTimeout(false)).toEqual({
+      totalMs: undefined,
+      headersMs: undefined,
+      attachSignal: true,
+    })
+    expect(resolveTimeout(0)).toEqual({
+      totalMs: undefined,
+      headersMs: undefined,
+      attachSignal: true,
+    })
   })
 
   it('defaults total to 120s when unset', () => {
-    expect(resolveTimeout(undefined)).toEqual({totalMs: 120_000, headersMs: undefined})
-    expect(resolveTimeout({headers: 15_000})).toEqual({totalMs: 120_000, headersMs: 15_000})
+    expect(resolveTimeout(undefined)).toEqual({
+      totalMs: 120_000,
+      headersMs: undefined,
+      attachSignal: true,
+    })
+    expect(resolveTimeout({headers: 15_000})).toEqual({
+      totalMs: 120_000,
+      headersMs: 15_000,
+      attachSignal: true,
+    })
   })
 
   it('object form: explicit fields win, falsy disables per field', () => {
     expect(resolveTimeout({total: 30_000, headers: 5000})).toEqual({
       totalMs: 30_000,
       headersMs: 5000,
+      attachSignal: true,
     })
     expect(resolveTimeout({total: false, headers: 5000})).toEqual({
       totalMs: undefined,
       headersMs: 5000,
+      attachSignal: true,
     })
-    expect(resolveTimeout({total: 0})).toEqual({totalMs: undefined, headersMs: undefined})
+    expect(resolveTimeout({total: 0})).toEqual({
+      totalMs: undefined,
+      headersMs: undefined,
+      attachSignal: true,
+    })
     expect(resolveTimeout({total: 30_000, headers: 0})).toEqual({
       totalMs: 30_000,
       headersMs: undefined,
+      attachSignal: true,
     })
   })
 
   it('negative values disable a phase', () => {
-    expect(resolveTimeout(-1)).toEqual({totalMs: undefined, headersMs: undefined})
+    expect(resolveTimeout(-1)).toEqual({
+      totalMs: undefined,
+      headersMs: undefined,
+      attachSignal: true,
+    })
     expect(resolveTimeout({total: -1, headers: -1})).toEqual({
       totalMs: undefined,
       headersMs: undefined,
+      attachSignal: true,
+    })
+  })
+
+  it('signal: false switches to rejection-only mode', () => {
+    expect(resolveTimeout({total: 30_000, signal: false})).toEqual({
+      totalMs: 30_000,
+      headersMs: undefined,
+      attachSignal: false,
+    })
+    expect(resolveTimeout({headers: 5000, signal: false})).toEqual({
+      totalMs: 120_000,
+      headersMs: 5000,
+      attachSignal: false,
+    })
+    expect(resolveTimeout({total: 30_000, signal: true})).toEqual({
+      totalMs: 30_000,
+      headersMs: undefined,
+      attachSignal: true,
     })
   })
 })
@@ -134,6 +180,120 @@ describe('structured timeout behavior', () => {
   it.skipIf('happyDOM' in globalThis)('total covers slow bodies in buffered mode', async () => {
     const request = createRequester({base: baseUrl, timeout: {total: 250}})
     await expect(request('/slow-body?delay=5000')).rejects.toThrow()
+  })
+
+  it('rejection-only mode: total deadline rejects without aborting the fetch', async () => {
+    const request = createRequester({base: baseUrl, timeout: {total: 250, signal: false}})
+    const err = await request('/delay?delay=750').then(
+      () => null,
+      (reason: unknown) => reason,
+    )
+    expect(err).toBeInstanceOf(Error)
+    if (!(err instanceof Error)) throw new Error('expected Error')
+    expect(err.name).toBe('TimeoutError')
+    expect(err.message).toBe('The operation was aborted due to timeout')
+    // The losing fetch keeps running to completion in the background; let it
+    // settle to prove the late response is swallowed (vitest fails the test
+    // on unhandled rejections).
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+  })
+
+  it('rejection-only mode: headers deadline rejects with a headers-phase TimeoutError', async () => {
+    const request = createRequester({
+      base: baseUrl,
+      timeout: {headers: 250, total: false, signal: false},
+    })
+    const err = await request('/delay?delay=750').then(
+      () => null,
+      (reason: unknown) => reason,
+    )
+    expect(err).toBeInstanceOf(Error)
+    expect(err).toBeInstanceOf(TimeoutError)
+    if (!(err instanceof TimeoutError)) throw new Error('expected TimeoutError')
+    expect(err.phase).toBe('headers')
+    expect(err.code).toBe('ETIMEDOUT')
+    expect(err.timeoutMs).toBe(250)
+    expect(err.method).toBe('GET')
+    // The losing fetch was not aborted; let its late response (and dangling
+    // body) arrive to prove it is swallowed, not an unhandled rejection.
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+  })
+
+  it('rejection-only mode: total covers slow bodies in buffered mode', async () => {
+    const request = createRequester({base: baseUrl, timeout: {total: 250, signal: false}})
+    const err = await request('/slow-body?delay=1000').then(
+      () => null,
+      (reason: unknown) => reason,
+    )
+    expect(err).toBeInstanceOf(Error)
+    if (!(err instanceof Error)) throw new Error('expected Error')
+    expect(err.name).toBe('TimeoutError')
+    // Buffering continues in the background after the race is lost; let the
+    // body finish to prove its settlement is swallowed.
+    await new Promise((resolve) => setTimeout(resolve, 1250))
+  })
+
+  it('rejection-only mode: attaches no timeout-derived signal to the fetch init', async () => {
+    let capturedInit: FetchInit | undefined
+    const request = createRequester({
+      base: baseUrl,
+      timeout: {total: 30_000, headers: 15_000, signal: false},
+      fetch: (_url, init) => {
+        capturedInit = init
+        return Promise.resolve(new Response('spied'))
+      },
+    })
+    const res = await request('/plain-text')
+    expect(res.text()).toBe('spied')
+    expect(capturedInit?.signal).toBeUndefined()
+  })
+
+  it('rejection-only mode: a caller-provided signal passes through untouched and still aborts', async () => {
+    let capturedInit: FetchInit | undefined
+    const request = createRequester({
+      base: baseUrl,
+      timeout: {total: 30_000, signal: false},
+      fetch: (_url, init) => {
+        capturedInit = init
+        const signal = init?.signal
+        // Signal-honoring stand-in for fetch — the real environments differ
+        // in abort support (happy-dom lacks it), and this test is about what
+        // get-it hands to fetch, not the fetch implementation itself.
+        return new Promise<Response>((resolve, reject) => {
+          const timer = setTimeout(() => resolve(new Response('too late')), 5000)
+          signal?.addEventListener('abort', () => {
+            clearTimeout(timer)
+            reject(signal.reason instanceof Error ? signal.reason : new Error('aborted'))
+          })
+        })
+      },
+    })
+    const controller = new AbortController()
+    const rejection = request({url: '/delay?delay=5000', signal: controller.signal}).then(
+      () => null,
+      (reason: unknown) => reason,
+    )
+    controller.abort(new Error('caller aborted'))
+    const err = await rejection
+    expect(capturedInit?.signal).toBe(controller.signal)
+    expect(err).toBeInstanceOf(Error)
+    if (!(err instanceof Error)) throw new Error('expected Error')
+    expect(err.message).toBe('caller aborted')
+  })
+
+  it('rejection-only mode: a response that beats the deadline resolves normally', async () => {
+    const request = createRequester({base: baseUrl, timeout: {total: 250, signal: false}})
+    let error: unknown
+    const res = await request('/plain-text').catch((reason: unknown) => {
+      error = reason
+      return undefined
+    })
+    if (error) throw error
+    if (!res) throw new Error('expected a response')
+    expect(res.text()).toBe('Just some plain text for you to consume')
+    // Let the already-won deadline timer fire; its rejection must stay
+    // swallowed (vitest fails the test on unhandled rejections).
+    await new Promise((resolve) => setTimeout(resolve, 400))
   })
 
   it('{headers, total: false} lets a slow stream complete', async () => {
