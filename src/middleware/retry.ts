@@ -17,7 +17,8 @@ interface RetryOptions {
  *   `retryDelay` returns the delay in ms for a given attempt (default: exponential
  *   backoff `100 * 2^attempt + random(0–100)`), and `shouldRetry` is a predicate
  *   that decides if an error is retryable (default: transient network errors on
- *   GET/HEAD only).
+ *   GET/HEAD only). A per-request `maxRetries` option overrides the construction
+ *   value for that request, in both directions.
  * @returns A wrapping middleware that adds retry logic.
  *
  * @example
@@ -30,7 +31,7 @@ interface RetryOptions {
  * @public
  */
 export function retry(opts?: RetryOptions): WrappingMiddleware {
-  const maxRetries = opts?.maxRetries ?? 5
+  const defaultMaxRetries = opts?.maxRetries ?? 5
   const retryDelay = opts?.retryDelay ?? getRetryDelay
   const shouldRetry = opts?.shouldRetry ?? isRetryableRequest
 
@@ -38,6 +39,10 @@ export function retry(opts?: RetryOptions): WrappingMiddleware {
     options: RequestOptions,
     next: (reqOpts: RequestOptions) => Promise<BufferedResponse>,
   ): Promise<BufferedResponse> {
+    // Per-request `maxRetries` overrides the construction value in both
+    // directions — `0` disables retries, a higher value extends the cap.
+    const maxRetries =
+      typeof options.maxRetries === 'number' ? options.maxRetries : defaultMaxRetries
     let lastError: unknown
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {

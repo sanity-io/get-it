@@ -208,6 +208,8 @@ const request = createRequester({
 })
 ```
 
+A per-request `maxRetries` option overrides the retry middleware's configured value for that request (`0` disables retries, higher values allow more attempts).
+
 ## Runtime proxy support
 
 In Node.js and Bun, `createRequester` automatically uses an undici-based fetch that reads proxy configuration from environment variables.
