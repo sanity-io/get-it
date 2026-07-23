@@ -67,13 +67,20 @@ describe('deepMatch', () => {
 })
 
 describe('anyValue', () => {
-  it('matches any value', () => {
+  it('matches any value except null and undefined', () => {
     const matcher = anyValue()
     expect(matcher.asymmetricMatch('hello')).toBe(true)
     expect(matcher.asymmetricMatch(42)).toBe(true)
-    expect(matcher.asymmetricMatch(null)).toBe(true)
-    expect(matcher.asymmetricMatch(undefined)).toBe(true)
     expect(matcher.asymmetricMatch({a: 1})).toBe(true)
+    expect(matcher.asymmetricMatch('')).toBe(true)
+    expect(matcher.asymmetricMatch(0)).toBe(true)
+    expect(matcher.asymmetricMatch(false)).toBe(true)
+  })
+
+  it('does not match null or undefined (expect.anything() semantics)', () => {
+    const matcher = anyValue()
+    expect(matcher.asymmetricMatch(null)).toBe(false)
+    expect(matcher.asymmetricMatch(undefined)).toBe(false)
   })
 })
 
