@@ -1,4 +1,4 @@
-import type {FetchFunction, FetchResponse} from '../types'
+import type {FetchFunction, FetchInit, FetchResponse} from '../types'
 import {
   blobToBytes,
   contentTypeFor,
@@ -58,6 +58,13 @@ export interface RecordedRequest {
   query: Record<string, string>
   headers: Headers
   body: unknown
+  /**
+   * The raw init object passed to the mock fetch call, verbatim (or `undefined`
+   * if the fetch was called without one). Useful for asserting on transport-level
+   * fields like `signal`, or non-standard fields forwarded by composed fetches
+   * (e.g. Next.js `cache`/`next`) — reach those via narrowing (`'next' in init`).
+   */
+  init: FetchInit | undefined
 }
 
 /**
@@ -706,6 +713,7 @@ export function createMockFetch(): MockFetch {
       query,
       headers: normalizedHeaders,
       body,
+      init,
     })
 
     // Normalize native-type expected bodies once (async for Blob/FormData), cached per handler.
