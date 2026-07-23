@@ -257,7 +257,7 @@ mock
 - `arrayContaining(items)` - matches an array that contains at least the given items, in any order
 - `stringMatching(pattern)` - matches a string against a regex, or by substring when given a string
 - `anyValue()` - matches any value
-- `queryContaining(subset)` - like `objectContaining` for query-shaped records: expected numbers/booleans are coerced to strings, and an array expected value matches a multi-value parameter containing each entry
+- `queryContaining(subset)` - like `objectContaining` for query-shaped records: expected numbers/booleans are coerced to strings, and extra keys are ignored
 - `bodyBytes(bytes)` - matches a recorded binary body (`Uint8Array`) against exact bytes; accepts a `Uint8Array` or `ArrayBuffer`
 
 Matchers nest:
