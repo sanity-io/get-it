@@ -30,70 +30,19 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "react-server": {
-        "source": "./src/_exports/index.ts",
-        "default": "./dist/index.js"
-      },
-      "deno": {
-        "source": "./src/_exports/index.ts",
-        "default": "./dist/index.js"
-      },
-      "workerd": {
-        "source": "./src/_exports/index.ts",
-        "default": "./dist/index.js"
-      },
-      "worker": {
-        "source": "./src/_exports/index.ts",
-        "default": "./dist/index.js"
-      },
-      "node": {
-        "source": "./src/_exports/index.node.ts",
-        "default": "./dist/index.node.js"
-      },
-      "bun": {
-        "source": "./src/_exports/index.node.ts",
-        "default": "./dist/index.node.js"
-      },
-      "default": {
-        "source": "./src/_exports/index.ts",
-        "default": "./dist/index.js"
-      }
+      "react-server": "./dist/index.js",
+      "deno": "./dist/index.js",
+      "workerd": "./dist/index.js",
+      "worker": "./dist/index.js",
+      "node": "./dist/index.node.js",
+      "bun": "./dist/index.node.js",
+      "default": "./dist/index.js"
     },
-    "./middleware": {
-      "source": "./src/_exports/middleware.ts",
-      "default": "./dist/middleware.js"
-    },
-    "./mock": {
-      "source": "./src/_exports/mock.ts",
-      "default": "./dist/mock.js"
-    },
-    "./node": {
-      "source": "./src/_exports/node.ts",
-      "default": "./dist/node.js"
-    },
-    "./vitest": {
-      "source": "./src/_exports/vitest.ts",
-      "default": "./dist/vitest.js"
-    },
+    "./middleware": "./dist/middleware.js",
+    "./mock": "./dist/mock.js",
+    "./node": "./dist/node.js",
+    "./vitest": "./dist/vitest.js",
     "./package.json": "./package.json"
-  },
-  "publishConfig": {
-    "exports": {
-      ".": {
-        "react-server": "./dist/index.js",
-        "deno": "./dist/index.js",
-        "workerd": "./dist/index.js",
-        "worker": "./dist/index.js",
-        "node": "./dist/index.node.js",
-        "bun": "./dist/index.node.js",
-        "default": "./dist/index.js"
-      },
-      "./middleware": "./dist/middleware.js",
-      "./mock": "./dist/mock.js",
-      "./node": "./dist/node.js",
-      "./vitest": "./dist/vitest.js",
-      "./package.json": "./package.json"
-    }
   },
   "scripts": {
     "build": "tsdown",

@@ -7,10 +7,17 @@ const config = await defineConfig({
   // (index.node.ts → dist/index.node.js), so adding an entry is adding a file.
   entry: ['./src/_exports/*.ts'],
   exports: {
-    // Layer a `source` condition over dist-pointing dev exports (the layout
-    // pkg-utils generated). Dev exports must keep resolving to dist: the
-    // workerd smoke suite resolves the real exports map against built assets.
-    devExports: 'source',
+    // One dist-pointing map for every consumer, no dev/publish split. Nothing
+    // in this repo consumes source through the exports map (the vitest suites
+    // alias source explicitly, the editor resolves through tsconfig `paths`),
+    // while the built-asset smoke suites depend on the map resolving dist:
+    // with `devExports: true` the Deno smoke fails on the extensionless TS
+    // imports in source, and the workerd smoke silently tests source instead
+    // of built output (it keeps passing with dist/ deleted). A named
+    // condition fares no better: with `devExports: 'development'` the
+    // cloudflare pool resolves source too, because Vite's dev-mode resolution
+    // activates the `development` condition.
+    devExports: false,
     customExports(exports) {
       // `index.node` is not a public subpath: it's the undici-backed variant
       // of `.` for runtimes with node built-ins, so fold it into the root
