@@ -1,5 +1,11 @@
 # get-it
 
+## 9.4.0
+
+### Minor Changes
+
+- **mock:** track request-signal aborts on StreamBody ([#622](https://github.com/sanity-io/get-it/pull/622)) ([00e4b8b](https://github.com/sanity-io/get-it/commit/00e4b8b9a9010ac1b8c56a6ff396b968c36d6789))
+
 ## 9.3.0
 
 ### Minor Changes
