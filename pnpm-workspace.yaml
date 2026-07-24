@@ -8,7 +8,6 @@ overrides:
   undici-types: ^7.28.0
 minimumReleaseAgeExclude:
   # Security updates, can be released as soon as they are beyond release age
-  - '@sanity/pkg-utils@10.5.0'
   - tar@7.5.11
   - handlebars@4.7.9
   - lodash-es@4.17.24
