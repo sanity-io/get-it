@@ -30,56 +30,49 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "source": "./src/_exports/index.ts",
       "react-server": {
         "source": "./src/_exports/index.ts",
-        "import": "./dist/index.js"
+        "default": "./dist/index.js"
       },
       "deno": {
         "source": "./src/_exports/index.ts",
-        "import": "./dist/index.js"
+        "default": "./dist/index.js"
       },
       "workerd": {
         "source": "./src/_exports/index.ts",
-        "import": "./dist/index.js"
+        "default": "./dist/index.js"
       },
       "worker": {
         "source": "./src/_exports/index.ts",
-        "import": "./dist/index.js"
+        "default": "./dist/index.js"
       },
       "node": {
         "source": "./src/_exports/index.node.ts",
-        "import": "./dist/index.node.js",
-        "require": "./dist/index.node.js"
+        "default": "./dist/index.node.js"
       },
       "bun": {
         "source": "./src/_exports/index.node.ts",
-        "import": "./dist/index.node.js",
-        "require": "./dist/index.node.js"
+        "default": "./dist/index.node.js"
       },
-      "import": "./dist/index.js",
-      "default": "./dist/index.js"
+      "default": {
+        "source": "./src/_exports/index.ts",
+        "default": "./dist/index.js"
+      }
     },
     "./middleware": {
       "source": "./src/_exports/middleware.ts",
-      "import": "./dist/middleware.js",
       "default": "./dist/middleware.js"
-    },
-    "./node": {
-      "source": "./src/_exports/node.ts",
-      "node": {
-        "import": "./dist/node.js"
-      },
-      "default": "./dist/node.js"
     },
     "./mock": {
       "source": "./src/_exports/mock.ts",
-      "import": "./dist/mock.js",
       "default": "./dist/mock.js"
+    },
+    "./node": {
+      "source": "./src/_exports/node.ts",
+      "default": "./dist/node.js"
     },
     "./vitest": {
       "source": "./src/_exports/vitest.ts",
-      "import": "./dist/vitest.js",
       "default": "./dist/vitest.js"
     },
     "./package.json": "./package.json"
@@ -87,50 +80,20 @@
   "publishConfig": {
     "exports": {
       ".": {
-        "react-server": {
-          "import": "./dist/index.js"
-        },
-        "deno": {
-          "import": "./dist/index.js"
-        },
-        "workerd": {
-          "import": "./dist/index.js"
-        },
-        "worker": {
-          "import": "./dist/index.js"
-        },
-        "node": {
-          "import": "./dist/index.node.js",
-          "require": "./dist/index.node.js"
-        },
-        "bun": {
-          "import": "./dist/index.node.js",
-          "require": "./dist/index.node.js"
-        },
-        "import": "./dist/index.js",
+        "react-server": "./dist/index.js",
+        "deno": "./dist/index.js",
+        "workerd": "./dist/index.js",
+        "worker": "./dist/index.js",
+        "node": "./dist/index.node.js",
+        "bun": "./dist/index.node.js",
         "default": "./dist/index.js"
       },
-      "./middleware": {
-        "import": "./dist/middleware.js",
-        "default": "./dist/middleware.js"
-      },
-      "./node": {
-        "node": {
-          "import": "./dist/node.js"
-        },
-        "default": "./dist/node.js"
-      },
-      "./mock": {
-        "import": "./dist/mock.js",
-        "default": "./dist/mock.js"
-      },
-      "./vitest": {
-        "import": "./dist/vitest.js",
-        "default": "./dist/vitest.js"
-      },
+      "./middleware": "./dist/middleware.js",
+      "./mock": "./dist/mock.js",
+      "./node": "./dist/node.js",
+      "./vitest": "./dist/vitest.js",
       "./package.json": "./package.json"
-    },
-    "access": "public"
+    }
   },
   "scripts": {
     "build": "tsdown",
