@@ -93,8 +93,7 @@
       "./node": "./dist/node.js",
       "./vitest": "./dist/vitest.js",
       "./package.json": "./package.json"
-    },
-    "access": "public"
+    }
   },
   "scripts": {
     "build": "tsdown",
