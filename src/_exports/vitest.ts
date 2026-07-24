@@ -21,10 +21,7 @@ declare module 'vitest' {
      * - `value` may be a string or an asymmetric matcher
      * - `name` may be an asymmetric matcher, tested against lowercased header names
      */
-    toHaveHeader(
-      name: string | import('../mock/matchers').AsymmetricMatcher,
-      value?: unknown,
-    ): void
+    toHaveHeader(name: string | import('../mock/matchers').AsymmetricMatcher, value?: unknown): void
     toHaveBody(expected: unknown): void
     toHaveQuery(expected: unknown): void
     toHaveMethod(expected: string): void

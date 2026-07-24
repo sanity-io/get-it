@@ -143,9 +143,7 @@ export function createRequester(
     // with nothing subscribed to it.
     let fetching: Promise<FetchResponse> | undefined
     try {
-      fetching = Promise.resolve(
-        controller ? fetchFn(url, {...init, signal}) : fetchFn(url, init),
-      )
+      fetching = Promise.resolve(controller ? fetchFn(url, {...init, signal}) : fetchFn(url, init))
       return {response: await Promise.race([fetching, ...deadlines]), url, method, totalDeadline}
     } catch (reason) {
       // A deadline won the race (or the fetch itself failed): the fetch's
