@@ -66,9 +66,13 @@ export default mergeConfig(config, {
           // directive points Deno at the declaration file; everything else
           // ignores the comment (TypeScript resolves `./x.js` to `./x.d.ts`
           // before ever consulting the stub), and nothing imports the stubs
-          // at runtime. Rewriting the specifiers to `.d.ts` instead is not an
-          // option: importing a declaration file is a tsc error (TS2846) for
-          // consumers with `skipLibCheck: false`.
+          // at runtime. Alternatives that don't work: rewriting the
+          // specifiers to `.d.ts` is a tsc error (TS2846) for consumers with
+          // `skipLibCheck: false`, and explicit `types` export conditions
+          // don't help either — they only govern how the entry declaration
+          // file is discovered, while these relative imports resolve inside
+          // the declaration files without ever consulting the exports map
+          // (verified against Deno 2.9.4).
           for (const fileName of Object.keys(bundle)) {
             if (!fileName.endsWith('.d.ts')) continue
             const jsFileName = `${fileName.slice(0, -'.d.ts'.length)}.js`
