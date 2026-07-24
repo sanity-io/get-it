@@ -24,7 +24,7 @@ export type StreamPart = string | Uint8Array | StreamDirective
  * Marker object recognized in `MockResponseDef.body`, produced by
  * {@link streamBody}. Also serves as the observability handle: a fresh
  * stream is built from the script for every consumption, and consumer
- * cancellations are aggregated on this object.
+ * cancellations and request-signal aborts are aggregated on this object.
  * @public
  */
 export class StreamBody {
@@ -32,6 +32,10 @@ export class StreamBody {
   cancelCount = 0
   /** The reason passed to the most recent cancel, if any. */
   lastCancelReason: unknown = undefined
+  /** Number of times a request's abort signal terminated a stream produced from this script. */
+  abortCount = 0
+  /** The abort reason from the most recent request-signal abort, if any. */
+  lastAbortReason: unknown = undefined
   /** The validated script. @internal */
   readonly script: ReadonlyArray<StreamPart>
 
@@ -164,7 +168,7 @@ function stallUntilAborted(signal: AbortSignal | undefined): Promise<never> {
  * Build a fresh `ReadableStream` that plays back a {@link StreamBody} script.
  * Each call produces an independent stream (persist-safe). Aborting `signal`
  * errors the stream with the signal's reason, mirroring real fetch behavior;
- * consumer cancellation is recorded on the handle.
+ * both consumer cancellation and signal aborts are recorded on the handle.
  * @internal
  */
 export function streamFromScript(
@@ -188,10 +192,19 @@ export function streamFromScript(
     }
   }
 
+  // The abort listener is removed on close/error/cancel, so an abort is only
+  // recorded when the signal actually terminated a live stream — a cancelled
+  // stream whose signal later aborts does not count.
+  const recordAbort = (reason: unknown) => {
+    body.abortCount++
+    body.lastAbortReason = reason
+  }
+
   return new ReadableStream<Uint8Array>({
     start(controller) {
       if (!signal) return
       if (signal.aborted) {
+        recordAbort(signal.reason)
         controller.error(signal.reason)
         return
       }
@@ -202,6 +215,7 @@ export function streamFromScript(
       // this listener is safe even when pull() also rejects on the same abort.
       onAbort = () => {
         removeAbortListener()
+        recordAbort(signal.reason)
         controller.error(signal.reason)
       }
       signal.addEventListener('abort', onAbort, {once: true})

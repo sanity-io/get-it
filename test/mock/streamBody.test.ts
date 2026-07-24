@@ -19,6 +19,8 @@ describe('streamBody()', () => {
     expect(body).toBeInstanceOf(StreamBody)
     expect(body.cancelCount).toBe(0)
     expect(body.lastCancelReason).toBeUndefined()
+    expect(body.abortCount).toBe(0)
+    expect(body.lastAbortReason).toBeUndefined()
     expect(body.script).toHaveLength(4)
   })
 
@@ -166,6 +168,8 @@ describe('streamFromScript', () => {
     controller.abort(abortError)
     await expect(readPromise).rejects.toBe(abortError)
     expect(body.cancelCount).toBe(0)
+    expect(body.abortCount).toBe(1)
+    expect(body.lastAbortReason).toBe(abortError)
   })
 
   it('errors with the signal reason when aborted during a stall', async () => {
@@ -175,14 +179,55 @@ describe('streamFromScript', () => {
     const readPromise = readAll(streamFromScript(body, controller.signal))
     controller.abort(abortError)
     await expect(readPromise).rejects.toBe(abortError)
+    expect(body.abortCount).toBe(1)
+    expect(body.lastAbortReason).toBe(abortError)
   })
 
   it('errors immediately when the signal is already aborted', async () => {
     const controller = new AbortController()
     const abortError = new Error('pre-aborted')
     controller.abort(abortError)
-    const readPromise = readAll(streamFromScript(streamBody('never'), controller.signal))
+    const body = streamBody('never')
+    const readPromise = readAll(streamFromScript(body, controller.signal))
     await expect(readPromise).rejects.toBe(abortError)
+    expect(body.abortCount).toBe(1)
+    expect(body.lastAbortReason).toBe(abortError)
+  })
+
+  it('counts aborts and cancels independently on the handle', async () => {
+    const controller = new AbortController()
+    const body = streamBody('chunk', streamStall())
+    const reader = streamFromScript(body, controller.signal).getReader()
+    const first = await reader.read()
+    expect(new TextDecoder().decode(first.value)).toBe('chunk')
+
+    const abortError = new Error('client tore down the connection')
+    const pendingRead = reader.read()
+    controller.abort(abortError)
+    await expect(pendingRead).rejects.toBe(abortError)
+
+    expect(body.abortCount).toBe(1)
+    expect(body.lastAbortReason).toBe(abortError)
+    expect(body.cancelCount).toBe(0)
+    expect(body.lastCancelReason).toBeUndefined()
+  })
+
+  it('consumer cancel() increments cancelCount only, even with a signal attached', async () => {
+    const controller = new AbortController()
+    const body = streamBody('chunk', streamStall())
+    const reader = streamFromScript(body, controller.signal).getReader()
+    await reader.read()
+
+    const reason = new Error('consumer done')
+    await reader.cancel(reason)
+    expect(body.cancelCount).toBe(1)
+    expect(body.lastCancelReason).toBe(reason)
+    expect(body.abortCount).toBe(0)
+
+    // Aborting the signal after the stream was cancelled must not be counted:
+    // the stream was already terminated by the consumer, not the signal.
+    controller.abort(new Error('late abort'))
+    expect(body.abortCount).toBe(0)
   })
 
   it('produces independent streams per call, aggregating cancels on the handle', async () => {

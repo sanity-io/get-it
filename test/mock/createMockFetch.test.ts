@@ -1762,6 +1762,10 @@ describe('createMockFetch', () => {
       const pendingRead = reader.read()
       controller.abort(abortError)
       await expect(pendingRead).rejects.toBe(abortError)
+      // The teardown is observable on the handle: counted as a signal abort,
+      // not a consumer cancel (the "did the client disconnect?" leak test).
+      expect(body.abortCount).toBe(1)
+      expect(body.lastAbortReason).toBe(abortError)
       expect(body.cancelCount).toBe(0)
     })
   })
