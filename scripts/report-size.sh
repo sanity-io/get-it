@@ -8,8 +8,18 @@ set -euo pipefail
 echo "Building..."
 npm run build --silent
 
-echo "Minifying dist/index.js → dist/index.min.js..."
-npx terser dist/index.js \
+# tsdown code-splits shared code into hashed chunks, so dist/index.js is often
+# a thin re-export. Bundle it back into a single file first so the size we
+# report reflects what a real consumer's bundler would actually ship. Reuse
+# rolldown (tsdown's bundler) so this needs no extra dependency.
+echo "Bundling dist/index.js → dist/index.bundled.js..."
+npx rolldown dist/index.js \
+  --format esm \
+  --platform browser \
+  --file dist/index.bundled.js
+
+echo "Minifying dist/index.bundled.js → dist/index.min.js..."
+npx terser dist/index.bundled.js \
   --ecma 2022 \
   --module \
   --compress passes=2,pure_getters=true,unsafe_methods=true \
@@ -22,11 +32,11 @@ npx oxfmt --ignore-path /dev/null dist/index.min.pretty.js
 
 kb() { echo "scale=2; $1 / 1024" | bc; }
 
-original=$(wc -c < dist/index.js | tr -d ' ')
+original=$(wc -c < dist/index.bundled.js | tr -d ' ')
 raw=$(wc -c < dist/index.min.js | tr -d ' ')
 gzipped=$(gzip -c dist/index.min.js | wc -c | tr -d ' ')
 
 echo ""
-echo "dist/index.js (original):  $(kb $original) kB"
+echo "dist/index.bundled.js:     $(kb $original) kB"
 echo "dist/index.min.js:         $(kb $raw) kB"
 echo "dist/index.min.js (gzip):  $(kb $gzipped) kB"

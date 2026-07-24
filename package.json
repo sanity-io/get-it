@@ -133,7 +133,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "pkg build --strict --check --clean",
+    "build": "tsdown",
     "check": "pnpm run format && pnpm run lint:fix && pnpm run knip && pnpm run typecheck",
     "coverage": "vitest run --coverage",
     "format": "oxfmt",
@@ -168,8 +168,8 @@
     "@changesets/cli": "^2.31.0",
     "@cloudflare/vitest-pool-workers": "^0.18.4",
     "@edge-runtime/vm": "^5.0.0",
-    "@sanity/pkg-utils": "^10.5.1",
     "@sanity/tsconfig": "^2.1.0",
+    "@sanity/tsdown-config": "^0.21.0",
     "@types/node": "^24.13.3",
     "@vitest/browser": "^4.1.7",
     "@vitest/browser-playwright": "^4.1.7",
@@ -180,7 +180,9 @@
     "oxfmt": "^0.52.0",
     "oxlint": "^1.67.0",
     "playwright": "^1.60.0",
+    "tsdown": "^0.22.14",
     "typescript": "6.0.3",
+    "unrun": "^0.3.1",
     "vitest": "^4.1.7"
   },
   "peerDependencies": {
