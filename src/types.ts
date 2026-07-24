@@ -207,6 +207,12 @@ export interface RequestOptions {
    * workers) return the real 3xx response, so its status and headers are readable.
    */
   redirect?: 'error' | 'follow' | 'manual'
+  /**
+   * Max retry attempts for this request when the `retry` middleware is used.
+   * Overrides the middleware's construction config in both directions —
+   * `0` disables retries, a value above the configured cap allows more attempts.
+   */
+  maxRetries?: number
   /** Arbitrary metadata — not used by get-it, but available to middleware. */
   meta?: {
     /** Custom request identifier used by the `debug` middleware in log output. */

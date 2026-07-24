@@ -34,6 +34,77 @@ describe('retry middleware', {timeout: 15000}, () => {
     await expect(request('/permafail')).rejects.toThrow()
   })
 
+  it.runIf(canTestNetworkErrors)('per-request maxRetries of 0 disables retries', async () => {
+    let attempts = 0
+    const request = createRequester({
+      base: baseUrl,
+      httpErrors: false,
+      middleware: [
+        retry({maxRetries: 5, retryDelay: () => 10}),
+        async (opts, next) => {
+          attempts++
+          return next(opts)
+        },
+      ],
+    })
+    await expect(request({url: '/permafail', maxRetries: 0})).rejects.toThrow()
+    expect(attempts).toBe(1)
+  })
+
+  it.runIf(canTestNetworkErrors)(
+    'per-request maxRetries below instance cap is honored',
+    async () => {
+      let attempts = 0
+      const request = createRequester({
+        base: baseUrl,
+        httpErrors: false,
+        middleware: [
+          retry({maxRetries: 5, retryDelay: () => 10}),
+          async (opts, next) => {
+            attempts++
+            return next(opts)
+          },
+        ],
+      })
+      await expect(request({url: '/permafail', maxRetries: 1})).rejects.toThrow()
+      expect(attempts).toBe(2)
+    },
+  )
+
+  it.runIf(canTestNetworkErrors)(
+    'per-request maxRetries above instance cap is honored',
+    async () => {
+      const request = createRequester({
+        base: baseUrl,
+        httpErrors: false,
+        middleware: [retry({maxRetries: 1, retryDelay: () => 10})],
+      })
+      // Succeeds on the 4th attempt — beyond the instance cap of 1 retry (2 attempts)
+      const res = await request({url: `/fail?uuid=${Math.random()}&n=4`, maxRetries: 3})
+      expect(res.status).toBe(200)
+    },
+  )
+
+  it.runIf(canTestNetworkErrors)(
+    'falls back to construction config when no per-request maxRetries',
+    async () => {
+      let attempts = 0
+      const request = createRequester({
+        base: baseUrl,
+        httpErrors: false,
+        middleware: [
+          retry({maxRetries: 2, retryDelay: () => 10}),
+          async (opts, next) => {
+            attempts++
+            return next(opts)
+          },
+        ],
+      })
+      await expect(request('/permafail')).rejects.toThrow()
+      expect(attempts).toBe(3)
+    },
+  )
+
   it('does not retry HTTP errors by default', async () => {
     let attempts = 0
     const request = createRequester({
