@@ -3,8 +3,8 @@ import '../../src/_exports/vitest'
 import {createRequester} from 'get-it'
 import {describe, expect, it} from 'vitest'
 
-import {createMockFetch} from '../../src/mock/createMockFetch'
-import {objectContaining} from '../../src/mock/matchers'
+import {createMockFetch, type RecordedRequest} from '../../src/mock/createMockFetch'
+import {anyValue, objectContaining, stringMatching} from '../../src/mock/matchers'
 
 describe('vitest custom matchers', () => {
   describe('MockFetch matchers', () => {
@@ -155,7 +155,7 @@ describe('vitest custom matchers', () => {
 
   describe('RecordedRequest matchers', () => {
     describe('toHaveHeader', () => {
-      it('matches exact header value', async () => {
+      async function recordRequest(headers?: Record<string, string>): Promise<RecordedRequest> {
         const mock = createMockFetch()
         mock.on('POST', '/api/docs').respond({status: 201, body: {id: '1'}})
 
@@ -165,26 +165,90 @@ describe('vitest custom matchers', () => {
           httpErrors: false,
         })
 
-        await request({url: '/api/docs', method: 'POST', body: {title: 'Hello'}, as: 'json'})
+        await request({
+          url: '/api/docs',
+          method: 'POST',
+          body: {title: 'Hello'},
+          headers,
+          as: 'json',
+        })
 
-        const requests = mock.getRequests()
-        expect(requests[0]).toHaveHeader('content-type', 'application/json')
+        const [recorded] = mock.getRequests()
+        if (!recorded) throw new Error('No request was recorded')
+        return recorded
+      }
+
+      it('matches exact header value', async () => {
+        const recorded = await recordRequest()
+        expect(recorded).toHaveHeader('content-type', 'application/json')
       })
 
       it('matches header with asymmetric matcher', async () => {
-        const mock = createMockFetch()
-        mock.on('POST', '/api/docs').respond({status: 201, body: {id: '1'}})
+        const recorded = await recordRequest()
+        expect(recorded).toHaveHeader('content-type', expect.stringContaining('json'))
+      })
 
-        const request = createRequester({
-          base: 'https://api.example.com',
-          fetch: mock.fetch,
-          httpErrors: false,
-        })
+      it('does not match a missing header, even with anyValue()', async () => {
+        const recorded = await recordRequest()
+        expect(recorded).not.toHaveHeader('x-missing', anyValue())
+        expect(() => {
+          expect(recorded).toHaveHeader('x-missing', anyValue())
+        }).toThrow('not set')
+      })
 
-        await request({url: '/api/docs', method: 'POST', body: {title: 'Hello'}, as: 'json'})
+      it('does not match a missing header with expect.anything()', async () => {
+        const recorded = await recordRequest()
+        expect(recorded).not.toHaveHeader('x-missing', expect.anything())
+      })
 
-        const requests = mock.getRequests()
-        expect(requests[0]).toHaveHeader('content-type', expect.stringContaining('json'))
+      it('asserts header presence when called without a value', async () => {
+        const recorded = await recordRequest({'x-custom-token': 'abc123'})
+        expect(recorded).toHaveHeader('x-custom-token')
+        expect(recorded).toHaveHeader('X-Custom-Token')
+      })
+
+      it('asserts header absence via .not without a value', async () => {
+        const recorded = await recordRequest()
+        expect(recorded).not.toHaveHeader('x-missing')
+        expect(() => {
+          expect(recorded).toHaveHeader('x-missing')
+        }).toThrow('not set')
+      })
+
+      it('fails the negated presence check when the header exists', async () => {
+        const recorded = await recordRequest({'x-custom-token': 'abc123'})
+        expect(() => {
+          expect(recorded).not.toHaveHeader('x-custom-token')
+        }).toThrow('abc123')
+      })
+
+      it('matches header name with an asymmetric matcher', async () => {
+        const recorded = await recordRequest({'x-custom-token': 'abc123'})
+        expect(recorded).toHaveHeader(stringMatching(/^x-custom-/), 'abc123')
+        expect(recorded).toHaveHeader(expect.stringContaining('custom'), 'abc123')
+      })
+
+      it('matches any header name for a given value with anyValue()', async () => {
+        const recorded = await recordRequest({'x-custom-token': 'abc123'})
+        expect(recorded).toHaveHeader(anyValue(), 'abc123')
+        expect(recorded).not.toHaveHeader(anyValue(), 'value-no-header-has')
+      })
+
+      it('matches name matcher without a value (presence of any matching header)', async () => {
+        const recorded = await recordRequest({'x-custom-token': 'abc123'})
+        expect(recorded).toHaveHeader(stringMatching(/^x-custom-/))
+        expect(recorded).not.toHaveHeader(stringMatching(/^x-nothing-/))
+      })
+
+      it('requires both name matcher and value to match the same header', async () => {
+        const recorded = await recordRequest({'x-custom-token': 'abc123'})
+        expect(recorded).not.toHaveHeader(stringMatching(/^x-custom-/), 'application/json')
+      })
+
+      it('matches asymmetric header names against lowercased names', async () => {
+        const recorded = await recordRequest({'X-Custom-Token': 'abc123'})
+        expect(recorded).toHaveHeader(stringMatching(/^x-custom-token$/), 'abc123')
+        expect(recorded).not.toHaveHeader(stringMatching(/^X-Custom-Token$/), 'abc123')
       })
     })
 

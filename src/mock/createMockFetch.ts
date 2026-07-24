@@ -152,13 +152,15 @@ function getContentType(headers: Headers): string | null {
 
 /**
  * Build a lowercased-key record of a request's headers for matching.
- * `Headers.forEach` already yields lowercased names.
+ * Spec-compliant `Headers.forEach` already yields lowercased names, but some
+ * implementations (eg happy-dom, see capricorn86/happy-dom#2249) preserve the
+ * original casing — lowercase defensively so matching stays case-insensitive.
  * @internal
  */
 function toHeaderRecord(headers: Headers): Record<string, string> {
   const record: Record<string, string> = {}
   headers.forEach((value, key) => {
-    record[key] = value
+    record[key.toLowerCase()] = value
   })
   return record
 }

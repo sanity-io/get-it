@@ -287,7 +287,7 @@ mock
 - `objectContaining(subset)` - matches an object that contains at least the given keys/values
 - `arrayContaining(items)` - matches an array that contains at least the given items
 - `stringMatching(pattern)` - matches a string against a regex or substring
-- `anyValue()` - matches any value
+- `anyValue()` - matches any value except `null`/`undefined` (same semantics as vitest's `expect.anything()`)
 - `queryContaining(subset)` - matches a query object partially, coercing expected number/boolean values to strings (since query params are always strings)
 
 These implement the `asymmetricMatch` protocol, so vitest's `expect.objectContaining()` and friends work too.
@@ -447,6 +447,9 @@ expect(scriptedBody).toHaveBeenCancelled()
 // Assert on individual recorded requests
 const req = mock.getRequests()[0]
 expect(req).toHaveHeader('authorization', 'Bearer token123')
+expect(req).toHaveHeader('authorization') // presence only, any value
+expect(req).not.toHaveHeader('x-legacy-auth') // absence
+expect(req).toHaveHeader(stringMatching(/^x-sanity-/), 'yes') // matcher for the name
 expect(req).toHaveBody(objectContaining({_type: 'post'}))
 expect(req).toHaveQuery({limit: '10'})
 expect(req).toHaveMethod('POST')

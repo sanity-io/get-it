@@ -1,6 +1,6 @@
 import {createRequester} from 'get-it'
 import {retry} from 'get-it/middleware'
-import {describe, expect, it} from 'vitest'
+import {describe, expect, it, vi} from 'vitest'
 
 import {createMockFetch} from '../../src/mock/createMockFetch'
 import {MockFetchError} from '../../src/mock/errors'
@@ -1596,6 +1596,66 @@ describe('createMockFetch', () => {
       })
 
       expect(res.status).toBe(200)
+    })
+
+    it('matches mixed-case request header names in non-lowercasing environments', async () => {
+      // Spec-compliant `Headers` iterate with lowercased names, but happy-dom
+      // preserves the original casing (capricorn86/happy-dom#2249). Running
+      // under `pnpm test:happy-dom`, this exercises that real-world case.
+      const mock = createMockFetch()
+      mock.on('GET', '/x', {headers: {authorization: 'Bearer token'}}).respond({status: 200})
+
+      const res = await mock.fetch('https://api.example.com/x', {
+        method: 'GET',
+        headers: {Authorization: 'Bearer token'},
+      })
+
+      expect(res.status).toBe(200)
+    })
+
+    it('matches when the Headers implementation iterates original-case names', async () => {
+      // Minimal Headers-compatible fake that (like happy-dom, see
+      // capricorn86/happy-dom#2249) keeps original header-name casing during
+      // iteration, reproducing the non-conforming behavior in any environment.
+      class CasePreservingHeaders {
+        private entries = new Map<string, {name: string; value: string}>()
+        constructor(init?: CasePreservingHeaders | [string, string][] | Record<string, string>) {
+          if (init instanceof CasePreservingHeaders) {
+            init.forEach((value, name) => this.set(name, value))
+          } else if (Array.isArray(init)) {
+            for (const [name, value] of init) this.set(name, value)
+          } else if (init !== undefined) {
+            for (const name of Object.keys(init)) this.set(name, init[name])
+          }
+        }
+        get(name: string): string | null {
+          return this.entries.get(name.toLowerCase())?.value ?? null
+        }
+        has(name: string): boolean {
+          return this.entries.has(name.toLowerCase())
+        }
+        set(name: string, value: string): void {
+          this.entries.set(name.toLowerCase(), {name, value})
+        }
+        forEach(callback: (value: string, name: string) => void): void {
+          for (const {name, value} of this.entries.values()) callback(value, name)
+        }
+      }
+
+      vi.stubGlobal('Headers', CasePreservingHeaders)
+      try {
+        const mock = createMockFetch()
+        mock.on('GET', '/x', {headers: {authorization: 'Bearer token'}}).respond({status: 200})
+
+        const res = await mock.fetch('https://api.example.com/x', {
+          method: 'GET',
+          headers: {Authorization: 'Bearer token'},
+        })
+
+        expect(res.status).toBe(200)
+      } finally {
+        vi.unstubAllGlobals()
+      }
     })
 
     it('reports a headers diff on mismatch', async () => {
