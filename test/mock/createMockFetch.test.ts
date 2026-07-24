@@ -407,6 +407,65 @@ describe('createMockFetch', () => {
       expect(requests[0].headers).toBeInstanceOf(Headers)
       expect(requests[0].query).toEqual({limit: '10', offset: '0'})
     })
+
+    it('records the raw fetch init, exposing transport-level fields like signal', async () => {
+      const mock = createMockFetch()
+      mock.on('GET', '/api/docs').respond({status: 200, body: {items: []}})
+
+      const request = createRequester({
+        base: 'https://api.example.com',
+        fetch: mock.fetch,
+        httpErrors: false,
+      })
+
+      const controller = new AbortController()
+      await request({url: '/api/docs', signal: controller.signal, as: 'json'})
+
+      const requests = mock.getRequests()
+      expect(requests).toHaveLength(1)
+      const {init} = requests[0]
+      if (!init) throw new Error('expected init to be recorded')
+      expect(init.signal).toBeInstanceOf(AbortSignal)
+    })
+
+    it('records non-standard init fields forwarded by composed fetches', async () => {
+      const mock = createMockFetch()
+      mock.on('GET', '/api/docs').respond({status: 200, body: {items: []}})
+
+      // Mirrors e.g. a Next.js setup where a wrapping fetch forwards extra
+      // init fields (`cache`, `next`) to the underlying transport.
+      const request = createRequester({
+        base: 'https://api.example.com',
+        fetch: (input, init) => {
+          const forwarded = {...init, cache: 'force-cache', next: {revalidate: 60}}
+          return mock.fetch(input, forwarded)
+        },
+        httpErrors: false,
+      })
+
+      await request({url: '/api/docs', as: 'json'})
+
+      const requests = mock.getRequests()
+      expect(requests).toHaveLength(1)
+      const {init} = requests[0]
+      if (!init) throw new Error('expected init to be recorded')
+      if (!('cache' in init) || !('next' in init)) {
+        throw new Error('expected non-standard init fields to be recorded')
+      }
+      expect(init.cache).toBe('force-cache')
+      expect(init.next).toEqual({revalidate: 60})
+    })
+
+    it('records init as undefined when fetch is called without one', async () => {
+      const mock = createMockFetch()
+      mock.on('GET', '/api/docs').respond({status: 200, body: {items: []}})
+
+      await mock.fetch('https://api.example.com/api/docs')
+
+      const requests = mock.getRequests()
+      expect(requests).toHaveLength(1)
+      expect(requests[0].init).toBeUndefined()
+    })
   })
 
   describe('assertAllConsumed', () => {
