@@ -171,9 +171,9 @@
     "@sanity/pkg-utils": "^10.5.1",
     "@sanity/tsconfig": "^2.1.0",
     "@types/node": "^24.13.3",
-    "@vitest/browser": "^4.1.7",
-    "@vitest/browser-playwright": "^4.1.7",
-    "@vitest/coverage-v8": "^4.1.7",
+    "@vitest/browser": "^4.1.10",
+    "@vitest/browser-playwright": "^4.1.10",
+    "@vitest/coverage-v8": "^4.1.10",
     "happy-dom": "^20.9.0",
     "knip": "^6.14.2",
     "ls-engines": "^0.10.1",
@@ -181,7 +181,7 @@
     "oxlint": "^1.67.0",
     "playwright": "^1.60.0",
     "typescript": "6.0.3",
-    "vitest": "^4.1.7"
+    "vitest": "^4.1.10"
   },
   "peerDependencies": {
     "vitest": ">=2.0.0"
