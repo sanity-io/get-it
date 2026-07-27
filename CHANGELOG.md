@@ -1,5 +1,19 @@
 # get-it
 
+## 9.4.0
+
+### Minor Changes
+
+- **mock:** header presence assertions and name matchers for toHaveHeader ([#627](https://github.com/sanity-io/get-it/pull/627)) ([5e60f0b](https://github.com/sanity-io/get-it/commit/5e60f0b977feaea549f19ad0963ca2ef1d4f59b5))
+- **mock:** expose raw fetch init on RecordedRequest ([#621](https://github.com/sanity-io/get-it/pull/621)) ([f66b33c](https://github.com/sanity-io/get-it/commit/f66b33cb9229e256d479ac05a92fcee4eaef82b4))
+- **mock:** track request-signal aborts on StreamBody ([#622](https://github.com/sanity-io/get-it/pull/622)) ([00e4b8b](https://github.com/sanity-io/get-it/commit/00e4b8b9a9010ac1b8c56a6ff396b968c36d6789))
+- **retry:** honor per-request maxRetries option ([#623](https://github.com/sanity-io/get-it/pull/623)) ([7c4a0d2](https://github.com/sanity-io/get-it/commit/7c4a0d2ad8246a34975fec9b29bbf98d2af4dca7))
+- rejection-only timeouts via {signal: false} ([#626](https://github.com/sanity-io/get-it/pull/626)) ([7238c6e](https://github.com/sanity-io/get-it/commit/7238c6ecf899d4b8ab745c8c6caa1d36a16612a9))
+
+### Patch Changes
+
+- **mock:** lowercase header names defensively in header matching ([#624](https://github.com/sanity-io/get-it/pull/624)) ([5e60f0b](https://github.com/sanity-io/get-it/commit/5e60f0b977feaea549f19ad0963ca2ef1d4f59b5))
+
 ## 9.3.0
 
 ### Minor Changes
