@@ -3,7 +3,6 @@ import http from 'node:http'
 import https from 'node:https'
 import path from 'node:path'
 import qs from 'node:querystring'
-import url from 'node:url'
 import zlib from 'node:zlib'
 
 import {concat} from '../../src/request/node/simpleConcat'
@@ -29,7 +28,8 @@ const requestCounters: Record<string, number> = {}
 function getResponseHandler(proto = 'http'): any {
   const isSecure = proto === 'https'
   return (req: any, res: any, next: any) => {
-    const parts = url.parse(req.url, true)
+    const parsedUrl = new URL(req.url, 'http://localhost')
+    const parts = {pathname: parsedUrl.pathname, query: qs.parse(parsedUrl.search.slice(1))}
     const num = Number(parts.query['n'])
     const atMax = num >= 10
     const uuid: any = parts.query['uuid']

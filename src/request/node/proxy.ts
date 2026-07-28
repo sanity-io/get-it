@@ -6,6 +6,7 @@
 import url, {type UrlWithStringQuery} from 'url'
 
 import type {ProxyOptions, RequestOptions} from '../../types'
+import {parseUri} from './parseUri'
 
 function formatHostname(hostname: string) {
   // canonicalize the hostname, so that 'oogle.com' won't match 'google.com'
@@ -123,7 +124,7 @@ export function rewriteUriForProxy(
 
 export function getProxyOptions(options: RequestOptions): UrlWithStringQuery | ProxyOptions | null {
   const proxy =
-    typeof options.proxy === 'undefined' ? getProxyFromUri(url.parse(options.url)) : options.proxy
+    typeof options.proxy === 'undefined' ? getProxyFromUri(parseUri(options.url)) : options.proxy
 
-  return typeof proxy === 'string' ? url.parse(proxy) : proxy || null
+  return typeof proxy === 'string' ? parseUri(proxy) : proxy || null
 }

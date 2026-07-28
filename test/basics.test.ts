@@ -22,6 +22,15 @@ describe('basics', {timeout: 15000}, () => {
     return expect(() => request({url: 'heisann'})).to.throw(/valid URL/)
   })
 
+  // The fetch spec forbids credentials in request URLs, so this only works on the node adapter
+  it.skipIf(adapter !== 'node')('should send percent-decoded basic auth from the URL', async () => {
+    const request = getIt([jsonResponse(), debugRequest])
+    const req = request({url: `${baseUrlPrefix.replace('://', '://user:p%40ss@')}/debug`})
+    const body: any = await promiseRequest(req).then((res: any) => res.body)
+    // base64 of the decoded credentials, `user:p@ss`
+    expect(body.headers).toMatchObject({authorization: 'Basic dXNlcjpwQHNz'})
+  })
+
   it('should be able to request a basic, plain-text file', async () => {
     const body = 'Just some plain text for you to consume'
     const request = getIt([baseUrl, debugRequest])

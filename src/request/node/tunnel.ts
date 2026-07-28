@@ -4,7 +4,8 @@
  * Apache License 2.0
  */
 import * as tunnel from 'tunnel-agent'
-import url from 'url'
+
+import {parseUri} from './parseUri'
 
 const uriParts = [
   'protocol',
@@ -56,7 +57,7 @@ export function shouldEnable(options: any) {
   }
 
   // If the destination is HTTPS, tunnel.
-  const uri = url.parse(options.url)
+  const uri = parseUri(options.url)
   if (uri.protocol === 'https:') {
     return true
   }
