@@ -113,6 +113,19 @@ describe.runIf(environment === 'node')('proxy', {timeout: 15000}, () => {
     })
   })
 
+  it('http: should support percent-encoded HTTP proxy auth from env', async () => {
+    process.env['http_proxy'] = 'http://user:p%40ss@localhost:4000/'
+
+    const request = getIt([baseUrl, debugRequest])
+
+    const res = await promiseRequest(request({url: '/plain-text'}))
+    expect(res).toHaveProperty('headers')
+    expect(res.headers).toMatchObject({
+      // base64 of the decoded credentials, `user:p@ss`
+      'x-proxy-auth': 'Basic dXNlcjpwQHNz',
+    })
+  })
+
   it('http: should use requested hostname as Host header', async () => {
     process.env['http_proxy'] = 'http://localhost:4000/'
 

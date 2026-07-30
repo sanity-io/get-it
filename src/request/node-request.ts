@@ -5,11 +5,11 @@ import http from 'http'
 import https from 'https'
 import qs from 'querystring'
 import {Readable, type Stream} from 'stream'
-import url from 'url'
 
 import type {RequestAdapter} from '../types'
 import {lowerCaseHeaders} from '../util/lowerCaseHeaders'
 import {progressStream} from '../util/progress-stream'
+import {parseUri} from './node/parseUri'
 import {getProxyOptions, rewriteUriForProxy} from './node/proxy'
 import {concat} from './node/simpleConcat'
 import {timedOut} from './node/timedOut'
@@ -46,7 +46,7 @@ const reduceResponse = (
 
 export const httpRequester: HttpRequest = (context, cb) => {
   const {options} = context
-  const uri = Object.assign({}, url.parse(options.url))
+  const uri = Object.assign({}, parseUri(options.url))
 
   if (typeof fetch === 'function' && options.fetch) {
     const controller = new AbortController()

@@ -22,6 +22,28 @@ describe('basics', {timeout: 15000}, () => {
     return expect(() => request({url: 'heisann'})).to.throw(/valid URL/)
   })
 
+  // The fetch spec forbids credentials in request URLs, so this only works on the node adapter
+  it.skipIf(adapter !== 'node')('should send percent-decoded basic auth from the URL', async () => {
+    const request = getIt([jsonResponse(), debugRequest])
+    const req = request({url: `${baseUrlPrefix.replace('://', '://user:p%40ss@')}/debug`})
+    const body: any = await promiseRequest(req).then((res: any) => res.body)
+    // base64 of the decoded credentials, `user:p@ss`
+    expect(body.headers).toMatchObject({authorization: 'Basic dXNlcjpwQHNz'})
+  })
+
+  // Token-as-username URLs (`token:@host`) must keep the trailing colon, or the
+  // `Authorization` value isn't valid `Basic` credentials
+  it.skipIf(adapter !== 'node')(
+    'should keep an explicitly empty password in basic auth',
+    async () => {
+      const request = getIt([jsonResponse(), debugRequest])
+      const req = request({url: `${baseUrlPrefix.replace('://', '://token:@')}/debug`})
+      const body: any = await promiseRequest(req).then((res: any) => res.body)
+      // base64 of `token:`, not of `token`
+      expect(body.headers).toMatchObject({authorization: 'Basic dG9rZW46'})
+    },
+  )
+
   it('should be able to request a basic, plain-text file', async () => {
     const body = 'Just some plain text for you to consume'
     const request = getIt([baseUrl, debugRequest])
