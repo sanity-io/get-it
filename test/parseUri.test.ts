@@ -386,8 +386,8 @@ describe('parseUri', () => {
       // dot segments are resolved and non-ASCII is percent-encoded, on purpose
       /\/\.\.?(\/|$)|[^ -~]/.test(uri) ||
       // `new URL()` rejects these (a `#`, `/`, `?` or `\` ends the authority
-      // early), so they take the null-shape fallback. Legacy's answer is junk
-      // anyway: it reports `host: 'user'` with `path: '/:p'`
+      // early), so parseUri throws. Legacy instead guessed, reporting
+      // `host: 'user'` with `path: '/:p'` - a host nobody asked for
       /^http:\/\/user:p[#/?\\]w@/.test(uri) ||
       // WHATWG drops an empty query/fragment delimiter, legacy kept `?` / `#`.
       // No server routes on an empty query, so this stays as-is
@@ -421,6 +421,35 @@ describe('parseUri', () => {
     // segments, and legacy passed non-ASCII through as raw bytes
     expect(parseUri('http://example.com/a/../b').path).toBe('/b')
     expect(parseUri('http://example.com/ä').path).toBe('/%C3%A4')
+  })
+
+  // A malformed absolute URL must never reach the relative fallback: that shape
+  // has `host: null`, which `http.request()` defaults to localhost while putting
+  // the whole URI in `path`, quietly sending the request to the local machine
+  it.each([
+    'http://x.com:99999/a',
+    'http://x.com:abc/a',
+    'http://x.com:-1/a',
+    'http://[::1/a',
+    'http://user:p/w@x.com/p',
+    'https://exa mple.com/a',
+    'http://%zz.com/a',
+  ])('throws on the malformed absolute URL %s rather than falling back', (input) => {
+    expect(() => parseUri(input)).toThrow()
+  })
+
+  it('never reports a null host for input carrying an authority', () => {
+    // The property that keeps a request from being retargeted to localhost
+    const inputs = ['http://x.com:99999/a', 'http://[::1/a', 'http://user:p/w@x.com/p']
+    for (const input of inputs) {
+      let parsed
+      try {
+        parsed = parseUri(input)
+      } catch {
+        continue // throwing is the intended outcome
+      }
+      expect(parsed.host).not.toBeNull()
+    }
   })
 
   it('does not throw on non-absolute input, mimicking legacy fallback shape', () => {

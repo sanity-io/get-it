@@ -16,8 +16,8 @@ import {format, type UrlWithStringQuery} from 'url'
  * - `hostname` has no brackets around IPv6 addresses
  * - the characters `url.parse` auto-escaped but WHATWG leaves literal (see
  *   `AUTO_ESCAPE`) stay escaped, since `path` goes out on the wire as-is
- * - relative/unparseable input returns the "everything null except path parts"
- *   shape instead of throwing
+ * - relative input returns the "everything null except path parts" shape
+ *   instead of throwing (but a *malformed absolute* URL throws - see below)
  *
  * Deliberate deviations, where WHATWG is more correct and matching legacy would
  * mean re-implementing its path parser against the raw string:
@@ -25,12 +25,25 @@ import {format, type UrlWithStringQuery} from 'url'
  *   fetch and xhr adapters already do, since they hand the URL to the platform
  * - non-ASCII path/query characters are percent-encoded as UTF-8 instead of
  *   being passed through as raw bytes
+ * - a malformed authority (`http://x:99999`, `http://user:p/w@x`) throws rather
+ *   than reporting legacy's guesswork (it read those as host `x` and host
+ *   `user`), because the alternative is a request to the wrong host
  */
 export function parseUri(uri: string): UrlWithStringQuery {
   let parsed: URL
   try {
     parsed = new URL(uri)
-  } catch {
+  } catch (err) {
+    // Only genuinely relative input gets the lenient fallback. An absolute URL
+    // the parser rejected (invalid port, malformed IPv6) must not fall through
+    // to it: `host` would be null, which `http.request()` defaults to localhost
+    // while putting the whole URI in `path` - silently sending a request meant
+    // for a remote host to the local machine. Legacy failed on the bad
+    // authority instead, so throw, as `url.parse` itself did for some of these
+    if (HAS_AUTHORITY.test(uri.trim())) {
+      throw err
+    }
+
     return withHref(parseRelative(uri))
   }
 
@@ -88,6 +101,9 @@ const AUTO_ESCAPE = /[ "'<>\\^`{|}]/g
 function autoEscape(value: string): string {
   return value.replace(AUTO_ESCAPE, (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`)
 }
+
+// `scheme://` - i.e. the input carries an authority, so it isn't relative
+const HAS_AUTHORITY = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//
 
 function getAuthority(uri: string): string {
   const match = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\/([^/?#]*)/.exec(uri.trim())
