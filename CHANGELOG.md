@@ -1,5 +1,11 @@
 # get-it
 
+## 8.8.1
+
+### Patch Changes
+
+- replace deprecated url.parse (DEP0169) with WHATWG URL-based shim ([#634](https://github.com/sanity-io/get-it/pull/634)) ([898f7a9](https://github.com/sanity-io/get-it/commit/898f7a98a15fe6d32c0cf227bd50ba389262e7a8))
+
 <!-- markdownlint-disable --><!-- textlint-disable -->
 
 # 📓 Changelog
