@@ -9,6 +9,9 @@ import {format, type UrlWithStringQuery} from 'url'
  * Legacy behaviors preserved on purpose:
  * - `auth` is percent-decoded (throws `URIError` on malformed sequences, like
  *   `url.parse` did) - the tunnel agent and `http.request()` base64 it verbatim
+ * - an explicitly written empty password (`http://user:@x`) keeps its colon,
+ *   which WHATWG can't express (it reports the same empty `password` as
+ *   `http://user@x`), and which `Basic` credentials require
  * - explicitly written default ports (`http://x:80`) are kept in `port`/`host`
  * - `hostname` has no brackets around IPv6 addresses
  * - relative/unparseable input returns the "everything null except path parts"
@@ -22,19 +25,18 @@ export function parseUri(uri: string): UrlWithStringQuery {
     return withHref(parseRelative(uri))
   }
 
-  const auth =
-    parsed.username || parsed.password
-      ? `${decodeURIComponent(parsed.username)}${
-          parsed.password ? `:${decodeURIComponent(parsed.password)}` : ''
-        }`
-      : null
+  // The raw authority is the only place some legacy details survive, since
+  // WHATWG normalizes them away before we get to look at the parsed parts
+  const authority = getAuthority(uri)
+
+  const auth = recoverAuth(authority, parsed)
 
   // Legacy `hostname` has no brackets around IPv6 addresses, WHATWG does
   const hostname = parsed.hostname.startsWith('[') ? parsed.hostname.slice(1, -1) : parsed.hostname
 
   // WHATWG strips explicitly written default ports (`http://x:80`) - recover
   // them, since the proxy/tunnel code connects to whatever `port` says
-  const port = parsed.port || recoverExplicitPort(uri)
+  const port = parsed.port || recoverExplicitPort(authority)
   const host = parsed.host ? `${parsed.host}${parsed.port || !port ? '' : `:${port}`}` : null
 
   const search = parsed.search || null
@@ -63,12 +65,29 @@ function withHref(parts: Omit<UrlWithStringQuery, 'href'>): UrlWithStringQuery {
   return {...parts, href: format(parts)}
 }
 
-function recoverExplicitPort(uri: string): string {
-  const authority = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\/([^/?#]*)/.exec(uri.trim())
-  if (!authority) {
-    return ''
+function getAuthority(uri: string): string {
+  const match = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\/([^/?#]*)/.exec(uri.trim())
+  return match ? match[1] : ''
+}
+
+// Legacy `auth` is the userinfo verbatim (percent-decoded), so it distinguishes
+// `user` from `user:` - WHATWG doesn't, so the separator has to come from the
+// raw userinfo. Like legacy, the *last* `@` ends it, so an unencoded `@` in the
+// password (`user:p@ss@host`) is handled the same way.
+function recoverAuth(authority: string, parsed: URL): string | null {
+  const at = authority.lastIndexOf('@')
+  if (at === -1) {
+    return null
   }
-  const hostPart = authority[1].slice(authority[1].lastIndexOf('@') + 1)
+
+  const username = decodeURIComponent(parsed.username)
+  return authority.slice(0, at).includes(':')
+    ? `${username}:${decodeURIComponent(parsed.password)}`
+    : username
+}
+
+function recoverExplicitPort(authority: string): string {
+  const hostPart = authority.slice(authority.lastIndexOf('@') + 1)
   const port = /:(\d+)$/.exec(hostPart)
   return port ? port[1] : ''
 }

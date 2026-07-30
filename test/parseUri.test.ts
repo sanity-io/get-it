@@ -217,6 +217,96 @@ describe('parseUri', () => {
         href: 'http://user@example.com/',
       },
     ],
+    // an explicitly written empty password must keep its colon: `Basic`
+    // credentials require the separator, and WHATWG reports the same empty
+    // `password` here as it does for `http://user@example.com/` above
+    [
+      'http://user:@example.com/',
+      {
+        protocol: 'http:',
+        slashes: true,
+        auth: 'user:',
+        host: 'example.com',
+        port: null,
+        hostname: 'example.com',
+        hash: null,
+        search: null,
+        query: null,
+        pathname: '/',
+        path: '/',
+        href: 'http://user:@example.com/',
+      },
+    ],
+    [
+      'http://:pass@example.com/',
+      {
+        protocol: 'http:',
+        slashes: true,
+        auth: ':pass',
+        host: 'example.com',
+        port: null,
+        hostname: 'example.com',
+        hash: null,
+        search: null,
+        query: null,
+        pathname: '/',
+        path: '/',
+        href: 'http://:pass@example.com/',
+      },
+    ],
+    [
+      'http://@example.com/',
+      {
+        protocol: 'http:',
+        slashes: true,
+        auth: '',
+        host: 'example.com',
+        port: null,
+        hostname: 'example.com',
+        hash: null,
+        search: null,
+        query: null,
+        pathname: '/',
+        path: '/',
+        href: 'http://example.com/',
+      },
+    ],
+    [
+      'http://:@example.com/',
+      {
+        protocol: 'http:',
+        slashes: true,
+        auth: ':',
+        host: 'example.com',
+        port: null,
+        hostname: 'example.com',
+        hash: null,
+        search: null,
+        query: null,
+        pathname: '/',
+        path: '/',
+        href: 'http://:@example.com/',
+      },
+    ],
+    // legacy ends the userinfo at the *last* `@`, so an unencoded `@` in the
+    // password belongs to the password
+    [
+      'http://user:p@ss@example.com/',
+      {
+        protocol: 'http:',
+        slashes: true,
+        auth: 'user:p@ss',
+        host: 'example.com',
+        port: null,
+        hostname: 'example.com',
+        hash: null,
+        search: null,
+        query: null,
+        pathname: '/',
+        path: '/',
+        href: 'http://user:p%40ss@example.com/',
+      },
+    ],
   ]
 
   it.each(cases)('parses %s like legacy url.parse', (input, expected) => {
