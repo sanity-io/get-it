@@ -46,7 +46,13 @@ jobs:
           PR_BODY: ${{ github.event.pull_request.body }}
           PR_REPO: ${{ github.event.pull_request.head.repo.full_name }}
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: node base-scripts/.github/scripts/generate-changeset.mjs
+        run: |
+          if [ ! -f base-scripts/.github/scripts/generate-changeset.mjs ]; then
+            echo "Base branch '${{ github.event.pull_request.base.ref }}' has no generate-changeset script, skipping"
+            echo "action=skip" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          node base-scripts/.github/scripts/generate-changeset.mjs
 
       - name: Checkout PR branch
         if: steps.analyze.outputs.action == 'write' || steps.analyze.outputs.action == 'remove'
