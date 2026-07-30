@@ -1,3 +1,4 @@
+import url from 'url'
 import {describe, expect, it} from 'vitest'
 
 import {parseUri} from '../src/request/node/parseUri'
@@ -307,6 +308,45 @@ describe('parseUri', () => {
         href: 'http://user:p%40ss@example.com/',
       },
     ],
+    // legacy auto-escaped ` "'<>\^`{|}` in the path, query and fragment alike,
+    // and `path` goes out on the wire as-is, so they have to stay escaped. Which
+    // of them the WHATWG parser escapes on its own is Node-version dependent,
+    // which is what the differential sweep below guards
+    [
+      "http://example.com/it's?q=a|b",
+      {
+        protocol: 'http:',
+        slashes: true,
+        auth: null,
+        host: 'example.com',
+        port: null,
+        hostname: 'example.com',
+        hash: null,
+        search: '?q=a%7Cb',
+        query: 'q=a%7Cb',
+        pathname: '/it%27s',
+        path: '/it%27s?q=a%7Cb',
+        href: 'http://example.com/it%27s?q=a%7Cb',
+      },
+    ],
+    // a GROQ-shaped query is the realistic case: `|`, `{` and `}` are common
+    [
+      'http://example.com/v1/data/query/prod?query={a}|order(x)^`#f|{x}',
+      {
+        protocol: 'http:',
+        slashes: true,
+        auth: null,
+        host: 'example.com',
+        port: null,
+        hostname: 'example.com',
+        hash: '#f%7C%7Bx%7D',
+        search: '?query=%7Ba%7D%7Corder(x)%5E%60',
+        query: 'query=%7Ba%7D%7Corder(x)%5E%60',
+        pathname: '/v1/data/query/prod',
+        path: '/v1/data/query/prod?query=%7Ba%7D%7Corder(x)%5E%60',
+        href: 'http://example.com/v1/data/query/prod?query=%7Ba%7D%7Corder(x)%5E%60#f%7C%7Bx%7D',
+      },
+    ],
   ]
 
   it.each(cases)('parses %s like legacy url.parse', (input, expected) => {
@@ -315,6 +355,72 @@ describe('parseUri', () => {
 
   it('throws URIError on malformed percent-encoding in userinfo, like legacy url.parse', () => {
     expect(() => parseUri('http://us%er@x.com/')).toThrow(URIError)
+  })
+
+  // The hand-written cases above document the interesting inputs; this sweep is
+  // what actually catches escaping and normalization drift, by diffing every
+  // printable ASCII character in every component against the real `url.parse`
+  it('matches legacy url.parse across a differential sweep', () => {
+    const corpus: string[] = [
+      'http://example.com',
+      'http://example.com/',
+      'http://example.com:8080/a?b=c#d',
+      'http://example.com/a//b',
+      'http://example.com/%7Euser',
+      'http://example.com/%41?q=%42#%43',
+      'http://example.com/a%2e%2e/b',
+      'http://example.com/a?b#c?d',
+    ]
+    for (let code = 0x20; code < 0x7f; code++) {
+      const char = String.fromCharCode(code)
+      corpus.push(
+        `http://example.com/a${char}b`,
+        `http://example.com/p?q=a${char}b`,
+        `http://example.com/p#f${char}g`,
+        `http://user:p${char}w@example.com/p`,
+      )
+    }
+
+    // Inputs the shim knowingly handles differently - see parseUri's doc comment
+    const deviates = (uri: string) =>
+      // dot segments are resolved and non-ASCII is percent-encoded, on purpose
+      /\/\.\.?(\/|$)|[^ -~]/.test(uri) ||
+      // `new URL()` rejects these (a `#`, `/`, `?` or `\` ends the authority
+      // early), so they take the null-shape fallback. Legacy's answer is junk
+      // anyway: it reports `host: 'user'` with `path: '/:p'`
+      /^http:\/\/user:p[#/?\\]w@/.test(uri) ||
+      // WHATWG drops an empty query/fragment delimiter, legacy kept `?` / `#`.
+      // No server routes on an empty query, so this stays as-is
+      /[?#]+$/.test(uri)
+
+    // Key order isn't part of the contract, and a thrown URIError has to match
+    // too (both reject malformed percent-encoding in the userinfo)
+    const snapshot = (parse: (uri: string) => object, uri: string) => {
+      try {
+        const parts = {...parse(uri)}
+        return JSON.stringify(parts, Object.keys(parts).sort())
+      } catch (err) {
+        return `throws ${(err as Error).name}`
+      }
+    }
+
+    const mismatches = corpus
+      .filter((uri) => !deviates(uri))
+      .map((uri) => ({
+        uri,
+        legacy: snapshot(url.parse, uri),
+        actual: snapshot(parseUri, uri),
+      }))
+      .filter(({legacy, actual}) => legacy !== actual)
+
+    expect(mismatches).toEqual([])
+  })
+
+  it('resolves dot segments and encodes non-ASCII, unlike legacy url.parse', () => {
+    // Deliberate deviations: the fetch and xhr adapters already resolve dot
+    // segments, and legacy passed non-ASCII through as raw bytes
+    expect(parseUri('http://example.com/a/../b').path).toBe('/b')
+    expect(parseUri('http://example.com/ä').path).toBe('/%C3%A4')
   })
 
   it('does not throw on non-absolute input, mimicking legacy fallback shape', () => {

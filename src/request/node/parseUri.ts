@@ -14,8 +14,17 @@ import {format, type UrlWithStringQuery} from 'url'
  *   `http://user@x`), and which `Basic` credentials require
  * - explicitly written default ports (`http://x:80`) are kept in `port`/`host`
  * - `hostname` has no brackets around IPv6 addresses
+ * - the characters `url.parse` auto-escaped but WHATWG leaves literal (see
+ *   `AUTO_ESCAPE`) stay escaped, since `path` goes out on the wire as-is
  * - relative/unparseable input returns the "everything null except path parts"
  *   shape instead of throwing
+ *
+ * Deliberate deviations, where WHATWG is more correct and matching legacy would
+ * mean re-implementing its path parser against the raw string:
+ * - `.`/`..` path segments are resolved (`/a/../b` -> `/b`), which is what the
+ *   fetch and xhr adapters already do, since they hand the URL to the platform
+ * - non-ASCII path/query characters are percent-encoded as UTF-8 instead of
+ *   being passed through as raw bytes
  */
 export function parseUri(uri: string): UrlWithStringQuery {
   let parsed: URL
@@ -39,8 +48,8 @@ export function parseUri(uri: string): UrlWithStringQuery {
   const port = parsed.port || recoverExplicitPort(authority)
   const host = parsed.host ? `${parsed.host}${parsed.port || !port ? '' : `:${port}`}` : null
 
-  const search = parsed.search || null
-  const pathname = parsed.pathname || null
+  const search = parsed.search ? autoEscape(parsed.search) : null
+  const pathname = parsed.pathname ? autoEscape(parsed.pathname) : null
   const path = pathname === null && search === null ? null : `${pathname || ''}${search || ''}`
 
   return withHref({
@@ -50,7 +59,7 @@ export function parseUri(uri: string): UrlWithStringQuery {
     host,
     port: port || null,
     hostname: hostname || null,
-    hash: parsed.hash || null,
+    hash: parsed.hash ? autoEscape(parsed.hash) : null,
     search,
     query: search ? search.slice(1) : null,
     pathname,
@@ -63,6 +72,21 @@ export function parseUri(uri: string): UrlWithStringQuery {
 // is exactly what the non-deprecated `url.format()` produces
 function withHref(parts: Omit<UrlWithStringQuery, 'href'>): UrlWithStringQuery {
   return {...parts, href: format(parts)}
+}
+
+// The characters `url.parse` percent-escaped, which it did uniformly across the
+// path, query and fragment. Keeping them escaped matters because `path` is handed
+// to `http.request()` verbatim, and a literal `|` or `{` in a request target
+// isn't valid per RFC 3986 - strict servers and proxies reject it.
+//
+// The WHATWG parser escapes most of these already, but *which* ones varies by
+// Node version (`^` in a path is literal on Node 22, escaped on Node 24), so
+// re-escape the whole set rather than just the current gap: it's a no-op for the
+// characters the parser already handled, and doesn't rot when the spec moves.
+const AUTO_ESCAPE = /[ "'<>\\^`{|}]/g
+
+function autoEscape(value: string): string {
+  return value.replace(AUTO_ESCAPE, (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`)
 }
 
 function getAuthority(uri: string): string {
