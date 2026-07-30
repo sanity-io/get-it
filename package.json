@@ -90,6 +90,8 @@
     "coverage": "vitest run --coverage",
     "lint": "eslint . --ext .cjs,.js,.ts --report-unused-disable-directives",
     "prepublishOnly": "npm run build",
+    "release": "changeset publish --tag v8",
+    "version": "changeset version && npm install --package-lock-only",
     "test": "vitest",
     "test:browser": "npm test -- --config ./vitest.browser.config.ts --dom",
     "test:edge-runtime": "npm test -- --config ./vitest.edge.config.ts",
@@ -108,10 +110,10 @@
     "tunnel-agent": "^0.6.0"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.31.1",
     "@edge-runtime/vm": "^5.0.0",
     "@sanity/pkg-utils": "^7.9.0",
     "@sanity/prettier-config": "^2.0.0",
-    "@sanity/semantic-release-preset": "^5.0.0",
     "@types/bun": "^1.2.17",
     "@types/debug": "^4.1.12",
     "@types/follow-redirects": "^1.14.4",
@@ -133,7 +135,6 @@
     "node-fetch": "^2.6.7",
     "parse-headers": "2.0.6",
     "prettier": "^3.6.2",
-    "semantic-release": "^24.2.6",
     "typescript": "5.8.3",
     "vite": "^7.0.0",
     "vitest": "^3.2.4",

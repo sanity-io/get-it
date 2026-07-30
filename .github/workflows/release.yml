@@ -1,0 +1,70 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - v8
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+permissions:
+  contents: read # for checkout
+
+jobs:
+  release:
+    # v8 is a maintenance branch. It can't use the shared sanity-io/.github
+    # changesets workflow (which requires pnpm) since this branch predates the
+    # pnpm migration, so this is a standalone npm-based equivalent.
+    # Publishes use `npm run release` = `changeset publish --tag v8` so that
+    # the npm `latest` dist-tag stays on the v9.x line.
+    if: github.repository_owner == 'sanity-io'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # for checkout
+      id-token: write # to enable use of OIDC for npm provenance
+    steps:
+      - uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          client-id: ${{ vars.ECOSPARK_CLIENT_ID }}
+          private-key: ${{ secrets.ECOSPARK_APP_PRIVATE_KEY }}
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          # Uses generated token to allow pushing commits back
+          token: ${{ steps.app-token.outputs.token }}
+          # Make sure the value of GITHUB_TOKEN will not be persisted in repo's config
+          persist-credentials: false
+      - name: Get app token user id
+        id: get-user-id
+        run: echo "user-id=$(gh api "/users/${{ steps.app-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+      - name: Setup git user
+        run: |
+          git config --global user.name '${{ steps.app-token.outputs.app-slug }}[bot]'
+          git config --global user.email '${{ steps.get-user-id.outputs.user-id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com'
+      - uses: actions/setup-node@v6
+        with:
+          cache: npm
+          check-latest: true
+          node-version: lts/*
+        # temporary until setup-node action comes with npm version that contains oidc setup by default.
+        # Pinned to npm 11 (OIDC support landed in 11.5.1): npm 12 changed the `npm info --json`
+        # output format, which breaks the `changeset publish` already-published check.
+      - name: Update npm to use trusted publishing (OIDC)
+        run: npm install -g npm@^11
+      - run: npm ci
+      - name: Create Release Pull Request or Publish to npm
+        id: changesets
+        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
+        with:
+          publish: npm run release
+          # Also refreshes package-lock.json, which `changeset version` alone leaves stale
+          version: npm run version
+          title: 'chore: version packages (v8)'
+          commit: 'chore: version packages (v8)'
+          setupGitUser: false
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          NPM_CONFIG_PROVENANCE: true
