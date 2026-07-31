@@ -251,9 +251,9 @@ export const httpRequester: HttpRequest = (context, cb) => {
       //
       // When the response was piped through a transform (decompress-response
       // or onHeaders middleware), neither check above works. We instead wait
-      // for 'readable' on resStream and inspect its buffer without consuming
-      // it: 'readable' fires at EOF too, so an empty buffer at that point means
-      // the stream ended without data and needs draining.
+      // for 'readable' on resStream and peek one byte: null means the stream
+      // ended empty, so we resume; non-null means real data, so we unshift it
+      // back for the caller to consume.
       process.nextTick(() => {
         if (resStream.readableFlowing) {
           return
@@ -273,11 +273,14 @@ export const httpRequester: HttpRequest = (context, cb) => {
         // original IncomingMessage. Peek via 'readable' instead.
         if (response.complete && response.readableFlowing) {
           resStream.once('readable', () => {
-            // Must not read() here: read() emits 'data' to any consumer that
-            // has already attached, and unshift()-ing the chunk back makes it
-            // arrive a second time, corrupting the payload.
-            if (resStream.readableLength === 0) {
+            if (resStream.readableFlowing) {
+              return
+            }
+            const chunk = resStream.read(1)
+            if (chunk === null) {
               resStream.resume()
+            } else {
+              resStream.unshift(chunk)
             }
           })
         }

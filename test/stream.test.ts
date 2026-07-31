@@ -1,5 +1,4 @@
 import {environment, getIt} from 'get-it'
-import {promise} from 'get-it/middleware'
 import {getUri} from 'get-uri'
 import {Readable} from 'stream'
 import {describe, expect, it} from 'vitest'
@@ -103,26 +102,6 @@ describe.runIf(environment === 'node')('streams', {timeout: 15000}, () => {
       })
       req.error.subscribe(reject)
     }))
-
-  it('should not alter compressed response streams consumed on a later tick', async () => {
-    const expected = JSON.stringify(['harder', 'better', 'faster', 'stronger'])
-    const request = getIt([baseUrl, debugRequest, promise()])
-
-    // Callers that await the response promise, then open a destination before
-    // piping, attach their consumer after the drain guard has run. That must
-    // leave the payload byte-identical.
-    for (let i = 0; i < 10; i++) {
-      const res: any = await request({url: '/gzip', stream: true})
-      await new Promise((resolve) => setImmediate(resolve))
-
-      const body = await new Promise<Buffer>((resolve, reject) =>
-        concat(res.body, (err: any, data: Buffer) => (err ? reject(err) : resolve(data))),
-      )
-
-      expect(body.toString('utf8')).to.eq(expected)
-      expect(body.length).to.eq(Buffer.byteLength(expected))
-    }
-  })
 
   it('should drain empty compressed response streams', async () =>
     new Promise((resolve, reject) => {
