@@ -15,8 +15,9 @@ jobs:
     # v8 is a maintenance branch. It can't use the shared sanity-io/.github
     # changesets workflow (which requires pnpm) since this branch predates the
     # pnpm migration, so this is a standalone npm-based equivalent.
-    # Publishes use `npm run release` = `changeset publish --tag v8` so that
-    # the npm `latest` dist-tag stays on the v9.x line.
+    # Publishes use `npm run release` = `changeset publish --tag latest-v8` so
+    # that the npm `latest` dist-tag stays on the v9.x line. (npm rejects `v8`
+    # itself as a dist-tag since it parses as a valid semver range.)
     if: github.repository_owner == 'sanity-io'
     runs-on: ubuntu-latest
     permissions:

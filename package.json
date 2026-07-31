@@ -90,7 +90,7 @@
     "coverage": "vitest run --coverage",
     "lint": "eslint . --ext .cjs,.js,.ts --report-unused-disable-directives",
     "prepublishOnly": "npm run build",
-    "release": "changeset publish --tag v8",
+    "release": "changeset publish --tag latest-v8",
     "version": "changeset version && npm install --package-lock-only",
     "test": "vitest",
     "test:browser": "npm test -- --config ./vitest.browser.config.ts --dom",
