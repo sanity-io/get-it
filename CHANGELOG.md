@@ -1,5 +1,11 @@
 # get-it
 
+## 8.8.2
+
+### Patch Changes
+
+- don't duplicate the first byte of compressed response streams ([#642](https://github.com/sanity-io/get-it/pull/642)) ([1855f81](https://github.com/sanity-io/get-it/commit/1855f81bdae1f17f31c92aa3cce1ba661ec68445))
+
 ## 8.8.1
 
 ### Patch Changes
