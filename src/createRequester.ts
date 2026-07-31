@@ -75,13 +75,14 @@ export function createRequester(
     url: string
     method: string
     totalDeadline: Promise<never> | undefined
+    clearDeadline: () => void
   }> {
     const {totalMs, headersMs, attachSignal} = resolveTimeout(
       opts.timeout !== undefined ? opts.timeout : instanceTimeout,
     )
     // In rejection-only mode the total deadline must not become a fetch-init
     // signal, so it is withheld from buildFetchArgs and raced below instead.
-    const {url, init} = buildFetchArgs(
+    const {url, init, clearTotalTimer} = buildFetchArgs(
       opts,
       attachSignal ? totalMs : undefined,
       instanceCredentials,
@@ -95,16 +96,31 @@ export function createRequester(
     // background — the caller opted out of teardown (e.g. so Next.js RSC
     // request memoization stays enabled) — and its late settlement is
     // swallowed in the catch block below.
-    const totalDeadline =
+    const totalTimeout =
       !attachSignal && totalMs !== undefined
         ? rejectAfterTimeout(
             totalMs,
             new DOMException('The operation was aborted due to timeout', 'TimeoutError'),
           )
         : undefined
+    const totalDeadline = totalTimeout?.deadline
+
+    // Releases the total-deadline timers once the request has settled and the
+    // deadline no longer governs anything. unref alone only lets the Node.js
+    // process exit early — Deno's test sanitizer and browsers still see a
+    // pending timer for the full timeout window.
+    const clearDeadline = () => {
+      clearTotalTimer?.()
+      totalTimeout?.clear()
+    }
 
     if (headersMs === undefined && totalDeadline === undefined) {
-      return {response: await fetchFn(url, init), url, method, totalDeadline}
+      try {
+        return {response: await fetchFn(url, init), url, method, totalDeadline, clearDeadline}
+      } catch (reason) {
+        clearDeadline()
+        throw reason
+      }
     }
 
     // Deadlines competing with the fetch to settle the request promise.
@@ -144,13 +160,22 @@ export function createRequester(
     let fetching: Promise<FetchResponse> | undefined
     try {
       fetching = Promise.resolve(controller ? fetchFn(url, {...init, signal}) : fetchFn(url, init))
-      return {response: await Promise.race([fetching, ...deadlines]), url, method, totalDeadline}
+      return {
+        response: await Promise.race([fetching, ...deadlines]),
+        url,
+        method,
+        totalDeadline,
+        clearDeadline,
+      }
     } catch (reason) {
       // A deadline won the race (or the fetch itself failed): the fetch's
       // later settlement must not become an unhandled rejection. In
       // rejection-only mode the fetch was not aborted, so a late response
       // arrives with a dangling body — cancel it to release the connection.
       fetching?.then((response) => response.body?.cancel()).catch(() => {})
+      // The request has settled by rejection, so no deadline governs anything
+      // anymore — release the total-deadline timers.
+      clearDeadline()
       throw reason
     } finally {
       clearTimeout(timer)
@@ -163,11 +188,17 @@ export function createRequester(
    */
   async function getItBuffered(opts: RequestOptions): Promise<BufferedResponse> {
     const fetchFn: FetchFunction = opts.fetch ?? instanceFetch ?? globalThis.fetch
-    const {response, url, method, totalDeadline} = await performFetch(fetchFn, opts)
+    const {response, url, method, totalDeadline, clearDeadline} = await performFetch(fetchFn, opts)
     const httpErrors = opts.httpErrors ?? instanceHttpErrors ?? true
     // The rejection-only total deadline covers body download too, so keep
     // racing it while buffering (abort mode covers this via the init signal).
-    return raceDeadline(bufferAndCheck(response, httpErrors, url, method), totalDeadline)
+    // Once buffering settles the deadline is spent either way — release its
+    // timers.
+    try {
+      return await raceDeadline(bufferAndCheck(response, httpErrors, url, method), totalDeadline)
+    } finally {
+      clearDeadline()
+    }
   }
 
   // Compose wrapping middlewares around the core fetch
@@ -211,18 +242,30 @@ export function createRequester(
 
     async function getItStreamed(reqOpts: RequestOptions): Promise<BufferedResponse> {
       const fetchFn: FetchFunction = reqOpts.fetch ?? instanceFetch ?? globalThis.fetch
-      const {response, url, method, totalDeadline} = await performFetch(fetchFn, reqOpts)
+      const {response, url, method, totalDeadline, clearDeadline} = await performFetch(
+        fetchFn,
+        reqOpts,
+      )
       const httpErrors = reqOpts.httpErrors ?? instanceHttpErrors ?? true
 
       if (httpErrors && response.status >= 400) {
-        return raceDeadline(bufferAndCheck(response, httpErrors, url, method), totalDeadline)
+        try {
+          return await raceDeadline(
+            bufferAndCheck(response, httpErrors, url, method),
+            totalDeadline,
+          )
+        } finally {
+          clearDeadline()
+        }
       }
 
       // A rejection-only total deadline cannot govern the stream from here on
       // — a stream already handed to the caller cannot be retracted — so with
-      // `signal: false` it only covers up to response headers. The deadline
-      // promise is pre-armed with a catch handler, so its eventual rejection
-      // stays handled.
+      // `signal: false` it only covers up to response headers, and its timer
+      // can be released at hand-off. In abort mode (totalDeadline undefined)
+      // the deadline still governs the stream via the fetch-init signal, so
+      // its timer must stay armed.
+      if (totalDeadline !== undefined) clearDeadline()
       capturedResponse = response
       return createBufferedResponse(
         response.status,
@@ -363,16 +406,21 @@ function unrefTimer(timer: unknown): void {
  * Creates the rejection-only (`timeout: {signal: false}`) total deadline: a
  * promise that rejects with `reason` once `ms` elapses. Pre-armed with a
  * no-op catch handler so the rejection never becomes "unhandled" when the
- * guarded work settles first — like the abort-based total deadline, the timer
- * is unref'd rather than cleared, and firing after the race is won is
- * harmless.
+ * guarded work settles first. The timer is unref'd so it cannot hold the
+ * Node.js event loop open, and `clear` releases it entirely once the request
+ * settles.
  */
-function rejectAfterTimeout(ms: number, reason: unknown): Promise<never> {
+function rejectAfterTimeout(
+  ms: number,
+  reason: unknown,
+): {deadline: Promise<never>; clear: () => void} {
+  let timer: ReturnType<typeof setTimeout> | undefined
   const deadline = new Promise<never>((_, reject) => {
-    unrefTimer(setTimeout(() => reject(reason), ms))
+    timer = setTimeout(() => reject(reason), ms)
+    unrefTimer(timer)
   })
   deadline.catch(() => {})
-  return deadline
+  return {deadline, clear: () => clearTimeout(timer)}
 }
 
 /**
@@ -456,7 +504,7 @@ function buildFetchArgs(
   opts: RequestOptions,
   totalMs: number | undefined,
   instanceCredentials: 'include' | 'omit' | 'same-origin' | undefined,
-): {url: string; init: FetchInit} {
+): {url: string; init: FetchInit; clearTotalTimer: (() => void) | undefined} {
   let url = opts.url
 
   // Query string — merge query params into URL
@@ -509,21 +557,22 @@ function buildFetchArgs(
 
   // Signal — build the final abort signal (totalMs already resolved by resolveTimeout)
   let signal: AbortSignal | undefined = opts.signal
+  let clearTotalTimer: (() => void) | undefined
   if (totalMs !== undefined) {
     // Own the deadline timer instead of using AbortSignal.timeout(): WebKit
     // can garbage-collect an otherwise-unreferenced timeout signal behind
     // AbortSignal.any(), silently disarming the deadline. The timer callback
     // closure keeps this controller (and thus the abort chain) alive.
     const totalController = new AbortController()
-    unrefTimer(
-      setTimeout(
-        () =>
-          totalController.abort(
-            new DOMException('The operation was aborted due to timeout', 'TimeoutError'),
-          ),
-        totalMs,
-      ),
+    const timer = setTimeout(
+      () =>
+        totalController.abort(
+          new DOMException('The operation was aborted due to timeout', 'TimeoutError'),
+        ),
+      totalMs,
     )
+    unrefTimer(timer)
+    clearTotalTimer = () => clearTimeout(timer)
     signal = signal ? AbortSignal.any([signal, totalController.signal]) : totalController.signal
   }
   if (signal) init.signal = signal
@@ -533,7 +582,7 @@ function buildFetchArgs(
 
   if (opts.redirect) init.redirect = opts.redirect
 
-  return {url, init}
+  return {url, init, clearTotalTimer}
 }
 
 /**
