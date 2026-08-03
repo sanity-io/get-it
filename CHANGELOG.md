@@ -1,5 +1,11 @@
 # get-it
 
+## 8.8.3
+
+### Patch Changes
+
+- don't leave streams piped by `onHeaders` middleware permanently paused ([#644](https://github.com/sanity-io/get-it/pull/644)) ([f2e8460](https://github.com/sanity-io/get-it/commit/f2e84601f57b522fea78e61c916d057651b6065d))
+
 ## 8.8.2
 
 ### Patch Changes
