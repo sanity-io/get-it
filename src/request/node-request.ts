@@ -23,6 +23,18 @@ import {NodeRequestError} from './node-request-error'
 const isStream = (stream: any): stream is Stream =>
   stream !== null && typeof stream === 'object' && typeof stream.pipe === 'function'
 
+/**
+ * Whether a stream has a writable side, and will therefore emit 'finish' once
+ * everything piped into it has been written and flushed. `resStream` is only
+ * writable when decompress-response or an `onHeaders` middleware piped the
+ * response through a transform; otherwise it is the raw IncomingMessage.
+ */
+const hasWritableSide = (stream: unknown): boolean =>
+  typeof stream === 'object' &&
+  stream !== null &&
+  'write' in stream &&
+  typeof stream.write === 'function'
+
 /** @public */
 export const adapter: RequestAdapter = 'node'
 
@@ -250,10 +262,18 @@ export const httpRequester: HttpRequest = (context, cb) => {
       // readableLength to 0 even for non-empty bodies.
       //
       // When the response was piped through a transform (decompress-response
-      // or onHeaders middleware), neither check above works. We instead wait
-      // for 'readable' on resStream and inspect its buffer without consuming
-      // it: 'readable' fires at EOF too, so an empty buffer at that point means
-      // the stream ended without data and needs draining.
+      // or onHeaders middleware), neither check above works. We then wait for
+      // the transform's writable side to finish, which means every byte it will
+      // ever produce has been pushed, and read `readableLength` to see whether
+      // that was nothing at all.
+      //
+      // Whatever we do here must not observe resStream through a listener that
+      // changes its mode. Attaching 'readable' sets `flowing = false`, and for
+      // userland streams (through2/readable-stream@3, as used by the progress
+      // middleware) that is never reset, so a consumer attaching later is
+      // deadlocked: `.on('data')` skips its implicit resume() when flowing is
+      // already false. Reading properties is safe; listening for 'finish' on
+      // the writable side is safe. Listening for 'readable' is not.
       process.nextTick(() => {
         if (resStream.readableFlowing) {
           return
@@ -270,12 +290,13 @@ export const httpRequester: HttpRequest = (context, cb) => {
 
         // Piped case: response was consumed by decompress-response or
         // onHeaders middleware, so we cannot inspect readableLength on the
-        // original IncomingMessage. Peek via 'readable' instead.
-        if (response.complete && response.readableFlowing) {
-          resStream.once('readable', () => {
-            // Must not read() here: read() emits 'data' to any consumer that
-            // has already attached, and unshift()-ing the chunk back makes it
-            // arrive a second time, corrupting the payload.
+        // original IncomingMessage. Wait for the transform to finish writing
+        // instead, then inspect the buffer it produced.
+        if (response.complete && response.readableFlowing && hasWritableSide(resStream)) {
+          resStream.once('finish', () => {
+            // 'finish' fires after the writable side has ended and _flush has
+            // run, so nothing more will be pushed. An empty buffer here means
+            // the transform produced no output at all.
             if (resStream.readableLength === 0) {
               resStream.resume()
             }

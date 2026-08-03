@@ -1,5 +1,5 @@
 import {environment, getIt} from 'get-it'
-import {promise} from 'get-it/middleware'
+import {progress, promise} from 'get-it/middleware'
 import {getUri} from 'get-uri'
 import {Readable} from 'stream'
 import {describe, expect, it} from 'vitest'
@@ -123,6 +123,65 @@ describe.runIf(environment === 'node')('streams', {timeout: 15000}, () => {
       expect(body.length).to.eq(Buffer.byteLength(expected))
     }
   })
+
+  it('should deliver plain response streams piped by onHeaders middleware on a later tick', async () => {
+    const expected = 'Just some plain text for you to consume'
+    const request = getIt([baseUrl, debugRequest, promise(), progress()])
+
+    // The progress middleware pipes the response through a through2 transform.
+    // The drain guard must not leave that transform paused, or a consumer
+    // attaching on a later tick never receives anything.
+    for (let i = 0; i < 5; i++) {
+      const res: any = await request({url: '/plain-text', stream: true})
+      await new Promise((resolve) => setImmediate(resolve))
+
+      const body = await new Promise<Buffer>((resolve, reject) =>
+        concat(res.body, (err: any, data: Buffer) => (err ? reject(err) : resolve(data))),
+      )
+
+      expect(body.toString('utf8')).to.eq(expected)
+    }
+  })
+
+  it('should deliver compressed response streams piped by onHeaders middleware on a later tick', async () => {
+    const expected = JSON.stringify(['harder', 'better', 'faster', 'stronger'])
+    const request = getIt([baseUrl, debugRequest, promise(), progress()])
+
+    for (let i = 0; i < 5; i++) {
+      const res: any = await request({url: '/gzip', stream: true})
+      // A macrotask boundary: later than setImmediate, so the guard has always
+      // finished before the consumer attaches.
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      const body = await new Promise<Buffer>((resolve, reject) =>
+        concat(res.body, (err: any, data: Buffer) => (err ? reject(err) : resolve(data))),
+      )
+
+      expect(body.toString('utf8')).to.eq(expected)
+    }
+  })
+
+  const emptyBodyCases = [
+    ['empty', {url: '/empty'}],
+    ['204 No Content', {url: '/no-content'}],
+    ['HEAD', {url: '/plain-text', method: 'HEAD'}],
+    ['empty compressed', {url: '/gzip-empty'}],
+  ] as const
+
+  for (const [name, requestOptions] of emptyBodyCases) {
+    it(`should drain ${name} response streams piped by onHeaders middleware`, async () =>
+      new Promise((resolve, reject) => {
+        const request = getIt([baseUrl, debugRequest, progress()])
+        const req = request({...requestOptions, stream: true})
+        req.response.subscribe((res: any) => {
+          // Do NOT consume the stream. The progress middleware pipes the
+          // response through a transform, and that transform must still be
+          // drained so 'end' fires and the socket is released.
+          res.body.once('end', () => resolve(undefined))
+        })
+        req.error.subscribe(reject)
+      }))
+  }
 
   it('should drain empty compressed response streams', async () =>
     new Promise((resolve, reject) => {
