@@ -69,3 +69,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           NPM_CONFIG_PROVENANCE: true
+      - name: Keep v8 release from becoming latest
+        if: steps.changesets.outputs.published == 'true'
+        run: gh release edit "v$(node -p "require('./package.json').version")" --latest=false
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
