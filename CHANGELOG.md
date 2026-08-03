@@ -1,5 +1,11 @@
 # get-it
 
+## 9.4.1
+
+### Patch Changes
+
+- clear total-deadline timers once the request settles ([#640](https://github.com/sanity-io/get-it/pull/640)) ([174a95d](https://github.com/sanity-io/get-it/commit/174a95dfb354a793f156974bc27fe0a60f4951a8))
+
 ## 9.4.0
 
 ### Minor Changes
