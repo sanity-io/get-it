@@ -1,5 +1,5 @@
 import {createRequester, type FetchInit, TimeoutError} from 'get-it'
-import {describe, expect, it} from 'vitest'
+import {describe, expect, it, vi} from 'vitest'
 import {resolveTimeout} from '../src/createRequester'
 
 describe('TimeoutError', () => {
@@ -119,6 +119,28 @@ describe('resolveTimeout', () => {
 })
 
 const baseUrl = 'http://localhost:9980/req-test'
+
+/**
+ * Spies on the global timer functions so tests can assert that every timer
+ * created during a request is cleared once the request settles. `restore()`
+ * clears any leftover timers so a leak cannot outlive the test.
+ */
+function trackTimers() {
+  const setSpy = vi.spyOn(globalThis, 'setTimeout')
+  const clearSpy = vi.spyOn(globalThis, 'clearTimeout')
+  const created = () => setSpy.mock.results.map((result) => result.value)
+  const cleared = () => clearSpy.mock.calls.map(([timer]) => timer)
+  return {
+    created,
+    uncleared: () => created().filter((timer) => !cleared().includes(timer)),
+    restore: () => {
+      const leftovers = created().filter((timer) => !cleared().includes(timer))
+      setSpy.mockRestore()
+      clearSpy.mockRestore()
+      for (const timer of leftovers) clearTimeout(timer)
+    },
+  }
+}
 
 describe('structured timeout behavior', () => {
   // happy-dom's fetch does not properly support AbortController on network requests
@@ -315,6 +337,112 @@ describe('structured timeout behavior', () => {
     // promise nothing subscribes to (vitest fails the test on unhandled
     // rejections).
     await new Promise((resolve) => setTimeout(resolve, 400))
+  })
+
+  it('clears the total-deadline timer once the body is buffered (abort mode)', async () => {
+    const request = createRequester({
+      base: baseUrl,
+      timeout: {total: 30_000},
+      fetch: () => Promise.resolve(new Response('ok')),
+    })
+    const timers = trackTimers()
+    try {
+      const res = await request('/plain-text')
+      expect(res.text()).toBe('ok')
+      expect(timers.created()).not.toHaveLength(0)
+      expect(timers.uncleared()).toHaveLength(0)
+    } finally {
+      timers.restore()
+    }
+  })
+
+  it('clears the total-deadline timer once the body is buffered (rejection-only mode)', async () => {
+    const request = createRequester({
+      base: baseUrl,
+      timeout: {total: 30_000, signal: false},
+      fetch: () => Promise.resolve(new Response('ok')),
+    })
+    const timers = trackTimers()
+    try {
+      const res = await request('/plain-text')
+      expect(res.text()).toBe('ok')
+      expect(timers.created()).not.toHaveLength(0)
+      expect(timers.uncleared()).toHaveLength(0)
+    } finally {
+      timers.restore()
+    }
+  })
+
+  it('clears the total-deadline timer when the fetch rejects (abort mode)', async () => {
+    const request = createRequester({
+      base: baseUrl,
+      timeout: {total: 30_000},
+      fetch: () => Promise.reject(new Error('boom')),
+    })
+    const timers = trackTimers()
+    try {
+      await expect(request('/plain-text')).rejects.toThrow('boom')
+      expect(timers.created()).not.toHaveLength(0)
+      expect(timers.uncleared()).toHaveLength(0)
+    } finally {
+      timers.restore()
+    }
+  })
+
+  it('clears the total-deadline timer when the fetch rejects (rejection-only mode)', async () => {
+    const request = createRequester({
+      base: baseUrl,
+      timeout: {total: 30_000, headers: 15_000, signal: false},
+      fetch: () => Promise.reject(new Error('boom')),
+    })
+    const timers = trackTimers()
+    try {
+      await expect(request('/plain-text')).rejects.toThrow('boom')
+      expect(timers.created()).not.toHaveLength(0)
+      expect(timers.uncleared()).toHaveLength(0)
+    } finally {
+      timers.restore()
+    }
+  })
+
+  it('clears the rejection-only total-deadline timer once a stream is handed over', async () => {
+    // With `signal: false` the total deadline only covers up to response
+    // headers in stream mode, so its timer serves no purpose once the stream
+    // is handed to the caller.
+    const request = createRequester({
+      base: baseUrl,
+      timeout: {total: 30_000, signal: false},
+      fetch: () => Promise.resolve(new Response('streamed')),
+    })
+    const timers = trackTimers()
+    try {
+      const res = await request({url: '/plain-text', as: 'stream'})
+      expect(res.status).toBe(200)
+      expect(timers.created()).not.toHaveLength(0)
+      expect(timers.uncleared()).toHaveLength(0)
+      await res.body.cancel()
+    } finally {
+      timers.restore()
+    }
+  })
+
+  it('keeps the abort-mode total-deadline timer armed while a stream is unconsumed', async () => {
+    // In abort mode the total deadline governs the body stream too, so the
+    // timer must stay armed after the stream is handed to the caller.
+    const request = createRequester({
+      base: baseUrl,
+      timeout: {total: 30_000},
+      fetch: () => Promise.resolve(new Response('streamed')),
+    })
+    const timers = trackTimers()
+    try {
+      const res = await request({url: '/plain-text', as: 'stream'})
+      expect(res.status).toBe(200)
+      expect(timers.uncleared()).toHaveLength(1)
+      await res.body.cancel()
+    } finally {
+      timers.restore()
+    }
   })
 
   it('{headers, total: false} lets a slow stream complete', async () => {
