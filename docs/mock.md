@@ -1,8 +1,8 @@
 # Mock fetch and vitest matchers
 
-`get-it/mock` provides a mock fetch for testing code that uses get-it. There is no network access and no global patching: `createMockFetch()` returns an object whose `fetch` function you inject wherever you would normally pass `fetch`. It runs in any runtime get-it supports, with any test runner.
+`get-it/mock` gives you a mock fetch to test code that uses get-it. It uses no network and it patches no globals. `createMockFetch()` returns an object with a `fetch` function. You use this function where you normally pass `fetch`. The mock runs in any runtime that get-it supports, and with any test runner.
 
-`get-it/vitest` adds custom matchers to vitest's `expect` for asserting on the mock. See [Vitest matchers](#vitest-matchers).
+`get-it/vitest` adds custom matchers to the `expect` of vitest. Use them to assert on the mock. See [Vitest matchers](#vitest-matchers).
 
 - [Setup](#setup)
 - [Registering mocks](#registering-mocks)
@@ -22,7 +22,7 @@
 
 ## Setup
 
-Create a mock, inject `mock.fetch` into `createRequester`, register handlers, make requests:
+Create a mock. Inject `mock.fetch` into `createRequester`. Register the handlers. Then make the requests.
 
 ```ts
 import {createRequester} from 'get-it'
@@ -37,7 +37,7 @@ const res = await request({url: '/api/docs', as: 'json'})
 // res.body → {results: []}
 ```
 
-A typical test lifecycle asserts that every registered response was used, then resets:
+A typical test asserts that the code used every registered response. The test then resets the mock.
 
 ```ts
 afterEach(() => {
@@ -46,11 +46,11 @@ afterEach(() => {
 })
 ```
 
-`assertAllConsumed()` throws an `Error` listing each handler that still has unconsumed responses. Persistent responses (see [One-shot vs persistent mocks](#one-shot-vs-persistent-mocks)) never count as unconsumed.
+`assertAllConsumed()` throws an `Error`. The error lists each handler that still has unconsumed responses. Persistent responses (see [One-shot vs persistent mocks](#one-shot-vs-persistent-mocks)) never count as unconsumed.
 
 ## Registering mocks
 
-`mock.on(method, url, options?)` registers a handler and returns a builder for attaching responses:
+`mock.on(method, url, options?)` registers a handler. It returns a builder that attaches responses:
 
 - `method` - HTTP method, compared exactly (use uppercase: `'GET'`, `'POST'`, ...)
 - `url` - exact path, glob pattern, full URL, or predicate function (see [URL matching](#url-matching))
@@ -65,7 +65,7 @@ The builder methods all return the builder, so they chain:
 - `.respondWithError(error)` - reject the request once with a transport-level error
 - `.respondWithErrorPersist(error)` - reject every matching request
 
-Chained responses are consumed in order, which is useful for testing retries:
+The mock consumes chained responses in order. This behavior is useful when you test retries:
 
 ```ts
 mock
@@ -76,7 +76,7 @@ mock
 // First call → 500, second call → 200, third call → MockFetchError
 ```
 
-When several handlers could match a request, the first registered handler that matches and still has an available response wins. A handler whose responses are exhausted is skipped, so a later handler can take over.
+When several handlers can match a request, the mock uses the first handler that matches and still has an available response. The mock skips a handler with no more responses. A later handler can then match.
 
 ## Response definition
 
@@ -88,12 +88,12 @@ When several handlers could match a request, the first registered handler that m
 - `headers` - response headers as a plain record
 - `delay` - milliseconds before the response resolves (see below)
 
-The `body` value determines serialization:
+The `body` value sets how the mock serializes the body:
 
-- a string is returned as-is
+- the mock returns a string without a change
 - `undefined` or `null` produces an empty body
 - a `streamBody(...)` value streams chunks (see [Streaming response bodies](#streaming-response-bodies))
-- anything else is `JSON.stringify`-ed, and `content-type: application/json` is set unless you provided a `content-type` header yourself
+- for all other values, the mock uses `JSON.stringify`. It also sets `content-type: application/json`, unless you supply a `content-type` header
 
 ```ts
 mock.on('GET', '/api/docs').respond({
@@ -105,17 +105,17 @@ mock.on('GET', '/api/docs').respond({
 
 ### Delayed responses
 
-`delay` simulates server response time. The request is treated as sent immediately; the response resolves after `delay` milliseconds. Values of `0` or less resolve immediately.
+`delay` simulates the response time of the server. The mock sends the request immediately. The response resolves after `delay` milliseconds. A value of `0` or less resolves immediately.
 
 ```ts
 mock.on('GET', '/slow').respond({status: 200, body: {ok: true}, delay: 100})
 ```
 
-If the request is aborted before the delay elapses (via an `AbortController` signal or a get-it `timeout`), the request rejects with the signal's reason and the pending timer is cleared. This makes timeout logic testable without a real server.
+If the request aborts before the delay is complete, the request rejects with the reason of the signal. An `AbortController` signal or a get-it `timeout` can cause this abort. The mock also clears the pending timer. With this behavior, you can test timeout logic without a real server.
 
 ## Simulating network errors
 
-`.respondWithError()` rejects the matched request the way a real `fetch()` rejects on a failed connection, instead of resolving to a response. The error is thrown unmodified, preserving `name`, `message`, and `cause`:
+`.respondWithError()` rejects the matched request and does not resolve to a response. A real `fetch()` rejects in the same way when a connection fails. The mock throws the error without a change, and it keeps `name`, `message`, and `cause`:
 
 ```ts
 mock
@@ -129,11 +129,11 @@ Pass a factory function to get a fresh error instance per rejection (useful with
 mock.onAny('/api/docs').respondWithErrorPersist(() => new TypeError('fetch failed'))
 ```
 
-Error responses behave like regular ones in every other respect:
+In all other conditions, error responses operate like regular responses:
 
-- Error responses chain with regular responses, so you can queue an error followed by a success to test retry recovery.
-- The request is still recorded (visible in `getRequests()`) even when it rejects.
-- One-shot error responses count toward consumption: `assertAllConsumed()` throws while an unconsumed `.respondWithError()` remains.
+- Error responses chain with regular responses. Thus you can queue an error, then a success, to test the recovery after a retry.
+- The mock records the request even when the request rejects. `getRequests()` shows it.
+- One-shot error responses are consumable. `assertAllConsumed()` throws when an unconsumed `.respondWithError()` remains.
 
 ## URL matching
 
@@ -142,7 +142,7 @@ The `url` argument to `on()` / `onAny()` accepts four forms:
 - an exact path: `/api/docs`
 - a glob pattern: `*` matches within one path segment, `**` matches across segments
 - a full URL with origin: `https://api.example.com/api/docs` (constrains the origin too)
-- a predicate function receiving the request path (without origin or query string) and returning a boolean
+- a predicate function that receives the request path (no origin, no query string) and returns a boolean
 
 ```ts
 mock.on('GET', '/api/docs/*/revisions').respond({status: 200, body: []})
@@ -153,11 +153,11 @@ mock.on('GET', (url) => url.startsWith('/api/')).respond({status: 200, body: 'ok
 
 Handlers registered with a plain path match requests to any host. Handlers registered with a full URL only match that origin.
 
-A URL pattern may include a query string (`/api/docs?limit=10`), which becomes a query constraint. Combining a query string in the URL pattern with an asymmetric `query` matcher in options throws at registration time; use one form or the other.
+A URL pattern can include a query string (`/api/docs?limit=10`). The query string becomes a query constraint. If you use a query string in the URL pattern and an asymmetric `query` matcher in the options, the registration throws. Use one form or the other.
 
 ## Query matching
 
-A handler with no query constraint matches any query parameters. Once you constrain the query (via a query string in the URL pattern or the `query` option), matching is strict: the request's query parameters must match the expected set exactly (same keys, same values).
+A handler with no query constraint matches any query parameters. You can constrain the query with a query string in the URL pattern, or with the `query` option. The match is then strict. The request must have the same keys and the same values as the expected set.
 
 ```ts
 mock.on('GET', '/api/docs', {query: {limit: '10'}}).respond({status: 200, body: {results: []}})
@@ -166,7 +166,7 @@ await request({url: '/api/docs', query: {limit: 10}}) // matches
 await request({url: '/api/docs', query: {limit: 10, offset: 0}}) // no match: extra key
 ```
 
-Number and boolean values in the `query` option are coerced to strings, since query parameters are always strings on the wire: `{limit: 10}` matches `?limit=10`.
+The mock converts number and boolean values in the `query` option to strings, because query parameters are always strings on the wire. Thus `{limit: 10}` matches `?limit=10`.
 
 For partial matching, use `queryContaining()` or any other [value matcher](#value-matchers):
 
@@ -180,7 +180,7 @@ mock
 
 ## Body matching
 
-A handler with no `body` option matches any request body. With a `body` option, matching is strict by default: objects must match deeply with the same keys, strings and bytes must be identical. Use [value matchers](#value-matchers) for partial matching.
+A handler with no `body` option matches any request body. With a `body` option, the match is strict by default. Objects must match deeply and have the same keys. Strings and bytes must be identical. For partial matching, use [value matchers](#value-matchers).
 
 ```ts
 import {objectContaining} from 'get-it/mock'
@@ -194,17 +194,17 @@ mock.on('POST', '/api/docs', {body: objectContaining({_type: 'post'})}).respond(
 
 ### How request bodies are normalized
 
-The mock normalizes each request body to a canonical form, used both for matching and for what `getRequests()` records:
+The mock normalizes each request body to a canonical form. It uses this form for the matching and for the records of `getRequests()`:
 
-- a string body with a JSON `content-type` is parsed, so you match against the object, not the JSON text (get-it serializes plain-object bodies this way, so they round-trip)
+- the mock parses a string body with a JSON `content-type`. You match against the object, not the JSON text. get-it serializes plain-object bodies in this way, so they round-trip
 - other string bodies stay strings
-- `Uint8Array` / `ArrayBuffer` / `Buffer` bodies are recorded as a `Uint8Array` snapshot (later mutation of the source does not affect the recording)
-- a `ReadableStream` body is drained and recorded as a single `Uint8Array`
-- a `Blob` or `File` body is recorded as its bytes (`Uint8Array`)
-- a `URLSearchParams` body becomes a plain record; a key appearing multiple times becomes an array of strings
-- a `FormData` body becomes a plain record; string fields stay strings, file fields become `{name, type, size, bytes}`, and repeated fields become arrays
+- the mock records `Uint8Array`, `ArrayBuffer`, and `Buffer` bodies as a `Uint8Array` snapshot (a later change to the source does not affect the record)
+- the mock drains a `ReadableStream` body and records it as one `Uint8Array`
+- the mock records a `Blob` or `File` body as its bytes (`Uint8Array`)
+- a `URLSearchParams` body becomes a plain record. A key that occurs more than one time becomes an array of strings
+- a `FormData` body becomes a plain record. String fields stay strings. File fields become `{name, type, size, bytes}`. Fields that occur more than one time become arrays
 
-The expected `body` you pass to `on()` may also be a native `URLSearchParams`, `FormData`, `Blob`, `Uint8Array`, or `ArrayBuffer`; it is normalized the same way before comparison. Binary bodies are compared byte-for-byte.
+The expected `body` that you pass to `on()` can also be a native `URLSearchParams`, `FormData`, `Blob`, `Uint8Array`, or `ArrayBuffer`. The mock normalizes it in the same way before the comparison. It compares binary bodies byte-for-byte.
 
 ```ts
 import {bodyBytes, objectContaining} from 'get-it/mock'
@@ -225,17 +225,17 @@ mock
 
 ### Synthesized content-type headers
 
-Mirroring platform `fetch`, the mock fills in the default `content-type` for body types that have one, when the request did not set one explicitly. The synthesized header is recorded and matchable:
+The mock supplies the default `content-type` for body types that have one, if the request does not set it. Platform `fetch` operates in the same way. The mock records this header, and you can match on it:
 
 - `URLSearchParams` → `application/x-www-form-urlencoded;charset=UTF-8`
-- `FormData` → `multipart/form-data; boundary=...` (the boundary is random; match the prefix with `stringMatching()`, not the whole value)
+- `FormData` → `multipart/form-data; boundary=...` (the boundary is random, so match the prefix with `stringMatching()`, not the whole value)
 - `Blob` / `File` → the blob's `type`, when set
 
-An explicit `content-type` header on the request always wins.
+An explicit `content-type` header on the request always has priority.
 
 ## Header matching
 
-The `headers` option uses containing semantics: only the headers you list are checked, extra request headers are ignored. Header names are compared case-insensitively. Values can be exact strings or [value matchers](#value-matchers), and the whole constraint can be a single asymmetric matcher:
+The `headers` option uses containing semantics. The mock compares only the headers that you list, and it ignores the other request headers. It compares header names without case sensitivity. Values can be exact strings or [value matchers](#value-matchers). The full constraint can also be one asymmetric matcher:
 
 ```ts
 import {objectContaining, stringMatching} from 'get-it/mock'
@@ -251,14 +251,14 @@ mock
 
 ## Value matchers
 
-`get-it/mock` exports asymmetric matchers for loose matching, usable anywhere an expected value goes (`query`, `body`, `headers`, nested values, and the vitest matchers):
+`get-it/mock` exports asymmetric matchers for loose matching. You can use them in each location that takes an expected value: `query`, `body`, `headers`, nested values, and the vitest matchers.
 
-- `objectContaining(subset)` - matches an object that contains at least the given keys with matching values; extra keys are ignored
+- `objectContaining(subset)` - matches an object that contains a minimum of the given keys, with matching values. It ignores extra keys
 - `arrayContaining(items)` - matches an array that contains at least the given items, in any order
-- `stringMatching(pattern)` - matches a string against a regex, or by substring when given a string
+- `stringMatching(pattern)` - matches a string against a regex. If you give it a string, it matches a substring
 - `anyValue()` - matches any value except `null`/`undefined` (same semantics as vitest's `expect.anything()`)
-- `queryContaining(subset)` - like `objectContaining` for query-shaped records: expected numbers/booleans are coerced to strings, and an array expected value matches a multi-value parameter containing each entry
-- `bodyBytes(bytes)` - matches a recorded binary body (`Uint8Array`) against exact bytes; accepts a `Uint8Array` or `ArrayBuffer`
+- `queryContaining(subset)` - like `objectContaining`, but for query-shaped records. It converts expected numbers and booleans to strings. An expected array matches a parameter that has each entry
+- `bodyBytes(bytes)` - matches a recorded binary body (`Uint8Array`) against exact bytes. It accepts a `Uint8Array` or an `ArrayBuffer`
 
 Matchers nest:
 
@@ -275,11 +275,11 @@ mock
   .respond({status: 201, body: {id: 'abc'}})
 ```
 
-They implement the `asymmetricMatch` protocol shared with vitest and Jest, so vitest's `expect.objectContaining()`, `expect.stringContaining()` and friends work in all the same places.
+The matchers use the `asymmetricMatch` protocol of vitest and Jest. Thus `expect.objectContaining()`, `expect.stringContaining()`, and the related vitest matchers work in the same locations.
 
 ## One-shot vs persistent mocks
 
-Responses queued with `.respond()` and `.respondWithError()` are one-shot: each is consumed by exactly one matching request, in registration order. When a handler's queue is exhausted, the handler no longer matches (later handlers get a chance, and if none match, a `MockFetchError` is thrown).
+Responses from `.respond()` and `.respondWithError()` are one-shot. Exactly one matching request consumes each response, in registration order. When the queue of a handler is empty, the handler no longer matches. The mock then tries the later handlers. If no handler matches, the mock throws a `MockFetchError`.
 
 `.respondPersist()` and `.respondWithErrorPersist()` register persistent responses that serve any number of requests:
 
@@ -288,13 +288,13 @@ mock.on('GET', '/api/config').respondPersist({status: 200, body: {feature: true}
 ```
 
 - A persistent response never counts as unconsumed for `assertAllConsumed()`.
-- Responses are picked in queue order, and a persistent response never exhausts, so anything queued after it on the same handler is unreachable.
+- The mock uses responses in queue order. A persistent response never becomes empty. Thus you cannot reach a response that you queue after it on the same handler.
 
-`mock.clear()` removes all handlers and recorded requests, resetting the instance.
+`mock.clear()` removes all handlers and all recorded requests. It resets the instance.
 
 ## Scoped mocks
 
-When code under test talks to multiple hosts, `mock.scope(baseUrl)` gives a view of the mock constrained to one origin:
+When the code under test uses more than one host, `mock.scope(baseUrl)` gives a view of the mock for one origin:
 
 ```ts
 const mock = createMockFetch()
@@ -316,21 +316,21 @@ A `MockScope` has `on()`, `onAny()`, `getRequests()`, and `assertAllConsumed()`:
 
 - Handlers registered through a scope only match requests to that origin.
 - `scope.getRequests()` only returns requests sent to that origin.
-- `scope.assertAllConsumed()` only checks handlers registered through that scope.
+- `scope.assertAllConsumed()` applies only to handlers that you register through that scope.
 - `scope()` requires a full URL with origin and throws on a relative path.
-- Registering a full URL through a scope uses the URL's own origin instead of the scope's.
+- If you register a full URL through a scope, the mock uses the origin of that URL, not the origin of the scope.
 
-Scopes and plain registration mix freely: handlers registered on the root mock with a plain path match any origin.
+You can mix scopes and plain registration. A handler on the root mock with a plain path matches any origin.
 
 ## Request recording
 
-Every request through `mock.fetch` is recorded, whether it matched or not (including requests that rejected via `respondWithError`). `mock.getRequests()` returns a fresh array of `RecordedRequest` objects in call order:
+The mock records every request through `mock.fetch`, and it also records the requests that do not match. It records the requests that rejected with `respondWithError`. `mock.getRequests()` returns a new array of `RecordedRequest` objects, in call order:
 
 - `method` - the HTTP method (`'GET'`, `'POST'`, ...)
 - `url` - the path portion, without origin or query string (`'/api/docs'`)
 - `fullUrl` - the complete URL as passed to fetch
 - `query` - query parameters parsed into a `Record<string, string>`
-- `headers` - a `Headers` instance, including any synthesized `content-type`
+- `headers` - a `Headers` instance, with any synthesized `content-type`
 - `body` - the normalized body (see [Body matching](#body-matching)), or `undefined`
 
 ```ts
@@ -346,7 +346,7 @@ req.headers.get('content-type') // 'application/json'
 
 ## Streaming response bodies
 
-`streamBody(...parts)` declares a response body delivered in chunks, with optional pauses, a permanent stall, or a mid-download error. Pass the result as `body` in a response definition:
+`streamBody(...parts)` declares a response body that the mock sends in chunks. The body can have pauses, a permanent stall, or an error during the download. Pass the result as `body` in a response definition:
 
 ```ts
 import {createMockFetch, streamBody, streamDelay, streamError, streamStall} from 'get-it/mock'
@@ -371,23 +371,23 @@ mock.on('GET', '/flaky').respond({
 
 Script parts:
 
-- a string chunk is UTF-8 encoded; a `Uint8Array` chunk passes through as bytes
-- `streamDelay(ms)` pauses before delivering the next part; allowed anywhere in the script
-- `streamStall()` never closes the body; the stream ends only when the consumer cancels it or the request's abort signal fires
+- the mock encodes a string chunk as UTF-8. It sends a `Uint8Array` chunk as bytes
+- `streamDelay(ms)` pauses before the next part. You can use it at any position in the script
+- `streamStall()` never closes the body. The stream ends only when the consumer cancels it, or when the abort signal of the request fires
 - `streamError(error)` errors the body stream with the given error
 
-`streamStall()` and `streamError()` are terminal: they must be the last part. The script is validated eagerly, so an invalid script throws a `TypeError` from `streamBody()` itself.
+`streamStall()` and `streamError()` are terminal: they must be the last part. The mock validates the script immediately, so an invalid script throws a `TypeError` from `streamBody()`.
 
-Streaming bodies compose with the rest of the response definition:
+Streaming bodies operate with the other parts of the response definition:
 
-- `delay` on the response definition still controls time-to-headers; the script controls the body after that.
-- A fresh stream is built from the script for every consumption, so a `streamBody` works with `respondPersist`.
-- Aborting the request signal errors the body with the abort reason, matching real fetch behavior.
-- Buffered reads (no `as` option, or `text()` / `arrayBuffer()`) drain the script with the same timing, so total-deadline timeout behavior is testable without `as: 'stream'`.
+- `delay` on the response definition still controls the time to the headers. The script controls the body after the headers.
+- The mock builds a new stream from the script for each use. Thus a `streamBody` works with `respondPersist`.
+- If the request signal aborts, the body errors with the abort reason. Real fetch operates in the same way.
+- Buffered reads (no `as` option, or `text()` and `arrayBuffer()`) drain the script with the same timing. Thus you can test the total deadline without `as: 'stream'`.
 
 ### The StreamBody handle
 
-The `streamBody()` return value doubles as an observability handle. Consumer cancellations of any stream built from the script are aggregated on it:
+The return value of `streamBody()` is also an observability handle. It counts the consumer cancellations of each stream from the script:
 
 - `cancelCount` - number of times a consumer cancelled a stream produced from this script
 - `lastCancelReason` - the reason passed to the most recent cancel, if any
@@ -402,7 +402,7 @@ expect(stalled.cancelCount).toBe(1)
 expect(stalled).toHaveBeenCancelled() // matcher from 'get-it/vitest'
 ```
 
-Cancellation (consumer calls `cancel()` on the stream) and abort (the request signal fires) are tracked separately: an abort errors the stream but does not increment `cancelCount`.
+The mock tracks cancellation and abort separately. A cancellation occurs when the consumer calls `cancel()` on the stream. An abort occurs when the request signal fires. An abort errors the stream, but it does not increment `cancelCount`.
 
 ## Unmatched requests and diagnostics
 
@@ -422,13 +422,13 @@ MockFetchError: No mock matched POST /api/documents?limit=10
     2. GET /api/other (1 responses remaining)
 ```
 
-The closest mock is chosen by scoring each handler on how many dimensions match (origin, method, URL, query, body, headers). Diffs are structural where possible: nested object bodies produce per-path entries like `body.attributes.title: expected "a", received "b"`, and binary bodies render as byte lengths (`Uint8Array(3 bytes)`).
+The mock scores each handler on the number of dimensions that match (origin, method, URL, query, body, headers). The handler with the best score is the closest mock. Diffs are structural when possible. A nested object body gives one entry for each path, such as `body.attributes.title: expected "a", received "b"`. A binary body shows a byte length (`Uint8Array(3 bytes)`).
 
-The error instance also exposes `method`, `url`, `query`, and `body` fields for programmatic inspection, and its `name` is `'MockFetchError'`. The class is exported from `get-it/mock` for `instanceof` checks.
+The error instance also has `method`, `url`, `query`, and `body` fields for inspection in code. Its `name` is `'MockFetchError'`. `get-it/mock` exports the class for `instanceof` tests.
 
 ## Vitest matchers
 
-`get-it/vitest` registers custom matchers on vitest's `expect` and augments vitest's types, both via a single side-effect import.
+`get-it/vitest` registers custom matchers on the `expect` of vitest. It also adds the vitest types. One side-effect import does both.
 
 ### Registration
 
@@ -439,7 +439,7 @@ Import it in a setup file:
 import 'get-it/vitest'
 ```
 
-And point vitest at the setup file:
+Then point vitest at the setup file:
 
 ```ts
 // vitest.config.ts
@@ -452,11 +452,11 @@ export default defineConfig({
 })
 ```
 
-The import calls `expect.extend()` with the matchers and includes a `declare module 'vitest'` augmentation, so TypeScript knows about the matchers as long as the setup file is part of your TypeScript project (for a single test file, importing `'get-it/vitest'` at the top works too). All matchers support negation with `.not`.
+The import calls `expect.extend()` with the matchers. It also includes a `declare module 'vitest'` augmentation. TypeScript then knows the matchers, if the setup file is part of your TypeScript project. For one test file, you can also import `'get-it/vitest'` at the top of that file. All matchers support negation with `.not`.
 
 ### Matchers on the mock instance
 
-`toHaveReceivedRequest(method, url, options?)` - asserts a matching request was recorded. The `url` accepts an exact path, a glob pattern, or a full URL (which also constrains the origin), and may include a query string. `options` accepts `query` and `body` constraints, including value matchers. The failure message lists all recorded requests.
+`toHaveReceivedRequest(method, url, options?)` - asserts that the mock recorded a matching request. The `url` accepts an exact path, a glob pattern, or a full URL (a full URL also constrains the origin). It can include a query string. `options` accepts `query` and `body` constraints, and it accepts value matchers. The failure message lists all recorded requests.
 
 ```ts
 expect(mock).toHaveReceivedRequest('POST', '/api/docs', {
@@ -465,14 +465,14 @@ expect(mock).toHaveReceivedRequest('POST', '/api/docs', {
 expect(mock).toHaveReceivedRequest('GET', '/api/docs?limit=10')
 ```
 
-`toHaveReceivedRequestTimes(method, url, times)` - asserts an exact number of matching requests. Same `url` forms; query strings in the `url` constrain the count.
+`toHaveReceivedRequestTimes(method, url, times)` - asserts an exact number of matching requests. It accepts the same `url` forms. A query string in the `url` constrains the count.
 
 ```ts
 expect(mock).toHaveReceivedRequestTimes('GET', '/api/docs', 2)
 expect(mock).toHaveReceivedRequestTimes('DELETE', '/api/docs/*', 0)
 ```
 
-`toHaveConsumedAllMocks()` - asserts every registered one-shot response was used; the assertion form of `mock.assertAllConsumed()`. On failure, the message lists the unconsumed handlers.
+`toHaveConsumedAllMocks()` - asserts that the code used every registered one-shot response. This matcher is the assertion form of `mock.assertAllConsumed()`. On a failure, the message lists the unconsumed handlers.
 
 ```ts
 expect(mock).toHaveConsumedAllMocks()
@@ -480,9 +480,9 @@ expect(mock).toHaveConsumedAllMocks()
 
 ### Matchers on recorded requests
 
-These operate on a single `RecordedRequest` from `mock.getRequests()`:
+These matchers operate on one `RecordedRequest` from `mock.getRequests()`:
 
-`toHaveHeader(name, value?)` - asserts a header matches. The name is case-insensitive (standard `Headers` semantics) and can be a string or an asymmetric matcher; the value can be a string or an asymmetric matcher. Omit the value to assert presence only, or combine with `.not` to assert absence.
+`toHaveHeader(name, value?)` - asserts that a header matches. The name is not case-sensitive (standard `Headers` semantics). The name can be a string or an asymmetric matcher. The value can also be a string or an asymmetric matcher. To assert presence only, omit the value. To assert absence, use `.not`.
 
 ```ts
 const [req] = mock.getRequests()
@@ -493,27 +493,27 @@ expect(req).not.toHaveHeader('x-legacy-auth') // absence
 expect(req).toHaveHeader(stringMatching(/^x-sanity-/), 'yes') // matcher for the name
 ```
 
-`toHaveBody(expected)` - asserts the normalized request body matches. Strict deep equality unless you use value matchers.
+`toHaveBody(expected)` - asserts that the normalized request body matches. The match is a strict deep equality, unless you use value matchers.
 
 ```ts
 expect(req).toHaveBody({title: 'Hello'})
 expect(req).toHaveBody(objectContaining({title: 'Hello'}))
 ```
 
-`toHaveQuery(expected)` - asserts the parsed query parameters match. Strict: all keys must be present and equal (values are strings). Use `queryContaining()` for partial matching.
+`toHaveQuery(expected)` - asserts that the parsed query parameters match. The match is strict: all keys must be present and equal (the values are strings). For partial matching, use `queryContaining()`.
 
 ```ts
 expect(req).toHaveQuery({limit: '10', offset: '0'})
 expect(req).toHaveQuery(queryContaining({limit: 10}))
 ```
 
-`toHaveMethod(expected)` - asserts the HTTP method.
+`toHaveMethod(expected)` - asserts that the HTTP method matches.
 
 ```ts
 expect(req).toHaveMethod('POST')
 ```
 
-`toHaveUrl(expected)` - asserts the request path (the `url` field: path only, no origin or query string) by exact string comparison.
+`toHaveUrl(expected)` - asserts the request path with an exact string comparison. The `url` field holds the path only, with no origin and no query string.
 
 ```ts
 expect(req).toHaveUrl('/api/docs')
@@ -521,7 +521,7 @@ expect(req).toHaveUrl('/api/docs')
 
 ### Matchers on stream bodies
 
-`toHaveBeenCancelled()` - asserts a `streamBody()` handle was cancelled by a consumer at least once. The failure message for `.not` includes the cancel count and last cancel reason.
+`toHaveBeenCancelled()` - asserts that a consumer cancelled a `streamBody()` handle one or more times. The failure message for `.not` gives the cancel count and the last cancel reason.
 
 ```ts
 const stalled = streamBody('partial', streamStall())
