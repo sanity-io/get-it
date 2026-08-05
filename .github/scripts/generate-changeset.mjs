@@ -29,8 +29,10 @@ if (
 }
 
 const PACKAGE_NAME = 'get-it'
-// Paths that affect the published package - changes elsewhere (CI, docs, tests) don't warrant a release
-const RELEVANT_PATHS = ['src/', 'package.json', 'package.config.ts']
+// Paths that affect the published package - changes elsewhere (CI, docs, tests) don't warrant a release.
+// The build config counts: tsdown.config.ts controls the entry points and the exports map, and
+// tsconfig.dist.json controls declaration emit, so either can change what consumers receive.
+const RELEVANT_PATHS = ['src/', 'package.json', 'tsdown.config.ts', 'tsconfig.dist.json']
 
 const CHANGESET_FILE = `.changeset/pr-${PR_NUMBER}.md`
 const AUTO_GENERATED_MARKER = '<!-- auto-generated -->'
