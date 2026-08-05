@@ -5,11 +5,11 @@
 [![gzip size][gzip-badge]][bundlephobia]
 [![size][size-badge]][bundlephobia]
 
-Generic HTTP request library for node.js (>= 22.12), browsers, and edge runtimes. Built on `fetch()`.
+Generic HTTP request library for Node.js (>= 22.12), browsers, Deno, Bun, and edge runtimes. Built on `fetch()`.
 
 ## Features
 
-- Promise-based API with full TypeScript support
+- Promise-based API with TypeScript types
 - Automatic JSON serialization/deserialization
 - Base URL and default headers
 - HTTP error throwing (on by default)
@@ -19,7 +19,6 @@ Generic HTTP request library for node.js (>= 22.12), browsers, and edge runtimes
 - Middleware system for retry, debug logging, and custom logic
 - Injectable `fetch` for testing and custom transports
 - Built-in mock fetch with request matching, recording, and vitest matchers
-- Works in Node.js, browsers, Deno, Bun, and edge runtimes
 
 ## Installation
 
@@ -38,17 +37,17 @@ const request = createRequester({
 })
 
 // Simple GET
-const res = await request('/users')
-console.log(res.json())
+const users = await request('/users')
+console.log(users.json())
 
 // POST with JSON body (auto-serialized)
-const res = await request({
+const created = await request({
   url: '/users',
   method: 'POST',
   body: {name: 'Espen'},
   as: 'json',
 })
-console.log(res.body) // parsed JSON
+console.log(created.body) // parsed JSON
 ```
 
 ## Response
@@ -63,7 +62,7 @@ The response object depends on the `as` option:
 | `'stream'`  | `ReadableStream<Uint8Array>`                    | no        |
 
 ```ts
-// Default — buffered with convenience methods
+// Default: buffered, with convenience methods
 const res = await request('/data')
 res.status // number
 res.statusText // string
@@ -73,45 +72,45 @@ res.json() // parse as JSON (synchronous)
 res.text() // decode as string (synchronous)
 
 // Typed JSON
-const res = await request<User[]>({url: '/users', as: 'json'})
-res.body // User[]
+const users = await request<User[]>({url: '/users', as: 'json'})
+users.body // User[]
 
 // Streaming
-const res = await request({url: '/large-file', as: 'stream'})
-res.body // ReadableStream<Uint8Array>
+const file = await request({url: '/large-file', as: 'stream'})
+file.body // ReadableStream<Uint8Array>
 ```
 
 ## Options
 
 ### Instance options (`createRequester`)
 
-| Option       | Type                                | Default            | Description                                                      |
-| ------------ | ----------------------------------- | ------------------ | ---------------------------------------------------------------- |
-| `base`       | `string`                            | —                  | Base URL prepended to relative paths                             |
-| `headers`    | `FetchHeaders`                      | —                  | Default headers for all requests                                 |
-| `httpErrors` | `boolean`                           | `true`             | Throw `HttpError` on status >= 400                               |
-| `timeout`    | `number \| false \| TimeoutOptions` | —                  | Timeout in ms, or `{total, headers}` — see [Timeouts](#timeouts) |
-| `fetch`      | `FetchFunction`                     | `globalThis.fetch` | Custom fetch implementation                                      |
-| `middleware` | `Array`                             | `[]`               | Transform and wrapping middleware                                |
+| Option       | Type                                | Default            | Description                                                     |
+| ------------ | ----------------------------------- | ------------------ | --------------------------------------------------------------- |
+| `base`       | `string`                            | none               | Base URL prepended to relative paths                            |
+| `headers`    | `FetchHeaders`                      | none               | Default headers for all requests                                |
+| `httpErrors` | `boolean`                           | `true`             | Throw `HttpError` on status >= 400                              |
+| `timeout`    | `number \| false \| TimeoutOptions` | `120_000` total    | Timeout in ms, or `{total, headers}`. See [Timeouts](#timeouts) |
+| `fetch`      | `FetchFunction`                     | `globalThis.fetch` | Custom fetch implementation                                     |
+| `middleware` | `Array`                             | `[]`               | Transform and wrapping middleware                               |
 
 ### Per-request options
 
-| Option        | Type                                                       | Description                                                     |
-| ------------- | ---------------------------------------------------------- | --------------------------------------------------------------- |
-| `url`         | `string`                                                   | Request URL (required)                                          |
-| `method`      | `string`                                                   | HTTP method                                                     |
-| `body`        | `unknown`                                                  | Request body (objects auto-serialized as JSON)                  |
-| `headers`     | `FetchHeaders`                                             | Merged with instance headers                                    |
-| `query`       | `Record<string, string \| number \| boolean \| undefined>` | URL query parameters                                            |
-| `as`          | `'json' \| 'text' \| 'stream'`                             | Response body type                                              |
-| `signal`      | `AbortSignal`                                              | Cancellation signal                                             |
-| `httpErrors`  | `boolean`                                                  | Override instance setting                                       |
-| `timeout`     | `number \| false \| TimeoutOptions`                        | Override instance timeout (replaces it wholesale)               |
-| `fetch`       | `FetchFunction`                                            | Override instance fetch                                         |
-| `redirect`    | `'error' \| 'follow' \| 'manual'`                          | Redirect strategy (`'manual'` is opaque in browsers - see note) |
-| `credentials` | `'include' \| 'omit' \| 'same-origin'`                     | Credentials mode (browser-only)                                 |
+| Option        | Type                                                       | Description                                                    |
+| ------------- | ---------------------------------------------------------- | -------------------------------------------------------------- |
+| `url`         | `string`                                                   | Request URL (required)                                         |
+| `method`      | `string`                                                   | HTTP method                                                    |
+| `body`        | `unknown`                                                  | Request body (objects auto-serialized as JSON)                 |
+| `headers`     | `FetchHeaders`                                             | Merged with instance headers                                   |
+| `query`       | `Record<string, string \| number \| boolean \| undefined>` | URL query parameters                                           |
+| `as`          | `'json' \| 'text' \| 'stream'`                             | Response body type                                             |
+| `signal`      | `AbortSignal`                                              | Cancellation signal                                            |
+| `httpErrors`  | `boolean`                                                  | Override instance setting                                      |
+| `timeout`     | `number \| false \| TimeoutOptions`                        | Override instance timeout (replaces it wholesale)              |
+| `fetch`       | `FetchFunction`                                            | Override instance fetch                                        |
+| `redirect`    | `'error' \| 'follow' \| 'manual'`                          | Redirect strategy (`'manual'` is opaque in browsers, see note) |
+| `credentials` | `'include' \| 'omit' \| 'same-origin'`                     | Credentials mode (browser-only)                                |
 
-> **Note on `redirect: 'manual'`:** In browsers this yields an opaque-redirect response (status `0`, empty headers) per the Fetch spec, so the 3xx status and headers (e.g. `location`) are unreadable. Reading them neither throws nor warns - `headers.get()` returns `null` and iteration is empty - so detect the case via `status === 0`. Non-browser runtimes (Node.js, Bun, Deno, edge runtimes, workers) return the real 3xx response, so its status and headers are readable.
+> **Note on `redirect: 'manual'`:** In browsers this yields an opaque-redirect response (status `0`, empty headers) per the Fetch spec, so the 3xx status and headers (such as `location`) are unreadable. Reading them neither throws nor warns: `headers.get()` returns `null` and iteration is empty. Detect the case via `status === 0`. Non-browser runtimes (Node.js, Bun, Deno, edge runtimes, workers) return the real 3xx response, so its status and headers are readable.
 
 ## Timeouts
 
@@ -120,20 +119,20 @@ res.body // ReadableStream<Uint8Array>
 ```ts
 const request = createRequester({
   timeout: {
-    total: 120_000, // total deadline, request start through body (default 120 000)
+    total: 120_000, // total deadline, request start through body (default 120_000)
     headers: 15_000, // max time to receive response headers, per attempt (disabled by default)
   },
 })
 ```
 
-- `total` — the existing deadline. Covers everything, including the body stream in `as: 'stream'` mode. Rejects with a `TimeoutError` DOMException, which the `retry()` middleware never retries. When combined with the retry() middleware, the deadline applies per attempt - each retry gets a fresh total timer.
-- `headers` — time to receive response headers for one fetch attempt. Does not cover body download. Rejects with get-it's `TimeoutError` (`code: 'ETIMEDOUT'`, `phase: 'headers'`), which the default `retry()` middleware retries on GET/HEAD. Because the timer lives inside the middleware chain, each retry attempt gets a fresh timer — no middleware ordering requirements.
+- `total`: the deadline you get when passing a plain number. Covers everything, including the body stream in `as: 'stream'` mode. Rejects with a `TimeoutError` DOMException, which the `retry()` middleware never retries. Combined with the retry() middleware, the deadline applies per attempt, so each retry gets a fresh total timer.
+- `headers`: time to receive response headers for one fetch attempt. Does not cover body download. Rejects with get-it's `TimeoutError` (`code: 'ETIMEDOUT'`, `phase: 'headers'`), which the default `retry()` middleware retries on GET/HEAD. The timer lives inside the middleware chain, so each retry attempt gets a fresh timer and there are no middleware ordering requirements.
 
 ### Escape hatch: rejection-only timeouts (`signal: false`)
 
-By default, timeouts attach an abort signal to the fetch init - keep it that way unless an environment forces your hand. The known case: Next.js' patched fetch treats any signal-carrying request as opted out of React Request Memoization, so RSC consumers would otherwise have to choose between timeouts and memoization. For that situation, `timeout: {total: 30_000, signal: false}` keeps the timeouts (both `total` and `headers`) as pure rejections: the request promise still rejects with the same errors at the deadline, but nothing is attached to the fetch init.
+By default, timeouts attach an abort signal to the fetch init. Keep it that way unless an environment forces your hand. Next.js is the one known case: its patched fetch treats any signal-carrying request as opted out of React Request Memoization, so RSC consumers would otherwise have to choose between timeouts and memoization. For that situation, `timeout: {total: 30_000, signal: false}` keeps both `total` and `headers` as pure rejections. The request promise still rejects with the same errors at the deadline, but nothing is attached to the fetch init.
 
-Understand what you are giving up: when a timeout wins, the underlying request is not torn down - it keeps running to completion in the background, holding its connection until the server finishes on its own. A caller-provided `signal` is passed through untouched and still aborts. In `as: 'stream'` mode, `total` only covers up to response headers (a stream already handed to you cannot be retracted).
+When a timeout wins, the underlying request is not torn down: it keeps running to completion in the background, holding its connection until the server finishes on its own. A caller-provided `signal` is passed through untouched and still aborts. In `as: 'stream'` mode, `total` only covers up to response headers, since a stream already handed to you cannot be retracted.
 
 For long-running streaming downloads, disable the total deadline and keep a headers timeout:
 
@@ -174,13 +173,13 @@ const promise = request({url: '/slow', signal: controller.signal})
 controller.abort()
 ```
 
-Timeout and user-provided signals are combined automatically with `AbortSignal.any()` - unless the timeout is rejection-only (`timeout: {signal: false}`), in which case the user-provided signal is passed through as-is.
+Timeout and user-provided signals are combined automatically with `AbortSignal.any()`. The exception is rejection-only timeouts (`timeout: {signal: false}`), where the user-provided signal is passed through as-is.
 
 ## Middleware
 
 Two types of middleware, passed in the `middleware` array:
 
-**Transform middleware** (object) — flat pipeline, invisible in stack traces:
+**Transform middleware** (object). Flat pipeline, invisible in stack traces:
 
 ```ts
 const addHeader: TransformMiddleware = {
@@ -193,7 +192,7 @@ const addHeader: TransformMiddleware = {
 }
 ```
 
-**Wrapping middleware** (function) — wraps the fetch call, appears in stack traces:
+**Wrapping middleware** (function). Wraps the fetch call, appears in stack traces:
 
 ```ts
 const logger: WrappingMiddleware = async (options, next) => {
@@ -214,7 +213,7 @@ const request = createRequester({
 })
 ```
 
-A per-request `maxRetries` option overrides the retry middleware's configured value for that request (`0` disables retries, higher values allow more attempts).
+A per-request `maxRetries` option overrides the retry middleware's configured value for that request. Set it to `0` to disable retries.
 
 ## Runtime proxy support
 
@@ -252,7 +251,7 @@ const request = createRequester({
 
 ## Testing
 
-`get-it/mock` provides a mock fetch for testing code that uses get-it. No network, no global patching — just inject `mock.fetch` where you'd normally pass `fetch`.
+`get-it/mock` provides a mock fetch for testing code that uses get-it. No network, no global patching: inject `mock.fetch` where you'd normally pass `fetch`.
 
 ```ts
 import {createRequester} from 'get-it'
@@ -261,7 +260,7 @@ import {createMockFetch, objectContaining} from 'get-it/mock'
 const mock = createMockFetch()
 const request = createRequester({fetch: mock.fetch, base: 'https://api.example.com'})
 
-// Register handlers — responses are one-shot by default
+// Register handlers: responses are one-shot by default
 mock.on('GET', '/api/docs', {query: {limit: '10'}}).respond({status: 200, body: {results: []}})
 
 mock
@@ -272,7 +271,9 @@ const res = await request({url: '/api/docs', query: {limit: 10}, as: 'json'})
 // res.body → {results: []}
 ```
 
-Requests are matched on method, URL (exact, glob, or predicate), query, body, and headers, with loose matching via `objectContaining()` and friends. Every request is recorded for inspection, unmatched requests throw a `MockFetchError` with a diff against the closest mock, and `get-it/vitest` adds custom matchers to vitest's `expect`:
+Requests are matched on method, URL (exact, glob, or predicate), query, body, and headers, with loose matching via `objectContaining()` and friends. Every request is recorded for inspection, and unmatched requests throw a `MockFetchError` with a diff against the closest mock.
+
+`get-it/vitest` adds custom matchers to vitest's `expect`:
 
 ```ts
 // In your test setup file (wired via vitest's setupFiles)
@@ -300,7 +301,7 @@ See [docs/mock.md](docs/mock.md) for the full documentation: response sequences 
 
 ## Migrating from v8
 
-See [docs/MIGRATION-v9.md](docs/MIGRATION-v9.md) for a comprehensive migration guide. It doubles as a playbook for AI agents: point yours at the guide and ask it to migrate the codebase.
+See [docs/MIGRATION-v9.md](docs/MIGRATION-v9.md) for the full migration guide. It doubles as a playbook for AI agents: point yours at the guide and ask it to migrate the codebase.
 
 ## License
 

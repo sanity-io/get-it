@@ -1,6 +1,6 @@
 # Mock fetch and vitest matchers
 
-`get-it/mock` provides a mock fetch for testing code that uses get-it. There is no network access and no global patching: `createMockFetch()` returns an object whose `fetch` function you inject wherever you would normally pass `fetch`. It works in any runtime get-it works in, and with any test runner.
+`get-it/mock` provides a mock fetch for testing code that uses get-it. There is no network access and no global patching: `createMockFetch()` returns an object whose `fetch` function you inject wherever you would normally pass `fetch`. It runs in any runtime get-it supports, with any test runner.
 
 `get-it/vitest` adds custom matchers to vitest's `expect` for asserting on the mock. See [Vitest matchers](#vitest-matchers).
 
@@ -111,7 +111,7 @@ mock.on('GET', '/api/docs').respond({
 mock.on('GET', '/slow').respond({status: 200, body: {ok: true}, delay: 100})
 ```
 
-If the request is aborted before the delay elapses - via an `AbortController` signal or a get-it `timeout` - the request rejects with the signal's reason and the pending timer is cleared. This makes timeout logic testable without a real server.
+If the request is aborted before the delay elapses (via an `AbortController` signal or a get-it `timeout`), the request rejects with the signal's reason and the pending timer is cleared. This makes timeout logic testable without a real server.
 
 ## Simulating network errors
 
@@ -129,7 +129,7 @@ Pass a factory function to get a fresh error instance per rejection (useful with
 mock.onAny('/api/docs').respondWithErrorPersist(() => new TypeError('fetch failed'))
 ```
 
-Notes:
+Error responses behave like regular ones in every other respect:
 
 - Error responses chain with regular responses, so you can queue an error followed by a success to test retry recovery.
 - The request is still recorded (visible in `getRequests()`) even when it rejects.
@@ -157,7 +157,7 @@ A URL pattern may include a query string (`/api/docs?limit=10`), which becomes a
 
 ## Query matching
 
-A handler with no query constraint matches any query parameters. Once you constrain the query - via a query string in the URL pattern or the `query` option - matching is strict: the request's query parameters must match the expected set exactly (same keys, same values).
+A handler with no query constraint matches any query parameters. Once you constrain the query (via a query string in the URL pattern or the `query` option), matching is strict: the request's query parameters must match the expected set exactly (same keys, same values).
 
 ```ts
 mock.on('GET', '/api/docs', {query: {limit: '10'}}).respond({status: 200, body: {results: []}})
@@ -287,8 +287,6 @@ Responses queued with `.respond()` and `.respondWithError()` are one-shot: each 
 mock.on('GET', '/api/config').respondPersist({status: 200, body: {feature: true}})
 ```
 
-Details:
-
 - A persistent response never counts as unconsumed for `assertAllConsumed()`.
 - Responses are picked in queue order, and a persistent response never exhausts, so anything queued after it on the same handler is unreachable.
 
@@ -380,7 +378,7 @@ Script parts:
 
 `streamStall()` and `streamError()` are terminal: they must be the last part. The script is validated eagerly, so an invalid script throws a `TypeError` from `streamBody()` itself.
 
-Behavior:
+Streaming bodies compose with the rest of the response definition:
 
 - `delay` on the response definition still controls time-to-headers; the script controls the body after that.
 - A fresh stream is built from the script for every consumption, so a `streamBody` works with `respondPersist`.

@@ -59,13 +59,13 @@ v9 is ESM-only. If your project uses CommonJS, you'll need to either:
 
 ### `remoteAddress` removed from responses
 
-v8.7.0 added `response.remoteAddress` containing the server's IP address, obtained from Node's `http` socket. v9 uses `fetch()` which does not expose socket-level information. There is no equivalent and no workaround — this field is no longer available.
+v8.7.0 added `response.remoteAddress` containing the server's IP address, obtained from Node's `http` socket. v9 uses `fetch()` which does not expose socket-level information. There is no equivalent and no workaround.
 
 ### No redirect limit control
 
 v8 used `follow-redirects` which supported a `maxRedirects` option (defaulting to 5). v9 uses `fetch()` which follows redirects automatically with no way to limit the count. The `redirect` option on fetch only supports `'follow'` (default), `'error'` (reject on any redirect), or `'manual'` (don't follow, return the 3xx response).
 
-If you need to block redirects entirely, pass `redirect: 'error'` or `redirect: 'manual'` in the fetch init. There is no way to allow _some_ redirects but cap the count — fetch does not expose this.
+If you need to block redirects entirely, pass `redirect: 'error'` or `redirect: 'manual'` in the fetch init. There is no way to allow _some_ redirects but cap the count: fetch does not expose it.
 
 ### Retry middleware: changed set of retryable errors
 
@@ -113,7 +113,7 @@ v8 allowed all retry settings on individual requests:
 await request({url: '/critical', maxRetries: 10, shouldRetry: customPredicate})
 ```
 
-v9 keeps per-request `maxRetries` — it overrides the middleware's configured value for that request, in both directions:
+v9 keeps per-request `maxRetries`. It overrides the middleware's configured value for that request, in both directions:
 
 ```ts
 // v9
@@ -188,7 +188,7 @@ v8 expanded arrays into repeated keys: `{tags: ['a', 'b']}` → `tags=a&tags=b`.
 await request({url: '/api', query: {tags: ['a', 'b']}})
 // → /api?tags=a&tags=b
 
-// v9 — WRONG, produces /api?tags=a%2Cb
+// v9: WRONG, produces /api?tags=a%2Cb
 await request({url: '/api', query: {tags: ['a', 'b']}})
 ```
 
@@ -221,18 +221,18 @@ The mapping:
 | `withCredentials: false` | `credentials: 'omit'`                          |
 | _(not set)_              | `credentials: 'same-origin'` (browser default) |
 
-Note: `credentials` follows the fetch API and is forwarded whenever you set it, including in browser workers and edge runtimes.
+`credentials` follows the fetch API and is forwarded whenever you set it, including in browser workers and edge runtimes.
 
 ### `fetch` option changed meaning
 
 v8's `fetch` option on request options was a `boolean | Omit<RequestInit, 'method'>` that opted into using the native `fetch` API instead of Node's `http`/`https` modules, and could pass through `RequestInit` options like `cache`:
 
 ```ts
-// v8 — opt into native fetch with cache control
+// v8: opt into native fetch with cache control
 await request({url: '/api', fetch: {cache: 'no-store'}})
 ```
 
-In v9, `fetch` is always used (there is no `http`/`https` transport), and the `fetch` option on both `RequesterOptions` and `RequestOptions` is a `FetchFunction` — an injectable fetch implementation, not a config flag.
+In v9, `fetch` is always used (there is no `http`/`https` transport), and the `fetch` option on both `RequesterOptions` and `RequestOptions` is a `FetchFunction`, an injectable fetch implementation rather than a config flag.
 
 To pass `RequestInit` options like `cache`, wrap the global fetch:
 
@@ -244,7 +244,7 @@ const request = createRequester({
 
 ### `clone()` removed
 
-v8 had `request.clone()` to create derived requesters that inherited the parent's middleware stack. v9 has no `clone()` — since `createRequester` takes a plain options object, you get the same result by spreading shared config:
+v8 had `request.clone()` to create derived requesters that inherited the parent's middleware stack. v9 has no `clone()`. Since `createRequester` takes a plain options object, you get the same result by spreading shared config:
 
 ```ts
 // v8
@@ -266,7 +266,7 @@ const withAuth = createRequester({
 
 ### `onlyBody` removed
 
-v8's `promise({ onlyBody: true })` resolved with just the response body instead of the full response object. v9 always resolves with the full response — access the body directly:
+v8's `promise({ onlyBody: true })` resolved with just the response body instead of the full response object. v9 always resolves with the full response. Access the body directly:
 
 ```ts
 // v8
@@ -279,7 +279,7 @@ const body = res.body
 
 ### `compress` removed
 
-v8 supported a `compress` option (defaulting to `true`) that sent `accept-encoding: gzip, deflate` headers. In v9, fetch handles content negotiation automatically — there is no option to disable it.
+v8 supported a `compress` option (defaulting to `true`) that sent `accept-encoding: gzip, deflate` headers. In v9, fetch handles content negotiation automatically, and there is no option to disable it.
 
 ## Creating a request instance
 
@@ -307,7 +307,7 @@ import {createRequester} from 'get-it'
 const request = createRequester({
   base: 'https://api.example.com',
   headers: {Authorization: 'Bearer ...'},
-  // JSON serialization, HTTP errors, and promise-based — all built in
+  // JSON serialization, HTTP errors, and promise-based: all built in
 })
 ```
 
@@ -412,7 +412,7 @@ const res = request({url: '/users', signal: controller.signal})
 controller.abort()
 ```
 
-Standard `AbortController` — no custom cancellation primitives.
+Standard `AbortController`, with no custom cancellation primitives.
 
 ## HTTP errors
 
@@ -485,7 +485,7 @@ await request({url: '/slow', timeout: {headers: 5000}})
 
 | v8                   | v9                                                                                                                                                             |
 | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `timeout: {connect}` | `timeout: {headers}` — per-attempt time to response headers, throws a retryable `TimeoutError`                                                                 |
+| `timeout: {connect}` | `timeout: {headers}`. Per-attempt time to response headers, throws a retryable `TimeoutError`                                                                  |
 | `timeout: {socket}`  | No direct equivalent (no idle/stall detection). Use `total` as a blunt substitute (note: per retry attempt when combined with `retry()`), or watch the stream. |
 
 For streaming downloads that should never hit a total deadline but fail fast on unresponsive servers:
@@ -513,7 +513,7 @@ v9 has two middleware types instead of the v8 hook-based system:
 
 ### Transform middleware (object with hooks)
 
-Flat pipeline — does not wrap the fetch call, invisible in stack traces:
+Flat pipeline. Does not wrap the fetch call, invisible in stack traces:
 
 ```ts
 import type {TransformMiddleware} from 'get-it'
@@ -532,7 +532,7 @@ const myTransform: TransformMiddleware = {
 
 ### Wrapping middleware (function)
 
-Wraps the fetch call — appears in stack traces. Used for retry, error recovery:
+Wraps the fetch call and appears in stack traces. Used for retry and error recovery:
 
 ```ts
 import type {WrappingMiddleware} from 'get-it'
@@ -558,14 +558,14 @@ const request = createRequester({
 })
 ```
 
-Note: v8's `requester.use(middleware)` chaining is removed. Pass all middleware at creation time.
+v8's `requester.use(middleware)` chaining is removed. Pass all middleware at creation time.
 
 ### Custom per-request properties (`meta`)
 
 v8 allowed custom properties directly on the request options object. Middleware could access them via `processOptions`:
 
 ```ts
-// v8 — custom properties on RequestOptions
+// v8: custom properties on RequestOptions
 const request = getIt([
   {
     processOptions: (opts) => {
@@ -580,10 +580,10 @@ const request = getIt([
 await request({url: '/api', lineage: 'abc'})
 ```
 
-v9's `RequestOptions` is a closed type — unknown properties are rejected by TypeScript. Use the `meta` field instead, which is typed as `Record<string, unknown>`:
+v9's `RequestOptions` is a closed type: unknown properties are rejected by TypeScript. Use the `meta` field instead, which is typed as `Record<string, unknown>`:
 
 ```ts
-// v9 — use meta for custom per-request data
+// v9: use meta for custom per-request data
 const request = createRequester({
   middleware: [
     {
@@ -609,19 +609,19 @@ The `meta` field is passed through to all middleware (both transform and wrappin
 
 ### Removed middleware (no replacement needed)
 
-| Middleware         | Reason                                                                          |
-| ------------------ | ------------------------------------------------------------------------------- |
-| `promise()`        | All requests return promises by default                                         |
-| `jsonRequest()`    | Built in — plain objects and arrays are auto-serialized as JSON                 |
-| `jsonResponse()`   | Use `as: 'json'` or `res.json()`                                                |
-| `httpErrors()`     | Built in, on by default                                                         |
-| `base(url)`        | Use `createRequester({ base: url })`                                            |
-| `headers(obj)`     | Use `createRequester({ headers: obj })`                                         |
-| `observable()`     | Wrap with RxJS `defer(() => promise)` (cold) or `from(promise)` (eager)         |
-| `progress()`       | Removed — no replacement in fetch-based architecture                            |
-| `keepAlive()`      | Built into fetch connection pooling                                             |
-| `injectResponse()` | Removed — use injectable `fetch` for testing                                    |
-| `urlEncoded()`     | Pass `new URLSearchParams(...)` as body — fetch sets content-type automatically |
+| Middleware         | Reason                                                                         |
+| ------------------ | ------------------------------------------------------------------------------ |
+| `promise()`        | All requests return promises by default                                        |
+| `jsonRequest()`    | Built in. Plain objects and arrays are auto-serialized as JSON                 |
+| `jsonResponse()`   | Use `as: 'json'` or `res.json()`                                               |
+| `httpErrors()`     | Built in, on by default                                                        |
+| `base(url)`        | Use `createRequester({ base: url })`                                           |
+| `headers(obj)`     | Use `createRequester({ headers: obj })`                                        |
+| `observable()`     | Wrap with RxJS `defer(() => promise)` (cold) or `from(promise)` (eager)        |
+| `progress()`       | Removed, no replacement in the fetch-based architecture                        |
+| `keepAlive()`      | Built into fetch connection pooling                                            |
+| `injectResponse()` | Removed. Use injectable `fetch`, or `get-it/mock`, for testing                 |
+| `urlEncoded()`     | Pass `new URLSearchParams(...)` as body; fetch sets content-type automatically |
 
 ### Still available
 
@@ -632,18 +632,18 @@ The `meta` field is passed through to all middleware (both transform and wrappin
 
 ### Debug middleware changes
 
-v8's `debug()` middleware used the [`debug`](https://www.npmjs.com/package/debug) npm package, enabled with the `DEBUG=get-it:*` environment variable — zero config, no code changes needed.
+v8's `debug()` middleware used the [`debug`](https://www.npmjs.com/package/debug) npm package, enabled with the `DEBUG=get-it:*` environment variable. Zero config, no code changes needed.
 
 v9's `debug()` requires an explicit `log` function. Without one, it's a no-op:
 
 ```ts
 import {debug} from 'get-it/middleware'
 
-// v8 — just add the middleware, control via DEBUG env var
+// v8: add the middleware, control via DEBUG env var
 const request = getIt([debug()])
 // $ DEBUG=get-it:* node app.js
 
-// v9 — must pass a log function explicitly
+// v9: must pass a log function explicitly
 const request = createRequester({
   middleware: [debug({log: console.log, verbose: true})],
 })
@@ -671,10 +671,7 @@ request({url: '/users', requestId: 'abc-123'})
 request({url: '/users', meta: {requestId: 'abc-123'}})
 ```
 
-**What's different from v8:**
-
-- **Activation**: v8 used the `DEBUG=get-it:*` env var automatically. v9 requires an explicit `log` function (see above for restoring env var behavior).
-- **Body truncation**: v9 truncates logged bodies at 16 KB and summarizes binary/stream bodies, preventing large payloads from flooding logs.
+One other difference: v9 truncates logged bodies at 16 KB and summarizes binary and stream bodies, so large payloads no longer flood the logs.
 
 ### Proxy / agent configuration
 
@@ -717,7 +714,7 @@ const request = createRequester({
 v9 lets you provide a custom `fetch` implementation at instance or request level:
 
 ```ts
-// Instance level — used for all requests
+// Instance level: used for all requests
 const request = createRequester({fetch: myCustomFetch})
 
 // Per-request override
@@ -755,15 +752,17 @@ beforeRequest(opts) {
 }
 ```
 
-Use **lowercase header names** in middleware — since all keys are normalized to lowercase, using a different casing (e.g. `'Content-Type'` when `'content-type'` already exists) would create a duplicate entry rather than overriding it.
+Use **lowercase header names** in middleware. All keys are normalized to lowercase, so a different casing (`'Content-Type'` when `'content-type'` already exists) creates a duplicate entry rather than overriding it.
 
 ## Entry points
 
 | Import              | Purpose                                                          |
 | ------------------- | ---------------------------------------------------------------- |
 | `get-it`            | Core. Includes environment proxy support in Node, Bun, and Deno. |
-| `get-it/middleware` | `retry`, `debug`                                                 |
+| `get-it/middleware` | `retry`, `debug`, `isRetryableRequest`, `getRetryDelay`          |
 | `get-it/node`       | `createNodeFetch()` for custom undici dispatcher configuration   |
+| `get-it/mock`       | `createMockFetch()` and matchers, replacing `injectResponse()`   |
+| `get-it/vitest`     | Custom vitest matchers for mock assertions                       |
 
 ## TypeScript
 
@@ -856,7 +855,7 @@ const request = createRequester({
 const response = await request<User[]>({url: '/users', as: 'json'})
 const users = response.body
 
-// Observable — wrap the promise yourself
+// Observable: wrap the promise yourself
 // Use `defer` so the request fires on subscribe (cold), matching v8's
 // `observable()`. Plain `from(request('/users'))` would fire eagerly.
 import {defer} from 'rxjs'
