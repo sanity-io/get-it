@@ -1,5 +1,11 @@
 # get-it
 
+## 9.5.0
+
+### Minor Changes
+
+- preserve response metadata and add error guards ([#652](https://github.com/sanity-io/get-it/pull/652)) ([1fcc975](https://github.com/sanity-io/get-it/commit/1fcc9757fbcaf877f000e677aa36eff357b7df99))
+
 ## 9.4.1
 
 ### Patch Changes
