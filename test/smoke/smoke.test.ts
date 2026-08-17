@@ -1,4 +1,4 @@
-import {createRequester} from 'get-it'
+import {createRequester, isHttpError, isTimeoutError} from 'get-it'
 import {retry} from 'get-it/middleware'
 import {expect, test} from 'vitest'
 
@@ -25,4 +25,9 @@ test('the built get-it package resolves and runs a request', async () => {
 
 test('the built get-it/middleware subpath resolves', () => {
   expect(typeof retry).toBe('function')
+})
+
+test('the built error guards resolve', () => {
+  expect(typeof isHttpError).toBe('function')
+  expect(typeof isTimeoutError).toBe('function')
 })

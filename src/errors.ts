@@ -7,6 +7,8 @@ import type {BufferedResponse, JsonResponse, TextResponse} from './types'
  * @public
  */
 export class HttpError extends Error {
+  /** Stable error discriminator. */
+  declare name: 'HttpError'
   /** The URL that was requested. */
   declare url: string
   /** The HTTP method used (e.g. `"GET"`, `"POST"`). */
@@ -58,6 +60,8 @@ export class HttpError extends Error {
  * @public
  */
 export class TimeoutError extends Error {
+  /** Stable error discriminator. */
+  declare name: 'TimeoutError'
   /** The URL that was requested. */
   declare url: string
   /** The HTTP method used (e.g. `"GET"`, `"POST"`). */

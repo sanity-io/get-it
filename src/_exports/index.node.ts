@@ -43,6 +43,8 @@ export function createRequester(
 
 // Re-export everything from core
 export {HttpError, TimeoutError} from '../errors'
+export {isHttpError, isTimeoutError} from '../errorGuards'
+export type {HttpErrorLike, TimeoutErrorLike} from '../errorGuards'
 export type {
   BufferedResponse,
   DefaultResponse,

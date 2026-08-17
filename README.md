@@ -68,6 +68,8 @@ const res = await request('/data')
 res.status // number
 res.statusText // string
 res.headers // Headers
+res.url // final response URL after redirects
+res.redirected // whether the response resulted from following a redirect
 res.body // Uint8Array
 res.json() // parse as JSON (synchronous)
 res.text() // decode as string (synchronous)
@@ -151,12 +153,12 @@ const res = await request({url: 'https://example.com/big-file', as: 'stream'})
 ## Error handling
 
 ```ts
-import {HttpError} from 'get-it'
+import {isHttpError} from 'get-it'
 
 try {
   await request('/not-found')
 } catch (err) {
-  if (err instanceof HttpError) {
+  if (isHttpError(err)) {
     console.log(err.status) // 404
     console.log(err.response) // full response object
   }
@@ -165,6 +167,16 @@ try {
 // Disable for a single request
 const res = await request({url: '/maybe-404', httpErrors: false})
 ```
+
+`isHttpError()` recognizes the stable HTTP error shape from any get-it v9
+release, where `instanceof HttpError` would fail for another installed copy.
+It narrows to `HttpErrorLike`; newer response fields such as `response.url` are
+optional because early v9 releases did not include them. `isTimeoutError()`
+recognizes both get-it's headers-phase `TimeoutError` and the platform
+`DOMException` used for total-deadline timeouts. Check for
+`error.code === 'ETIMEDOUT'` after narrowing when you need to distinguish the
+headers timeout. The guard also accepts DOM implementations such as happy-dom
+that omit the spec-required numeric `code`.
 
 ## Cancellation
 
