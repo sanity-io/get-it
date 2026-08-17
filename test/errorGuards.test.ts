@@ -130,14 +130,33 @@ describe('isTimeoutError', () => {
     })
 
     if (!isTimeoutError(error)) throw new Error('expected a timeout error')
+    if (error.code !== 'ETIMEDOUT') throw new Error('expected a headers timeout')
     expect(error.phase).toBe('headers')
     expect(error.code).toBe('ETIMEDOUT')
   })
 
-  it('does not classify a total-deadline DOMException as the get-it class', () => {
+  it('recognizes a total-deadline DOMException', () => {
     const error = new DOMException('The operation timed out', 'TimeoutError')
 
-    expect(isTimeoutError(error)).toBe(false)
+    expect(isTimeoutError(error)).toBe(true)
+  })
+
+  it('recognizes the platform shape from another realm', () => {
+    const crossRealmError = {
+      name: 'TimeoutError',
+      message: 'The operation timed out',
+      code: 23,
+    }
+
+    expect(crossRealmError).not.toBeInstanceOf(DOMException)
+    expect(isTimeoutError(crossRealmError)).toBe(true)
+  })
+
+  it('narrows platform timeout errors', () => {
+    const error: unknown = new DOMException('The operation timed out', 'TimeoutError')
+
+    if (!isTimeoutError(error)) throw new Error('expected a timeout error')
+    expect(error.code).toBe(23)
   })
 
   it('rejects malformed and non-object values', () => {

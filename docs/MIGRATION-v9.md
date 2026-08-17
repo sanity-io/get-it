@@ -469,9 +469,10 @@ Use `isHttpError()` instead of `instanceof HttpError` when an application can
 contain more than one installed get-it version. It recognizes the stable error
 shape shared by all v9 releases and narrows to `HttpErrorLike`; response URL
 metadata is optional because early v9 releases did not include it.
-`isTimeoutError()` provides the same structural check for get-it's
-headers-phase `TimeoutError` class. It does not match the platform
-`DOMException` used for total-deadline timeouts.
+`isTimeoutError()` recognizes both get-it's headers-phase `TimeoutError` and
+the platform `DOMException` used for total-deadline timeouts. Check for
+`error.code === 'ETIMEDOUT'` after narrowing when you need to distinguish the
+headers timeout.
 
 ## Timeout
 

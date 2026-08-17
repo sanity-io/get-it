@@ -172,9 +172,10 @@ const res = await request({url: '/maybe-404', httpErrors: false})
 release, where `instanceof HttpError` would fail for another installed copy.
 It narrows to `HttpErrorLike`; newer response fields such as `response.url` are
 optional because early v9 releases did not include them. `isTimeoutError()`
-does the same for get-it's headers-phase `TimeoutError`. Total-deadline timeouts
-are platform `DOMException`s; check their `name === 'TimeoutError'` when you
-need to handle both timeout categories.
+recognizes both get-it's headers-phase `TimeoutError` and the platform
+`DOMException` used for total-deadline timeouts. Check for
+`error.code === 'ETIMEDOUT'` after narrowing when you need to distinguish the
+headers timeout.
 
 ## Cancellation
 

@@ -28,6 +28,20 @@ export interface HttpErrorLike {
 }
 
 /**
+ * A timeout raised by get-it or the platform, described structurally so the
+ * type works across runtimes, realms, and installed get-it copies.
+ *
+ * @public
+ */
+export type TimeoutErrorLike =
+  | TimeoutError
+  | {
+      name: 'TimeoutError'
+      message: string
+      code: number
+    }
+
+/**
  * Checks whether a value has the public shape of a get-it {@link HttpError}.
  *
  * Unlike `instanceof HttpError`, this recognizes errors created by another
@@ -66,28 +80,30 @@ export function isHttpError(error: unknown): error is HttpErrorLike {
 }
 
 /**
- * Checks whether a value has the public shape of get-it's headers-phase
- * {@link TimeoutError}.
+ * Checks whether a value is a get-it headers timeout or a platform
+ * total-deadline timeout.
  *
- * Unlike `instanceof TimeoutError`, this recognizes errors created by another
- * installed copy of get-it. Total-deadline timeouts are platform
- * `DOMException`s and are not matched by this guard.
+ * This structural check recognizes errors created by another installed copy
+ * of get-it and platform `DOMException`s from another realm.
  *
  * @param error - The value to check.
- * @returns `true` when the value is a get-it headers-phase timeout error.
+ * @returns `true` when the value is a timeout error.
  *
  * @public
  */
-export function isTimeoutError(error: unknown): error is TimeoutError {
+export function isTimeoutError(error: unknown): error is TimeoutErrorLike {
+  if (!isRecord(error) || error.name !== 'TimeoutError' || typeof error.message !== 'string') {
+    return false
+  }
+
+  if (typeof error.code === 'number') return true
+
   return (
-    isRecord(error) &&
-    error.name === 'TimeoutError' &&
-    typeof error.message === 'string' &&
+    error.code === 'ETIMEDOUT' &&
     typeof error.url === 'string' &&
     typeof error.method === 'string' &&
     typeof error.timeoutMs === 'number' &&
-    error.phase === 'headers' &&
-    error.code === 'ETIMEDOUT'
+    error.phase === 'headers'
   )
 }
 
