@@ -68,6 +68,8 @@ const res = await request('/data')
 res.status // number
 res.statusText // string
 res.headers // Headers
+res.url // final response URL after redirects
+res.redirected // whether the response resulted from following a redirect
 res.body // Uint8Array
 res.json() // parse as JSON (synchronous)
 res.text() // decode as string (synchronous)
@@ -151,12 +153,12 @@ const res = await request({url: 'https://example.com/big-file', as: 'stream'})
 ## Error handling
 
 ```ts
-import {HttpError} from 'get-it'
+import {isHttpError} from 'get-it'
 
 try {
   await request('/not-found')
 } catch (err) {
-  if (err instanceof HttpError) {
+  if (isHttpError(err)) {
     console.log(err.status) // 404
     console.log(err.response) // full response object
   }
@@ -165,6 +167,14 @@ try {
 // Disable for a single request
 const res = await request({url: '/maybe-404', httpErrors: false})
 ```
+
+`isHttpError()` recognizes the stable HTTP error shape from any get-it v9
+release, where `instanceof HttpError` would fail for another installed copy.
+It narrows to `HttpErrorLike`; newer response fields such as `response.url` are
+optional because early v9 releases did not include them. `isTimeoutError()`
+does the same for get-it's headers-phase `TimeoutError`. Total-deadline timeouts
+are platform `DOMException`s; check their `name === 'TimeoutError'` when you
+need to handle both timeout categories.
 
 ## Cancellation
 

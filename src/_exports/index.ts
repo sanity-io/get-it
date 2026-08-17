@@ -1,5 +1,7 @@
 export {createRequester} from '../createRequester'
 export {HttpError, TimeoutError} from '../errors'
+export {isHttpError, isTimeoutError} from '../errorGuards'
+export type {HttpErrorLike} from '../errorGuards'
 export type {
   BufferedResponse,
   DefaultResponse,

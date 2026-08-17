@@ -348,7 +348,14 @@ describe('middleware system', () => {
 
   it('stream mode throws when wrapping middleware never calls next', async () => {
     const shortCircuit = async () => {
-      return createBufferedResponse(200, 'OK', new Headers(), new Uint8Array())
+      return createBufferedResponse(
+        200,
+        'OK',
+        new Headers(),
+        new Uint8Array(),
+        'https://example.com',
+        false,
+      )
     }
     const request = createRequester({base: baseUrl, middleware: [shortCircuit]})
     await expect(request({url: '/plain-text', as: 'stream'})).rejects.toThrow(

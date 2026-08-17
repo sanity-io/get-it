@@ -10,6 +10,8 @@ let decoder: InstanceType<typeof TextDecoder>
  * @param statusText - HTTP status text.
  * @param headers - Response headers.
  * @param body - Raw response body bytes.
+ * @param url - Final response URL after redirects.
+ * @param redirected - Whether the response resulted from following a redirect.
  * @returns A buffered response with `text()`, `json()`, and `bytes()` accessors.
  *
  * @internal
@@ -19,6 +21,8 @@ export function createBufferedResponse(
   statusText: string,
   headers: Headers,
   body: Uint8Array,
+  url: string,
+  redirected: boolean,
 ): BufferedResponse {
   let cachedText: string | undefined
   let cachedJson: {value: unknown} | undefined
@@ -27,6 +31,8 @@ export function createBufferedResponse(
     status,
     statusText,
     headers,
+    url,
+    redirected,
     body,
 
     text(): string {

@@ -359,11 +359,17 @@ response.body // pre-parsed body (depends on middleware)
 response.status // number
 response.statusText // string
 response.headers // Headers instance (use .get(), .has(), .forEach())
+response.url // final response URL after redirects
+response.redirected // whether the response resulted from following a redirect
 response.body // Uint8Array (default), or typed based on `as` option
 response.json() // parse body as JSON (synchronous, returns unknown)
 response.text() // decode body as UTF-8 string (synchronous)
 response.bytes() // returns body as Uint8Array (synchronous)
 ```
+
+All v9 response modes expose `url` and `redirected`. `url` is the final URL
+reported by fetch after redirect handling. On an `HttpError`, `error.url` is
+the attempted request URL and `error.response.url` is the final response URL.
 
 ### Reading response headers
 
@@ -443,20 +449,29 @@ const request = createRequester({httpErrors: false})
 const res = await request({url: '/maybe-404', httpErrors: false})
 ```
 
-The `HttpError` class is exported from `get-it`:
+The `HttpError` class and a cross-package structural guard are exported from
+`get-it`:
 
 ```ts
-import {HttpError} from 'get-it'
+import {isHttpError} from 'get-it'
 
 try {
   await request('/not-found')
 } catch (err) {
-  if (err instanceof HttpError) {
+  if (isHttpError(err)) {
     console.log(err.status) // 404
     console.log(err.response) // full response object
   }
 }
 ```
+
+Use `isHttpError()` instead of `instanceof HttpError` when an application can
+contain more than one installed get-it version. It recognizes the stable error
+shape shared by all v9 releases and narrows to `HttpErrorLike`; response URL
+metadata is optional because early v9 releases did not include it.
+`isTimeoutError()` provides the same structural check for get-it's
+headers-phase `TimeoutError` class. It does not match the platform
+`DOMException` used for total-deadline timeouts.
 
 ## Timeout
 
@@ -778,6 +793,7 @@ v9 is written in TypeScript with erasable type syntax. It exports all of the typ
 import type {
   RequestOptions,
   BufferedResponse,
+  HttpErrorLike,
   JsonResponse,
   TextResponse,
   StreamResponse,

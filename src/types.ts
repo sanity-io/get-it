@@ -263,6 +263,10 @@ export interface BufferedResponse {
   statusText: string
   /** Response headers. */
   headers: Headers
+  /** The final response URL after redirects. */
+  url: string
+  /** Whether the response resulted from following a redirect. */
+  redirected: boolean
   /** Raw response body bytes. */
   body: Uint8Array
   /** Parses the body as JSON. The result is cached after the first call. */
@@ -289,6 +293,10 @@ export interface JsonResponse<T = unknown> {
   statusText: string
   /** Response headers. */
   headers: Headers
+  /** The final response URL after redirects. */
+  url: string
+  /** Whether the response resulted from following a redirect. */
+  redirected: boolean
   /** Parsed JSON body. */
   body: T
 }
@@ -307,6 +315,10 @@ export interface TextResponse {
   statusText: string
   /** Response headers. */
   headers: Headers
+  /** The final response URL after redirects. */
+  url: string
+  /** Whether the response resulted from following a redirect. */
+  redirected: boolean
   /** Response body decoded as a string. */
   body: string
 }
@@ -325,6 +337,10 @@ export interface StreamResponse {
   statusText: string
   /** Response headers. */
   headers: Headers
+  /** The final response URL after redirects. */
+  url: string
+  /** Whether the response resulted from following a redirect. */
+  redirected: boolean
   /** Readable stream of the response body. */
   body: ReadableStream<Uint8Array>
 }

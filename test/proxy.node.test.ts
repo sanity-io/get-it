@@ -108,6 +108,8 @@ describe('node entry point', () => {
     const mod = await import('../src/_exports/index.node')
     expect(typeof mod.createRequester).toBe('function')
     expect(typeof mod.HttpError).toBe('function')
+    expect(typeof mod.isHttpError).toBe('function')
+    expect(typeof mod.isTimeoutError).toBe('function')
   })
 
   it('createRequester from node entry works without custom fetch', async () => {

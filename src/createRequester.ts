@@ -272,6 +272,8 @@ export function createRequester(
         response.statusText,
         response.headers,
         new Uint8Array(0),
+        response.url,
+        response.redirected,
       )
     }
 
@@ -590,12 +592,7 @@ function buildFetchArgs(
  * Optionally throws HttpError for error status codes.
  */
 async function bufferAndCheck(
-  response: {
-    status: number
-    statusText: string
-    headers: Headers
-    arrayBuffer(): Promise<ArrayBuffer>
-  },
+  response: FetchResponse,
   httpErrors: boolean,
   requestUrl: string,
   requestMethod: string,
@@ -607,6 +604,8 @@ async function bufferAndCheck(
     response.statusText,
     response.headers,
     bytes,
+    response.url,
+    response.redirected,
   )
 
   if (httpErrors && response.status >= 400) {
@@ -682,10 +681,30 @@ function runAfterResponse(
 }
 
 function responseOf<T>(
-  source: {status: number; statusText: string; headers: Headers},
+  source: {
+    status: number
+    statusText: string
+    headers: Headers
+    url: string
+    redirected: boolean
+  },
   body: T,
-): {status: number; statusText: string; headers: Headers; body: T} {
-  return {status: source.status, statusText: source.statusText, headers: source.headers, body}
+): {
+  status: number
+  statusText: string
+  headers: Headers
+  url: string
+  redirected: boolean
+  body: T
+} {
+  return {
+    status: source.status,
+    statusText: source.statusText,
+    headers: source.headers,
+    url: source.url,
+    redirected: source.redirected,
+    body,
+  }
 }
 
 /**
