@@ -472,7 +472,8 @@ metadata is optional because early v9 releases did not include it.
 `isTimeoutError()` recognizes both get-it's headers-phase `TimeoutError` and
 the platform `DOMException` used for total-deadline timeouts. Check for
 `error.code === 'ETIMEDOUT'` after narrowing when you need to distinguish the
-headers timeout.
+headers timeout. The guard also accepts DOM implementations such as happy-dom
+that omit the spec-required numeric `code`.
 
 ## Timeout
 

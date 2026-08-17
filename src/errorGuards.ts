@@ -38,7 +38,7 @@ export type TimeoutErrorLike =
   | {
       name: 'TimeoutError'
       message: string
-      code: number
+      code?: number
     }
 
 /**
@@ -96,7 +96,7 @@ export function isTimeoutError(error: unknown): error is TimeoutErrorLike {
     return false
   }
 
-  if (typeof error.code === 'number') return true
+  if (error.code === undefined || typeof error.code === 'number') return true
 
   return (
     error.code === 'ETIMEDOUT' &&

@@ -156,11 +156,15 @@ describe('isTimeoutError', () => {
     const error: unknown = new DOMException('The operation timed out', 'TimeoutError')
 
     if (!isTimeoutError(error)) throw new Error('expected a timeout error')
-    expect(error.code).toBe(23)
+    expect(error.name).toBe('TimeoutError')
+    expect(error.message).toBe('The operation timed out')
   })
 
   it('rejects malformed and non-object values', () => {
     expect(isTimeoutError({name: 'TimeoutError'})).toBe(false)
+    expect(
+      isTimeoutError({name: 'TimeoutError', message: 'not a supported timeout', code: 'OTHER'}),
+    ).toBe(false)
     expect(isTimeoutError(undefined)).toBe(false)
   })
 })
