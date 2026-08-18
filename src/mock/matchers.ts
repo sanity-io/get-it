@@ -1,4 +1,4 @@
-import {bytesEqual, toBytes} from './bytes'
+import {bytesEqual, isUint8Array, toBytes} from './bytes'
 
 /**
  * Protocol interface for asymmetric matching, compatible with vitest/Jest.
@@ -47,10 +47,8 @@ export function deepMatch(expected: unknown, actual: unknown): boolean {
 
   if (expected === actual) return true
 
-  if (expected instanceof Uint8Array || actual instanceof Uint8Array) {
-    return (
-      expected instanceof Uint8Array && actual instanceof Uint8Array && bytesEqual(expected, actual)
-    )
+  if (isUint8Array(expected) || isUint8Array(actual)) {
+    return isUint8Array(expected) && isUint8Array(actual) && bytesEqual(expected, actual)
   }
 
   if (typeof expected !== typeof actual) return false
@@ -170,7 +168,7 @@ export function bodyBytes(expected: Uint8Array | ArrayBuffer): AsymmetricMatcher
   // member doesn't trip TypeScript's excess-property check against AsymmetricMatcher.
   const matcher = {
     asymmetricMatch(actual: unknown): boolean {
-      return actual instanceof Uint8Array && bytesEqual(expectedBytes, actual)
+      return isUint8Array(actual) && bytesEqual(expectedBytes, actual)
     },
     toString(): string {
       return `bodyBytes(${expectedBytes.byteLength} bytes)`

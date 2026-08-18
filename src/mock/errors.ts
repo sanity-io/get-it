@@ -1,4 +1,5 @@
 import type {Diff} from './diff'
+import {isArrayBuffer, isUint8Array} from './bytes'
 
 /**
  * Description of a registered mock for error reporting.
@@ -16,8 +17,8 @@ export interface MockDescription {
 function formatValue(value: unknown): string {
   if (value === undefined) return 'undefined'
   if (typeof value === 'string') return `"${value}"`
-  if (value instanceof Uint8Array) return `Uint8Array(${value.byteLength} bytes)`
-  if (value instanceof ArrayBuffer) return `ArrayBuffer(${value.byteLength} bytes)`
+  if (isUint8Array(value)) return `Uint8Array(${value.byteLength} bytes)`
+  if (isArrayBuffer(value)) return `ArrayBuffer(${value.byteLength} bytes)`
   return String(value)
 }
 
