@@ -25,4 +25,4 @@ jobs:
           cache: pnpm
           node-version: 24
       - run: pnpm install --frozen-lockfile
-      - uses: rexxars/bundle-stats@4bf52e3d63ba6ebe8be19dce75bd0d5b2d2cce20 # v2 baseline fix
+      - uses: rexxars/bundle-stats@4c3c939363da017fdb1a44b2de0c2927a0c95020 # v2
