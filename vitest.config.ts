@@ -1,3 +1,5 @@
+import {fileURLToPath} from 'node:url'
+
 import {configDefaults, defineConfig, type ViteUserConfig} from 'vitest/config'
 
 // The built-asset smoke tests (test/smoke) resolve `get-it` through the real package.json
@@ -11,10 +13,10 @@ export const nonNodeExclude = [...baseExclude, 'test/*.node.test.ts']
 export const sharedConfig = {
   exclude: baseExclude,
   globalSetup: [
-    new URL('./test/helpers/globalSetup.http.ts', import.meta.url).pathname,
-    new URL('./test/helpers/globalSetup.https.ts', import.meta.url).pathname,
-    new URL('./test/helpers/globalSetup.proxy.http.ts', import.meta.url).pathname,
-    new URL('./test/helpers/globalSetup.proxy.https.ts', import.meta.url).pathname,
+    fileURLToPath(new URL('./test/helpers/globalSetup.http.ts', import.meta.url)),
+    fileURLToPath(new URL('./test/helpers/globalSetup.https.ts', import.meta.url)),
+    fileURLToPath(new URL('./test/helpers/globalSetup.proxy.http.ts', import.meta.url)),
+    fileURLToPath(new URL('./test/helpers/globalSetup.proxy.https.ts', import.meta.url)),
   ],
   reporters: process.env['GITHUB_ACTIONS'] ? ['default', 'github-actions'] : 'default',
   alias: {
