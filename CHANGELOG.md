@@ -1,5 +1,11 @@
 # get-it
 
+## 9.5.1
+
+### Patch Changes
+
+- **mock:** use realm-safe checks ([#654](https://github.com/sanity-io/get-it/pull/654)) ([765b19c](https://github.com/sanity-io/get-it/commit/765b19c45b2d9d14981fbb1dbb7aa538f9ebf307))
+
 ## 9.5.0
 
 ### Minor Changes
