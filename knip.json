@@ -2,7 +2,7 @@
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "entry": ["test/deno/smoke.ts"],
   "vitest": {
-    "config": ["vitest.config.ts", "vitest.*.config.ts"]
+    "config": ["vitest.config.ts", "test/config/vitest.*.config.ts"]
   },
   "ignoreBinaries": ["scripts/report-size.sh"]
 }

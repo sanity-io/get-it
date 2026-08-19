@@ -1,3 +1,5 @@
+import {fileURLToPath} from 'node:url'
+
 import {configDefaults, defineConfig, type ViteUserConfig} from 'vitest/config'
 
 // The built-asset smoke tests (test/smoke) resolve `get-it` through the real package.json
@@ -11,12 +13,12 @@ export const nonNodeExclude = [...baseExclude, 'test/*.node.test.ts']
 export const sharedConfig = {
   exclude: baseExclude,
   globalSetup: [
-    './test/helpers/globalSetup.http.ts',
-    './test/helpers/globalSetup.https.ts',
-    './test/helpers/globalSetup.proxy.http.ts',
-    './test/helpers/globalSetup.proxy.https.ts',
+    fileURLToPath(new URL('./test/helpers/globalSetup.http.ts', import.meta.url)),
+    fileURLToPath(new URL('./test/helpers/globalSetup.https.ts', import.meta.url)),
+    fileURLToPath(new URL('./test/helpers/globalSetup.proxy.http.ts', import.meta.url)),
+    fileURLToPath(new URL('./test/helpers/globalSetup.proxy.https.ts', import.meta.url)),
   ],
-  reporters: process.env.GITHUB_ACTIONS ? ['default', 'github-actions'] : 'default',
+  reporters: process.env['GITHUB_ACTIONS'] ? ['default', 'github-actions'] : 'default',
   alias: {
     'get-it/middleware': new URL('./src/_exports/middleware.ts', import.meta.url).pathname,
     'get-it/node': new URL('./src/_exports/node.ts', import.meta.url).pathname,
@@ -30,7 +32,7 @@ export const sharedConfig = {
 // never touch the test servers).
 export const smokeConfig = {
   include: ['test/smoke/**/*.test.ts'],
-  reporters: process.env.GITHUB_ACTIONS ? ['default', 'github-actions'] : 'default',
+  reporters: process.env['GITHUB_ACTIONS'] ? ['default', 'github-actions'] : 'default',
 } satisfies ViteUserConfig['test']
 
 /**

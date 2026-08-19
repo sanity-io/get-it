@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   build:
-    name: Build, lint and test coverage
+    name: 'Build, lint & coverage: Node.js LTS'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -36,7 +36,7 @@ jobs:
       - run: pnpm run coverage
 
   test:
-    name: Node.js ${{ matrix.node }} on ${{ matrix.os }}
+    name: 'Test: Node.js ${{ matrix.node }}, ${{ matrix.platform }}'
     needs: build
     runs-on: ${{ matrix.os }}
     strategy:
@@ -46,13 +46,22 @@ jobs:
         #   22.12.0 - the minimum supported version (must match the `engines` field in package.json)
         #   24      - the active LTS release
         #   26      - the latest/current release
-        os: [ubuntu-latest]
-        node: ['22.12.0', '24', '26']
-        # Additionally verify the active LTS release on the other major operating systems
         include:
+          - os: ubuntu-latest
+            platform: Ubuntu
+            node: '22.12.0'
+          - os: ubuntu-latest
+            platform: Ubuntu
+            node: '24'
+          - os: ubuntu-latest
+            platform: Ubuntu
+            node: '26'
+          # Additionally verify the active LTS release on the other major operating systems.
           - os: macos-latest
+            platform: macOS
             node: '24'
           - os: windows-latest
+            platform: Windows
             node: '24'
     steps:
       - uses: actions/checkout@v7
@@ -67,7 +76,7 @@ jobs:
       - run: pnpm test
 
   test-browser:
-    name: Test Browser
+    name: 'Test: Chrome, Firefox, WebKit'
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -84,7 +93,7 @@ jobs:
       - run: pnpm run test:smoke:browser
 
   test-bun:
-    name: Test Bun
+    name: 'Test: Bun'
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -101,7 +110,7 @@ jobs:
       - run: pnpm run test:smoke:bun
 
   test-deno:
-    name: Test Deno
+    name: 'Test: Deno'
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -118,7 +127,7 @@ jobs:
       - run: pnpm run test:deno
 
   test-happy-dom:
-    name: Test Happy DOM
+    name: 'Test: happy-dom, Node.js LTS'
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -133,8 +142,24 @@ jobs:
       - run: pnpm run build
       - run: pnpm run test:smoke:happy-dom
 
+  test-jsdom:
+    name: 'Test: jsdom, Node.js LTS'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          cache: pnpm
+          node-version: lts/*
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run test:jsdom
+      - run: pnpm run build
+      - run: pnpm run test:smoke:jsdom
+
   test-react-server:
-    name: Test React Server
+    name: 'Test: React Server Components'
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -150,7 +175,7 @@ jobs:
       - run: pnpm run test:smoke:react-server
 
   test-vercel-edge:
-    name: Test Vercel Edge Runtime
+    name: 'Test: Vercel Edge'
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -166,7 +191,7 @@ jobs:
       - run: pnpm run test:smoke:vercel-edge
 
   test-workerd:
-    name: Test workerd (Cloudflare Workers)
+    name: 'Test: workerd'
     needs: build
     runs-on: ubuntu-latest
     steps:

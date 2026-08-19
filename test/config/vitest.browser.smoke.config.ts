@@ -1,7 +1,7 @@
 import {playwright} from '@vitest/browser-playwright'
 import {defineConfig} from 'vitest/config'
 
-import {builtPackageAlias, smokeConfig} from './vitest.config'
+import {builtPackageAlias, smokeConfig} from '../../vitest.config'
 
 // Built-asset smoke test in real browsers, pinned to the fetch entry browsers resolve to (see
 // test/exports.test.ts). Verifies the built fetch entry loads and runs in Chromium/Firefox/WebKit.
