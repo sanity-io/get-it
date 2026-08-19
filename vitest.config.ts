@@ -11,12 +11,12 @@ export const nonNodeExclude = [...baseExclude, 'test/*.node.test.ts']
 export const sharedConfig = {
   exclude: baseExclude,
   globalSetup: [
-    './test/helpers/globalSetup.http.ts',
-    './test/helpers/globalSetup.https.ts',
-    './test/helpers/globalSetup.proxy.http.ts',
-    './test/helpers/globalSetup.proxy.https.ts',
+    new URL('./test/helpers/globalSetup.http.ts', import.meta.url).pathname,
+    new URL('./test/helpers/globalSetup.https.ts', import.meta.url).pathname,
+    new URL('./test/helpers/globalSetup.proxy.http.ts', import.meta.url).pathname,
+    new URL('./test/helpers/globalSetup.proxy.https.ts', import.meta.url).pathname,
   ],
-  reporters: process.env.GITHUB_ACTIONS ? ['default', 'github-actions'] : 'default',
+  reporters: process.env['GITHUB_ACTIONS'] ? ['default', 'github-actions'] : 'default',
   alias: {
     'get-it/middleware': new URL('./src/_exports/middleware.ts', import.meta.url).pathname,
     'get-it/node': new URL('./src/_exports/node.ts', import.meta.url).pathname,
@@ -30,7 +30,7 @@ export const sharedConfig = {
 // never touch the test servers).
 export const smokeConfig = {
   include: ['test/smoke/**/*.test.ts'],
-  reporters: process.env.GITHUB_ACTIONS ? ['default', 'github-actions'] : 'default',
+  reporters: process.env['GITHUB_ACTIONS'] ? ['default', 'github-actions'] : 'default',
 } satisfies ViteUserConfig['test']
 
 /**

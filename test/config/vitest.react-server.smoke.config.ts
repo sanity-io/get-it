@@ -1,6 +1,6 @@
 import {defineConfig} from 'vitest/config'
 
-import {builtPackageAlias, smokeConfig} from './vitest.config'
+import {builtPackageAlias, smokeConfig} from '../../vitest.config'
 
 // Built-asset smoke test for React Server Components, pinned to the fetch entry that the
 // `react-server` condition resolves to (see test/exports.test.ts).

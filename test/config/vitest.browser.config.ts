@@ -1,7 +1,7 @@
 import {playwright} from '@vitest/browser-playwright'
 import {defineConfig} from 'vitest/config'
 
-import {nonNodeExclude, sharedConfig} from './vitest.config'
+import {nonNodeExclude, sharedConfig} from '../../vitest.config'
 
 const {globalSetup, ...browserSharedConfig} = sharedConfig
 
