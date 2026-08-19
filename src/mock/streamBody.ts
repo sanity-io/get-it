@@ -1,3 +1,5 @@
+import {isUint8Array} from './bytes'
+
 // ---------------------------------------------------------------------------
 // Public types
 // ---------------------------------------------------------------------------
@@ -47,15 +49,13 @@ export class StreamBody {
     // `Buffer` inputs: `Buffer` (a `Uint8Array` subclass) overrides `slice()`
     // to return a view sharing the same backing memory, which would leave
     // the snapshot unprotected against later mutation of the source buffer.
-    const copiedParts = parts.map((part) =>
-      part instanceof Uint8Array ? new Uint8Array(part) : part,
-    )
+    const copiedParts = parts.map((part) => (isUint8Array(part) ? new Uint8Array(part) : part))
     this.script = copiedParts
   }
 }
 
 function assertValidPart(part: StreamPart, index: number, parts: ReadonlyArray<StreamPart>): void {
-  if (typeof part === 'string' || part instanceof Uint8Array) return
+  if (typeof part === 'string' || isUint8Array(part)) return
   if (part.kind === 'delay') {
     if (!(part.ms >= 0)) {
       throw new TypeError(`streamBody(): invalid delay at index ${index}: ${part.ms}`)
@@ -227,7 +227,7 @@ export function streamFromScript(
           controller.enqueue(encoder.encode(part))
           return
         }
-        if (part instanceof Uint8Array) {
+        if (isUint8Array(part)) {
           controller.enqueue(new Uint8Array(part))
           return
         }

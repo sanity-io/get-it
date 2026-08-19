@@ -6,7 +6,7 @@ import {
   normalizeFormData,
   normalizeUrlSearchParams,
 } from './body'
-import {bytesEqual, isBinaryBody, toBytes} from './bytes'
+import {bytesEqual, isArrayBuffer, isBinaryBody, isUint8Array, toBytes} from './bytes'
 import type {Diff} from './diff'
 import {diffValues} from './diff'
 import type {MockDescription} from './errors'
@@ -219,10 +219,10 @@ async function drainStream(stream: ReadableStream): Promise<Uint8Array> {
   for (let chunk = await reader.read(); !chunk.done; chunk = await reader.read()) {
     const value: unknown = chunk.value
     // Request-body streams yield binary chunks; anything else is ignored.
-    if (value instanceof Uint8Array) {
+    if (isUint8Array(value)) {
       chunks.push(value)
       total += value.byteLength
-    } else if (value instanceof ArrayBuffer) {
+    } else if (isArrayBuffer(value)) {
       const bytes = new Uint8Array(value)
       chunks.push(bytes)
       total += bytes.byteLength
@@ -246,7 +246,7 @@ async function drainStream(stream: ReadableStream): Promise<Uint8Array> {
  */
 function matchBody(expected: unknown, actual: unknown): boolean {
   if (isBinaryBody(expected)) {
-    return actual instanceof Uint8Array && bytesEqual(toBytes(expected), actual)
+    return isUint8Array(actual) && bytesEqual(toBytes(expected), actual)
   }
   return deepMatch(expected, actual)
 }
@@ -679,7 +679,7 @@ export function createMockFetch(): MockFetch {
         } else {
           body = rawBody
         }
-      } else if (rawBody instanceof Uint8Array || rawBody instanceof ArrayBuffer) {
+      } else if (isBinaryBody(rawBody)) {
         // Store a defensive copy so the recorded body is a stable snapshot.
         // Note: a plain `new Uint8Array(...)` copy is used rather than
         // `toBytes(rawBody).slice()` because `Buffer` (a `Uint8Array`

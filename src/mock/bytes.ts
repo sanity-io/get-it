@@ -1,9 +1,27 @@
 /**
+ * Check whether a value is a `Uint8Array`, including one from another realm.
+ * @internal
+ */
+export function isUint8Array(value: unknown): value is Uint8Array {
+  return (
+    ArrayBuffer.isView(value) && Object.prototype.toString.call(value) === '[object Uint8Array]'
+  )
+}
+
+/**
+ * Check whether a value is an `ArrayBuffer`, including one from another realm.
+ * @internal
+ */
+export function isArrayBuffer(value: unknown): value is ArrayBuffer {
+  return Object.prototype.toString.call(value) === '[object ArrayBuffer]'
+}
+
+/**
  * Check whether a value is a binary body the mock knows how to normalize to bytes.
  * @internal
  */
 export function isBinaryBody(value: unknown): value is Uint8Array | ArrayBuffer {
-  return value instanceof Uint8Array || value instanceof ArrayBuffer
+  return isUint8Array(value) || isArrayBuffer(value)
 }
 
 /**
@@ -12,7 +30,7 @@ export function isBinaryBody(value: unknown): value is Uint8Array | ArrayBuffer 
  * @internal
  */
 export function toBytes(value: Uint8Array | ArrayBuffer): Uint8Array {
-  return value instanceof Uint8Array ? value : new Uint8Array(value)
+  return isUint8Array(value) ? value : new Uint8Array(value)
 }
 
 /**

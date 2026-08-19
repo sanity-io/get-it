@@ -1,4 +1,4 @@
-import {createRequester} from 'get-it'
+import {createRequester, isTimeoutError} from 'get-it'
 import {retry} from 'get-it/middleware'
 import {describe, expect, it, vi} from 'vitest'
 
@@ -1123,9 +1123,8 @@ describe('createMockFetch', () => {
       } catch (err) {
         error = err
       }
-      expect(error).toBeInstanceOf(DOMException)
-      if (!(error instanceof DOMException)) throw new Error('expected a DOMException')
-      expect(error.name).toBe('AbortError')
+      expect(error).toBe(controller.signal.reason)
+      expect(error).toMatchObject({name: 'AbortError'})
     })
 
     it('propagates a custom abort reason', async () => {
@@ -1193,9 +1192,9 @@ describe('createMockFetch', () => {
       // Should reject well before the 1000ms delay completes
       expect(elapsed).toBeLessThan(500)
 
-      // AbortSignal.timeout() produces a DOMException with name 'TimeoutError'
-      expect(error).toBeInstanceOf(Error)
-      if (!(error instanceof Error)) throw error
+      // The total deadline produces a DOMException with name 'TimeoutError'.
+      expect(isTimeoutError(error)).toBe(true)
+      if (!isTimeoutError(error)) throw new Error('expected timeout error')
       expect(error.name).toBe('TimeoutError')
     })
   })

@@ -1,4 +1,4 @@
-import {bytesEqual} from './bytes'
+import {bytesEqual, isUint8Array} from './bytes'
 import {isAsymmetricMatcher, isRecord} from './matchers'
 
 /**
@@ -24,12 +24,8 @@ export function diffValues(prefix: string, expected: unknown, actual: unknown): 
 
   if (expected === actual) return []
 
-  if (expected instanceof Uint8Array || actual instanceof Uint8Array) {
-    if (
-      expected instanceof Uint8Array &&
-      actual instanceof Uint8Array &&
-      bytesEqual(expected, actual)
-    ) {
+  if (isUint8Array(expected) || isUint8Array(actual)) {
+    if (isUint8Array(expected) && isUint8Array(actual) && bytesEqual(expected, actual)) {
       return []
     }
     return [{path: prefix, expected, actual}]

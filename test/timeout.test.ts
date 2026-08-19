@@ -1,4 +1,4 @@
-import {createRequester, type FetchInit, TimeoutError} from 'get-it'
+import {createRequester, type FetchInit, isTimeoutError, TimeoutError} from 'get-it'
 import {describe, expect, it, vi} from 'vitest'
 import {resolveTimeout} from '../src/createRequester'
 
@@ -210,8 +210,8 @@ describe('structured timeout behavior', () => {
       () => null,
       (reason: unknown) => reason,
     )
-    expect(err).toBeInstanceOf(Error)
-    if (!(err instanceof Error)) throw new Error('expected Error')
+    expect(isTimeoutError(err)).toBe(true)
+    if (!isTimeoutError(err)) throw new Error('expected timeout error')
     expect(err.name).toBe('TimeoutError')
     expect(err.message).toBe('The operation was aborted due to timeout')
     // The losing fetch keeps running to completion in the background; let it
@@ -247,8 +247,8 @@ describe('structured timeout behavior', () => {
       () => null,
       (reason: unknown) => reason,
     )
-    expect(err).toBeInstanceOf(Error)
-    if (!(err instanceof Error)) throw new Error('expected Error')
+    expect(isTimeoutError(err)).toBe(true)
+    if (!isTimeoutError(err)) throw new Error('expected timeout error')
     expect(err.name).toBe('TimeoutError')
     // Buffering continues in the background after the race is lost; let the
     // body finish to prove its settlement is swallowed.
