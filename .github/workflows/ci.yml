@@ -142,6 +142,22 @@ jobs:
       - run: pnpm run build
       - run: pnpm run test:smoke:happy-dom
 
+  test-jsdom:
+    name: 'Test: jsdom, Node.js LTS'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          cache: pnpm
+          node-version: lts/*
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run test:jsdom
+      - run: pnpm run build
+      - run: pnpm run test:smoke:jsdom
+
   test-react-server:
     name: 'Test: React Server Components'
     needs: build
