@@ -85,9 +85,9 @@
     "@sanity/tsconfig": "^2.1.0",
     "@sanity/tsdown-config": "^0.21.0",
     "@types/node": "^24.13.3",
-    "@vitest/browser": "^4.1.10",
-    "@vitest/browser-playwright": "^4.1.10",
-    "@vitest/coverage-v8": "^4.1.10",
+    "@vitest/browser": "^4.1.11",
+    "@vitest/browser-playwright": "^4.1.11",
+    "@vitest/coverage-v8": "^4.1.11",
     "happy-dom": "^20.9.0",
     "jsdom": "^30.0.1",
     "knip": "^6.14.2",
@@ -98,7 +98,7 @@
     "tsdown": "^0.22.14",
     "typescript": "6.0.3",
     "unrun": "^0.3.1",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   },
   "peerDependencies": {
     "vitest": ">=2.0.0"
