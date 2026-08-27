@@ -12,6 +12,28 @@
       "matchPackageNames": ["debug", "follow-redirects", "parse-headers"],
       "rangeStrategy": "bump",
       "semanticCommitType": "fix"
+    },
+    {
+      "description": "Batch non-major devDependency updates into a single PR, instead of one PR per package",
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": [
+        "bump",
+        "digest",
+        "lockfileUpdate",
+        "minor",
+        "patch",
+        "pin",
+        "pinDigest",
+        "replacement",
+        "rollback"
+      ],
+      "groupName": "dev dependencies (non-major)",
+      "groupSlug": "dev-deps-non-major"
+    },
+    {
+      "description": "`undici-types` is a pnpm override that must stay major-aligned with `undici`, so update them together",
+      "matchPackageNames": ["undici", "undici-types"],
+      "groupName": "undici"
     }
   ]
 }
