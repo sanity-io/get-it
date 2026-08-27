@@ -1,5 +1,11 @@
 # get-it
 
+## 9.5.2
+
+### Patch Changes
+
+- **deps:** update dependency undici to ^7.29.0 ([#660](https://github.com/sanity-io/get-it/pull/660)) ([d027a94](https://github.com/sanity-io/get-it/commit/d027a94393c1149006decd32dd2518840b9ef35c))
+
 ## 9.5.1
 
 ### Patch Changes
