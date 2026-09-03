@@ -175,6 +175,11 @@ export interface RequesterOptions {
    * 120 000 ms total.
    */
   timeout?: number | false | TimeoutOptions
+  /**
+   * Maximum response body size in bytes. The request is aborted if the body
+   * exceeds this size. Set to `-1` to disable. Disabled by default.
+   */
+  maxResponseSize?: number
   /** Custom fetch implementation. In Node.js, defaults to an undici-backed fetch. */
   fetch?: FetchFunction
   /** Credentials mode forwarded to fetch (browser-only). */
@@ -216,6 +221,11 @@ export interface RequestOptions {
    * instance value wholesale — fields are not merged.
    */
   timeout?: number | false | TimeoutOptions
+  /**
+   * Maximum response body size in bytes. Overrides the requester default.
+   * Set to `-1` to disable.
+   */
+  maxResponseSize?: number
   /** Override the instance-level `fetch` for this request. */
   fetch?: FetchFunction
   /** Credentials mode forwarded to fetch (browser-only). */

@@ -1,4 +1,4 @@
-import {HttpError, TimeoutError} from './errors'
+import {HttpError, ResponseExceededMaxSizeError, TimeoutError} from './errors'
 import {createBufferedResponse} from './response'
 import type {
   BufferedResponse,
@@ -48,6 +48,7 @@ export function createRequester(
   const instanceBase = options?.base
   const instanceHttpErrors = options?.httpErrors
   const instanceTimeout = options?.timeout
+  const instanceMaxResponseSize = validateMaxResponseSize(options?.maxResponseSize)
   const instanceCredentials = options?.credentials
 
   // Separate middleware into transforms and wrappers by shape
@@ -195,7 +196,11 @@ export function createRequester(
     // Once buffering settles the deadline is spent either way — release its
     // timers.
     try {
-      return await raceDeadline(bufferAndCheck(response, httpErrors, url, method), totalDeadline)
+      rejectDeclaredResponseTooLarge(response, opts.maxResponseSize)
+      return await raceDeadline(
+        bufferAndCheck(response, httpErrors, url, method, opts.maxResponseSize),
+        totalDeadline,
+      )
     } finally {
       clearDeadline()
     }
@@ -239,6 +244,7 @@ export function createRequester(
     // Capture the raw fetch response so we can extract the stream after
     // the wrapping middleware chain completes.
     let capturedResponse: FetchResponse | undefined
+    let capturedMaxResponseSize: number | undefined
 
     async function getItStreamed(reqOpts: RequestOptions): Promise<BufferedResponse> {
       const fetchFn: FetchFunction = reqOpts.fetch ?? instanceFetch ?? globalThis.fetch
@@ -248,10 +254,17 @@ export function createRequester(
       )
       const httpErrors = reqOpts.httpErrors ?? instanceHttpErrors ?? true
 
+      try {
+        rejectDeclaredResponseTooLarge(response, reqOpts.maxResponseSize)
+      } catch (error) {
+        clearDeadline()
+        throw error
+      }
+
       if (httpErrors && response.status >= 400) {
         try {
           return await raceDeadline(
-            bufferAndCheck(response, httpErrors, url, method),
+            bufferAndCheck(response, httpErrors, url, method, reqOpts.maxResponseSize),
             totalDeadline,
           )
         } finally {
@@ -267,6 +280,7 @@ export function createRequester(
       // its timer must stay armed.
       if (totalDeadline !== undefined) clearDeadline()
       capturedResponse = response
+      capturedMaxResponseSize = reqOpts.maxResponseSize
       return createBufferedResponse(
         response.status,
         response.statusText,
@@ -286,13 +300,10 @@ export function createRequester(
       throw new Error('Stream response was not captured')
     }
 
-    const streamBody =
-      capturedResponse.body ??
-      new ReadableStream<Uint8Array>({
-        start(controller) {
-          controller.close()
-        },
-      })
+    const streamBody = limitResponseBody(
+      capturedResponse.body ?? emptyResponseBody(),
+      capturedMaxResponseSize,
+    )
 
     return responseOf(capturedResponse, streamBody)
   }
@@ -318,6 +329,7 @@ export function createRequester(
       ...raw,
       url,
       headers: mergeHeaders(options?.headers, raw.headers),
+      maxResponseSize: validateMaxResponseSize(raw.maxResponseSize ?? instanceMaxResponseSize),
     }
 
     switch (opts.as ?? options?.as) {
@@ -596,9 +608,12 @@ async function bufferAndCheck(
   httpErrors: boolean,
   requestUrl: string,
   requestMethod: string,
+  maxResponseSize: number | undefined,
 ): Promise<BufferedResponse> {
-  const arrayBuffer = await response.arrayBuffer()
-  const bytes = new Uint8Array(arrayBuffer)
+  const bytes =
+    maxResponseSize === undefined || maxResponseSize === -1
+      ? new Uint8Array(await response.arrayBuffer())
+      : await readResponseBody(response.body, maxResponseSize)
   const buffered = createBufferedResponse(
     response.status,
     response.statusText,
@@ -631,6 +646,106 @@ async function bufferAndCheck(
   }
 
   return buffered
+}
+
+// TODO: Replace with ReadableStream.from([]) once it's baseline
+function emptyResponseBody(): ReadableStream<Uint8Array> {
+  return new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.close()
+    },
+  })
+}
+
+function rejectDeclaredResponseTooLarge(
+  response: FetchResponse,
+  maxResponseSize: number | undefined,
+): void {
+  const limit = validateMaxResponseSize(maxResponseSize)
+  if (limit === undefined || response.body === null) return
+
+  const contentEncoding = response.headers.get('content-encoding')
+  if (contentEncoding !== null && contentEncoding.trim().toLowerCase() !== 'identity') return
+
+  const contentLength = response.headers.get('content-length')
+  if (contentLength === null) return
+
+  const normalizedLength = contentLength.trim()
+  if (!/^\d+$/.test(normalizedLength) || Number(normalizedLength) <= limit) return
+
+  const error = new ResponseExceededMaxSizeError()
+  response.body.cancel(error).catch(() => {})
+  throw error
+}
+
+function limitResponseBody(
+  body: ReadableStream<Uint8Array>,
+  maxResponseSize: number | undefined,
+): ReadableStream<Uint8Array> {
+  const limit = validateMaxResponseSize(maxResponseSize)
+  if (limit === undefined) return body
+
+  const reader = body.getReader()
+  let bytesRead = 0
+  return new ReadableStream<Uint8Array>({
+    async pull(controller) {
+      try {
+        const result = await reader.read()
+        if (result.done) {
+          controller.close()
+          return
+        }
+
+        bytesRead += result.value.byteLength
+        if (bytesRead > limit) {
+          const error = new ResponseExceededMaxSizeError()
+          reader.cancel(error).catch(() => {})
+          controller.error(error)
+          return
+        }
+
+        controller.enqueue(result.value)
+      } catch (error) {
+        controller.error(error)
+      }
+    },
+    cancel(reason) {
+      return reader.cancel(reason)
+    },
+  })
+}
+
+async function readResponseBody(
+  body: ReadableStream<Uint8Array> | null,
+  maxResponseSize: number,
+): Promise<Uint8Array> {
+  const reader = limitResponseBody(body ?? emptyResponseBody(), maxResponseSize).getReader()
+  const chunks: Uint8Array[] = []
+  let bytesRead = 0
+  while (true) {
+    const result = await reader.read()
+    if (result.done) break
+
+    bytesRead += result.value.byteLength
+    chunks.push(result.value)
+  }
+
+  const bytes = new Uint8Array(bytesRead)
+  let offset = 0
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+  return bytes
+}
+
+/** @returns A positive integer or `undefined`. */
+function validateMaxResponseSize(maxResponseSize: number | undefined): number | undefined {
+  if (maxResponseSize === undefined || maxResponseSize === -1) return undefined
+  if (!Number.isInteger(maxResponseSize) || maxResponseSize < 0) {
+    throw new TypeError('maxResponseSize must be a non-negative integer or -1')
+  }
+  return maxResponseSize
 }
 
 /**

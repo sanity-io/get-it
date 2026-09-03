@@ -86,3 +86,18 @@ export class TimeoutError extends Error {
     this.code = 'ETIMEDOUT'
   }
 }
+
+/**
+ * An error thrown when a response body exceeds the configured maximum size.
+ *
+ * @public
+ */
+export class ResponseExceededMaxSizeError extends Error {
+  /** Stable error discriminator. */
+  declare name: 'ResponseExceededMaxSizeError'
+
+  constructor() {
+    super('Response content exceeded max size')
+    this.name = 'ResponseExceededMaxSizeError'
+  }
+}
