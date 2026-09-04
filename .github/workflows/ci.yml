@@ -82,7 +82,10 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - run: npx ls-engines
-      - run: npm run build
+      # This build only exists to give the tests something to run against, and
+      # publint packs the tarball with the package manager it detects (pnpm),
+      # which may not run on the version under test. The `build` job publints.
+      - run: npm run build -- --no-publint
       - run: npm test
 
   test-browser:
