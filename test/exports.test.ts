@@ -5,7 +5,7 @@ import pkg from '../package.json'
 /**
  * Faithful packaging-resolution guard.
  *
- * The runtime test pools cannot catch entry-resolution bugs: `@cloudflare/vitest-pool-workers`
+ * The runtime test pools cannot catch entry-resolution bugs: `@cloudflare/vitest-plugin`
  * explicitly *excludes* the `node` condition, so a workerd runtime test always resolves the
  * fetch entry even though real wrangler with `nodejs_compat` enabled *includes* `node` and would
  * resolve the Node entry (pulling in undici).
@@ -60,7 +60,7 @@ describe('package exports resolution', () => {
   const fetchRuntimes: Record<string, string[]> = {
     'wrangler + nodejs_compat': ['workerd', 'worker', 'browser', 'module', 'import', 'node'],
     'wrangler (no nodejs_compat)': ['workerd', 'worker', 'browser', 'module', 'import'],
-    'vitest-pool-workers': ['workerd', 'worker', 'module', 'browser', 'import'],
+    'vitest-plugin': ['workerd', 'worker', 'module', 'browser', 'import'],
     'vercel edge-light': ['edge-light', 'worker', 'browser', 'module', 'import'],
     'react-server (RSC)': ['react-server', 'browser', 'module', 'import'],
     'deno': ['deno', 'import'],
