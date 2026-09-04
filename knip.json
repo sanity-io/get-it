@@ -3,6 +3,5 @@
   "entry": ["bundle-stats.config.ts", "test/bundle/readme-minimal.ts", "test/deno/smoke.ts"],
   "vitest": {
     "config": ["vitest.config.ts", "test/config/vitest.*.config.ts"]
-  },
-  "ignoreBinaries": ["scripts/report-size.sh"]
+  }
 }
