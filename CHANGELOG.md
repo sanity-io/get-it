@@ -1,5 +1,11 @@
 # get-it
 
+## 9.5.3
+
+### Patch Changes
+
+- use any-signal instead of AbortSignal.any for Safari 17.0–17.3 (SAPP-4426) ([#670](https://github.com/sanity-io/get-it/pull/670)) ([02e322b](https://github.com/sanity-io/get-it/commit/02e322b356923d251c94eceb98898cbf9334d7ba))
+
 ## 9.5.2
 
 ### Patch Changes
