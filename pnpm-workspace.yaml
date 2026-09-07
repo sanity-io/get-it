@@ -1,5 +1,8 @@
 allowBuilds:
   esbuild: true
+  # Swaps workerd's JS launcher for the platform binary it would otherwise
+  # resolve on every run.
+  workerd: true
 overrides:
   # @types/node bundles undici-types@6, but we depend on undici@7 whose fetch
   # types use the newer (iterator-helper-bearing) FormData/Headers. Align the

@@ -2,7 +2,7 @@
  * A file/blob entry from a normalized `FormData` body.
  * @internal
  */
-export interface NormalizedFile {
+interface NormalizedFile {
   name: string
   type: string
   size: number

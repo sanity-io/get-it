@@ -50,6 +50,9 @@ jobs:
           - os: ubuntu-latest
             platform: Ubuntu
             node: '22.12.0'
+            # pnpm 11 itself requires Node.js >=22.13, so install dependencies on
+            # 22.13 and switch back to 22.12.0 before building and testing.
+            installNode: '22.13'
           - os: ubuntu-latest
             platform: Ubuntu
             node: '24'
@@ -69,11 +72,21 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           cache: pnpm
-          node-version: ${{ matrix.node }}
+          node-version: ${{ matrix.installNode || matrix.node }}
       - run: pnpm install
+      # Re-pin to the version under test, in case dependencies had to be installed
+      # on a newer one. Scripts run through `npm` since the pnpm CLI may not be
+      # able to run on it - the dependencies are already installed at this point.
+      - uses: actions/setup-node@v7
+        if: matrix.installNode
+        with:
+          node-version: ${{ matrix.node }}
       - run: npx ls-engines
-      - run: pnpm run build
-      - run: pnpm test
+      # This build only exists to give the tests something to run against, and
+      # publint packs the tarball with the package manager it detects (pnpm),
+      # which may not run on the version under test. The `build` job publints.
+      - run: npm run build -- --no-publint
+      - run: npm test
 
   test-browser:
     name: 'Test: Chrome, Firefox, WebKit'
