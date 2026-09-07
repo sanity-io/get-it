@@ -1,5 +1,4 @@
-import {anySignal} from 'any-signal'
-
+import {anySignal} from '../anySignal'
 import {isUint8Array} from './bytes'
 
 // ---------------------------------------------------------------------------

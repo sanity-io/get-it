@@ -186,7 +186,15 @@ const promise = request({url: '/slow', signal: controller.signal})
 controller.abort()
 ```
 
-get-it combines the timeout signal and your signal automatically with [`any-signal`](https://www.npmjs.com/package/any-signal), which works on Safari 17.0–17.3 where `AbortSignal.any()` does not exist. Rejection-only timeouts (`timeout: {signal: false}`) are the exception. For these, get-it sends your signal without a change.
+get-it combines the timeout signal and your signal automatically with `AbortSignal.any()`. Safari 17.0–17.3 has no `AbortSignal.any()`, so get-it uses the native function where it exists and a small fallback where it does not. The fallback is exported as `get-it/any-signal` for your own code:
+
+```ts
+import {anySignal} from 'get-it/any-signal'
+
+const signal = anySignal([controller.signal, AbortSignal.timeout(5000)])
+```
+
+Rejection-only timeouts (`timeout: {signal: false}`) are the exception. For these, get-it sends your signal without a change.
 
 ## Middleware
 
@@ -304,13 +312,14 @@ For the full documentation, read [docs/mock.md](docs/mock.md). It covers respons
 
 ## Entry points
 
-| Import              | Purpose                                                     |
-| ------------------- | ----------------------------------------------------------- |
-| `get-it`            | Core (it selects the Node variant with conditional exports) |
-| `get-it/middleware` | `retry`, `debug`, `isRetryableRequest`, `getRetryDelay`     |
-| `get-it/node`       | `createNodeFetch()` for your own undici dispatcher          |
-| `get-it/mock`       | `createMockFetch()` and matchers for testing                |
-| `get-it/vitest`     | Custom vitest matchers for mock assertions                  |
+| Import              | Purpose                                                      |
+| ------------------- | ------------------------------------------------------------ |
+| `get-it`            | Core (it selects the Node variant with conditional exports)  |
+| `get-it/middleware` | `retry`, `debug`, `isRetryableRequest`, `getRetryDelay`      |
+| `get-it/node`       | `createNodeFetch()` for your own undici dispatcher           |
+| `get-it/mock`       | `createMockFetch()` and matchers for testing                 |
+| `get-it/vitest`     | Custom vitest matchers for mock assertions                   |
+| `get-it/any-signal` | `anySignal()`, `AbortSignal.any()` with a Safari 17 fallback |
 
 ## Migrating from v8
 
