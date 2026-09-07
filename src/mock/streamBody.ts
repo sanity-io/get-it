@@ -1,3 +1,4 @@
+import {combineSignals} from '../combineSignals'
 import {isUint8Array} from './bytes'
 
 // ---------------------------------------------------------------------------
@@ -183,7 +184,7 @@ export function streamFromScript(
   // delayWithAbort/stallUntilAborted wait immediately, instead of leaving its
   // timer/listener alive until the script would otherwise have continued.
   const done = new AbortController()
-  const waitSignal = signal ? AbortSignal.any([signal, done.signal]) : done.signal
+  const waitSignal = combineSignals(done.signal, signal)
 
   const removeAbortListener = () => {
     if (onAbort) {

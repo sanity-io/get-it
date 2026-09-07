@@ -1,3 +1,4 @@
+import {combineSignals} from './combineSignals'
 import {HttpError, TimeoutError} from './errors'
 import {createBufferedResponse} from './response'
 import type {
@@ -135,7 +136,7 @@ export function createRequester(
       // Reject via Promise.race rather than relying on fetch to reject with the
       // abort reason: workerd's fetch reconstructs the reason (losing its
       // prototype, so `instanceof TimeoutError` breaks), and WebKit has dropped
-      // the reason — or ignored `AbortSignal.any`-derived aborts entirely.
+      // the reason — or ignored aborts from a combined signal entirely.
       // In rejection-only mode there is no controller — the race alone rejects.
       controller = attachSignal ? new AbortController() : undefined
       deadlines.push(
@@ -150,10 +151,7 @@ export function createRequester(
 
     // Without a controller (rejection-only mode) the init is passed through
     // untouched, so a caller-provided signal reaches fetch as-is.
-    const signal =
-      controller && init.signal
-        ? AbortSignal.any([init.signal, controller.signal])
-        : (controller?.signal ?? init.signal)
+    const signal = controller ? combineSignals(controller.signal, init.signal) : init.signal
     // fetchFn is invoked inside the try so a synchronous throw still clears
     // the headers timer — otherwise the orphaned deadline would later reject
     // with nothing subscribed to it.
@@ -562,8 +560,8 @@ function buildFetchArgs(
   let clearTotalTimer: (() => void) | undefined
   if (totalMs !== undefined) {
     // Own the deadline timer instead of using AbortSignal.timeout(): WebKit
-    // can garbage-collect an otherwise-unreferenced timeout signal behind
-    // AbortSignal.any(), silently disarming the deadline. The timer callback
+    // can garbage-collect an otherwise-unreferenced timeout signal behind a
+    // combined signal, silently disarming the deadline. The timer callback
     // closure keeps this controller (and thus the abort chain) alive.
     const totalController = new AbortController()
     const timer = setTimeout(
@@ -575,7 +573,7 @@ function buildFetchArgs(
     )
     unrefTimer(timer)
     clearTotalTimer = () => clearTimeout(timer)
-    signal = signal ? AbortSignal.any([signal, totalController.signal]) : totalController.signal
+    signal = combineSignals(totalController.signal, signal)
   }
   if (signal) init.signal = signal
 
