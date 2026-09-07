@@ -38,6 +38,7 @@
       "bun": "./dist/index.node.js",
       "default": "./dist/index.js"
     },
+    "./any-signal": "./dist/any-signal.js",
     "./middleware": "./dist/middleware.js",
     "./mock": "./dist/mock.js",
     "./node": "./dist/node.js",
@@ -76,7 +77,6 @@
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.check.json && tsc --noEmit -p tsconfig.check-node.json"
   },
   "dependencies": {
-    "any-signal": "^4.2.0",
     "undici": "^7.29.0"
   },
   "devDependencies": {
