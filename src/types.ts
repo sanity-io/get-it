@@ -204,10 +204,9 @@ export interface RequestOptions {
   /** Response format — determines the return type. Defaults to buffered. */
   as?: 'json' | 'text' | 'stream'
   /**
-   * Abort signal for cancellation. Combined with the timeout signal (through
-   * `any-signal`, so it also works on Safari 17.0–17.3 which lack
-   * `AbortSignal.any`) — or passed through untouched when the timeout is
-   * rejection-only (`timeout: {signal: false}`).
+   * Abort signal for cancellation. Combined with the timeout signal, or
+   * passed through untouched when the timeout is rejection-only
+   * (`timeout: {signal: false}`).
    */
   signal?: AbortSignal
   /** Override the instance-level `httpErrors` setting for this request. */

@@ -522,7 +522,7 @@ const request = createRequester({
 })
 ```
 
-get-it combines the timeout signal and your `signal` automatically. It uses [`any-signal`](https://www.npmjs.com/package/any-signal) for this instead of `AbortSignal.any()`, so cancellation also works on Safari 17.0–17.3, which have no `AbortSignal.any()`.
+get-it combines the timeout signal and your `signal` automatically with [`any-signal`](https://www.npmjs.com/package/any-signal), which works on Safari 17.0–17.3 where `AbortSignal.any()` does not exist.
 
 **React Native**: v8 detected React Native (`navigator.product === 'ReactNative'`) and used a default timeout of 60 seconds. v9 uses 120 seconds in all runtimes. To get the shorter timeout again:
 

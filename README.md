@@ -186,7 +186,7 @@ const promise = request({url: '/slow', signal: controller.signal})
 controller.abort()
 ```
 
-get-it combines the timeout signal and your signal automatically. It uses [`any-signal`](https://www.npmjs.com/package/any-signal) for this instead of `AbortSignal.any()`, so cancellation also works on Safari 17.0–17.3, which have no `AbortSignal.any()`. Rejection-only timeouts (`timeout: {signal: false}`) are the exception. For these, get-it sends your signal without a change.
+get-it combines the timeout signal and your signal automatically with [`any-signal`](https://www.npmjs.com/package/any-signal), which works on Safari 17.0–17.3 where `AbortSignal.any()` does not exist. Rejection-only timeouts (`timeout: {signal: false}`) are the exception. For these, get-it sends your signal without a change.
 
 ## Middleware
 
