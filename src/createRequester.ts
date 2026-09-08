@@ -1,5 +1,4 @@
-import {anySignal} from 'any-signal'
-
+import {anySignal} from './anySignal'
 import {HttpError, TimeoutError} from './errors'
 import {createBufferedResponse} from './response'
 import type {

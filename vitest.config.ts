@@ -20,6 +20,7 @@ export const sharedConfig = {
   ],
   reporters: process.env['GITHUB_ACTIONS'] ? ['default', 'github-actions'] : 'default',
   alias: {
+    'get-it/any-signal': new URL('./src/_exports/any-signal.ts', import.meta.url).pathname,
     'get-it/middleware': new URL('./src/_exports/middleware.ts', import.meta.url).pathname,
     'get-it/node': new URL('./src/_exports/node.ts', import.meta.url).pathname,
     'get-it/mock': new URL('./src/_exports/mock.ts', import.meta.url).pathname,

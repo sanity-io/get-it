@@ -1,4 +1,5 @@
 import {createRequester, type FetchInit, isTimeoutError, TimeoutError} from 'get-it'
+import {anySignal} from 'get-it/any-signal'
 import {afterEach, beforeEach, describe, expect, it} from 'vitest'
 import {streamBody, streamFromScript, streamStall} from '../src/mock/streamBody'
 
@@ -54,6 +55,53 @@ function settle(promise: Promise<unknown>): Promise<unknown> {
 }
 
 function itCombinesSignals() {
+  it('aborts once, with the reason of the signal that aborted first', () => {
+    const a = new AbortController()
+    const b = new AbortController()
+    const combined = anySignal([a.signal, b.signal])
+    expect(combined).toBeInstanceOf(AbortSignal)
+    expect(combined.aborted).toBe(false)
+
+    let events = 0
+    combined.addEventListener('abort', () => events++)
+    const reason = new Error('b aborted')
+    b.abort(reason)
+    expect(combined.aborted).toBe(true)
+    expect(combined.reason).toBe(reason)
+    expect(events).toBe(1)
+
+    a.abort(new Error('too late'))
+    expect(combined.reason).toBe(reason)
+    expect(events).toBe(1)
+  })
+
+  it('is aborted from the start when an input is already aborted', () => {
+    const live = new AbortController()
+    const dead = new AbortController()
+    const reason = new Error('already aborted')
+    dead.abort(reason)
+    const combined = anySignal([live.signal, dead.signal])
+    expect(combined.aborted).toBe(true)
+    expect(combined.reason).toBe(reason)
+  })
+
+  it('uses the first aborted input when several are already aborted', () => {
+    const first = new AbortController()
+    const second = new AbortController()
+    first.abort(new Error('first'))
+    second.abort(new Error('second'))
+    const combined = anySignal([first.signal, second.signal])
+    expect(combined.reason).toBe(first.signal.reason)
+  })
+
+  it('aborting one input leaves the other inputs untouched', () => {
+    const a = new AbortController()
+    const b = new AbortController()
+    anySignal([a.signal, b.signal])
+    a.abort()
+    expect(b.signal.aborted).toBe(false)
+  })
+
   it('a caller signal cancels a request that also has a total timeout', async () => {
     const observed = createSignalObservingFetch()
     const request = createRequester({timeout: {total: 30_000}, fetch: observed.fetch})
