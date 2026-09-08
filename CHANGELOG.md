@@ -1,5 +1,11 @@
 # get-it
 
+## 9.5.4
+
+### Patch Changes
+
+- replace the any-signal dependency with a get-it/any-signal ponyfill (SAPP-4426) ([#672](https://github.com/sanity-io/get-it/pull/672)) ([84cbf8d](https://github.com/sanity-io/get-it/commit/84cbf8d417a17db0633ad652754c840bb383305e))
+
 ## 9.5.3
 
 ### Patch Changes
