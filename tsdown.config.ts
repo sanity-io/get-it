@@ -29,12 +29,17 @@ const config = await defineConfig({
       // entry. Guarded by test/exports.test.ts.
       const fetchEntry = exports['.']
       const nodeEntry = exports['./index.node']
+      const nativeEntry = exports['./index.react-native']
       delete exports['./index.node']
+      delete exports['./index.react-native']
       exports['.'] = {
         'react-server': fetchEntry,
         'deno': fetchEntry,
         'workerd': fetchEntry,
         'worker': fetchEntry,
+        // Web wins when Metro also asserts react-native for RN Web.
+        'browser': fetchEntry,
+        'react-native': nativeEntry,
         'node': nodeEntry,
         'bun': nodeEntry,
         'default': fetchEntry,

@@ -34,6 +34,8 @@
       "deno": "./dist/index.js",
       "workerd": "./dist/index.js",
       "worker": "./dist/index.js",
+      "browser": "./dist/index.js",
+      "react-native": "./dist/index.react-native.js",
       "node": "./dist/index.node.js",
       "bun": "./dist/index.node.js",
       "default": "./dist/index.js"
