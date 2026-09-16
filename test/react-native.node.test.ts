@@ -7,6 +7,8 @@ import {retry} from '../src/middleware/retry'
 import {wrapReactNativeFetch} from '../src/reactNativeFetch'
 import type {FetchFunction} from '../src/types'
 
+// Exercise the React Native adapter with injected fetch implementations in the
+// default Node/Bun suite. Other runtime suites use their own package entry point.
 class FetchError extends Error {}
 
 const url = 'https://example.com/test'
