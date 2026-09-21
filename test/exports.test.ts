@@ -65,6 +65,7 @@ describe('package exports resolution', () => {
     'react-server (RSC)': ['react-server', 'browser', 'module', 'import'],
     'deno': ['deno', 'import'],
     'browser': ['browser', 'module', 'import'],
+    'React Native Web': ['react-native', 'browser', 'import'],
   }
 
   for (const [name, conditions] of Object.entries(fetchRuntimes)) {
@@ -88,6 +89,19 @@ describe('package exports resolution', () => {
       expect(resolve('.', conditions)).toBe(NODE_ENTRY)
     })
   }
+
+  test.each([
+    ['react-native', 'import'],
+    ['react-native', 'require'],
+    ['react-native', 'node', 'import'],
+  ])('React Native conditions %j resolve to the native entry', (...conditions) => {
+    expect(resolve('.', conditions)).toBe('./dist/index.react-native.js')
+    expect(resolve('./middleware', conditions)).toBe('./dist/middleware.js')
+  })
+
+  test('the native entry is not a public subpath', () => {
+    expect(resolve('./index.react-native', ['import'])).toBeNull()
+  })
 
   test('the "node" condition is ordered before the fetch fallback', () => {
     // Regression guard for the original bug: a worker-like runtime that also activates the
