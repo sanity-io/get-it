@@ -1,5 +1,11 @@
 # get-it
 
+## 9.5.5
+
+### Patch Changes
+
+- react native export condition to handle abort/retry ([#676](https://github.com/sanity-io/get-it/pull/676)) ([55be6c4](https://github.com/sanity-io/get-it/commit/55be6c411f7d70f1f379d00ca548715242679564))
+
 ## 9.5.4
 
 ### Patch Changes
