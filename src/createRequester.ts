@@ -75,6 +75,7 @@ export function createRequester(
     response: FetchResponse
     url: string
     method: string
+    signal: AbortSignal | undefined
     totalDeadline: Promise<never> | undefined
     clearDeadline: () => void
   }> {
@@ -115,15 +116,6 @@ export function createRequester(
       totalTimeout?.clear()
     }
 
-    if (headersMs === undefined && totalDeadline === undefined) {
-      try {
-        return {response: await fetchFn(url, init), url, method, totalDeadline, clearDeadline}
-      } catch (reason) {
-        clearDeadline()
-        throw reason
-      }
-    }
-
     // Deadlines competing with the fetch to settle the request promise.
     const deadlines: Promise<never>[] = totalDeadline === undefined ? [] : [totalDeadline]
 
@@ -162,17 +154,17 @@ export function createRequester(
     try {
       fetching = Promise.resolve(controller ? fetchFn(url, {...init, signal}) : fetchFn(url, init))
       return {
-        response: await Promise.race([fetching, ...deadlines]),
+        response: await raceDeadline(fetching, init.signal, ...deadlines),
         url,
         method,
+        signal: init.signal,
         totalDeadline,
         clearDeadline,
       }
     } catch (reason) {
-      // A deadline won the race (or the fetch itself failed): the fetch's
-      // later settlement must not become an unhandled rejection. In
-      // rejection-only mode the fetch was not aborted, so a late response
-      // arrives with a dangling body — cancel it to release the connection.
+      // A deadline or abort can win before the transport settles. Even an
+      // aborted fetch may still deliver a response: cancel its late body to
+      // release the connection and keep any late rejection handled.
       fetching?.then((response) => response.body?.cancel()).catch(() => {})
       // The request has settled by rejection, so no deadline governs anything
       // anymore — release the total-deadline timers.
@@ -189,14 +181,20 @@ export function createRequester(
    */
   async function getItBuffered(opts: RequestOptions): Promise<BufferedResponse> {
     const fetchFn: FetchFunction = opts.fetch ?? instanceFetch ?? globalThis.fetch
-    const {response, url, method, totalDeadline, clearDeadline} = await performFetch(fetchFn, opts)
+    const {response, url, method, signal, totalDeadline, clearDeadline} = await performFetch(
+      fetchFn,
+      opts,
+    )
     const httpErrors = opts.httpErrors ?? instanceHttpErrors ?? true
-    // The rejection-only total deadline covers body download too, so keep
-    // racing it while buffering (abort mode covers this via the init signal).
-    // Once buffering settles the deadline is spent either way — release its
-    // timers.
+    // Enforce aborts ourselves: some transports leave arrayBuffer() pending
+    // even after their signal aborts. The same total deadline covers headers
+    // and buffering without restarting the timer between phases.
     try {
-      return await raceDeadline(bufferAndCheck(response, httpErrors, url, method), totalDeadline)
+      return await raceDeadline(
+        bufferAndCheck(response, httpErrors, url, method),
+        signal,
+        totalDeadline,
+      )
     } finally {
       clearDeadline()
     }
@@ -243,7 +241,7 @@ export function createRequester(
 
     async function getItStreamed(reqOpts: RequestOptions): Promise<BufferedResponse> {
       const fetchFn: FetchFunction = reqOpts.fetch ?? instanceFetch ?? globalThis.fetch
-      const {response, url, method, totalDeadline, clearDeadline} = await performFetch(
+      const {response, url, method, signal, totalDeadline, clearDeadline} = await performFetch(
         fetchFn,
         reqOpts,
       )
@@ -253,6 +251,7 @@ export function createRequester(
         try {
           return await raceDeadline(
             bufferAndCheck(response, httpErrors, url, method),
+            signal,
             totalDeadline,
           )
         } finally {
@@ -427,17 +426,40 @@ function rejectAfterTimeout(
 }
 
 /**
- * Awaits `work` while a rejection-only total deadline keeps racing it. If the
- * deadline wins, `work` continues in the background — its eventual settlement
- * is swallowed so it cannot become an unhandled rejection.
+ * Enforces deadlines and cancellation independently of the transport. Losing
+ * work stays observed by Promise.race so a late rejection is still handled.
+ * Abort listeners only live for the phase being awaited; the total timeout
+ * timer continues across phases and, in abort mode, after stream hand-off.
  */
-async function raceDeadline<T>(work: Promise<T>, deadline: Promise<never> | undefined): Promise<T> {
-  if (deadline === undefined) return work
+async function raceDeadline<T>(
+  work: Promise<T>,
+  signal: AbortSignal | undefined,
+  ...deadlines: (Promise<never> | undefined)[]
+): Promise<T> {
+  const pending = deadlines.filter((deadline) => deadline !== undefined)
+  if (!signal && pending.length === 0) return work
+
+  let onAbort: (() => void) | undefined
+  if (signal) {
+    pending.push(
+      new Promise<never>((_, reject) => {
+        onAbort = () =>
+          reject(
+            signal.reason !== undefined
+              ? signal.reason
+              : new DOMException('The operation was aborted.', 'AbortError'),
+          )
+        if (signal.aborted) onAbort()
+        else signal.addEventListener('abort', onAbort, {once: true})
+      }),
+    )
+  }
+
   try {
-    return await Promise.race([work, deadline])
-  } catch (reason) {
-    work.catch(() => {})
-    throw reason
+    // Check already-fired deadlines before an already-settled transport.
+    return await Promise.race([...pending, work])
+  } finally {
+    if (onAbort) signal?.removeEventListener('abort', onAbort)
   }
 }
 
