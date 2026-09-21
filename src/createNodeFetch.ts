@@ -1,4 +1,10 @@
-import {Agent, EnvHttpProxyAgent, fetch as undiciFetch, ProxyAgent} from 'undici'
+import {
+  Agent,
+  EnvHttpProxyAgent,
+  fetch as undiciFetch,
+  FormData as UndiciFormData,
+  ProxyAgent,
+} from 'undici'
 import type Dispatcher from 'undici/types/dispatcher'
 
 import type {FetchFunction, FetchInit, FetchResponse} from './types'
@@ -83,7 +89,8 @@ export function createNodeFetch(options?: NodeFetchOptions): FetchFunction {
   const halfDuplex: {duplex: 'half'} = {duplex: 'half'}
 
   return async function nodeFetch(input: string, reqInit?: FetchInit): Promise<FetchResponse> {
-    const {body, ...rest} = reqInit ?? {}
+    const {body: inputBody, ...rest} = reqInit ?? {}
+    const body = normalizeBody(inputBody)
     const init = {
       ...rest,
       dispatcher,
@@ -95,6 +102,18 @@ export function createNodeFetch(options?: NodeFetchOptions): FetchFunction {
     const response = await undiciFetch(input, init)
     return adaptResponse(response)
   }
+}
+
+function normalizeBody(body: FetchInit['body']) {
+  // Undici only recognizes its own FormData class; native FormData would
+  // otherwise be sent as the string "[object FormData]".
+  if (!(body instanceof FormData) || body instanceof UndiciFormData) return body
+
+  const form = new UndiciFormData()
+  for (const [name, value] of body) {
+    form.append(name, value)
+  }
+  return form
 }
 
 /**
