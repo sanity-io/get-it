@@ -48,7 +48,7 @@ describe('deadlines with an uncooperative transport', () => {
     await vi.advanceTimersByTimeAsync(49)
     expect(outcome.settled).toBe(false)
     await vi.advanceTimersByTimeAsync(1)
-    expect(outcome.error).toBeInstanceOf(Error)
+    expect(outcome.error).toBeInstanceOf(DOMException)
     expect(outcome.error).toMatchObject({name: 'TimeoutError'})
     expect(init?.signal?.aborted).toBe(true)
     expect(outcome.error).toBe(init?.signal?.reason)
@@ -66,7 +66,7 @@ describe('deadlines with an uncooperative transport', () => {
     })
     const outcome = observe(request({url, as, signal: new AbortController().signal}))
     await vi.advanceTimersByTimeAsync(50)
-    expect(outcome.error).toBeInstanceOf(Error)
+    expect(outcome.error).toBeInstanceOf(DOMException)
     expect(outcome.error).toMatchObject({name: 'TimeoutError'})
   })
 
@@ -74,7 +74,7 @@ describe('deadlines with an uncooperative transport', () => {
     const request = createRequester({timeout: 50, fetch: () => new Promise(() => {})})
     const outcome = observe(request(url))
     await vi.advanceTimersByTimeAsync(50)
-    expect(outcome.error).toBeInstanceOf(Error)
+    expect(outcome.error).toBeInstanceOf(DOMException)
     expect(outcome.error).toMatchObject({name: 'TimeoutError'})
   })
 
@@ -90,7 +90,7 @@ describe('deadlines with an uncooperative transport', () => {
     await vi.advanceTimersByTimeAsync(49)
     expect(outcome.settled).toBe(false)
     await vi.advanceTimersByTimeAsync(1)
-    expect(outcome.error).toBeInstanceOf(Error)
+    expect(outcome.error).toBeInstanceOf(DOMException)
     expect(outcome.error).toMatchObject({name: 'TimeoutError'})
   })
 
@@ -109,7 +109,7 @@ describe('deadlines with an uncooperative transport', () => {
       const request = createRequester({timeout: 50, fetch: async () => new LateBodyResponse()})
       const outcome = observe(request(url))
       await vi.advanceTimersByTimeAsync(50)
-      expect(outcome.error).toBeInstanceOf(Error)
+      expect(outcome.error).toBeInstanceOf(DOMException)
       expect(outcome.error).toMatchObject({name: 'TimeoutError'})
       const error = outcome.error
       // A late body rejection must remain handled after the request rejects.
@@ -141,7 +141,7 @@ describe('deadlines with an uncooperative transport', () => {
     })
     const outcome = observe(request(url))
     await vi.advanceTimersByTimeAsync(50)
-    expect(outcome.error).toBeInstanceOf(Error)
+    expect(outcome.error).toBeInstanceOf(DOMException)
     expect(outcome.error).toMatchObject({name: 'TimeoutError'})
     await vi.advanceTimersByTimeAsync(50)
     expect(cancelled).toBe(true)
@@ -196,7 +196,7 @@ describe('deadlines with an uncooperative transport', () => {
     Object.defineProperty(controller.signal, 'reason', {value: undefined})
     controller.abort()
     await vi.advanceTimersByTimeAsync(0)
-    expect(outcome.error).toBeInstanceOf(Error)
+    expect(outcome.error).toBeInstanceOf(DOMException)
     expect(outcome.error).toMatchObject({name: 'AbortError'})
   })
 
@@ -225,7 +225,7 @@ describe('deadlines with an uncooperative transport', () => {
     })
     const outcome = observe(request(url))
     await vi.advanceTimersByTimeAsync(150)
-    expect(outcome.error).toBeInstanceOf(Error)
+    expect(outcome.error).toBeInstanceOf(DOMException)
     expect(outcome.error).toMatchObject({name: 'TimeoutError'})
     expect(attempts).toBe(1)
   })
