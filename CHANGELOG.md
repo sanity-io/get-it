@@ -1,5 +1,11 @@
 # get-it
 
+## 9.5.7
+
+### Patch Changes
+
+- Fix React Native requests hanging after a timeout or cancellation when the fetch implementation leaves response body reads pending. ([#679](https://github.com/sanity-io/get-it/pull/679)) ([677c48d](https://github.com/sanity-io/get-it/commit/677c48ddd7fc1613bc31b751fb74f0f5e7f4acec))
+
 ## 9.5.6
 
 ### Patch Changes
