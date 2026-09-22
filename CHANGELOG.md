@@ -1,5 +1,11 @@
 # get-it
 
+## 9.5.6
+
+### Patch Changes
+
+- encode native FormData as multipart in Node ([#678](https://github.com/sanity-io/get-it/pull/678)) ([32515e8](https://github.com/sanity-io/get-it/commit/32515e86fb418b55006cf1bc3f23ef06f1f89a13))
+
 ## 9.5.5
 
 ### Patch Changes
