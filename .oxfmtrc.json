@@ -6,6 +6,5 @@
   "semi": false,
   "singleQuote": true,
   "quoteProps": "consistent",
-  "bracketSpacing": false,
-  "ignorePatterns": [".changeset/*.md"]
+  "bracketSpacing": false
 }
