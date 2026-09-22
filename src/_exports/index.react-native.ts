@@ -6,7 +6,7 @@ export * from './index'
 
 /**
  * Creates a requester for React Native, normalizing fetch network failures
- * and restoring abort reasons before the retry middleware handles them.
+ * and enforcing cancellation while fetching and buffering response bodies.
  * @public
  */
 export function createRequester(options: RequesterOptions & {as: 'json'}): RequestFunction<'json'>
@@ -23,7 +23,7 @@ export function createRequester(
 ): RequestFunction<'json' | 'text' | 'stream' | undefined> {
   const instanceFetch = options?.fetch
   // Run inside all user middleware so per-request and middleware-supplied
-  // fetch overrides are normalized too. Only fetch rejections are caught.
+  // fetch overrides are guarded too. Only fetch rejections are normalized.
   const normalizeFetch: WrappingMiddleware = (opts, next) =>
     next({
       ...opts,
