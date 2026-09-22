@@ -1,12 +1,17 @@
-import {createRequester, type FetchInit, type RequestOptions} from 'get-it'
+import {type FetchInit, type RequestOptions} from 'get-it'
 import {retry} from 'get-it/middleware'
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
+
+import {createRequester} from '../src/_exports/index.react-native'
+import {wrapReactNativeFetch} from '../src/reactNativeFetch'
+import type {FetchResponse} from '../src/types'
 
 const url = 'https://example.com/stalled'
 
 // Models transports whose buffered body reader does not react to aborts.
 class PendingBodyResponse extends Response {
   override arrayBuffer = (): Promise<ArrayBuffer> => new Promise(() => {})
+  override text = (): Promise<string> => new Promise(() => {})
 }
 
 function observe(promise: Promise<unknown>) {
@@ -23,7 +28,7 @@ function observe(promise: Promise<unknown>) {
   return outcome
 }
 
-describe('deadlines with an uncooperative transport', () => {
+describe('React Native deadlines with an uncooperative transport', () => {
   beforeEach(() => vi.useFakeTimers())
   afterEach(() => {
     vi.useRealTimers()
@@ -228,5 +233,79 @@ describe('deadlines with an uncooperative transport', () => {
     expect(outcome.error).toBeInstanceOf(DOMException)
     expect(outcome.error).toMatchObject({name: 'TimeoutError'})
     expect(attempts).toBe(1)
+  })
+
+  it.each<'arrayBuffer' | 'text'>(['arrayBuffer', 'text'])(
+    'bounds the wrapped %s reader without changing its abort reason',
+    async (reader) => {
+      const controller = new AbortController()
+      const fetch = wrapReactNativeFetch(async () => new PendingBodyResponse())
+      const response = await fetch(url, {signal: controller.signal})
+      const outcome = observe(response[reader]())
+      const reason = new Error('cancelled by caller')
+      controller.abort(reason)
+      await vi.advanceTimersByTimeAsync(0)
+      expect(outcome.error).toBe(reason)
+    },
+  )
+
+  it('preserves response metadata and reads the original body lazily', async () => {
+    const body = new ReadableStream<Uint8Array>({start: (controller) => controller.close()})
+    let bodyReads = 0
+    const response: FetchResponse = {
+      ok: true,
+      status: 201,
+      statusText: 'Created',
+      headers: new Headers({'x-body': 'original'}),
+      url: 'https://example.com/redirected',
+      redirected: true,
+      get body() {
+        bodyReads++
+        return body
+      },
+      // These readers need the original receiver, like native Response methods.
+      async text() {
+        return this.headers.get('x-body') ?? ''
+      },
+      async arrayBuffer() {
+        return new TextEncoder().encode(await this.text()).buffer
+      },
+    }
+    const fetch = wrapReactNativeFetch(async () => response)
+    const wrapped = await fetch(url, {signal: new AbortController().signal})
+    expect(wrapped.ok).toBe(true)
+    expect(wrapped.status).toBe(201)
+    expect(wrapped.statusText).toBe('Created')
+    expect(wrapped.headers).toBe(response.headers)
+    expect(wrapped.url).toBe('https://example.com/redirected')
+    expect(wrapped.redirected).toBe(true)
+    expect(await wrapped.text()).toBe('original')
+    expect(new TextDecoder().decode(await wrapped.arrayBuffer())).toBe('original')
+    expect(bodyReads).toBe(0)
+    expect(wrapped.body).toBe(body)
+  })
+
+  it('returns the original response when no signal is attached', async () => {
+    const response = new Response('ok')
+    const fetch = wrapReactNativeFetch(async () => response)
+    expect(await fetch(url)).toBe(response)
+  })
+
+  it('keeps the original stream and its total abort timer after hand-off', async () => {
+    const body = new ReadableStream<Uint8Array>({start: (controller) => controller.close()})
+    let signal: AbortSignal | undefined
+    const request = createRequester({
+      timeout: 50,
+      fetch: async (_input, init) => {
+        signal = init?.signal
+        return new Response(body)
+      },
+    })
+    const response = await request({url, as: 'stream'})
+    expect(response.body).toBe(body)
+    expect(signal?.aborted).toBe(false)
+    await vi.advanceTimersByTimeAsync(50)
+    expect(signal?.aborted).toBe(true)
+    expect(signal?.reason).toMatchObject({name: 'TimeoutError'})
   })
 })
