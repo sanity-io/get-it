@@ -777,6 +777,27 @@ beforeRequest(opts) {
 
 Use **lowercase header names** in middleware. get-it normalizes all keys to lowercase. If you use a different case (`'Content-Type'` when `'content-type'` is present), you create a duplicate entry and you do not override the first entry.
 
+### Host header overrides
+
+Since get-it v9.6.0, the Node.js transport preserves explicit `Host` headers for virtual-host routing. Replace the v8 `headers()` middleware with the `headers` option. A separate fetch adapter is not required.
+
+For example, connect to a local server and select a virtual host:
+
+```ts
+import {createRequester} from 'get-it'
+
+const request = createRequester({
+  base: 'http://127.0.0.1:8080',
+  headers: {host: 'api.example.com'},
+})
+
+const response = await request('/items')
+```
+
+After upgrading, remove any custom `fetch` adapter whose only purpose was to preserve `Host`. Adapters that provide other behavior need a separate review.
+
+In Node.js, the override remains on same-origin redirects. A cross-origin redirect discards it for the rest of the request, including redirects back to the original origin. Bun retains its native fetch behavior. Browser fetch does not permit this override.
+
 ## Entry points
 
 | Import              | Purpose                                                             |

@@ -50,6 +50,10 @@ export interface NodeFetchOptions {
  *   `HTTP_PROXY` / `HTTPS_PROXY` / `NO_PROXY` from the environment.
  * - `proxy: "<url>"` — uses `ProxyAgent` with an explicit proxy URL.
  * - `proxy: false` — uses a plain `Agent` with no proxy.
+ *
+ * Since get-it v9.6.0, explicit `Host` headers are preserved in Node.js for
+ * virtual-host routing. The override is discarded when a redirect crosses
+ * origins, including on any later return to the original origin.
  * @public
  */
 export function createNodeFetch(options?: NodeFetchOptions): FetchFunction {
@@ -91,9 +95,10 @@ export function createNodeFetch(options?: NodeFetchOptions): FetchFunction {
   return async function nodeFetch(input: string, reqInit?: FetchInit): Promise<FetchResponse> {
     const {body: inputBody, ...rest} = reqInit ?? {}
     const body = normalizeBody(inputBody)
+    const host = reqInit?.headers ? new Headers(reqInit.headers).get('host') : null
     const init = {
       ...rest,
-      dispatcher,
+      dispatcher: host === null ? dispatcher : preserveHost(dispatcher, input, host),
       // Only set body when it's defined — fetch _can_ throw on
       // `body: undefined` for some request methods in strict mode.
       ...(body === undefined ? {} : {body}),
@@ -102,6 +107,32 @@ export function createNodeFetch(options?: NodeFetchOptions): FetchFunction {
     const response = await undiciFetch(input, init)
     return adaptResponse(response)
   }
+}
+
+function preserveHost(dispatcher: Dispatcher, input: string, host: string): Dispatcher {
+  // Bun's built-in undici shim has no dispatcher interception. Its native fetch
+  // already accepts Host; keep its existing behavior, including redirects.
+  if (typeof dispatcher.compose !== 'function') return dispatcher
+
+  const origin = new URL(input).origin
+  let sameOrigin = true
+
+  // Fetch removes Host before dispatch. Restore it at the transport boundary
+  // so fetch still owns body consumption, decompression, redirects and aborts.
+  // This interceptor belongs to one fetch call, not the shared connection pool.
+  return dispatcher.compose((dispatch) => (opts, handler) => {
+    if (opts.origin === undefined || new URL(opts.origin).origin !== origin) {
+      sameOrigin = false
+    }
+    if (!sameOrigin) return dispatch(opts, handler)
+
+    const headers = opts.headers
+    if (Array.isArray(headers)) {
+      return dispatch({...opts, headers: [...headers, 'host', host]}, handler)
+    }
+    const entries = headers && Symbol.iterator in headers ? headers : Object.entries(headers ?? {})
+    return dispatch({...opts, headers: {...Object.fromEntries(entries), host}}, handler)
+  })
 }
 
 function normalizeBody(body: FetchInit['body']) {
