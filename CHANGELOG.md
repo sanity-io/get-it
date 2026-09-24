@@ -1,5 +1,11 @@
 # get-it
 
+## 9.6.0
+
+### Minor Changes
+
+- support `host` header override in node.js environment ([#688](https://github.com/sanity-io/get-it/pull/688)) ([ae8d51d](https://github.com/sanity-io/get-it/commit/ae8d51d1f594b0a798d38f94140f4223947b3e32))
+
 ## 9.5.8
 
 ### Patch Changes
