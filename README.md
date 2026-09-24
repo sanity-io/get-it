@@ -270,6 +270,25 @@ const request = createRequester({
 })
 ```
 
+### Host header overrides
+
+Since get-it v9.6.0, the default Node.js transport preserves explicit `Host` headers. This supports servers that route requests by virtual hostname:
+
+```ts
+import {createRequester} from 'get-it'
+
+const request = createRequester({
+  base: 'http://127.0.0.1:8080',
+  headers: {host: 'api.example.com'},
+})
+
+const response = await request('/items')
+```
+
+Header names are case-insensitive. The override remains on redirects within the same origin. When a redirect changes the scheme, hostname, or port, get-it discards the override for the rest of that request. This includes redirects back to the original origin.
+
+`createNodeFetch()` provides the same behavior in Node.js with explicit proxy and TLS configuration. Bun and custom fetch implementations retain their own header and redirect behavior. Browser fetch does not permit `Host` overrides.
+
 ## Testing
 
 `get-it/mock` gives you a mock fetch to test code that uses get-it. It uses no network and it patches no globals. Inject `mock.fetch` where you normally pass `fetch`.
