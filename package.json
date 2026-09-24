@@ -1,6 +1,6 @@
 {
   "name": "get-it",
-  "version": "9.5.8",
+  "version": "9.6.0",
   "description": "Generic HTTP request library for node, browsers and workers",
   "keywords": [
     "fetch",
