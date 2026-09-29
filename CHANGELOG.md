@@ -1,5 +1,11 @@
 # get-it
 
+## 9.6.1
+
+### Patch Changes
+
+- **deps:** update undici to ^7.30.0 ([#691](https://github.com/sanity-io/get-it/pull/691)) ([27be57f](https://github.com/sanity-io/get-it/commit/27be57f20598a138506afbc84a2c1201f0ea2bfa))
+
 ## 9.6.0
 
 ### Minor Changes
