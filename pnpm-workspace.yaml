@@ -17,3 +17,6 @@ minimumReleaseAgeExclude:
   - lodash@4.17.24
   - vite@7.3.2
   - ip-address@10.1.1
+  - '@cloudflare/vitest-plugin@1.4.1'
+  - miniflare@5.20261006.2-beta
+  - wrangler@4.150.0
