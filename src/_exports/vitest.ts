@@ -1,12 +1,14 @@
+// Preserve the module import in declarations so custom matchers augment Vitest's types.
+import 'vitest'
 import {expect} from 'vitest'
 
 import {mockMatchers} from '../mock/vitestMatchers'
 
 expect.extend(mockMatchers)
 
-// Augment vitest's Assertion interface
+// Omit type parameters to support Assertion across Vitest versions.
 declare module 'vitest' {
-  interface Assertion<T> {
+  interface Assertion {
     toHaveReceivedRequest(
       method: string,
       url: string,

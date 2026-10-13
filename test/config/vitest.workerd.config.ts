@@ -1,4 +1,4 @@
-import {cloudflareTest} from '@cloudflare/vitest-pool-workers'
+import {cloudflareTest} from '@cloudflare/vitest-plugin'
 import {defineConfig} from 'vitest/config'
 
 import {nonNodeExclude, sharedConfig} from '../../vitest.config'
@@ -16,6 +16,8 @@ export default defineConfig({
   ],
   test: {
     ...sharedConfig,
+    // workerd cannot read transformed modules from Vitest's host filesystem cache.
+    fsModuleCache: false,
     exclude: nonNodeExclude,
   },
 })
