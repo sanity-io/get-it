@@ -99,7 +99,7 @@
     "oxlint": "^1.87.0",
     "playwright": "^1.64.0",
     "tsdown": "^0.23.1",
-    "typescript": "6.0.3",
+    "typescript": "7.0.2",
     "unrun": "^0.3.1",
     "vitest": "^5.0.4"
   },
