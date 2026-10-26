@@ -3,7 +3,7 @@
   // Uses @types/node for web platform types (Headers, ReadableStream, etc.)
   // instead of DOM. Includes createNodeFetch and the node entry point,
   // excludes the generic entry point (index.ts) since Node uses index.node.ts.
-  "extends": "./tsconfig.settings",
+  "extends": ["./tsconfig.settings", "@sanity/tsconfig/isolated-declarations"],
   "include": ["./src"],
   "exclude": ["./src/_exports/index.ts"],
   "compilerOptions": {
