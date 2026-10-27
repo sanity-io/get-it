@@ -332,7 +332,17 @@ function toHaveBeenCancelled(received: unknown): MatcherResult {
  * Custom vitest matchers for MockFetch and RecordedRequest assertions.
  * @public
  */
-export const mockMatchers = {
+export const mockMatchers: {
+  toHaveReceivedRequest: typeof toHaveReceivedRequest
+  toHaveReceivedRequestTimes: typeof toHaveReceivedRequestTimes
+  toHaveConsumedAllMocks: typeof toHaveConsumedAllMocks
+  toHaveHeader: typeof toHaveHeader
+  toHaveBody: typeof toHaveBody
+  toHaveQuery: typeof toHaveQuery
+  toHaveMethod: typeof toHaveMethod
+  toHaveUrl: typeof toHaveUrl
+  toHaveBeenCancelled: typeof toHaveBeenCancelled
+} = {
   toHaveReceivedRequest,
   toHaveReceivedRequestTimes,
   toHaveConsumedAllMocks,
