@@ -193,6 +193,15 @@ export interface RequesterOptions {
 export interface RequestOptions {
   /** The URL to request. Relative URLs are resolved against `RequesterOptions.base`. */
   url: string
+  /**
+   * Static URL template or service/route label used in error messages instead of the URL.
+   * Follows OpenTelemetry's `url.template` convention, e.g. `/projects/{projectId}`.
+   * Use a stable value without credentials, query values, or sensitive path values.
+   * Core uses it for HTTP response, headers-timeout, and JSON parse errors.
+   * The optional `errorContext()` middleware also uses it for other request failures.
+   * This label is not expanded or sent to fetch. It does not redact error properties or causes.
+   */
+  urlTemplate?: string
   /** HTTP method. Defaults to `GET`, or `POST` when a body is present. */
   method?: string
   /** Request body. Plain objects and arrays are JSON-serialized automatically. */

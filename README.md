@@ -101,6 +101,7 @@ file.body // ReadableStream<Uint8Array>
 | Option        | Type                                                       | Description                                                    |
 | ------------- | ---------------------------------------------------------- | -------------------------------------------------------------- |
 | `url`         | `string`                                                   | Request URL (required)                                         |
+| `urlTemplate` | `string`                                                   | Static template or service/route label for error messages      |
 | `method`      | `string`                                                   | HTTP method                                                    |
 | `body`        | `unknown`                                                  | Request body (objects auto-serialized as JSON)                 |
 | `headers`     | `FetchHeaders`                                             | Merged with instance headers                                   |
@@ -149,6 +150,29 @@ const request = createRequester({
 })
 const res = await request({url: 'https://example.com/big-file', as: 'stream'})
 ```
+
+## Error messages
+
+Enable the `errorContext()` middleware to expose more context on errors that occur. By default, many errors are emitted by the underlying fetch API simply as `fetch error`. With the error context middleware enabled, we include the HTTP method and (part of) the URL in the error message, as well as the underlying cause.
+
+Use the `urlTemplate` option to give errors a "normalized" URL. This follows OpenTelemetry's [`url.template` convention](https://opentelemetry.io/docs/specs/semconv/registry/attributes/url/): use a static template with placeholders for dynamic path values. If no template is provided, it uses the URL.
+
+```ts
+import {createRequester} from 'get-it'
+import {errorContext, retry} from 'get-it/middleware'
+
+const request = createRequester({middleware: [retry(), errorContext()]})
+await request({
+  url: 'https://my.api/projects/abc123/datasets/myproduct',
+  urlTemplate: '/projects/:projectId/datasets/:datasetName',
+})
+// Fetch failure: HTTP GET /projects/:projectId/datasets/:datasetName failed: read ECONNRESET
+```
+
+`errorContext()` should generally be placed _last_ in the middleware chain: after wrapping middleware that changes request options.
+
+> [!WARNING]
+> Enabling the `errorContext` middleware _without_ providing a `urlTemplate` might expose sensitive values if they are part of the URL (to error reporters and anything that uses the error message).
 
 ## Error handling
 
