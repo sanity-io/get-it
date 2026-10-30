@@ -1,5 +1,5 @@
 import {createRequester} from 'get-it'
-import {retry} from 'get-it/middleware'
+import {errorContext, retry} from 'get-it/middleware'
 import {describe, expect, it} from 'vitest'
 
 const baseUrl = 'http://localhost:9980/req-test'
@@ -62,11 +62,18 @@ describe('keep-alive (connection reuse) [node]', {timeout: 15000}, () => {
   })
 
   it('does not retry the reset without the retry middleware', async () => {
-    const request = createRequester({base: baseUrl, httpErrors: false})
+    const request = createRequester({
+      base: baseUrl,
+      httpErrors: false,
+      middleware: [errorContext()],
+    })
 
     // undici does not auto-retry an in-flight reset, so without the retry
     // middleware the error propagates to the caller.
-    await expect(request(`/fail?uuid=keepalive-noretry-${Math.random()}&n=2`)).rejects.toThrow()
+    const path = `/fail?uuid=keepalive-noretry-${Math.random()}&n=2`
+    await expect(request(path)).rejects.toThrow(
+      'HTTP GET localhost:9980/req-test/fail?… failed: other side closed',
+    )
   })
 
   it('does not retry non-idempotent methods even with retry middleware', async () => {

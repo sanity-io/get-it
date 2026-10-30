@@ -132,7 +132,13 @@ export function createRequester(
     if (headersMs !== undefined) {
       // Created eagerly so the stack trace points at the request call site
       // rather than an empty timer-callback stack.
-      const timeoutError = new TimeoutError({url, method, timeoutMs: headersMs, phase: 'headers'})
+      const timeoutError = new TimeoutError({
+        url,
+        urlTemplate: opts.urlTemplate,
+        method,
+        timeoutMs: headersMs,
+        phase: 'headers',
+      })
       // Reject via Promise.race rather than relying on fetch to reject with the
       // abort reason: workerd's fetch reconstructs the reason (losing its
       // prototype, so `instanceof TimeoutError` breaks), and WebKit has dropped
@@ -196,7 +202,10 @@ export function createRequester(
     // Once buffering settles the deadline is spent either way — release its
     // timers.
     try {
-      return await raceDeadline(bufferAndCheck(response, httpErrors, url, method), totalDeadline)
+      return await raceDeadline(
+        bufferAndCheck(response, httpErrors, url, method, opts.urlTemplate),
+        totalDeadline,
+      )
     } finally {
       clearDeadline()
     }
@@ -213,10 +222,11 @@ export function createRequester(
       transforms,
     )
     try {
-      return responseOf(buffered, JSON.parse(buffered.text()) as unknown)
+      const body: unknown = JSON.parse(buffered.text())
+      return responseOf(buffered, body)
     } catch (cause: unknown) {
       throw new TypeError(
-        `Failed to parse JSON response from ${opts.url}: ${cause instanceof Error ? cause.message : cause}`,
+        `Failed to parse JSON response from ${transformedOpts.urlTemplate || transformedOpts.url}: ${cause instanceof Error ? cause.message : cause}`,
         {cause},
       )
     }
@@ -252,7 +262,7 @@ export function createRequester(
       if (httpErrors && response.status >= 400) {
         try {
           return await raceDeadline(
-            bufferAndCheck(response, httpErrors, url, method),
+            bufferAndCheck(response, httpErrors, url, method, reqOpts.urlTemplate),
             totalDeadline,
           )
         } finally {
@@ -593,6 +603,7 @@ async function bufferAndCheck(
   httpErrors: boolean,
   requestUrl: string,
   requestMethod: string,
+  urlTemplate?: string,
 ): Promise<BufferedResponse> {
   const arrayBuffer = await response.arrayBuffer()
   const bytes = new Uint8Array(arrayBuffer)
@@ -608,6 +619,7 @@ async function bufferAndCheck(
   if (httpErrors && response.status >= 400) {
     const error = new HttpError({
       url: requestUrl,
+      urlTemplate,
       method: requestMethod,
       status: response.status,
       statusText: response.statusText,
