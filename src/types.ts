@@ -64,6 +64,8 @@ export interface FetchInit {
   redirect?: 'error' | 'follow' | 'manual'
   /** Credentials mode (browser-only — some runtimes crash if set). */
   credentials?: 'include' | 'omit' | 'same-origin'
+  /** Set to `'half'` when `body` is a `ReadableStream`, as the Fetch spec requires. */
+  duplex?: 'half'
 }
 
 /**
