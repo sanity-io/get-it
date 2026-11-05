@@ -1,3 +1,4 @@
+import {getRequestMethod} from '../requestMethod'
 import type {BufferedResponse, FetchHeaders, RequestOptions, WrappingMiddleware} from '../types'
 
 type LogFunction = (message: string, ...args: unknown[]) => void
@@ -52,7 +53,7 @@ export function debug(opts?: DebugOptions): WrappingMiddleware {
   ): Promise<BufferedResponse> {
     const metaId = options.meta?.requestId
     const id = typeof metaId === 'string' || typeof metaId === 'number' ? metaId : ++requestId
-    const method = (options.method ?? 'GET').toUpperCase()
+    const method = getRequestMethod(options)
     log('[%s] %s %s', id, method, options.url)
 
     if (verbose && options.headers) {

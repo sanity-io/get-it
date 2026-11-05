@@ -52,6 +52,29 @@ describe('retry middleware', {timeout: 15000}, () => {
   })
 
   it.runIf(canTestNetworkErrors)(
+    'does not retry a request with a body and no method (sent as POST)',
+    async () => {
+      let attempts = 0
+      const request = createRequester({
+        base: baseUrl,
+        httpErrors: false,
+        middleware: [
+          retry({retryDelay: () => 10}),
+          async (opts, next) => {
+            attempts++
+            return next(opts)
+          },
+        ],
+      })
+      // Fails once, then succeeds, so a retry would resolve
+      await expect(
+        request({url: `/fail?uuid=${Math.random()}&n=2`, body: {hello: 'world'}}),
+      ).rejects.toThrow()
+      expect(attempts).toBe(1)
+    },
+  )
+
+  it.runIf(canTestNetworkErrors)(
     'per-request maxRetries below instance cap is honored',
     async () => {
       let attempts = 0
@@ -353,6 +376,15 @@ describe('retry middleware', {timeout: 15000}, () => {
       const err = new TypeError('Failed to fetch')
       expect(isRetryableRequest(err, 0, {url: 'http://example.com', method: 'POST'})).toBe(false)
       expect(isRetryableRequest(err, 0, {url: 'http://example.com', method: 'PUT'})).toBe(false)
+    })
+
+    it('treats a request with a body and no method as POST', () => {
+      const err = new TypeError('Failed to fetch')
+      const url = 'http://example.com'
+      expect(isRetryableRequest(err, 0, {url, body: {hello: 'world'}})).toBe(false)
+      expect(isRetryableRequest(err, 0, {url, body: 'text'})).toBe(false)
+      expect(isRetryableRequest(err, 0, {url})).toBe(true)
+      expect(isRetryableRequest(err, 0, {url, body: null})).toBe(true)
     })
 
     it('retries error with code directly on error object', () => {
