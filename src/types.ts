@@ -197,7 +197,11 @@ export interface RequestOptions {
   url: string
   /** HTTP method. Defaults to `GET`, or `POST` when a body is present. */
   method?: string
-  /** Request body. Plain objects and arrays are JSON-serialized automatically. */
+  /**
+   * Request body. Plain objects and arrays are JSON-serialized automatically.
+   * For async iterables, such as Node.js `Readable` streams, add the
+   * `asyncIterableBody()` middleware from `get-it/middleware`.
+   */
   body?: unknown
   /** Request headers. Merged with instance-level headers (per-request wins). */
   headers?: FetchHeaders

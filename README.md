@@ -236,6 +236,20 @@ const request = createRequester({
 
 A `maxRetries` option on a request overrides the value in the retry middleware for that request. To disable retries, set it to `0`.
 
+### Async iterable request bodies
+
+get-it accepts the body types that fetch accepts. To send an async iterable, such as a Node.js `Readable` stream or an async generator, add the `asyncIterableBody()` middleware. It converts the body to a `ReadableStream`:
+
+```ts
+import {createReadStream} from 'node:fs'
+import {asyncIterableBody} from 'get-it/middleware'
+
+const request = createRequester({middleware: [asyncIterableBody()]})
+await request({url: '/upload', method: 'PUT', body: createReadStream('photo.jpg')})
+```
+
+The middleware sends byte chunks as they are, and encodes string chunks as UTF-8. Other chunks reject the request. A stream can only be read once, so a retry of the request fails. It does not send an empty body.
+
 ## Runtime proxy support
 
 In Node.js and Bun, `createRequester` automatically uses an undici-based fetch that reads proxy configuration from environment variables.

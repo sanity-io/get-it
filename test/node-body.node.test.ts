@@ -1,10 +1,63 @@
-import {createRequester} from 'get-it'
+import {createReadStream, readFileSync} from 'node:fs'
+import {PassThrough} from 'node:stream'
+import {fileURLToPath} from 'node:url'
+
+import {createRequester, type RequesterOptions} from 'get-it'
+import {asyncIterableBody, retry} from 'get-it/middleware'
 import {createNodeFetch} from 'get-it/node'
 import {describe, expect, it} from 'vitest'
 
 import {createRequester as createNodeRequester} from '../src/_exports/index.node'
 
 const baseUrl = 'http://localhost:9980/req-test'
+
+describe.each([
+  {
+    name: 'the default Node entry',
+    createRequest: (options?: RequesterOptions) => createNodeRequester(options),
+  },
+  {
+    name: 'the global fetch',
+    createRequest: (options?: RequesterOptions) =>
+      createRequester({fetch: globalThis.fetch, ...options}),
+  },
+])('Node.js stream bodies through $name', ({createRequest}) => {
+  it('sends a Node.js stream body', async () => {
+    const body = new PassThrough()
+    body.end('streamed body')
+    const request = createRequest({middleware: [asyncIterableBody()]})
+    const res = await request({url: `${baseUrl}/echo`, method: 'POST', body})
+    expect(res.text()).toBe('streamed body')
+  })
+
+  it('sends a Node.js file stream body', async () => {
+    const file = fileURLToPath(import.meta.url)
+    const request = createRequest({middleware: [asyncIterableBody()]})
+    const res = await request({
+      url: `${baseUrl}/echo`,
+      method: 'POST',
+      body: createReadStream(file),
+    })
+    expect(res.bytes()).toEqual(new Uint8Array(readFileSync(file)))
+  })
+
+  it('fails a retry instead of sending an empty body', async () => {
+    // The first attempt is reset, and the second is answered without reading
+    // the body, so an empty resend would succeed.
+    const body = new PassThrough()
+    body.end('the complete upload')
+    const request = createRequest({
+      middleware: [
+        asyncIterableBody(),
+        retry({maxRetries: 2, retryDelay: () => 0, shouldRetry: () => true}),
+      ],
+    })
+
+    await expect(
+      request({url: `${baseUrl}/fail?uuid=${crypto.randomUUID()}&n=2`, method: 'POST', body}),
+    ).rejects.toThrow()
+  })
+})
 
 describe('global fetch request bodies', () => {
   it('sends a ReadableStream body (requires duplex: half)', async () => {
