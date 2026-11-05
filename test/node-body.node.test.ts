@@ -1,4 +1,6 @@
+import {once} from 'node:events'
 import {createReadStream, readFileSync} from 'node:fs'
+import {createServer} from 'node:http'
 import {PassThrough} from 'node:stream'
 import {fileURLToPath} from 'node:url'
 
@@ -42,8 +44,22 @@ describe.each([
   })
 
   it('fails a retry instead of sending an empty body', async () => {
-    // The first attempt is reset, and the second is answered without reading
-    // the body, so an empty resend would succeed.
+    // Read the whole first upload before resetting the connection, so the
+    // stream has been consumed when the retry comes. Every body is recorded,
+    // so any resend shows up.
+    const received: string[] = []
+    const server = createServer(async (req, res) => {
+      let text = ''
+      for await (const chunk of req) text += chunk
+      received.push(text)
+      if (received.length === 1) req.socket.destroy()
+      else res.end('ok')
+    })
+    server.listen(0, '127.0.0.1')
+    await once(server, 'listening')
+    const address = server.address()
+    if (!address || typeof address === 'string') throw new Error('Expected a listening port')
+
     const body = new PassThrough()
     body.end('the complete upload')
     const request = createRequest({
@@ -53,9 +69,15 @@ describe.each([
       ],
     })
 
-    await expect(
-      request({url: `${baseUrl}/fail?uuid=${crypto.randomUUID()}&n=2`, method: 'POST', body}),
-    ).rejects.toThrow()
+    try {
+      await expect(
+        request({url: `http://127.0.0.1:${address.port}/`, method: 'POST', body}),
+      ).rejects.toThrow()
+      expect(received).toEqual(['the complete upload'])
+    } finally {
+      server.closeAllConnections()
+      await new Promise<void>((resolve) => server.close(() => resolve()))
+    }
   })
 })
 
