@@ -38,7 +38,12 @@ describe('error context middleware', () => {
     expect(error.message).toBe(`HTTP GET ${target} failed: ${message}`)
     expect(error.cause).toBe(cause)
     expect(cause.message).toBe(message)
-    expect(error.stack).toBe(stack)
+    if (stack?.startsWith('TypeError: fetch failed')) {
+      expect(error.stack?.split('\n')[0]).toBe(`TypeError: ${error.message}`)
+      expect(error.stack?.split('\n').slice(1)).toEqual(stack.split('\n').slice(1))
+    } else {
+      expect(error.stack).toBe(stack)
+    }
   })
 
   it.each<RequestOptions>([
@@ -108,6 +113,36 @@ describe('error context middleware', () => {
 
     await expect(request(url)).rejects.toThrow(`HTTP GET ${target} failed: fetch failed`)
   })
+
+  it.each(['ECONNREFUSED', 'ETIMEDOUT'])(
+    'uses %s from an empty AggregateError cause',
+    async (code) => {
+      const cause = Object.assign(
+        new AggregateError(
+          [
+            Object.assign(new Error(`connect ${code} ::1:59999`), {code}),
+            Object.assign(new Error('connect ECONNREFUSED 127.0.0.1:59999'), {
+              code: 'ECONNREFUSED',
+            }),
+          ],
+          '',
+        ),
+        {code},
+      )
+      const error = new TypeError('fetch failed', {cause})
+      const request = createContextRequester({
+        fetch: async () => {
+          throw error
+        },
+      })
+
+      await expect(request(url)).rejects.toBe(error)
+      expect(error.message).toBe(`HTTP GET ${target} failed: ${code}`)
+      expect(error.cause).toBe(cause)
+      expect(cause.message).toBe('')
+      expect(isRetryableRequest(error, 0, {url})).toBe(true)
+    },
+  )
 
   it('redacts query values in the message without changing the fetch URL', async () => {
     const longUrl = `${url}?query=${'x'.repeat(500)}`
@@ -243,4 +278,33 @@ describe('error context middleware', () => {
       expect(attempts).toBe(2)
     },
   )
+
+  it('leaves stacks without a matching message header unchanged', async () => {
+    const error = new TypeError('Failed to fetch')
+    error.stack = 'fetch@transport.js:2:3\nrequest@client.js:1:2'
+    const stack = error.stack
+    const request = createContextRequester({
+      fetch: async () => {
+        throw error
+      },
+    })
+    await expect(request(url)).rejects.toBe(error)
+    expect(error.message).toBe(`HTTP GET ${target} failed: Failed to fetch`)
+    expect(error.stack).toBe(stack)
+  })
+
+  it('keeps reused errors consistent when the stack is read-only', async () => {
+    const error = new TypeError('Failed to fetch')
+    const stack = error.stack
+    Object.defineProperty(error, 'stack', {value: stack, writable: false})
+    const request = createContextRequester({
+      fetch: async () => {
+        throw error
+      },
+    })
+    await expect(request(url)).rejects.toBe(error)
+    await expect(request(`${url}/other`)).rejects.toBe(error)
+    expect(error.message).toBe(`HTTP GET ${target}/other failed: Failed to fetch`)
+    expect(error.stack).toBe(stack)
+  })
 })

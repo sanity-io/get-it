@@ -153,9 +153,9 @@ const res = await request({url: 'https://example.com/big-file', as: 'stream'})
 
 ## Error messages
 
-Enable the `errorContext()` middleware to expose more context on errors that occur. By default, many errors are emitted by the underlying fetch API simply as `fetch error`. With the error context middleware enabled, we include the HTTP method and (part of) the URL in the error message, as well as the underlying cause.
+Enable the `errorContext()` middleware to include the HTTP method and request target in request errors. For Node's generic `fetch failed` errors, it also includes the underlying cause.
 
-Use the `urlTemplate` option to give errors a "normalized" URL. This follows OpenTelemetry's [`url.template` convention](https://opentelemetry.io/docs/specs/semconv/registry/attributes/url/): use a static template with placeholders for dynamic path values. If no template is provided, it uses the URL.
+Use the `urlTemplate` option to give errors a stable request target. This follows OpenTelemetry's [`url.template` convention](https://opentelemetry.io/docs/specs/semconv/registry/attributes/url/): use a static template with placeholders for dynamic path values. Without a template, the middleware shows a bounded host and path, removes URL credentials and fragments, and replaces query contents with `?…`.
 
 ```ts
 import {createRequester} from 'get-it'
@@ -171,8 +171,10 @@ await request({
 
 `errorContext()` should generally be placed _last_ in the middleware chain: after wrapping middleware that changes request options.
 
+Core's default `HttpError` and headers `TimeoutError` messages include the full URL, including query values. `errorContext()` gives those errors the sanitized target instead. On network errors it adds the target, so use a static `urlTemplate` when path segments contain sensitive or request-specific values.
+
 > [!WARNING]
-> Enabling the `errorContext` middleware _without_ providing a `urlTemplate` might expose sensitive values if they are part of the URL (to error reporters and anything that uses the error message).
+> Only the request target is sanitized. The underlying error details are kept as-is, and some platforms include the full URL there (Deno's fetch does, query string and all), even when you provide a `urlTemplate`.
 
 ## Error handling
 
