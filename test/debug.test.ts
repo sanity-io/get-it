@@ -17,6 +17,17 @@ describe('debug middleware', () => {
     expect(logs.some((l) => l.includes('/plain-text'))).toBe(true)
   })
 
+  it('logs a request with a body and no method as POST', async () => {
+    const logs: string[] = []
+    const log = (msg: string, ...args: unknown[]) => logs.push(`${msg} ${args.join(' ')}`)
+    const request = createRequester({
+      base: baseUrl,
+      middleware: [debug({log})],
+    })
+    await request({url: '/plain-text', body: {hello: 'world'}})
+    expect(logs.find((l) => l.includes('/plain-text'))).toContain('POST')
+  })
+
   it('logs response status', async () => {
     const logs: string[] = []
     const log = (msg: string, ...args: unknown[]) => logs.push(`${msg} ${args.join(' ')}`)

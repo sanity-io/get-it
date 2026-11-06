@@ -1,3 +1,4 @@
+import {getRequestMethod} from '../requestMethod'
 import type {BufferedResponse, RequestOptions, WrappingMiddleware} from '../types'
 
 interface RetryOptions {
@@ -76,7 +77,8 @@ export function getRetryDelay(attemptNumber: number): number {
  * Default predicate for deciding whether a failed request should be retried.
  *
  * Returns `true` only for transient network errors on idempotent methods
- * (`GET`, `HEAD`). HTTP errors (`HttpError`) are never retried.
+ * (`GET`, `HEAD`). HTTP errors (`HttpError`) are never retried. A request with
+ * a body and no `method` counts as `POST`, since that's how it's sent.
  *
  * @param error - The error thrown by the request.
  * @param _attemptNumber - Zero-based attempt index (unused by default).
@@ -90,7 +92,7 @@ export function isRetryableRequest(
   _attemptNumber: number,
   options: RequestOptions,
 ): boolean {
-  const method = (options.method ?? 'GET').toUpperCase()
+  const method = getRequestMethod(options)
   if (method !== 'GET' && method !== 'HEAD') {
     return false
   }
