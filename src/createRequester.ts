@@ -554,6 +554,10 @@ function buildFetchArgs(
     } else {
       throw new TypeError(`Unsupported body type: ${typeof opts.body}`)
     }
+
+    // The Fetch spec requires `duplex: 'half'` for streamed request bodies.
+    // Node.js, Chromium and WebKit reject the request without it.
+    if (init.body instanceof ReadableStream) init.duplex = 'half'
   }
 
   init.headers = headers

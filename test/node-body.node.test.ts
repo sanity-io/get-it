@@ -6,6 +6,20 @@ import {createRequester as createNodeRequester} from '../src/_exports/index.node
 
 const baseUrl = 'http://localhost:9980/req-test'
 
+describe('global fetch request bodies', () => {
+  it('sends a ReadableStream body (requires duplex: half)', async () => {
+    const request = createRequester({fetch: globalThis.fetch})
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode('streamed body'))
+        controller.close()
+      },
+    })
+    const res = await request({url: `${baseUrl}/echo`, method: 'POST', body})
+    expect(res.text()).toBe('streamed body')
+  })
+})
+
 describe('createNodeFetch request bodies', () => {
   it('sends a ReadableStream body through undici (requires duplex: half)', async () => {
     const request = createRequester({fetch: createNodeFetch()})
