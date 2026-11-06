@@ -1,5 +1,16 @@
 # get-it
 
+## 9.7.0
+
+### Minor Changes
+
+- add `asyncIterableBody()` middleware for Node.js stream request bodies ([#714](https://github.com/sanity-io/get-it/pull/714)) ([b0c50b7](https://github.com/sanity-io/get-it/commit/b0c50b7e2688cf9064903731d9890eb132e8058a))
+
+### Patch Changes
+
+- set `duplex: 'half'` for streamed request bodies ([#715](https://github.com/sanity-io/get-it/pull/715)) ([e145176](https://github.com/sanity-io/get-it/commit/e145176fe51b22606c01006f70ae7e48bb708d8e))
+- treat a request with a body and no `method` as POST in `retry()` and `debug()` ([#717](https://github.com/sanity-io/get-it/pull/717)) ([b9bed9f](https://github.com/sanity-io/get-it/commit/b9bed9f18906539358d620b1204561cf7d8b4443))
+
 ## 9.6.2
 
 ### Patch Changes
