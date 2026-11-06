@@ -1,10 +1,85 @@
-import {createRequester} from 'get-it'
+import {once} from 'node:events'
+import {createReadStream, readFileSync} from 'node:fs'
+import {createServer} from 'node:http'
+import {PassThrough} from 'node:stream'
+import {fileURLToPath} from 'node:url'
+
+import {createRequester, type RequesterOptions} from 'get-it'
+import {asyncIterableBody, retry} from 'get-it/middleware'
 import {createNodeFetch} from 'get-it/node'
 import {describe, expect, it} from 'vitest'
 
 import {createRequester as createNodeRequester} from '../src/_exports/index.node'
 
 const baseUrl = 'http://localhost:9980/req-test'
+
+describe.each([
+  {
+    name: 'the default Node entry',
+    createRequest: (options?: RequesterOptions) => createNodeRequester(options),
+  },
+  {
+    name: 'the global fetch',
+    createRequest: (options?: RequesterOptions) =>
+      createRequester({fetch: globalThis.fetch, ...options}),
+  },
+])('Node.js stream bodies through $name', ({createRequest}) => {
+  it('sends a Node.js stream body', async () => {
+    const body = new PassThrough()
+    body.end('streamed body')
+    const request = createRequest({middleware: [asyncIterableBody()]})
+    const res = await request({url: `${baseUrl}/echo`, method: 'POST', body})
+    expect(res.text()).toBe('streamed body')
+  })
+
+  it('sends a Node.js file stream body', async () => {
+    const file = fileURLToPath(import.meta.url)
+    const request = createRequest({middleware: [asyncIterableBody()]})
+    const res = await request({
+      url: `${baseUrl}/echo`,
+      method: 'POST',
+      body: createReadStream(file),
+    })
+    expect(res.bytes()).toEqual(new Uint8Array(readFileSync(file)))
+  })
+
+  it('fails a retry instead of sending an empty body', async () => {
+    // Read the whole first upload before resetting the connection, so the
+    // stream has been consumed when the retry comes. Every body is recorded,
+    // so any resend shows up.
+    const received: string[] = []
+    const server = createServer(async (req, res) => {
+      let text = ''
+      for await (const chunk of req) text += chunk
+      received.push(text)
+      if (received.length === 1) req.socket.destroy()
+      else res.end('ok')
+    })
+    server.listen(0, '127.0.0.1')
+    await once(server, 'listening')
+    const address = server.address()
+    if (!address || typeof address === 'string') throw new Error('Expected a listening port')
+
+    const body = new PassThrough()
+    body.end('the complete upload')
+    const request = createRequest({
+      middleware: [
+        asyncIterableBody(),
+        retry({maxRetries: 2, retryDelay: () => 0, shouldRetry: () => true}),
+      ],
+    })
+
+    try {
+      await expect(
+        request({url: `http://127.0.0.1:${address.port}/`, method: 'POST', body}),
+      ).rejects.toThrow()
+      expect(received).toEqual(['the complete upload'])
+    } finally {
+      server.closeAllConnections()
+      await new Promise<void>((resolve) => server.close(() => resolve()))
+    }
+  })
+})
 
 describe('global fetch request bodies', () => {
   it('sends a ReadableStream body (requires duplex: half)', async () => {
