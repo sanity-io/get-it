@@ -101,6 +101,7 @@ file.body // ReadableStream<Uint8Array>
 | Option        | Type                                                       | Description                                                    |
 | ------------- | ---------------------------------------------------------- | -------------------------------------------------------------- |
 | `url`         | `string`                                                   | Request URL (required)                                         |
+| `urlTemplate` | `string`                                                   | Static template or service/route label for error messages      |
 | `method`      | `string`                                                   | HTTP method                                                    |
 | `body`        | `unknown`                                                  | Request body (objects auto-serialized as JSON)                 |
 | `headers`     | `FetchHeaders`                                             | Merged with instance headers                                   |
@@ -149,6 +150,31 @@ const request = createRequester({
 })
 const res = await request({url: 'https://example.com/big-file', as: 'stream'})
 ```
+
+## Error messages
+
+Enable the `errorContext()` middleware to include the HTTP method and request target in request errors. For Node's generic `fetch failed` errors, it also includes the underlying cause.
+
+Use the `urlTemplate` option to give errors a stable request target. This follows OpenTelemetry's [`url.template` convention](https://opentelemetry.io/docs/specs/semconv/registry/attributes/url/): use a static template with placeholders for dynamic path values. Without a template, the middleware shows a bounded host and path, removes URL credentials and fragments, and replaces query contents with `?…`.
+
+```ts
+import {createRequester} from 'get-it'
+import {errorContext, retry} from 'get-it/middleware'
+
+const request = createRequester({middleware: [retry(), errorContext()]})
+await request({
+  url: 'https://my.api/projects/abc123/datasets/myproduct',
+  urlTemplate: '/projects/:projectId/datasets/:datasetName',
+})
+// Fetch failure: HTTP GET /projects/:projectId/datasets/:datasetName failed: read ECONNRESET
+```
+
+`errorContext()` should generally be placed _last_ in the middleware chain: after wrapping middleware that changes request options.
+
+Core's default `HttpError` and headers `TimeoutError` messages include the full URL, including query values. `errorContext()` gives those errors the sanitized target instead. On network errors it adds the target, so use a static `urlTemplate` when path segments contain sensitive or request-specific values.
+
+> [!WARNING]
+> Only the request target is sanitized. The underlying error details are kept as-is, and some platforms include the full URL there (Deno's fetch does, query string and all), even when you provide a `urlTemplate`.
 
 ## Error handling
 

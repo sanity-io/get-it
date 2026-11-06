@@ -1,5 +1,5 @@
 import {createRequester, isHttpError, isTimeoutError} from 'get-it'
-import {retry} from 'get-it/middleware'
+import {errorContext, retry} from 'get-it/middleware'
 import {expect, test} from 'vitest'
 
 /**
@@ -25,6 +25,26 @@ test('the built get-it package resolves and runs a request', async () => {
 
 test('the built get-it/middleware subpath resolves', () => {
   expect(typeof retry).toBe('function')
+})
+
+test('the built errorContext middleware adds a template and socket cause', async () => {
+  const cause = new Error('other side closed')
+  const error = new TypeError('fetch failed', {cause})
+  const request = createRequester({
+    timeout: false,
+    fetch: async () => {
+      throw error
+    },
+    middleware: [errorContext()],
+  })
+  await expect(
+    request({
+      url: 'https://example.com/projects/private?token=secret',
+      urlTemplate: '/projects/{id}',
+    }),
+  ).rejects.toBe(error)
+  expect(error.message).toBe('HTTP GET /projects/{id} failed: other side closed')
+  expect(error.cause).toBe(cause)
 })
 
 test('the built error guards resolve', () => {

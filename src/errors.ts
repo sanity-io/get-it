@@ -26,6 +26,7 @@ export class HttpError extends Error {
 
   constructor(opts: {
     url: string
+    urlTemplate?: string
     method: string
     status: number
     statusText: string
@@ -33,7 +34,8 @@ export class HttpError extends Error {
     body: unknown
     response: BufferedResponse | JsonResponse | TextResponse
   }) {
-    const url = opts.url.length > 400 ? opts.url.slice(0, 399) + '…' : opts.url
+    const target = opts.urlTemplate || opts.url
+    const url = target.length > 400 ? target.slice(0, 399) + '…' : target
     super(`${opts.method}-request to ${url} resulted in HTTP ${opts.status} ${opts.statusText}`)
     this.name = 'HttpError'
     this.url = opts.url
@@ -73,8 +75,15 @@ export class TimeoutError extends Error {
   /** Node-style error code, recognized by the default `retry()` predicate. */
   declare code: 'ETIMEDOUT'
 
-  constructor(opts: {url: string; method: string; timeoutMs: number; phase: 'headers'}) {
-    const url = opts.url.length > 400 ? opts.url.slice(0, 399) + '…' : opts.url
+  constructor(opts: {
+    url: string
+    urlTemplate?: string
+    method: string
+    timeoutMs: number
+    phase: 'headers'
+  }) {
+    const target = opts.urlTemplate || opts.url
+    const url = target.length > 400 ? target.slice(0, 399) + '…' : target
     super(
       `Request timed out after ${opts.timeoutMs}ms waiting for response headers: ${opts.method} ${url}`,
     )
