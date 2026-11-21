@@ -163,15 +163,15 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  undici-types: ^7.30.1
+  undici-types: ^8.13.0
 
 importers:
 
   .:
     dependencies:
       undici:
-        specifier: ^7.30.1
-        version: 7.30.1
+        specifier: ^8.13.0
+        version: 8.13.0
     devDependencies:
       '@changesets/cli':
         specifier: ^3.0.3
@@ -3730,15 +3730,15 @@ packages:
   unconfig-core@7.5.0:
     resolution: {integrity: sha512-Su3FauozOGP44ZmKdHy2oE6LPjk51M/TRRjHv2HNCWiDvfvCoxC2lno6jevMA91MYAdCdwP05QnWdWpSbncX/w==}
 
-  undici-types@7.30.1:
-    resolution: {integrity: sha512-4CNTj7RmIepmiez9hX5pJzYLi5bv1ZBA6puqC3qYyqluB8zu5uygFc+4iG5Nmcx3fg+6bPFxuEbCrxTa7Yqy3A==}
+  undici-types@8.13.0:
+    resolution: {integrity: sha512-oE6ybuLS2aUIbVCR2zAjiidK4cFOf1FqSWBekci5p6baThYI4HffutuV+d1Y5jLLAmZfE+VhTwTBDoYGWRkWeA==}
 
   undici@7.30.1:
     resolution: {integrity: sha512-03KrMbjIFDWQR5RNPrSw3bd1r12JpyFQl9/yxjUbJtqkjmllqC5lFjZh6ujeuJCKr8EOQvRW872Oy/az+nLYxg==}
     engines: {node: '>=20.18.1'}
 
-  undici@8.12.3:
-    resolution: {integrity: sha512-+fdndUTwBP86cVjihTp21hZHo7d6oj1c/47XPA3lL8mM0XHs+C4EkcjmgRsFnFk2f/UONGDy9ItBItmXsLOQHw==}
+  undici@8.13.0:
+    resolution: {integrity: sha512-mxbeyRlRhHUTWE1zf/FwDOXTKMhE1vMQRz/o2oOir/5fIWsB79TeZrByMkj019EdDuxPg03jprCjFLxLkmxTCQ==}
     engines: {node: '>=22.19.0'}
 
   unenv@2.0.0-rc.24:
@@ -5349,7 +5349,7 @@ snapshots:
 
   '@types/node@24.19.2':
     dependencies:
-      undici-types: 7.30.1
+      undici-types: 8.13.0
 
   '@types/whatwg-mimetype@3.0.2': {}
 
@@ -6324,7 +6324,7 @@ snapshots:
       parse5: 8.0.1
       saxes: 6.0.0
       tough-cookie: 6.0.2
-      undici: 8.12.3
+      undici: 8.13.0
       w3c-xmlserializer: 6.0.0
       webidl-conversions: 8.0.1
       whatwg-mimetype: 5.0.0
@@ -7390,11 +7390,11 @@ snapshots:
       '@quansync/fs': 1.0.0
       quansync: 1.0.0
 
-  undici-types@7.30.1: {}
+  undici-types@8.13.0: {}
 
   undici@7.30.1: {}
 
-  undici@8.12.3: {}
+  undici@8.13.0: {}
 
   unenv@2.0.0-rc.24:
     dependencies:
